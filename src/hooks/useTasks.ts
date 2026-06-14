@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/types/task';
 import { tasksService } from '@/services/tasksService';
 import { useCelebration } from '@/contexts/CelebrationContext';
+import { useUser } from '@/contexts/UserContext';
+import { isToday } from '@/utils/date';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { celebrate } = useCelebration();
+  const { user, recordProductiveDay } = useUser();
 
   useEffect(() => {
     loadTasks();
@@ -56,14 +59,27 @@ export function useTasks() {
       const updated = await tasksService.completeTask(id);
       if (updated) {
         setTasks(prev => prev.map(t => t.id === id ? updated : t));
-        if (!wasCompleted) celebrate();
+        if (!wasCompleted) {
+          recordProductiveDay();
+          const doneTodayBefore = tasks.filter(
+            t => t.status === 'completed' && t.completedAt && isToday(t.completedAt),
+          ).length;
+          const goal = user.dailyGoal;
+          const justHitGoal =
+            goal > 0 && doneTodayBefore < goal && doneTodayBefore + 1 >= goal;
+          if (justHitGoal) {
+            celebrate('Meta diária batida! 🎯', 'goal');
+          } else {
+            celebrate();
+          }
+        }
       }
       return updated;
     } catch (err) {
       setError(err as Error);
       throw err;
     }
-  }, [tasks, celebrate]);
+  }, [tasks, celebrate, recordProductiveDay, user.dailyGoal]);
 
   const deleteTask = useCallback(async (id: string) => {
     try {
