@@ -7,6 +7,7 @@ import CalendarPage from '@/pages/CalendarPage';
 import PrioritiesPage from '@/pages/PrioritiesPage';
 import ReportsPage from '@/pages/ReportsPage';
 import TeamPage from '@/pages/TeamPage';
+import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 
@@ -20,6 +21,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/priorities" element={<PrioritiesPage />} />
       <Route path="/reports" element={<ReportsPage />} />
       <Route path="/team" element={<TeamPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

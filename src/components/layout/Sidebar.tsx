@@ -21,6 +21,7 @@ import { Logo } from '@/components/common/Logo';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { useUser, initialsOf } from '@/contexts/UserContext';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/' },
@@ -30,7 +31,6 @@ const navItems = [
   { icon: Flag, label: 'Prioridades', path: '/priorities' },
   { icon: BarChart3, label: 'Relatórios', path: '/reports' },
   { icon: Users, label: 'Equipe', path: '/team' },
-  { icon: Settings, label: 'Configurações', path: '/settings' },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -40,6 +40,7 @@ export const Sidebar: React.FC = () => {
   const [showLogout, setShowLogout] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useUser();
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -115,7 +116,7 @@ export const Sidebar: React.FC = () => {
                   />
                   <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-40 overflow-hidden">
                     <button
-                      onClick={() => goTo('/settings')}
+                      onClick={() => goTo('/profile')}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
                     >
                       <UserCircle size={18} className="text-text-secondary" />
@@ -146,12 +147,20 @@ export const Sidebar: React.FC = () => {
                 aria-expanded={showProfileMenu}
                 className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-bg-secondary transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-vibrant to-primary-dark flex items-center justify-center text-white font-bold shrink-0">
-                  JS
-                </div>
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-vibrant to-primary-dark flex items-center justify-center text-white font-bold shrink-0">
+                    {initialsOf(user.name)}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-semibold text-text-primary truncate">João Silva</p>
-                  <p className="text-xs text-text-secondary truncate">Administrador</p>
+                  <p className="text-sm font-semibold text-text-primary truncate">{user.name}</p>
+                  <p className="text-xs text-text-secondary truncate">{user.role}</p>
                 </div>
                 <ChevronRight
                   size={18}

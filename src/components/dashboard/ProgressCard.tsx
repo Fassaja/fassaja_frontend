@@ -3,13 +3,47 @@ import { motion } from 'framer-motion';
 import { Card } from '@/components/common/Card';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 
+interface GoalProgress {
+  done: number;
+  goal: number;
+}
+
 interface ProgressCardProps {
   percentage: number;
   label?: string;
   headline?: string;
   message?: string;
   mascotState?: MascotState;
+  goals?: { daily: GoalProgress; weekly: GoalProgress };
 }
+
+const GoalBar: React.FC<{ label: string; done: number; goal: number; color: string }> = ({
+  label,
+  done,
+  goal,
+  color,
+}) => {
+  const pct = goal > 0 ? Math.min(100, Math.round((done / goal) * 100)) : 0;
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs font-medium text-text-secondary">{label}</span>
+        <span className="text-xs font-bold text-text-primary">
+          {done}/{goal}
+        </span>
+      </div>
+      <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: color + '1A' }}>
+        <motion.div
+          className="h-full rounded-full"
+          style={{ backgroundColor: color }}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </div>
+    </div>
+  );
+};
 
 export const ProgressCard: React.FC<ProgressCardProps> = ({
   percentage,
@@ -17,6 +51,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
   headline,
   message,
   mascotState,
+  goals,
 }) => {
   const size = 116;
   const stroke = 11;
@@ -78,6 +113,13 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
           {message && (
             <p className="text-sm text-text-secondary mt-0.5">{message}</p>
           )}
+        </div>
+      )}
+
+      {goals && (
+        <div className="mt-4 pt-4 border-t border-border space-y-3">
+          <GoalBar label="Meta diária" done={goals.daily.done} goal={goals.daily.goal} color="#2477FF" />
+          <GoalBar label="Meta semanal" done={goals.weekly.done} goal={goals.weekly.goal} color="#8B5CF6" />
         </div>
       )}
     </Card>

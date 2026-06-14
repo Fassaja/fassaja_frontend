@@ -14,11 +14,13 @@ import { MascotState } from '@/components/mascot/Mascot';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { mockUser } from '@/data/mockUser';
+import { useUser } from '@/contexts/UserContext';
+import { isToday } from '@/utils/date';
 
 const DashboardPage: React.FC = () => {
   const { tasks, completeTask, createTask } = useTasks();
   const { projects } = useProjects();
+  const { user } = useUser();
   const stats = useDashboardStats(tasks);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
@@ -61,7 +63,7 @@ const DashboardPage: React.FC = () => {
 
       <AppLayout
         onNewTask={() => setShowNewTaskModal(true)}
-        title={`Olá, ${mockUser.name}! 👋`}
+        title={`Olá, ${user.name}! 👋`}
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
         {/* Metrics */}
@@ -107,6 +109,15 @@ const DashboardPage: React.FC = () => {
               headline={progressCopy.headline}
               message={progressCopy.message}
               mascotState={progressMascot}
+              goals={{
+                daily: {
+                  done: tasks.filter(
+                    t => t.status === 'completed' && t.completedAt && isToday(t.completedAt),
+                  ).length,
+                  goal: user.dailyGoal,
+                },
+                weekly: { done: stats.thisWeekCompleted, goal: user.weeklyGoal },
+              }}
             />
           </div>
         </div>

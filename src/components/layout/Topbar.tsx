@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Plus } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { SearchModal } from './SearchModal';
 import { NotificationsMenu } from './NotificationsMenu';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useUser, initialsOf } from '@/contexts/UserContext';
 
 interface TopbarProps {
   onNewTask?: () => void;
@@ -22,6 +24,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const notifications = useNotifications(true);
   const notificationCount = notifications.length;
+  const navigate = useNavigate();
+  const { user } = useUser();
 
   return (
     <div className="fixed top-0 left-0 right-0 min-h-20 bg-white/90 backdrop-blur-sm border-b border-border z-30 lg:left-64">
@@ -81,6 +85,21 @@ export const Topbar: React.FC<TopbarProps> = ({
               <span className="hidden sm:inline">{actionLabel}</span>
             </Button>
           )}
+
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            aria-label="Meu perfil"
+            className="shrink-0 rounded-full ring-2 ring-transparent hover:ring-primary-light focus:outline-none focus-visible:ring-primary-vibrant transition-all active:scale-95"
+          >
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
+            ) : (
+              <span className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-vibrant to-primary-dark flex items-center justify-center text-white text-sm font-bold">
+                {initialsOf(user.name)}
+              </span>
+            )}
+          </button>
         </div>
       </div>
     </div>

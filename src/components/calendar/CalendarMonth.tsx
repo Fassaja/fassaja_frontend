@@ -9,6 +9,8 @@ interface CalendarMonthProps {
   onDateChange: (date: Date) => void;
   tasks: Task[];
   projects?: Project[];
+  activeProject?: string;
+  onProjectFilter?: (value: string) => void;
   onSelectDate: (date: Date) => void;
 }
 
@@ -17,6 +19,8 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
   onDateChange,
   tasks,
   projects = [],
+  activeProject = 'all',
+  onProjectFilter,
   onSelectDate,
 }) => {
   const projectColor = (projectId?: string) =>
@@ -139,19 +143,43 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
         })}
       </div>
 
-      {/* Legenda por projeto */}
+      {/* Legenda / filtro por projeto */}
       {projects.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5 pt-4 border-t border-border">
-          {projects.map(project => (
-            <span key={project.id} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: project.color }} />
-              {project.name}
-            </span>
-          ))}
-          <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
-            <span className="w-2 h-2 rounded-full bg-text-soft" />
-            Sem projeto
-          </span>
+        <div className="flex flex-wrap items-center gap-2 mt-5 pt-4 border-t border-border">
+          {[
+            ...projects.map(p => ({ value: p.id, label: p.name, color: p.color })),
+            { value: '__none__', label: 'Sem projeto', color: '#94A3B8' },
+          ].map(item => {
+            const active = activeProject === item.value;
+            return (
+              <button
+                key={item.value}
+                type="button"
+                onClick={() => onProjectFilter?.(active ? 'all' : item.value)}
+                className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-all active:scale-95 ${
+                  active
+                    ? 'border-transparent text-white'
+                    : 'border-border text-text-secondary hover:bg-bg-secondary'
+                }`}
+                style={active ? { backgroundColor: item.color } : undefined}
+              >
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: active ? 'rgba(255,255,255,0.9)' : item.color }}
+                />
+                {item.label}
+              </button>
+            );
+          })}
+          {activeProject !== 'all' && (
+            <button
+              type="button"
+              onClick={() => onProjectFilter?.('all')}
+              className="text-xs font-semibold text-primary-vibrant hover:text-primary-hover ml-1"
+            >
+              Mostrar todos
+            </button>
+          )}
         </div>
       )}
     </Card>

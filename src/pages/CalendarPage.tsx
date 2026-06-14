@@ -11,9 +11,16 @@ const CalendarPage: React.FC = () => {
   const { projects } = useProjects();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [projectFilter, setProjectFilter] = useState<string>('all');
+
+  const matchesFilter = (projectId?: string) =>
+    projectFilter === 'all' ||
+    (projectFilter === '__none__' ? !projectId : projectId === projectFilter);
+
+  const visibleTasks = tasks.filter(t => matchesFilter(t.projectId));
 
   const selectedDateStr = selectedDate.toISOString().split('T')[0];
-  const tasksForSelectedDate = tasks.filter(t => t.dueDate === selectedDateStr);
+  const tasksForSelectedDate = visibleTasks.filter(t => t.dueDate === selectedDateStr);
 
   return (
     <AppLayout title="Calendário" subtitle="Visualize suas tarefas por data.">
@@ -23,8 +30,10 @@ const CalendarPage: React.FC = () => {
           <CalendarMonth
             date={currentDate}
             onDateChange={setCurrentDate}
-            tasks={tasks}
+            tasks={visibleTasks}
             projects={projects}
+            activeProject={projectFilter}
+            onProjectFilter={setProjectFilter}
             onSelectDate={setSelectedDate}
           />
         </div>

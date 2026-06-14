@@ -33,7 +33,7 @@ export function useDashboardStats(tasks: Task[]): DashboardStats {
     const thisWeekCompleted = tasks.filter(t => {
       if (t.status !== 'completed' || !t.completedAt) return false;
       const completedDate = new Date(t.completedAt);
-      return completedDate >= thisWeekStart && completedDate <= today;
+      return completedDate >= thisWeekStart && completedDate <= now;
     }).length;
 
     const lastWeekCompleted = tasks.filter(t => {
