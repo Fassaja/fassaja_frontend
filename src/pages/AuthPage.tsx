@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { Logo } from '@/components/common/Logo';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -53,8 +52,15 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
     <div className="min-h-screen bg-bg-main flex">
       {/* Brand panel */}
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary-vibrant to-primary-dark text-white flex-col justify-between p-12 relative overflow-hidden">
-        <div className="bg-white rounded-2xl px-4 py-3 w-fit">
-          <Logo size="lg" showImage />
+        <div className="bg-white rounded-2xl px-5 py-2.5 w-fit">
+          <div className="h-9 flex items-center justify-center overflow-hidden">
+            <img
+              src="/logofassaja.png"
+              alt="Fassaja"
+              className="max-w-none w-40 h-auto object-contain select-none"
+              draggable={false}
+            />
+          </div>
         </div>
 
         <div className="relative z-10">
@@ -76,7 +82,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8 flex justify-center">
-            <Logo size="lg" showImage />
+            <div className="h-12 flex items-center justify-center overflow-hidden">
+              <img
+                src="/logofassaja.png"
+                alt="Fassaja"
+                className="max-w-none w-56 h-auto object-contain select-none"
+                draggable={false}
+              />
+            </div>
           </div>
 
           <h2 className="text-2xl font-bold text-text-primary">

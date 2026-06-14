@@ -19,7 +19,6 @@ import {
   Lock,
   LogIn,
 } from 'lucide-react';
-import { Logo } from '@/components/common/Logo';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -77,8 +76,15 @@ export const Sidebar: React.FC = () => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="px-6 pt-5 pb-2 flex items-center">
-            <Logo size="xl" showImage={true} />
+          <div className="pt-6 pb-3 flex justify-center">
+            <div className="w-full h-20 flex items-center justify-center overflow-hidden">
+              <img
+                src="/logofassaja.png"
+                alt="Fassaja"
+                className="max-w-none w-72 h-auto object-contain select-none"
+                draggable={false}
+              />
+            </div>
           </div>
 
           {/* Navigation */}
