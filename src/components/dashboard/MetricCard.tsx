@@ -22,31 +22,40 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   comparison,
 }) => {
   return (
-    <Card className="flex items-start justify-between">
-      <div>
-        <p className="text-text-secondary text-sm font-medium mb-2">{title}</p>
-        <h3 className="text-3xl font-bold text-text-primary mb-2">{value}</h3>
-        {comparison && (
-          <div className="flex items-center gap-1">
-            {comparison.isPositive ? (
-              <TrendingUp size={16} className="text-success" />
-            ) : (
-              <TrendingDown size={16} className="text-danger" />
-            )}
-            <span className={`text-xs font-medium ${comparison.isPositive ? 'text-success' : 'text-danger'}`}>
-              {comparison.isPositive ? '+' : ''}{comparison.value}% vs {comparison.period}
-            </span>
-          </div>
-        )}
-      </div>
-      <div
-        className={`w-12 h-12 rounded-lg flex items-center justify-center`}
-        style={{ backgroundColor: color + '20' }}
-      >
-        <div style={{ color }}>
+    <Card hoverable className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+          style={{ backgroundColor: color + '1A', color }}
+        >
           {icon}
         </div>
+        <p className="text-sm font-medium text-text-secondary">{title}</p>
       </div>
+
+      <div className="flex items-end justify-between gap-2">
+        <h3 className="text-4xl font-extrabold text-text-primary leading-none tracking-tight">
+          {value}
+        </h3>
+      </div>
+
+      {comparison && (
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
+              comparison.isPositive ? 'text-success' : 'text-danger'
+            }`}
+          >
+            {comparison.isPositive ? (
+              <TrendingUp size={14} />
+            ) : (
+              <TrendingDown size={14} />
+            )}
+            {comparison.value}%
+          </span>
+          <span className="text-xs text-text-secondary">vs {comparison.period}</span>
+        </div>
+      )}
     </Card>
   );
 };

@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Clock, AlertCircle, ListTodo } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MetricCard } from '@/components/dashboard/MetricCard';
+import { WeeklyOverviewChart } from '@/components/dashboard/WeeklyOverviewChart';
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
-import { TaskCard } from '@/components/tasks/TaskCard';
-import { Card } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
+import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
+import { PriorityChart } from '@/components/dashboard/PriorityChart';
+import { QuickActions } from '@/components/dashboard/QuickActions';
 import { EmptyState } from '@/components/common/EmptyState';
+import { Card } from '@/components/common/Card';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
-import { MascotMessage } from '@/components/mascot/MascotMessage';
+import { MascotState } from '@/components/mascot/Mascot';
 import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { mockUser } from '@/data/mockUser';
 
 const DashboardPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { tasks, completeTask, deleteTask, createTask } = useTasks();
+  const { tasks, completeTask, createTask } = useTasks();
+  const { projects } = useProjects();
   const stats = useDashboardStats(tasks);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
@@ -29,14 +31,25 @@ const DashboardPage: React.FC = () => {
     })
     .slice(0, 5);
 
-  const getProgressMessage = () => {
-    const { completionRate } = stats;
-    if (completionRate === 100) return 'Tudo concluído! Você venceu o dia.';
-    if (completionRate >= 75) return 'Você está arrasando nas suas tarefas! 💪';
-    if (completionRate >= 50) return 'Bom progresso! Vamos continuar?';
-    if (completionRate > 0) return 'Cada tarefa conta. Continue!';
-    return 'Nenhuma tarefa concluída ainda. Vamos começar?';
-  };
+  const progressMascot = ((): MascotState => {
+    if (stats.total === 0) return 'confused';
+    if (stats.overdue >= 3 || stats.overdue > stats.completed) return 'sad';
+    if (stats.completionRate >= 75) return 'strong';
+    if (stats.completionRate > 0) return 'happy';
+    return 'confused';
+  })();
+
+  const progressCopy = (() => {
+    if (progressMascot === 'sad')
+      return { headline: 'Atenção!', message: 'Você tem tarefas atrasadas. Bora colocar em dia?' };
+    if (stats.completionRate >= 75)
+      return { headline: 'Mandou bem!', message: 'Você está arrasando nas suas tarefas! 💪' };
+    if (stats.completionRate >= 40)
+      return { headline: 'Bom progresso!', message: 'Continue assim, falta pouco.' };
+    if (stats.completionRate > 0)
+      return { headline: 'Vamos lá!', message: 'Cada tarefa concluída conta.' };
+    return { headline: 'Comece agora', message: 'Crie e conclua sua primeira tarefa.' };
+  })();
 
   return (
     <>
@@ -46,160 +59,82 @@ const DashboardPage: React.FC = () => {
         onCreateTask={createTask}
       />
 
-      <AppLayout onNewTask={() => setShowNewTaskModal(true)}>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">
-          Olá, {mockUser.name}! 👋
-        </h1>
-        <p className="text-text-secondary">
-          Que bom te ver por aqui. Vamos ser produtivos hoje?
-        </p>
-      </div>
-
-      {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <MetricCard
-          title="Total de Tarefas"
-          value={stats.total}
-          icon={<ListTodo size={24} />}
-          color="#2477FF"
-          comparison={{
-            value: 12,
-            isPositive: true,
-            period: 'semana passada',
-          }}
-        />
-        <MetricCard
-          title="Concluídas"
-          value={stats.completed}
-          icon={<CheckCircle size={24} />}
-          color="#22C55E"
-          comparison={{
-            value: 18,
-            isPositive: true,
-            period: 'semana passada',
-          }}
-        />
-        <MetricCard
-          title="Em Andamento"
-          value={stats.inProgress}
-          icon={<Clock size={24} />}
-          color="#FBBF24"
-          comparison={{
-            value: 5,
-            isPositive: false,
-            period: 'semana passada',
-          }}
-        />
-        <MetricCard
-          title="Atrasadas"
-          value={stats.overdue}
-          icon={<AlertCircle size={24} />}
-          color="#F43F5E"
-          comparison={{
-            value: 2,
-            isPositive: false,
-            period: 'semana passada',
-          }}
-        />
-      </div>
-
-      {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Progress */}
-        <div className="lg:col-span-1">
-          <ProgressCard
-            percentage={stats.completionRate}
-            label="Conclusão Geral"
-            message={getProgressMessage()}
+      <AppLayout
+        onNewTask={() => setShowNewTaskModal(true)}
+        title={`Olá, ${mockUser.name}! 👋`}
+        subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
+      >
+        {/* Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+          <MetricCard
+            title="Total de Tarefas"
+            value={stats.total}
+            icon={<ListTodo size={22} />}
+            color="#2477FF"
+            comparison={{ value: 12, isPositive: true, period: 'semana passada' }}
+          />
+          <MetricCard
+            title="Concluídas"
+            value={stats.completed}
+            icon={<CheckCircle size={22} />}
+            color="#22C55E"
+            comparison={{ value: 18, isPositive: true, period: 'semana passada' }}
+          />
+          <MetricCard
+            title="Em Andamento"
+            value={stats.inProgress}
+            icon={<Clock size={22} />}
+            color="#FBBF24"
+            comparison={{ value: 5, isPositive: false, period: 'semana passada' }}
+          />
+          <MetricCard
+            title="Atrasadas"
+            value={stats.overdue}
+            icon={<AlertCircle size={22} />}
+            color="#F43F5E"
+            comparison={{ value: 2, isPositive: false, period: 'semana passada' }}
           />
         </div>
 
-        {/* Upcoming Tasks */}
-        <div className="lg:col-span-2">
-          {upcomingTasks.length > 0 ? (
-            <Card>
-              <h3 className="text-lg font-bold text-text-primary mb-4">
-                Próximas Tarefas
-              </h3>
-              <div className="space-y-3">
-                {upcomingTasks.map(task => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    onComplete={completeTask}
-                    onDelete={deleteTask}
-                  />
-                ))}
-              </div>
-            </Card>
-          ) : (
-            <EmptyState
-              mascotState="happy"
-              title="Nenhuma tarefa pendente!"
-              description="Você está em dia com todas as suas tarefas. Aproveite e crie novas metas!"
-              action={{
-                label: 'Nova Tarefa',
-                onClick: () => setShowNewTaskModal(true),
-              }}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Bottom section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Quick actions */}
-        <Card>
-          <h3 className="text-lg font-bold text-text-primary mb-4">
-            Atalhos Rápidos
-          </h3>
-          <div className="space-y-2">
-            <Button
-              variant="secondary"
-              className="w-full justify-start"
-              onClick={() => setShowNewTaskModal(true)}
-            >
-              ➕ Nova Tarefa
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full justify-start"
-              onClick={() => navigate('/projects')}
-            >
-              📁 Novo Projeto
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full justify-start"
-              onClick={() => navigate('/reports')}
-            >
-              📊 Ver Relatórios
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full justify-start"
-              onClick={() => navigate('/calendar')}
-            >
-              📅 Calendário
-            </Button>
+        {/* Overview + Progress */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <WeeklyOverviewChart tasks={tasks} />
           </div>
-        </Card>
+          <div className="lg:col-span-1">
+            <ProgressCard
+              percentage={stats.completionRate}
+              headline={progressCopy.headline}
+              message={progressCopy.message}
+              mascotState={progressMascot}
+            />
+          </div>
+        </div>
 
-        {/* Help - Mascot Message */}
-        <MascotMessage
-          state="confused"
-          title="Precisa de ajuda?"
-          message="Fale conosco no chat de suporte. Estamos aqui para ajudar você a ser mais produtivo!"
-          mascotSize="md"
-          action={{
-            label: 'Fale conosco',
-            onClick: () => alert('Chat de suporte em breve!'),
-          }}
-        />
-      </div>
-    </AppLayout>
+        {/* Tasks + Priority + Shortcuts */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-5">
+            {upcomingTasks.length > 0 ? (
+              <UpcomingTasks tasks={upcomingTasks} projects={projects} onComplete={completeTask} />
+            ) : (
+              <Card className="h-full flex items-center">
+                <EmptyState
+                  mascotState="happy"
+                  title="Tudo em dia!"
+                  description="Você não tem tarefas pendentes. Que tal criar uma nova?"
+                  action={{ label: 'Nova Tarefa', onClick: () => setShowNewTaskModal(true) }}
+                />
+              </Card>
+            )}
+          </div>
+          <div className="lg:col-span-4">
+            <PriorityChart tasks={tasks} />
+          </div>
+          <div className="lg:col-span-3">
+            <QuickActions onNewTask={() => setShowNewTaskModal(true)} />
+          </div>
+        </div>
+      </AppLayout>
     </>
   );
 };

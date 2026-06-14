@@ -1,9 +1,11 @@
 import React from 'react';
-import { Input } from '@/components/common/Input';
-import { Select } from '@/components/common/Select';
-import { Card } from '@/components/common/Card';
-import { TaskStatus, TaskPriority } from '@/types/task';
 import { Search, X } from 'lucide-react';
+import { Input } from '@/components/common/Input';
+import { Dropdown } from '@/components/common/Dropdown';
+import { Card } from '@/components/common/Card';
+import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
+import { TaskStatus, TaskPriority } from '@/types/task';
+import { Project } from '@/types/project';
 
 interface TaskFiltersProps {
   searchTerm: string;
@@ -14,23 +16,23 @@ interface TaskFiltersProps {
   onPriorityChange: (value: TaskPriority | 'all') => void;
   filterProject: string | 'all';
   onProjectChange: (value: string | 'all') => void;
-  projects: any[];
+  projects: Project[];
   onReset: () => void;
 }
 
-const statusOptions = [
-  { value: 'all', label: 'Todos os Status' },
-  { value: 'pending', label: 'Pendente' },
-  { value: 'in_progress', label: 'Em Progresso' },
-  { value: 'completed', label: 'Concluída' },
-  { value: 'overdue', label: 'Atrasada' },
+const statusOptions: SelectableOption[] = [
+  { value: 'all', label: 'Todas' },
+  { value: 'pending', label: 'Pendentes', color: '#64748B' },
+  { value: 'in_progress', label: 'Em andamento', color: '#2477FF' },
+  { value: 'completed', label: 'Concluídas', color: '#22C55E' },
+  { value: 'overdue', label: 'Atrasadas', color: '#F43F5E' },
 ];
 
-const priorityOptions = [
-  { value: 'all', label: 'Todas as Prioridades' },
-  { value: 'low', label: '🟢 Baixa' },
-  { value: 'medium', label: '🟡 Média' },
-  { value: 'high', label: '🔴 Alta' },
+const priorityOptions: SelectableOption[] = [
+  { value: 'all', label: 'Todas' },
+  { value: 'low', label: 'Baixa', color: '#22C55E', dot: true },
+  { value: 'medium', label: 'Média', color: '#FBBF24', dot: true },
+  { value: 'high', label: 'Alta', color: '#8B5CF6', dot: true },
 ];
 
 export const TaskFilters: React.FC<TaskFiltersProps> = ({
@@ -46,7 +48,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
   onReset,
 }) => {
   const projectOptions = [
-    { value: 'all', label: 'Todos os Projetos' },
+    { value: 'all', label: 'Todos os projetos' },
     ...projects.map(p => ({ value: p.id, label: p.name })),
   ];
 
@@ -57,13 +59,13 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
     filterProject !== 'all';
 
   return (
-    <Card className="space-y-4">
+    <Card className="space-y-5">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-bold text-text-primary">Filtros</h3>
         {hasActiveFilters && (
           <button
             onClick={onReset}
-            className="flex items-center gap-2 text-sm text-primary-vibrant hover:text-blue-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-vibrant hover:text-primary-hover transition-colors"
           >
             <X size={16} />
             Limpar filtros
@@ -71,37 +73,40 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
         )}
       </div>
 
-      {/* Search */}
-      <Input
-        placeholder="Buscar tarefas..."
-        value={searchTerm}
-        onChange={e => onSearchChange(e.target.value)}
-        icon={<Search size={18} />}
+      <div className="flex flex-col lg:flex-row lg:items-end gap-4">
+        <div className="flex-1">
+          <Input
+            label="Buscar"
+            placeholder="Buscar por título..."
+            value={searchTerm}
+            onChange={e => onSearchChange(e.target.value)}
+            icon={<Search size={18} />}
+          />
+        </div>
+        <div className="lg:w-64">
+          <Dropdown
+            label="Projeto"
+            options={projectOptions}
+            value={filterProject}
+            onChange={onProjectChange}
+            fullWidth
+          />
+        </div>
+      </div>
+
+      <OptionSelector
+        label="Status"
+        options={statusOptions}
+        value={filterStatus}
+        onChange={v => onStatusChange(v as TaskStatus | 'all')}
       />
 
-      {/* Filters Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Select
-          label="Status"
-          options={statusOptions}
-          value={filterStatus}
-          onChange={e => onStatusChange(e.target.value as TaskStatus | 'all')}
-        />
-
-        <Select
-          label="Prioridade"
-          options={priorityOptions}
-          value={filterPriority}
-          onChange={e => onPriorityChange(e.target.value as TaskPriority | 'all')}
-        />
-
-        <Select
-          label="Projeto"
-          options={projectOptions}
-          value={filterProject}
-          onChange={e => onProjectChange(e.target.value)}
-        />
-      </div>
+      <OptionSelector
+        label="Prioridade"
+        options={priorityOptions}
+        value={filterPriority}
+        onChange={v => onPriorityChange(v as TaskPriority | 'all')}
+      />
     </Card>
   );
 };

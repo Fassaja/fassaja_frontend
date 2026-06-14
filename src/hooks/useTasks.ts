@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/types/task';
 import { tasksService } from '@/services/tasksService';
+import { useCelebration } from '@/contexts/CelebrationContext';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { celebrate } = useCelebration();
 
   useEffect(() => {
     loadTasks();
@@ -50,16 +52,18 @@ export function useTasks() {
 
   const completeTask = useCallback(async (id: string) => {
     try {
+      const wasCompleted = tasks.find(t => t.id === id)?.status === 'completed';
       const updated = await tasksService.completeTask(id);
       if (updated) {
         setTasks(prev => prev.map(t => t.id === id ? updated : t));
+        if (!wasCompleted) celebrate();
       }
       return updated;
     } catch (err) {
       setError(err as Error);
       throw err;
     }
-  }, []);
+  }, [tasks, celebrate]);
 
   const deleteTask = useCallback(async (id: string) => {
     try {

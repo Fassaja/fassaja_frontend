@@ -1,10 +1,26 @@
 import React from 'react';
-import { Moon, Sun, Bell, Target } from 'lucide-react';
+import { Moon, Sun, Bell, Target, User } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
 import { useTheme } from '@/contexts/ThemeContext';
 import { mockUser } from '@/data/mockUser';
+
+const SectionHeader: React.FC<{ icon: React.ReactNode; color: string; title: string }> = ({
+  icon,
+  color,
+  title,
+}) => (
+  <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-3">
+    <span
+      className="w-9 h-9 rounded-xl flex items-center justify-center"
+      style={{ backgroundColor: color + '1A', color }}
+    >
+      {icon}
+    </span>
+    {title}
+  </h3>
+);
 
 const SettingsPage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -12,24 +28,12 @@ const SettingsPage: React.FC = () => {
   const [weeklyGoal, setWeeklyGoal] = React.useState(mockUser.weeklyGoal);
 
   return (
-    <AppLayout>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">
-          Configurações
-        </h1>
-        <p className="text-text-secondary">
-          Personalize sua experiência no Fassaja
-        </p>
-      </div>
-
-      <div className="space-y-6">
+    <AppLayout title="Configurações" subtitle="Personalize sua experiência no Fassaja.">
+      <div className="space-y-6 max-w-3xl">
         {/* Profile Section */}
         <Card>
-          <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2">
-            <span>👤</span> Perfil
-          </h3>
-          <div className="space-y-4">
+          <SectionHeader icon={<User size={18} />} color="#2477FF" title="Perfil" />
+          <div className="grid sm:grid-cols-2 gap-4">
             <Input
               label="Nome"
               value={mockUser.name}
@@ -48,19 +52,17 @@ const SettingsPage: React.FC = () => {
 
         {/* Goals Section */}
         <Card>
-          <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2">
-            <Target size={20} /> Metas
-          </h3>
-          <div className="space-y-4">
+          <SectionHeader icon={<Target size={18} />} color="#22C55E" title="Metas" />
+          <div className="grid sm:grid-cols-2 gap-4">
             <Input
-              label="Meta Diária de Tarefas"
+              label="Meta diária de tarefas"
               type="number"
               value={dailyGoal}
               onChange={e => setDailyGoal(parseInt(e.target.value))}
               placeholder="5"
             />
             <Input
-              label="Meta Semanal de Tarefas"
+              label="Meta semanal de tarefas"
               type="number"
               value={weeklyGoal}
               onChange={e => setWeeklyGoal(parseInt(e.target.value))}
@@ -71,12 +73,13 @@ const SettingsPage: React.FC = () => {
 
         {/* Theme Section */}
         <Card>
-          <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2">
-            {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
-            Aparência
-          </h3>
+          <SectionHeader
+            icon={theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+            color="#FBBF24"
+            title="Aparência"
+          />
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-bg-secondary dark:bg-gray-800 rounded-xl">
               <div>
                 <p className="font-medium text-text-primary">
                   {theme === 'dark' ? 'Modo Escuro' : 'Modo Claro'}
@@ -105,20 +108,18 @@ const SettingsPage: React.FC = () => {
 
         {/* Notifications Section */}
         <Card>
-          <h3 className="text-lg font-bold text-text-primary mb-6 flex items-center gap-2">
-            <Bell size={20} /> Notificações
-          </h3>
-          <div className="space-y-4">
+          <SectionHeader icon={<Bell size={18} />} color="#8B5CF6" title="Notificações" />
+          <div className="space-y-2">
             {[
-              { label: 'Tarefas Pendentes', id: 'pending' },
-              { label: 'Prazos Próximos', id: 'deadline' },
-              { label: 'Lembretes Diários', id: 'daily' },
+              { label: 'Tarefas pendentes', id: 'pending' },
+              { label: 'Prazos próximos', id: 'deadline' },
+              { label: 'Lembretes diários', id: 'daily' },
             ].map(notif => (
-              <label key={notif.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer">
+              <label key={notif.id} className="flex items-center gap-3 p-3 hover:bg-bg-secondary dark:hover:bg-gray-800 rounded-xl cursor-pointer">
                 <input
                   type="checkbox"
                   defaultChecked
-                  className="w-4 h-4 accent-primary-vibrant"
+                  className="w-4 h-4 rounded accent-primary-vibrant"
                 />
                 <span className="text-text-primary">{notif.label}</span>
               </label>

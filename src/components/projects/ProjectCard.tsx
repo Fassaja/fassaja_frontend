@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Edit, Trash2, FolderOpen, ArrowRight } from 'lucide-react';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
-import { Edit, Trash2 } from 'lucide-react';
+import { formatDate } from '@/utils/date';
 
 interface ProjectCardProps {
   project: Project;
@@ -18,73 +20,81 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const navigate = useNavigate();
   const progressPercent = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
 
   return (
-    <Card hoverable className="group">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3 flex-1">
-          <div
-            className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: project.color }}
-          />
-          <h3 className="font-bold text-text-primary">
-            {project.name}
-          </h3>
+    <Card
+      hoverable
+      className="group flex flex-col"
+      style={{ backgroundColor: project.color + '12', borderColor: project.color + '40' }}
+    >
+      <div className="flex items-start gap-3 mb-4">
+        <div
+          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+          style={{ backgroundColor: project.color + '26', color: project.color }}
+        >
+          <FolderOpen size={20} />
         </div>
-        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-text-primary truncate">{project.name}</h3>
+          <p className="text-xs text-text-soft">Criado em {formatDate(project.createdAt)}</p>
+        </div>
+        <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           {onEdit && (
             <button
               onClick={() => onEdit(project)}
-              className="p-2 hover:bg-blue-50 rounded-lg text-primary-vibrant transition-colors"
+              aria-label="Editar projeto"
+              className="p-2 hover:bg-primary-light rounded-lg text-primary-vibrant transition-colors"
             >
-              <Edit size={16} />
+              <Edit size={15} />
             </button>
           )}
           {onDelete && (
             <button
               onClick={() => onDelete(project.id)}
-              className="p-2 hover:bg-red-50 rounded-lg text-danger transition-colors"
+              aria-label="Excluir projeto"
+              className="p-2 hover:bg-rose-50 rounded-lg text-danger transition-colors"
             >
-              <Trash2 size={16} />
+              <Trash2 size={15} />
             </button>
           )}
         </div>
       </div>
 
       {project.description && (
-        <p className="text-sm text-text-secondary mb-4 line-clamp-2">
-          {project.description}
-        </p>
+        <p className="text-sm text-text-secondary mb-4 line-clamp-2">{project.description}</p>
       )}
 
       {/* Progress */}
-      <div className="mb-4">
+      <div className="mb-4 mt-auto">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-text-secondary">
-            Progresso
-          </span>
-          <span className="text-xs font-bold text-text-primary">
-            {progressPercent}%
-          </span>
+          <span className="text-xs font-medium text-text-secondary">Progresso</span>
+          <span className="text-xs font-bold text-text-primary">{progressPercent}%</span>
         </div>
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="w-full h-2 rounded-full overflow-hidden"
+          style={{ backgroundColor: project.color + '26' }}
+        >
           <div
-            className="h-full transition-all"
-            style={{
-              width: `${progressPercent}%`,
-              backgroundColor: project.color,
-            }}
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${progressPercent}%`, backgroundColor: project.color }}
           />
+        </div>
+        <div className="flex gap-3 text-xs text-text-secondary mt-2">
+          <span><span className="font-semibold text-text-primary">{taskCount}</span> tarefas</span>
+          <span className="text-border">•</span>
+          <span><span className="font-semibold text-text-primary">{completedCount}</span> concluídas</span>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="flex gap-4 text-xs text-text-secondary">
-        <span>{taskCount} tarefas</span>
-        <span>•</span>
-        <span>{completedCount} concluídas</span>
-      </div>
+      <button
+        onClick={() => navigate('/tasks')}
+        className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border bg-white/70 text-sm font-semibold text-text-primary hover:bg-white transition-colors"
+      >
+        Ver tarefas
+        <ArrowRight size={16} />
+      </button>
     </Card>
   );
 };

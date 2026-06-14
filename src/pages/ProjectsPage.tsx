@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
+import { EditProjectModal } from '@/components/projects/EditProjectModal';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
+import { Project } from '@/types/project';
 
 const ProjectsPage: React.FC = () => {
-  const { projects, createProject, deleteProject } = useProjects();
+  const { projects, createProject, updateProject, deleteProject } = useProjects();
   const { tasks } = useTasks();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | undefined>();
 
   const getProjectStats = (projectId: string) => {
     const projectTasks = tasks.filter(t => t.projectId === projectId);
@@ -27,17 +30,19 @@ const ProjectsPage: React.FC = () => {
         onCreateProject={createProject}
       />
 
-      <AppLayout onNewTask={() => setShowCreateModal(true)}>
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-text-primary mb-2">
-            Projetos
-          </h1>
-          <p className="text-text-secondary">
-            Organize suas tarefas por projetos
-          </p>
-        </div>
+      <EditProjectModal
+        isOpen={!!editingProject}
+        project={editingProject}
+        onClose={() => setEditingProject(undefined)}
+        onUpdateProject={updateProject}
+      />
 
+      <AppLayout
+        onNewTask={() => setShowCreateModal(true)}
+        actionLabel="Novo Projeto"
+        title="Projetos"
+        subtitle="Organize suas tarefas por projetos."
+      >
         {projects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map(project => {
@@ -48,10 +53,7 @@ const ProjectsPage: React.FC = () => {
                   project={project}
                   taskCount={stats.total}
                   completedCount={stats.completed}
-                  onEdit={() => {
-                    // TODO: Implement edit modal
-                    alert('Edição em breve!');
-                  }}
+                  onEdit={() => setEditingProject(project)}
                   onDelete={() => {
                     if (window.confirm(`Deseja deletar o projeto "${project.name}"?`)) {
                       deleteProject(project.id);

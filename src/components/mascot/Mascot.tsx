@@ -1,15 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export type MascotState = 'happy' | 'strong' | 'confused' | 'sad' | 'error';
+export type MascotState = 'happy' | 'strong' | 'confused' | 'sad' | 'error' | 'celebrate';
 
 interface MascotProps {
   state?: MascotState;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   animate?: boolean;
 }
 
 const sizeClasses = {
+  xs: 'w-16 h-16',
   sm: 'w-24 h-24',
   md: 'w-32 h-32',
   lg: 'w-48 h-48',
@@ -22,6 +23,7 @@ const mascotImages: Record<MascotState, string> = {
   confused: '/bobduvida.png',
   sad: '/bobtriste.png',
   error: '/boberror404.png',
+  celebrate: '/bobparabens.png',
 };
 
 export const Mascot: React.FC<MascotProps> = ({

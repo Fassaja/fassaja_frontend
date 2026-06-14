@@ -1,59 +1,85 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Search, Bell, Plus } from 'lucide-react';
 import { Button } from '@/components/common/Button';
+import { SearchModal } from './SearchModal';
+import { NotificationsMenu } from './NotificationsMenu';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface TopbarProps {
   onNewTask?: () => void;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
+  actionLabel?: string;
+  title?: string;
+  subtitle?: string;
 }
 
-export const Topbar: React.FC<TopbarProps> = ({ onNewTask, searchValue, onSearchChange }) => {
+export const Topbar: React.FC<TopbarProps> = ({
+  onNewTask,
+  actionLabel = 'Nova Tarefa',
+  title = 'Bem-vindo de volta 👋',
+  subtitle = 'Vamos organizar o seu dia.',
+}) => {
+  const [showSearch, setShowSearch] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifications = useNotifications(true);
+  const notificationCount = notifications.length;
+
   return (
-    <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-border z-30 lg:left-64">
-      <div className="h-full px-4 lg:px-8 flex items-center justify-between">
-        {/* Search */}
-        <div className="flex-1 max-w-md hidden md:block">
-          <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" />
-            <input
-              type="text"
-              placeholder="Buscar tarefas..."
-              value={searchValue || ''}
-              onChange={e => onSearchChange?.(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg text-text-primary placeholder-text-secondary focus:outline-none focus:border-primary-vibrant focus:ring-2 focus:ring-primary-light"
-            />
-          </div>
+    <div className="fixed top-0 left-0 right-0 min-h-20 bg-white/90 backdrop-blur-sm border-b border-border z-30 lg:left-64">
+      <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
+
+      <div className="h-full px-4 lg:px-8 py-4 flex items-center justify-between gap-4">
+        {/* Greeting */}
+        <div className="min-w-0 pl-12 lg:pl-0">
+          <h1 className="text-xl lg:text-2xl font-bold text-text-primary truncate">
+            {title}
+          </h1>
+          <p className="text-sm text-text-secondary truncate hidden sm:block">
+            {subtitle}
+          </p>
         </div>
 
-        {/* Right side */}
-        <div className="flex items-center gap-4 ml-4">
-          {/* Notifications */}
-          <button className="relative p-2 hover:bg-gray-100 rounded-lg text-text-secondary">
-            <Bell size={20} />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full" />
+        {/* Actions */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <button
+            type="button"
+            aria-label="Buscar"
+            onClick={() => setShowSearch(true)}
+            className="w-11 h-11 flex items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+          >
+            <Search size={20} />
           </button>
 
-          {/* New task button */}
+          <div className="relative">
+            <button
+              type="button"
+              aria-label={`Notificações${notificationCount ? `, ${notificationCount} novas` : ''}`}
+              aria-expanded={showNotifications}
+              onClick={() => setShowNotifications(v => !v)}
+              className="relative w-11 h-11 flex items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+            >
+              <Bell size={20} />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-primary-vibrant rounded-full">
+                  {notificationCount}
+                </span>
+              )}
+            </button>
+            <NotificationsMenu
+              isOpen={showNotifications}
+              onClose={() => setShowNotifications(false)}
+              items={notifications}
+            />
+          </div>
+
           {onNewTask && (
             <Button
               onClick={onNewTask}
               size="md"
               icon={<Plus size={18} />}
-              className="hidden sm:flex"
+              className="rounded-xl shadow-sm shadow-primary-vibrant/20"
             >
-              Nova Tarefa
+              <span className="hidden sm:inline">{actionLabel}</span>
             </Button>
-          )}
-
-          {/* Mobile new task button */}
-          {onNewTask && (
-            <button
-              onClick={onNewTask}
-              className="sm:hidden w-10 h-10 bg-primary-vibrant text-white rounded-lg flex items-center justify-center hover:bg-blue-600"
-            >
-              <Plus size={20} />
-            </button>
           )}
         </div>
       </div>

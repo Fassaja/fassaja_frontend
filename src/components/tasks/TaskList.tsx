@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
+import { Project } from '@/types/project';
 import { TaskCard } from './TaskCard';
 import { EmptyState } from '@/components/common/EmptyState';
 
 interface TaskListProps {
   tasks: Task[];
+  projects?: Project[];
   onComplete?: (taskId: string) => void;
   onDelete?: (taskId: string) => void;
   onEdit?: (task: Task) => void;
@@ -16,6 +18,7 @@ interface TaskListProps {
 
 export const TaskList: React.FC<TaskListProps> = ({
   tasks,
+  projects = [],
   onComplete,
   onDelete,
   onEdit,
@@ -51,6 +54,7 @@ export const TaskList: React.FC<TaskListProps> = ({
         <TaskCard
           key={task.id}
           task={task}
+          project={projects.find(p => p.id === task.projectId)}
           onComplete={onComplete}
           onDelete={onDelete}
           onClick={onEdit}

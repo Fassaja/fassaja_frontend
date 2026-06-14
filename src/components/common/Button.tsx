@@ -11,10 +11,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles = {
-  primary: 'bg-primary-vibrant text-white hover:bg-blue-600 active:bg-blue-700',
-  secondary: 'bg-gray-100 text-text-primary hover:bg-gray-200 active:bg-gray-300',
-  ghost: 'bg-transparent text-text-primary hover:bg-gray-100 active:bg-gray-200',
-  danger: 'bg-danger text-white hover:bg-red-600 active:bg-red-700',
+  primary: 'bg-primary-vibrant text-white hover:bg-primary-hover hover:shadow-md hover:shadow-primary-vibrant/25 active:bg-blue-700',
+  secondary: 'bg-bg-secondary text-text-primary border border-border hover:bg-gray-200 active:bg-gray-300',
+  ghost: 'bg-transparent text-text-primary hover:bg-bg-secondary active:bg-gray-200',
+  danger: 'bg-danger text-white hover:bg-rose-600 hover:shadow-md hover:shadow-danger/25 active:bg-rose-700',
 };
 
 const sizeStyles = {
@@ -39,8 +39,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         className={`
-          flex items-center justify-center gap-2 rounded-lg font-medium
-          disabled:opacity-50 disabled:cursor-not-allowed
+          flex items-center justify-center gap-2 rounded-lg font-semibold
+          transition-all duration-150 active:scale-[0.97]
+          focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60
+          disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
           ${variantStyles[variant]}
           ${sizeStyles[size]}
           ${className}

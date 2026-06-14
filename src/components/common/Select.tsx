@@ -1,53 +1,49 @@
 import React from 'react';
+import { Dropdown, DropdownOption } from './Dropdown';
 
-interface SelectOption {
-  value: string | number;
-  label: string;
-}
-
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps {
   label?: string;
-  options: SelectOption[];
+  options: DropdownOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
   error?: string;
   helperText?: string;
+  menuAlign?: 'left' | 'right';
+  fullWidth?: boolean;
 }
 
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, options, error, helperText, className = '', ...props }, ref) => {
-    return (
-      <div className="w-full">
-        {label && (
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            {label}
-          </label>
-        )}
-        <select
-          ref={ref}
-          className={`
-            w-full px-4 py-2 border rounded-lg text-text-primary
-            border-border focus:border-primary-vibrant focus:ring-2 focus:ring-primary-light
-            disabled:bg-gray-50 disabled:cursor-not-allowed
-            ${error ? 'border-danger focus:border-danger focus:ring-red-100' : ''}
-            ${className}
-          `}
-          {...props}
-        >
-          <option value="">Selecione uma opção</option>
-          {options.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {error && (
-          <p className="mt-1 text-xs text-danger">{error}</p>
-        )}
-        {helperText && !error && (
-          <p className="mt-1 text-xs text-text-secondary">{helperText}</p>
-        )}
-      </div>
-    );
-  },
-);
-
-Select.displayName = 'Select';
+/**
+ * Select padrão do Fassaja. Renderiza o Dropdown estilizado (não o <select>
+ * nativo), então qualquer novo uso já vem com o visual da marca.
+ */
+export const Select: React.FC<SelectProps> = ({
+  label,
+  options,
+  value,
+  onChange,
+  placeholder,
+  error,
+  helperText,
+  menuAlign,
+  fullWidth = true,
+}) => {
+  return (
+    <div className="w-full">
+      <Dropdown
+        label={label}
+        options={options}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        menuAlign={menuAlign}
+        fullWidth={fullWidth}
+      />
+      {error ? (
+        <p className="mt-1 text-xs text-danger">{error}</p>
+      ) : helperText ? (
+        <p className="mt-1 text-xs text-text-secondary">{helperText}</p>
+      ) : null}
+    </div>
+  );
+};

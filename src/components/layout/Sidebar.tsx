@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   CheckSquare,
   FolderOpen,
@@ -9,32 +9,56 @@ import {
   Menu,
   X,
   Home,
+  Flag,
+  Users,
+  ChevronRight,
+  LogOut,
+  UserCircle,
+  Mail,
+  MessageCircle,
 } from 'lucide-react';
 import { Logo } from '@/components/common/Logo';
+import { Mascot } from '@/components/mascot/Mascot';
+import { Modal } from '@/components/common/Modal';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+
+const navItems = [
+  { icon: Home, label: 'Dashboard', path: '/' },
+  { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks' },
+  { icon: FolderOpen, label: 'Projetos', path: '/projects' },
+  { icon: Calendar, label: 'Calendário', path: '/calendar' },
+  { icon: Flag, label: 'Prioridades', path: '/priorities' },
+  { icon: BarChart3, label: 'Relatórios', path: '/reports' },
+  { icon: Users, label: 'Equipe', path: '/team' },
+  { icon: Settings, label: 'Configurações', path: '/settings' },
+];
 
 export const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
-  const navItems = [
-    { icon: Home, label: 'Dashboard', path: '/' },
-    { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks' },
-    { icon: FolderOpen, label: 'Projetos', path: '/projects' },
-    { icon: Calendar, label: 'Calendário', path: '/calendar' },
-    { icon: BarChart3, label: 'Relatórios', path: '/reports' },
-    { icon: Settings, label: 'Configurações', path: '/settings' },
-  ];
+  const goTo = (path: string) => {
+    setShowProfileMenu(false);
+    setIsOpen(false);
+    navigate(path);
+  };
 
   return (
     <>
       {/* Mobile menu button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-white p-2 rounded-lg border border-border"
+        aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
+        className="fixed top-4 left-4 z-50 lg:hidden bg-white p-2 rounded-xl border border-border shadow-sm"
       >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
+        {isOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
 
       {/* Sidebar */}
@@ -48,15 +72,12 @@ export const Sidebar: React.FC = () => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="px-6 py-6 flex items-center gap-3">
-            <Logo size="md" showImage={true} />
-            <span className="text-lg font-bold text-primary-dark hidden sm:inline">
-              Fassaja
-            </span>
+          <div className="px-6 pt-5 pb-2 flex items-center">
+            <Logo size="xl" showImage={true} />
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 space-y-2">
+          <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
             {navItems.map(item => {
               const Icon = item.icon;
               const active = isActive(item.path);
@@ -66,16 +87,17 @@ export const Sidebar: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
+                  aria-current={active ? 'page' : undefined}
                   className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg font-medium
+                    flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-[15px]
                     transition-colors duration-200
                     ${active
-                      ? 'bg-primary-vibrant text-white'
-                      : 'text-text-primary hover:bg-gray-100'
+                      ? 'bg-primary-vibrant text-white shadow-sm shadow-primary-vibrant/30'
+                      : 'text-primary-dark/80 hover:bg-primary-light hover:text-primary-dark'
                     }
                   `}
                 >
-                  <Icon size={20} />
+                  <Icon size={20} className={active ? 'text-white' : 'text-text-secondary'} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -83,17 +105,132 @@ export const Sidebar: React.FC = () => {
           </nav>
 
           {/* User profile */}
-          <div className="px-4 py-6 border-t border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-vibrant flex items-center justify-center text-white font-bold">
-                J
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">João Silva</p>
-                <p className="text-xs text-text-secondary truncate">Administrador</p>
-              </div>
+          <div className="px-4 pt-4">
+            <div className="relative">
+              {showProfileMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setShowProfileMenu(false)}
+                  />
+                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-40 overflow-hidden">
+                    <button
+                      onClick={() => goTo('/settings')}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+                    >
+                      <UserCircle size={18} className="text-text-secondary" />
+                      Meu perfil
+                    </button>
+                    <button
+                      onClick={() => goTo('/settings')}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+                    >
+                      <Settings size={18} className="text-text-secondary" />
+                      Configurações
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        setShowLogout(true);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-danger hover:bg-rose-50 border-t border-border transition-colors"
+                    >
+                      <LogOut size={18} />
+                      Sair
+                    </button>
+                  </div>
+                </>
+              )}
+              <button
+                onClick={() => setShowProfileMenu(v => !v)}
+                aria-expanded={showProfileMenu}
+                className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-bg-secondary transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-vibrant to-primary-dark flex items-center justify-center text-white font-bold shrink-0">
+                  JS
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold text-text-primary truncate">João Silva</p>
+                  <p className="text-xs text-text-secondary truncate">Administrador</p>
+                </div>
+                <ChevronRight
+                  size={18}
+                  className={`text-text-soft shrink-0 transition-transform ${showProfileMenu ? '-rotate-90' : ''}`}
+                />
+              </button>
             </div>
           </div>
+
+          {/* Help card */}
+          <div className="p-4">
+            <div className="relative rounded-2xl bg-primary-light p-4 overflow-hidden">
+              <div className="relative z-10 max-w-[60%]">
+                <p className="text-sm font-bold text-primary-dark">Precisa de ajuda?</p>
+                <p className="text-xs text-primary-dark/70 mb-3">Fale conosco</p>
+                <button
+                  aria-label="Fale conosco"
+                  onClick={() => setShowHelp(true)}
+                  className="w-8 h-8 rounded-full bg-primary-vibrant text-white flex items-center justify-center hover:bg-primary-hover transition-colors"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+              <button
+                type="button"
+                aria-label="Fale conosco"
+                onClick={() => setShowHelp(true)}
+                className="absolute right-1 bottom-0 w-24 h-24"
+              >
+                <Mascot state="happy" size="sm" animate={true} />
+              </button>
+            </div>
+          </div>
+
+          <Modal isOpen={showHelp} onClose={() => setShowHelp(false)} title="Fale conosco" size="md">
+            <div className="space-y-4">
+              <p className="text-sm text-text-secondary">
+                Tem alguma dúvida ou sugestão? A equipe Fassaja adora ouvir você.
+              </p>
+              <a
+                href="mailto:suporte@fassaja.com"
+                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-bg-secondary transition-colors"
+              >
+                <span className="w-10 h-10 rounded-xl bg-primary-light text-primary-vibrant flex items-center justify-center">
+                  <Mail size={18} />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-text-primary">E-mail</span>
+                  <span className="block text-xs text-text-secondary">suporte@fassaja.com</span>
+                </span>
+              </a>
+              <a
+                href="https://wa.me/5500000000000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-bg-secondary transition-colors"
+              >
+                <span className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <MessageCircle size={18} />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-text-primary">Chat de suporte</span>
+                  <span className="block text-xs text-text-secondary">Resposta em até 1 dia útil</span>
+                </span>
+              </a>
+            </div>
+          </Modal>
+
+          <ConfirmDialog
+            isOpen={showLogout}
+            title="Sair da conta?"
+            message="Você precisará entrar novamente para acessar suas tarefas."
+            confirmLabel="Sair"
+            cancelLabel="Cancelar"
+            tone="danger"
+            icon={<LogOut size={24} />}
+            onConfirm={() => goTo('/')}
+            onClose={() => setShowLogout(false)}
+          />
         </div>
       </aside>
 

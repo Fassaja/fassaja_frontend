@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, FolderOpen } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
@@ -6,10 +6,11 @@ import { Textarea } from '@/components/common/Textarea';
 import { Button } from '@/components/common/Button';
 import { Project } from '@/types/project';
 
-interface CreateProjectModalProps {
+interface EditProjectModalProps {
   isOpen: boolean;
+  project?: Project;
   onClose: () => void;
-  onCreateProject: (project: Omit<Project, 'id' | 'createdAt'>) => Promise<Project>;
+  onUpdateProject: (id: string, updates: Partial<Project>) => Promise<Project | undefined>;
 }
 
 const colorOptions = [
@@ -23,18 +24,26 @@ const colorOptions = [
   '#14B8A6',
 ];
 
-export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
+export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   isOpen,
+  project,
   onClose,
-  onCreateProject,
+  onUpdateProject,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    color: colorOptions[0],
-  });
+  const [formData, setFormData] = useState({ name: '', description: '', color: colorOptions[0] });
+
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        name: project.name,
+        description: project.description || '',
+        color: project.color,
+      });
+      setError('');
+    }
+  }, [project, isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -48,19 +57,18 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       setError('Dê um nome ao projeto antes de continuar.');
       return;
     }
+    if (!project) return;
 
     try {
       setLoading(true);
-      await onCreateProject({
+      await onUpdateProject(project.id, {
         name: formData.name.trim(),
         description: formData.description || undefined,
         color: formData.color,
       });
-      setFormData({ name: '', description: '', color: colorOptions[0] });
-      setError('');
       onClose();
     } catch (err) {
-      setError('Não foi possível criar o projeto. Tente novamente.');
+      setError('Não foi possível salvar as alterações. Tente novamente.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -68,9 +76,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Novo Projeto" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Editar Projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Live preview */}
         <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
@@ -109,7 +116,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           rows={3}
         />
 
-        {/* Color */}
         <div>
           <label className="block text-sm font-medium text-text-primary mb-2">Cor</label>
           <div className="flex gap-2.5 flex-wrap">
@@ -154,7 +160,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             isLoading={loading}
             className="flex-1 rounded-xl"
           >
-            Criar projeto
+            Salvar alterações
           </Button>
         </div>
       </form>

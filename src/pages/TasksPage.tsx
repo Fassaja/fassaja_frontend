@@ -63,39 +63,30 @@ const TasksPage: React.FC = () => {
         onUpdateTask={updateTask}
       />
 
-      <AppLayout onNewTask={() => setShowCreateModal(true)}>
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-text-primary mb-2">
-            Minhas Tarefas
-          </h1>
-          <p className="text-text-secondary">
-            Gerencie todas as suas tarefas em um só lugar
-          </p>
-        </div>
-
+      <AppLayout
+        onNewTask={() => setShowCreateModal(true)}
+        title="Minhas Tarefas"
+        subtitle="Gerencie todas as suas tarefas em um só lugar."
+      >
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <Card className="text-center py-4">
-            <p className="text-3xl font-bold text-text-primary">{taskStats.total}</p>
-            <p className="text-sm text-text-secondary">Total</p>
-          </Card>
-          <Card className="text-center py-4">
-            <p className="text-3xl font-bold text-primary-vibrant">{taskStats.pending}</p>
-            <p className="text-sm text-text-secondary">Pendentes</p>
-          </Card>
-          <Card className="text-center py-4">
-            <p className="text-3xl font-bold text-yellow-500">{taskStats.inProgress}</p>
-            <p className="text-sm text-text-secondary">Em Andamento</p>
-          </Card>
-          <Card className="text-center py-4">
-            <p className="text-3xl font-bold text-green-500">{taskStats.completed}</p>
-            <p className="text-sm text-text-secondary">Concluídas</p>
-          </Card>
-          <Card className="text-center py-4">
-            <p className="text-3xl font-bold text-red-500">{taskStats.overdue}</p>
-            <p className="text-sm text-text-secondary">Atrasadas</p>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          {[
+            { label: 'Total', value: taskStats.total, color: '#2477FF' },
+            { label: 'Pendentes', value: taskStats.pending, color: '#64748B' },
+            { label: 'Em andamento', value: taskStats.inProgress, color: '#FBBF24' },
+            { label: 'Concluídas', value: taskStats.completed, color: '#22C55E' },
+            { label: 'Atrasadas', value: taskStats.overdue, color: '#F43F5E' },
+          ].map(stat => (
+            <Card key={stat.label} className="py-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stat.color }} />
+                <p className="text-xs font-medium text-text-secondary">{stat.label}</p>
+              </div>
+              <p className="text-2xl font-extrabold leading-none" style={{ color: stat.color }}>
+                {stat.value}
+              </p>
+            </Card>
+          ))}
         </div>
 
         {/* Filters */}
@@ -116,6 +107,7 @@ const TasksPage: React.FC = () => {
         <div className="mt-8">
           <TaskList
             tasks={tasks}
+            projects={projects}
             searchTerm={searchTerm}
             filterStatus={filterStatus}
             filterPriority={filterPriority}

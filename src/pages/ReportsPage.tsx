@@ -16,12 +16,45 @@ import {
 } from 'recharts';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
+import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { useTasks } from '@/hooks/useTasks';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 const ReportsPage: React.FC = () => {
   const { tasks } = useTasks();
   const stats = useDashboardStats(tasks);
+
+  // Resumo com o bob conforme o desempenho geral.
+  const getSummary = (): { state: MascotState; title: string; message: string } => {
+    if (stats.total === 0) {
+      return {
+        state: 'confused',
+        title: 'Ainda não há dados',
+        message: 'Crie e conclua tarefas para ver seus relatórios ganharem vida.',
+      };
+    }
+    if (stats.overdue >= 3 || stats.overdue > stats.completed) {
+      return {
+        state: 'sad',
+        title: 'Atenção às atrasadas',
+        message: `Você tem ${stats.overdue} tarefa(s) atrasada(s). Que tal priorizá-las hoje?`,
+      };
+    }
+    if (stats.completionRate >= 75) {
+      return {
+        state: 'strong',
+        title: 'Você está voando! 💪',
+        message: `${stats.completionRate}% de conclusão. Produtividade nota dez!`,
+      };
+    }
+    return {
+      state: 'happy',
+      title: 'No caminho certo',
+      message: `${stats.completed} de ${stats.total} tarefas concluídas. Continue assim!`,
+    };
+  };
+
+  const summary = getSummary();
 
   // Data for bar chart - tasks by status
   const statusData = [
@@ -47,27 +80,39 @@ const ReportsPage: React.FC = () => {
     },
   ];
 
-  // Data for line chart - weekly trend
-  const weekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
-  const trendData = weekDays.map((day, index) => ({
-    day,
-    completed: Math.floor(Math.random() * 10) + index,
-    created: Math.floor(Math.random() * 12) + index,
-  }));
+  // Tendência semanal: acumulado real por dia da semana (determinístico).
+  const weekOrder = [
+    { key: 1, label: 'Seg' },
+    { key: 2, label: 'Ter' },
+    { key: 3, label: 'Qua' },
+    { key: 4, label: 'Qui' },
+    { key: 5, label: 'Sex' },
+    { key: 6, label: 'Sáb' },
+    { key: 0, label: 'Dom' },
+  ];
+  let accCreated = 0;
+  let accCompleted = 0;
+  const trendData = weekOrder.map(({ key, label }) => {
+    accCreated += tasks.filter(t => new Date(t.createdAt).getDay() === key).length;
+    accCompleted += tasks.filter(t => t.completedAt && new Date(t.completedAt).getDay() === key).length;
+    return { day: label, completed: accCompleted, created: accCreated };
+  });
 
-  const colors = ['#22C55E', '#FBBF24', '#F43F5E'];
+  // Baixa, Média, Alta (mesma paleta de prioridade do app).
+  const colors = ['#22C55E', '#FBBF24', '#8B5CF6'];
 
   return (
-    <AppLayout>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary mb-2">
-          Relatórios
-        </h1>
-        <p className="text-text-secondary">
-          Acompanhe suas estatísticas de produtividade
-        </p>
-      </div>
+    <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
+      {/* Resumo com mascote */}
+      <Card className="flex flex-col sm:flex-row items-center gap-6 mb-8">
+        <Mascot state={summary.state} size="md" animate={true} />
+        <div className="text-center sm:text-left">
+          <h3 className="text-xl font-bold text-text-primary mb-1">
+            {summary.title}
+          </h3>
+          <p className="text-text-secondary">{summary.message}</p>
+        </div>
+      </Card>
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
