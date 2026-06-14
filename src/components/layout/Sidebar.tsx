@@ -16,21 +16,24 @@ import {
   UserCircle,
   Mail,
   MessageCircle,
+  Lock,
+  LogIn,
 } from 'lucide-react';
 import { Logo } from '@/components/common/Logo';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useUser, initialsOf } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
-  { icon: Home, label: 'Dashboard', path: '/' },
-  { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks' },
-  { icon: FolderOpen, label: 'Projetos', path: '/projects' },
-  { icon: Calendar, label: 'Calendário', path: '/calendar' },
-  { icon: Flag, label: 'Prioridades', path: '/priorities' },
-  { icon: BarChart3, label: 'Relatórios', path: '/reports' },
-  { icon: Users, label: 'Equipe', path: '/team' },
+  { icon: Home, label: 'Dashboard', path: '/', free: true },
+  { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks', free: true },
+  { icon: FolderOpen, label: 'Projetos', path: '/projects', free: false },
+  { icon: Calendar, label: 'Calendário', path: '/calendar', free: false },
+  { icon: Flag, label: 'Prioridades', path: '/priorities', free: false },
+  { icon: BarChart3, label: 'Relatórios', path: '/reports', free: false },
+  { icon: Users, label: 'Equipe', path: '/team', free: false },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -41,6 +44,7 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useUser();
+  const { isGuest, logout } = useAuth();
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -82,6 +86,30 @@ export const Sidebar: React.FC = () => {
             {navItems.map(item => {
               const Icon = item.icon;
               const active = isActive(item.path);
+              const locked = isGuest && !item.free;
+              const baseClass = `
+                flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-[15px]
+                transition-colors duration-200
+                ${active
+                  ? 'bg-primary-vibrant text-white shadow-sm shadow-primary-vibrant/30'
+                  : 'text-primary-dark/80 hover:bg-primary-light hover:text-primary-dark'
+                }
+              `;
+
+              if (locked) {
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => goTo('/login')}
+                    className={`${baseClass} w-full text-left`}
+                    title="Entre para acessar"
+                  >
+                    <Icon size={20} className="text-text-soft" />
+                    <span className="flex-1 text-text-soft">{item.label}</span>
+                    <Lock size={15} className="text-text-soft" />
+                  </button>
+                );
+              }
 
               return (
                 <Link
@@ -89,14 +117,7 @@ export const Sidebar: React.FC = () => {
                   to={item.path}
                   onClick={() => setIsOpen(false)}
                   aria-current={active ? 'page' : undefined}
-                  className={`
-                    flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-[15px]
-                    transition-colors duration-200
-                    ${active
-                      ? 'bg-primary-vibrant text-white shadow-sm shadow-primary-vibrant/30'
-                      : 'text-primary-dark/80 hover:bg-primary-light hover:text-primary-dark'
-                    }
-                  `}
+                  className={baseClass}
                 >
                   <Icon size={20} className={active ? 'text-white' : 'text-text-secondary'} />
                   <span>{item.label}</span>
@@ -105,7 +126,23 @@ export const Sidebar: React.FC = () => {
             })}
           </nav>
 
-          {/* User profile */}
+          {/* Guest CTA / User profile */}
+          {isGuest ? (
+            <div className="px-4 pt-4">
+              <div className="rounded-2xl border border-border p-3">
+                <p className="text-sm font-semibold text-text-primary">Você está como visitante</p>
+                <p className="text-xs text-text-secondary mt-0.5 mb-3">
+                  Entre para liberar tudo.
+                </p>
+                <button
+                  onClick={() => goTo('/login')}
+                  className="w-full inline-flex items-center justify-center gap-2 py-2 rounded-xl bg-primary-vibrant text-white text-sm font-semibold hover:bg-primary-hover active:scale-[0.98] transition-all"
+                >
+                  <LogIn size={16} /> Entrar
+                </button>
+              </div>
+            </div>
+          ) : (
           <div className="px-4 pt-4">
             <div className="relative">
               {showProfileMenu && (
@@ -169,6 +206,7 @@ export const Sidebar: React.FC = () => {
               </button>
             </div>
           </div>
+          )}
 
           {/* Help card */}
           <div className="p-4">
@@ -237,7 +275,11 @@ export const Sidebar: React.FC = () => {
             cancelLabel="Cancelar"
             tone="danger"
             icon={<LogOut size={24} />}
-            onConfirm={() => goTo('/')}
+            onConfirm={() => {
+              setShowProfileMenu(false);
+              setIsOpen(false);
+              logout();
+            }}
             onClose={() => setShowLogout(false)}
           />
         </div>

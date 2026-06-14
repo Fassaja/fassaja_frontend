@@ -15,14 +15,24 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { isToday } from '@/utils/date';
 
 const DashboardPage: React.FC = () => {
   const { tasks, completeTask, createTask } = useTasks();
   const { projects } = useProjects();
   const { user } = useUser();
+  const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
   const stats = useDashboardStats(tasks);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+
+  const openNewTask = () => {
+    if (isGuest && guestTaskCount >= guestTaskLimit) {
+      requireAuth(`Visitantes podem criar até ${guestTaskLimit} tarefas por dia. Entre para criar mais.`);
+      return;
+    }
+    setShowNewTaskModal(true);
+  };
 
   const upcomingTasks = tasks
     .filter(t => t.status !== 'completed')
@@ -62,7 +72,7 @@ const DashboardPage: React.FC = () => {
       />
 
       <AppLayout
-        onNewTask={() => setShowNewTaskModal(true)}
+        onNewTask={openNewTask}
         title={`Olá, ${user.name}! 👋`}
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
@@ -133,7 +143,7 @@ const DashboardPage: React.FC = () => {
                   mascotState="happy"
                   title="Tudo em dia!"
                   description="Você não tem tarefas pendentes. Que tal criar uma nova?"
-                  action={{ label: 'Nova Tarefa', onClick: () => setShowNewTaskModal(true) }}
+                  action={{ label: 'Nova Tarefa', onClick: openNewTask }}
                 />
               </Card>
             )}
@@ -142,7 +152,7 @@ const DashboardPage: React.FC = () => {
             <PriorityChart tasks={tasks} />
           </div>
           <div className="lg:col-span-3">
-            <QuickActions onNewTask={() => setShowNewTaskModal(true)} />
+            <QuickActions onNewTask={openNewTask} />
           </div>
         </div>
       </AppLayout>

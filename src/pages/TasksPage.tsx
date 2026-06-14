@@ -6,12 +6,22 @@ import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
+import { useAuth } from '@/contexts/AuthContext';
 import { projectsService } from '@/services/projectsService';
 
 const TasksPage: React.FC = () => {
   const { tasks, createTask, updateTask, completeTask, deleteTask } = useTasks();
+  const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
   const [projects, setProjects] = React.useState<any[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const openNewTask = () => {
+    if (isGuest && guestTaskCount >= guestTaskLimit) {
+      requireAuth(`Visitantes podem criar até ${guestTaskLimit} tarefas por dia. Entre para criar mais.`);
+      return;
+    }
+    setShowCreateModal(true);
+  };
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>();
 
@@ -66,7 +76,7 @@ const TasksPage: React.FC = () => {
       />
 
       <AppLayout
-        onNewTask={() => setShowCreateModal(true)}
+        onNewTask={openNewTask}
         title="Minhas Tarefas"
         subtitle="Gerencie todas as suas tarefas em um só lugar."
       >

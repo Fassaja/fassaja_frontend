@@ -1,9 +1,11 @@
-import React, { useRef } from 'react';
-import { Camera, Trash2, CheckCircle2, Clock, ListTodo, Flame } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Camera, Trash2, CheckCircle2, Clock, ListTodo, Flame, ShieldCheck } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
+import { Button } from '@/components/common/Button';
 import { useUser, initialsOf, computeStreak } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
 
 function isoOf(d: Date): string {
@@ -12,8 +14,23 @@ function isoOf(d: Date): string {
 
 const ProfilePage: React.FC = () => {
   const { user, updateUser } = useUser();
+  const { account, changePassword } = useAuth();
   const { tasks } = useTasks();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [pw, setPw] = useState({ current: '', next: '' });
+  const [pwMsg, setPwMsg] = useState<{ type: 'ok' | 'error'; text: string } | null>(null);
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = changePassword(pw.current, pw.next);
+    if (result.ok) {
+      setPwMsg({ type: 'ok', text: 'Senha atualizada com sucesso.' });
+      setPw({ current: '', next: '' });
+    } else {
+      setPwMsg({ type: 'error', text: result.error ?? 'Não foi possível alterar a senha.' });
+    }
+  };
 
   // Dias produtivos = histórico persistido ∪ dias com conclusões reais.
   const activeDays = new Set<string>(user.productiveDays);
@@ -174,6 +191,49 @@ const ProfilePage: React.FC = () => {
               placeholder="Ex.: Administrador"
             />
           </div>
+        </Card>
+
+        {/* Account / security */}
+        <Card>
+          <h3 className="text-lg font-bold text-text-primary mb-1 flex items-center gap-2">
+            <ShieldCheck size={20} className="text-primary-vibrant" /> Conta e segurança
+          </h3>
+          <p className="text-sm text-text-secondary mb-5">
+            {account ? `Conectado como ${account.email}` : 'Gerencie suas credenciais de acesso.'}
+          </p>
+
+          <form onSubmit={handleChangePassword} className="grid sm:grid-cols-2 gap-4">
+            <Input
+              label="Senha atual"
+              type="password"
+              value={pw.current}
+              onChange={e => {
+                setPw(p => ({ ...p, current: e.target.value }));
+                if (pwMsg) setPwMsg(null);
+              }}
+              placeholder="••••••••"
+            />
+            <Input
+              label="Nova senha"
+              type="password"
+              value={pw.next}
+              onChange={e => {
+                setPw(p => ({ ...p, next: e.target.value }));
+                if (pwMsg) setPwMsg(null);
+              }}
+              placeholder="Pelo menos 4 caracteres"
+            />
+            <div className="sm:col-span-2 flex items-center gap-4">
+              <Button type="submit" className="rounded-xl">
+                Alterar senha
+              </Button>
+              {pwMsg && (
+                <span className={`text-sm ${pwMsg.type === 'ok' ? 'text-success' : 'text-danger'}`}>
+                  {pwMsg.text}
+                </span>
+              )}
+            </div>
+          </form>
         </Card>
       </div>
     </AppLayout>

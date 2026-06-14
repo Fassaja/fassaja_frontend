@@ -3,6 +3,7 @@ import { Task } from '@/types/task';
 import { tasksService } from '@/services/tasksService';
 import { useCelebration } from '@/contexts/CelebrationContext';
 import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { isToday } from '@/utils/date';
 
 export function useTasks() {
@@ -11,6 +12,7 @@ export function useTasks() {
   const [error, setError] = useState<Error | null>(null);
   const { celebrate } = useCelebration();
   const { user, recordProductiveDay } = useUser();
+  const { isGuest, noteGuestTask } = useAuth();
 
   useEffect(() => {
     loadTasks();
@@ -33,12 +35,13 @@ export function useTasks() {
     try {
       const newTask = await tasksService.createTask(task);
       setTasks(prev => [...prev, newTask]);
+      if (isGuest) noteGuestTask();
       return newTask;
     } catch (err) {
       setError(err as Error);
       throw err;
     }
-  }, []);
+  }, [isGuest, noteGuestTask]);
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
     try {

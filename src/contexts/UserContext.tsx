@@ -27,9 +27,9 @@ interface UserContextValue {
 const STORAGE_KEY = 'fassaja_user';
 
 const defaultUser: UserProfile = {
-  name: mockUser.name,
-  email: mockUser.email,
-  role: 'Administrador',
+  name: 'Visitante',
+  email: '',
+  role: 'Conta visitante',
   avatar: undefined,
   dailyGoal: mockUser.dailyGoal,
   weeklyGoal: mockUser.weeklyGoal,
