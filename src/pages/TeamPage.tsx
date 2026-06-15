@@ -7,6 +7,7 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
+import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useAuth } from '@/contexts/AuthContext';
 import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
@@ -218,11 +219,7 @@ const TeamPage: React.FC = () => {
       </Modal>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="h-44 animate-pulse" />
-          ))}
-        </div>
+        <LoadingScreen />
       ) : teams.length === 0 ? (
         <EmptyState
           mascotState="confused"
