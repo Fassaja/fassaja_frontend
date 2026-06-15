@@ -46,12 +46,21 @@ const DashboardPage: React.FC = () => {
     })
     .slice(0, 5);
 
+  // Mascote do card de progresso (distinto do banner para não repetir o mesmo Bob).
   const progressMascot = ((): MascotState => {
     if (stats.total === 0) return 'confused';
     if (stats.overdue >= 3 || stats.overdue > stats.completed) return 'sad';
-    if (stats.completionRate >= 75) return 'strong';
-    if (stats.completionRate > 0) return 'happy';
+    if (stats.completionRate >= 75) return 'celebrate';
+    if (stats.completionRate > 0) return 'strong';
     return 'confused';
+  })();
+
+  // Saudação do banner por horário (não duplica o card de progresso).
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Bom dia! ☀️';
+    if (h < 18) return 'Boa tarde! 🌤️';
+    return 'Boa noite! 🌙';
   })();
 
   const progressCopy = (() => {
@@ -80,14 +89,18 @@ const DashboardPage: React.FC = () => {
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
         {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : <>
-        {/* Bob greeting banner */}
+        {/* Bob greeting banner (saudação — Bob "olá") */}
         <div className="mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary-vibrant to-primary-dark text-white p-5 sm:p-6 relative overflow-hidden">
           <div className="shrink-0 -my-2">
-            <Mascot state={progressMascot} size="sm" animate />
+            <Mascot state="happy" size="sm" animate />
           </div>
           <div className="relative z-10">
-            <p className="text-lg font-extrabold leading-tight">{progressCopy.headline}</p>
-            <p className="text-white/85 text-sm mt-0.5">{progressCopy.message}</p>
+            <p className="text-lg font-extrabold leading-tight">{greeting}</p>
+            <p className="text-white/85 text-sm mt-0.5">
+              {stats.total === 0
+                ? 'Crie sua primeira tarefa e bora começar.'
+                : 'Pronto para mais um dia produtivo?'}
+            </p>
           </div>
           <div className="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-white/10" />
         </div>

@@ -102,7 +102,7 @@ const CalendarPage: React.FC = () => {
               </ul>
             ) : (
               <div className="flex flex-col items-center text-center py-6">
-                <Mascot state="happy" size="sm" animate />
+                <Mascot state="celebrate" size="sm" animate />
                 <p className="text-text-primary font-semibold mt-3">Dia livre!</p>
                 <p className="text-text-secondary text-sm">Nenhuma tarefa para esta data.</p>
               </div>

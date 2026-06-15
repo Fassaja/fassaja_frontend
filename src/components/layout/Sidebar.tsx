@@ -239,7 +239,7 @@ export const Sidebar: React.FC = () => {
                 onClick={() => setShowHelp(true)}
                 className="absolute right-1 bottom-0 w-24 h-24"
               >
-                <Mascot state="happy" size="sm" animate={true} />
+                <Mascot state="confused" size="sm" animate={true} />
               </button>
             </div>
           </div>
