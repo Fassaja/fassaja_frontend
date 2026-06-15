@@ -6,7 +6,6 @@ import { WeeklyOverviewChart } from '@/components/dashboard/WeeklyOverviewChart'
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
 import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
 import { PriorityChart } from '@/components/dashboard/PriorityChart';
-import { QuickActions } from '@/components/dashboard/QuickActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Card } from '@/components/common/Card';
 import { DashboardSkeleton } from '@/components/common/Skeletons';
@@ -44,7 +43,7 @@ const DashboardPage: React.FC = () => {
       if (!b.dueDate) return -1;
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     })
-    .slice(0, 5);
+    .slice(0, 8);
 
   // Mascote do card de progresso (distinto do banner para não repetir o mesmo Bob).
   const progressMascot = ((): MascotState => {
@@ -161,9 +160,9 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tasks + Priority + Shortcuts */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5">
+        {/* Próximas tarefas (foco) + Prioridade */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
             {upcomingTasks.length > 0 ? (
               <UpcomingTasks tasks={upcomingTasks} projects={projects} onComplete={completeTask} />
             ) : (
@@ -177,11 +176,8 @@ const DashboardPage: React.FC = () => {
               </Card>
             )}
           </div>
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-1">
             <PriorityChart tasks={tasks} />
-          </div>
-          <div className="lg:col-span-3">
-            <QuickActions onNewTask={openNewTask} />
           </div>
         </div>
         </>}
