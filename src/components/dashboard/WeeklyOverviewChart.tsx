@@ -16,41 +16,63 @@ interface WeeklyOverviewChartProps {
   tasks: Task[];
 }
 
-// Semana começando na segunda-feira.
-const WEEK = [
-  { key: 1, label: 'Seg' },
-  { key: 2, label: 'Ter' },
-  { key: 3, label: 'Qua' },
-  { key: 4, label: 'Qui' },
-  { key: 5, label: 'Sex' },
-  { key: 6, label: 'Sáb' },
-  { key: 0, label: 'Dom' },
-];
+const WEEK_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
+function sameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
 
 export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks }) => {
   const [period, setPeriod] = useState('week');
+
   const data = useMemo(() => {
-    const created: Record<number, number> = {};
-    const completed: Record<number, number> = {};
+    const now = new Date();
 
-    tasks.forEach(task => {
-      const c = new Date(task.createdAt).getDay();
-      created[c] = (created[c] ?? 0) + 1;
-      if (task.completedAt) {
-        const d = new Date(task.completedAt).getDay();
-        completed[d] = (completed[d] ?? 0) + 1;
-      }
-    });
+    if (period === 'month') {
+      // Mês atual, agrupado por semana do mês (Sem 1, Sem 2, ...).
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const weeks = Math.ceil(daysInMonth / 7);
+      const buckets = Array.from({ length: weeks }, (_, i) => ({
+        day: `Sem ${i + 1}`,
+        criadas: 0,
+        concluidas: 0,
+      }));
+      const inMonth = (d: Date) => d.getFullYear() === year && d.getMonth() === month;
+      tasks.forEach(task => {
+        const c = new Date(task.createdAt);
+        if (inMonth(c)) buckets[Math.floor((c.getDate() - 1) / 7)].criadas += 1;
+        if (task.completedAt) {
+          const d = new Date(task.completedAt);
+          if (inMonth(d)) buckets[Math.floor((d.getDate() - 1) / 7)].concluidas += 1;
+        }
+      });
+      return buckets;
+    }
 
-    // Acumulado ao longo da semana, para uma curva de evolução suave.
-    let accCreated = 0;
-    let accCompleted = 0;
-    return WEEK.map(({ key, label }) => {
-      accCreated += created[key] ?? 0;
-      accCompleted += completed[key] ?? 0;
-      return { day: label, criadas: accCreated, concluidas: accCompleted };
+    // Semana atual (segunda a domingo), por data real.
+    const monday = new Date(now);
+    const offset = (now.getDay() + 6) % 7; // 0 = segunda
+    monday.setDate(now.getDate() - offset);
+    monday.setHours(0, 0, 0, 0);
+
+    return WEEK_LABELS.map((label, i) => {
+      const day = new Date(monday);
+      day.setDate(monday.getDate() + i);
+      let criadas = 0;
+      let concluidas = 0;
+      tasks.forEach(task => {
+        if (sameDay(new Date(task.createdAt), day)) criadas += 1;
+        if (task.completedAt && sameDay(new Date(task.completedAt), day)) concluidas += 1;
+      });
+      return { day: label, criadas, concluidas };
     });
-  }, [tasks]);
+  }, [tasks, period]);
 
   return (
     <Card className="h-full">
