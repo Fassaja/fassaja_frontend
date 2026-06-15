@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { Card } from '@/components/common/Card';
 import { DashboardSkeleton } from '@/components/common/Skeletons';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
-import { MascotState } from '@/components/mascot/Mascot';
+import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -80,6 +80,18 @@ const DashboardPage: React.FC = () => {
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
         {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : <>
+        {/* Bob greeting banner */}
+        <div className="mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary-vibrant to-primary-dark text-white p-5 sm:p-6 relative overflow-hidden">
+          <div className="shrink-0 -my-2">
+            <Mascot state={progressMascot} size="sm" animate />
+          </div>
+          <div className="relative z-10">
+            <p className="text-lg font-extrabold leading-tight">{progressCopy.headline}</p>
+            <p className="text-white/85 text-sm mt-0.5">{progressCopy.message}</p>
+          </div>
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-white/10" />
+        </div>
+
         {/* Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
           <MetricCard

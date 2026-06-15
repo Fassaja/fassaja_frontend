@@ -68,8 +68,8 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
   return (
     <Card>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-text-primary">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-text-primary">
           {monthNames[month]} {year}
         </h2>
         <div className="flex gap-2">
@@ -91,16 +91,16 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
       </div>
 
       {/* Week days */}
-      <div className="grid grid-cols-7 gap-2 mb-4">
+      <div className="grid grid-cols-7 gap-1.5 mb-2">
         {weekDays.map(day => (
-          <div key={day} className="text-center text-sm font-bold text-text-secondary py-2">
+          <div key={day} className="text-center text-xs font-bold text-text-secondary py-1">
             {day}
           </div>
         ))}
       </div>
 
       {/* Days */}
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1.5">
         {days.map((day, index) => {
           const dayTasks = day ? getTasksForDate(day) : [];
           const isToday =
@@ -114,7 +114,7 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
               key={index}
               onClick={() => day && handleDayClick(day)}
               disabled={!day}
-              className={`aspect-square p-1.5 rounded-xl transition-all flex flex-col items-center justify-center gap-1 ${
+              className={`h-12 sm:h-14 p-1 rounded-xl transition-all flex flex-col items-center justify-center gap-1 ${
                 !day
                   ? 'cursor-default'
                   : isToday

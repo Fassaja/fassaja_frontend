@@ -10,6 +10,9 @@ export interface Account {
   id: string;
   name: string;
   email: string;
+  avatar?: string | null;
+  nameChangedAt?: string | null;
+  passwordChangedAt?: string | null;
 }
 
 type AuthStatus = 'guest' | 'authed';
@@ -31,6 +34,8 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<AuthResult>;
   register: (name: string, email: string, password: string) => Promise<AuthResult>;
   changePassword: (current: string, next: string) => Promise<AuthResult>;
+  updateName: (name: string) => Promise<AuthResult>;
+  updateAvatar: (avatar: string | null) => Promise<AuthResult>;
   logout: () => void;
   guestTaskLimit: number;
   guestTaskCount: number;
@@ -90,14 +95,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ? localStorage.setItem(SESSION_KEY, JSON.stringify(acc))
       : localStorage.removeItem(SESSION_KEY);
 
-  const adopt = (acc: Account) => {
+  // Persiste a conta e espelha nome/email/avatar para o UserContext.
+  const syncAccount = (acc: Account) => {
     persistSession(acc);
+    setAccount(acc);
+    updateUser({
+      name: acc.name,
+      email: acc.email,
+      role: 'Membro',
+      avatar: acc.avatar ?? undefined,
+    });
+  };
+
+  const adopt = (acc: Account) => {
     setAuthenticated(true);
     // Descarta a sandbox local do visitante ao assumir uma conta real.
     guestTasksStore.clear();
-    setAccount(acc);
-    updateUser({ name: acc.name, email: acc.email, role: 'Membro' });
+    syncAccount(acc);
   };
+
+  // Ao montar logado, atualiza os dados a partir do banco (avatar, cooldowns).
+  useEffect(() => {
+    if (!account) return;
+    api.get<Account>('/auth/me').then(syncAccount).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const login = async (email: string, password: string): Promise<AuthResult> => {
     try {
@@ -126,7 +148,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const changePassword = async (current: string, next: string): Promise<AuthResult> => {
     if (!account) return { ok: false, error: 'Faça login primeiro.' };
     try {
-      await api.patch('/auth/password', { current, next });
+      const updated = await api.patch<Account>('/auth/password', { current, next });
+      syncAccount(updated);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
+  };
+
+  const updateName = async (name: string): Promise<AuthResult> => {
+    if (!account) return { ok: false, error: 'Faça login primeiro.' };
+    try {
+      const updated = await api.patch<Account>('/auth/profile', { name: name.trim() });
+      syncAccount(updated);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
+  };
+
+  const updateAvatar = async (avatar: string | null): Promise<AuthResult> => {
+    if (!account) return { ok: false, error: 'Faça login primeiro.' };
+    try {
+      const updated = avatar
+        ? await api.patch<Account>('/auth/avatar', { avatar })
+        : await api.delete<Account>('/auth/avatar');
+      syncAccount(updated);
       return { ok: true };
     } catch (err) {
       return { ok: false, error: (err as Error).message };
@@ -181,6 +228,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         changePassword,
+        updateName,
+        updateAvatar,
         logout,
         guestTaskLimit: GUEST_TASK_LIMIT,
         guestTaskCount,

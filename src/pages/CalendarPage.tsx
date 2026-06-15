@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CalendarMonth } from '@/components/calendar/CalendarMonth';
 import { Card } from '@/components/common/Card';
+import { Mascot } from '@/components/mascot/Mascot';
 import { CalendarSkeleton } from '@/components/common/Skeletons';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
@@ -100,7 +101,11 @@ const CalendarPage: React.FC = () => {
                 })}
               </ul>
             ) : (
-              <p className="text-text-secondary text-sm">Nenhuma tarefa neste dia.</p>
+              <div className="flex flex-col items-center text-center py-6">
+                <Mascot state="happy" size="sm" animate />
+                <p className="text-text-primary font-semibold mt-3">Dia livre!</p>
+                <p className="text-text-secondary text-sm">Nenhuma tarefa para esta data.</p>
+              </div>
             )}
           </Card>
         </div>

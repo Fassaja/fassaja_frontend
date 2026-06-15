@@ -54,37 +54,29 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   return (
     <div className="min-h-screen bg-bg-main flex">
       {/* Brand panel */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary-vibrant to-primary-dark text-white flex-col justify-between p-12 relative overflow-hidden">
-        <div className="bg-white rounded-2xl px-5 py-2.5 w-fit">
-          <div className="h-9 flex items-center justify-center overflow-hidden">
-            <img
-              src="/logofassaja.png"
-              alt="Fassaja"
-              className="max-w-none w-40 h-auto object-contain select-none"
-              draggable={false}
-            />
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <Mascot state="strong" size="xl" animate />
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary-vibrant to-primary-dark text-white flex-col items-center justify-center text-center p-12 relative overflow-hidden">
+        <div className="relative z-10 flex flex-col items-center">
+          <Mascot state={isLogin ? 'happy' : 'strong'} size="xl" animate />
           <h1 className="text-3xl font-extrabold mt-6 leading-tight max-w-md">
-            Organize seu dia e conquiste suas metas com o Fassaja.
+            {isLogin
+              ? 'Que bom te ver de novo! Bora organizar o dia?'
+              : 'Vem com o Fassaja conquistar suas metas!'}
           </h1>
           <p className="text-white/80 mt-3 max-w-md">
             Tarefas, projetos, calendário e relatórios — tudo num só lugar, com aquele empurrãozinho
-            motivacional.
+            motivacional do Bob.
           </p>
         </div>
 
         <div className="absolute -right-16 -bottom-16 w-72 h-72 rounded-full bg-white/10" />
         <div className="absolute right-24 top-20 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -left-12 top-1/3 w-40 h-40 rounded-full bg-white/5" />
       </div>
 
       {/* Form panel */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
-          <div className="lg:hidden mb-8 flex justify-center">
+          <div className="mb-8 flex justify-center">
             <div className="h-12 flex items-center justify-center overflow-hidden">
               <img
                 src="/logofassaja.png"
