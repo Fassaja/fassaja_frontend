@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Lock } from 'lucide-react';
 import { useUser } from './UserContext';
-import { api, setAuthToken } from '@/services/api';
+import { api, setAuthenticated, SESSION_EXPIRED_EVENT } from '@/services/api';
+import { guestTasksStore } from '@/services/guestTasksStore';
 
 export interface Account {
   id: string;
@@ -91,6 +92,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const adopt = (acc: Account) => {
     persistSession(acc);
+    setAuthenticated(true);
+    // Descarta a sandbox local do visitante ao assumir uma conta real.
+    guestTasksStore.clear();
     setAccount(acc);
     updateUser({ name: acc.name, email: acc.email, role: 'Membro' });
   };
@@ -98,7 +102,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<AuthResult> => {
     try {
       const res = await api.post<AuthResponse>('/auth/login', { email: email.trim(), password });
-      setAuthToken(res.token);
       adopt(res.user);
       return { ok: true };
     } catch (err) {
@@ -113,7 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: email.trim(),
         password,
       });
-      setAuthToken(res.token);
       adopt(res.user);
       return { ok: true };
     } catch (err) {
@@ -132,12 +134,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    // Limpa o cookie de sessão no servidor (best-effort).
+    void api.post('/auth/logout', {}).catch(() => undefined);
     persistSession(null);
-    setAuthToken(null);
+    setAuthenticated(false);
     setAccount(null);
     updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
     navigate('/login');
   };
+
+  // Sessão expirada (401 num request autenticado): encerra e leva ao login.
+  useEffect(() => {
+    const handler = () => {
+      persistSession(null);
+      setAccount(null);
+      updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
+      navigate('/login?expired=1');
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, handler);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const noteGuestTask = () =>
     setGuest(prev => {

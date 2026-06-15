@@ -77,4 +77,12 @@ export const guestTasksStore = {
   remove(id: string): void {
     write(readRaw().filter(t => t.id !== id));
   },
+
+  clear(): void {
+    try {
+      localStorage.removeItem(STORE_KEY);
+    } catch {
+      // localStorage indisponível
+    }
+  },
 };

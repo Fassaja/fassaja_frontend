@@ -1,28 +1,24 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333/api';
-const TOKEN_KEY = 'fassaja_token';
+const SESSION_KEY = 'fassaja_session';
 
-// Token de sessão (JWT) em memória, sincronizado com o localStorage.
-let authToken: string | null = (() => {
+// O token de sessão fica num cookie httpOnly (inacessível ao JavaScript), enviado
+// automaticamente pelo navegador. Aqui guardamos só um sinalizador de "logado"
+// para saber quando um 401 significa sessão expirada.
+let authed = (() => {
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    return !!localStorage.getItem(SESSION_KEY);
   } catch {
-    return null;
+    return false;
   }
 })();
 
-export function setAuthToken(token: string | null): void {
-  authToken = token;
-  try {
-    if (token) localStorage.setItem(TOKEN_KEY, token);
-    else localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    // localStorage indisponível
-  }
+export function setAuthenticated(value: boolean): void {
+  authed = value;
 }
 
-export function getAuthToken(): string | null {
-  return authToken;
-}
+// Disparado quando um request autenticado recebe 401 (sessão expirada/inválida).
+// O AuthContext escuta para encerrar a sessão e levar ao /login.
+export const SESSION_EXPIRED_EVENT = 'fassaja:session-expired';
 
 interface RequestOptions {
   method?: string;
@@ -34,13 +30,23 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const headers: Record<string, string> = {};
   if (body) headers['Content-Type'] = 'application/json';
-  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
   const response = await fetch(`${API_URL}${path}`, {
     method,
     headers: Object.keys(headers).length ? headers : undefined,
     body: body ? JSON.stringify(body) : undefined,
+    // Envia/recebe o cookie de sessão httpOnly.
+    credentials: 'include',
   });
+
+  // Sessão expirada/inválida num request autenticado (fora das rotas de auth):
+  // encerra a sessão localmente e avisa a aplicação.
+  if (response.status === 401 && authed && !path.startsWith('/auth/')) {
+    authed = false;
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+    }
+  }
 
   if (!response.ok) {
     let message = `Erro ${response.status}`;

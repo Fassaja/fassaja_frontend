@@ -14,6 +14,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
+  const sessionExpired = searchParams.get('expired') === '1';
   const { login, register } = useAuth();
   const isLogin = mode === 'login';
 
@@ -103,6 +104,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               : 'Leva menos de um minuto e libera tudo.'}
           </p>
 
+          {sessionExpired && isLogin && (
+            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+              Sua sessão expirou. Entre novamente para continuar.
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <Input
@@ -128,6 +135,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               value={form.password}
               onChange={e => set('password', e.target.value)}
             />
+            {!isLogin && (
+              <p className="text-xs text-text-secondary -mt-2">
+                Use ao menos 8 caracteres, com letra e número.
+              </p>
+            )}
 
             {error && <p className="text-sm text-danger">{error}</p>}
 
