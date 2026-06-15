@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { EmptyState } from '@/components/common/EmptyState';
-import { TaskListSkeleton } from '@/components/common/Skeletons';
+import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -42,7 +42,7 @@ const PrioritiesPage: React.FC = () => {
 
   return (
     <AppLayout title="Prioridades" subtitle="Suas tarefas organizadas por nível de prioridade.">
-      {loading ? (showSkeleton ? <TaskListSkeleton /> : null) : <>
+      {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
       {/* Priority tabs (contagem + filtro) */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1">
         {tabsConfig.map(tab => {

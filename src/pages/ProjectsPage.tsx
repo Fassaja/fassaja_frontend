@@ -4,7 +4,7 @@ import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { EditProjectModal } from '@/components/projects/EditProjectModal';
 import { EmptyState } from '@/components/common/EmptyState';
-import { ProjectsSkeleton } from '@/components/common/Skeletons';
+import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -47,7 +47,7 @@ const ProjectsPage: React.FC = () => {
         subtitle="Organize suas tarefas por projetos."
       >
         {loading ? (
-          showSkeleton ? <ProjectsSkeleton /> : null
+          showSkeleton ? <LoadingScreen /> : null
         ) : projects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map(project => {

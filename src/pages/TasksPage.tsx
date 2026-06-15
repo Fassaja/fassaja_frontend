@@ -4,7 +4,7 @@ import { TaskList } from '@/components/tasks/TaskList';
 import { TaskFilters } from '@/components/tasks/TaskFilters';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
-import { TaskListSkeleton } from '@/components/common/Skeletons';
+import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
@@ -79,7 +79,7 @@ const TasksPage: React.FC = () => {
         title="Minhas Tarefas"
         subtitle="Gerencie todas as suas tarefas em um só lugar."
       >
-        {loading ? (showSkeleton ? <TaskListSkeleton /> : null) : <>
+        {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
         {/* Status tabs (contagem + filtro) */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
           {statusTabs.map(tab => {

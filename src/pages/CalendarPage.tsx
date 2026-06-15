@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { CalendarMonth } from '@/components/calendar/CalendarMonth';
 import { Card } from '@/components/common/Card';
 import { Mascot } from '@/components/mascot/Mascot';
-import { CalendarSkeleton } from '@/components/common/Skeletons';
+import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -28,7 +28,7 @@ const CalendarPage: React.FC = () => {
 
   return (
     <AppLayout title="Calendário" subtitle="Visualize suas tarefas por data.">
-      {loading ? (showSkeleton ? <CalendarSkeleton /> : null) : (
+      {loading ? (showSkeleton ? <LoadingScreen /> : null) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Calendar */}
         <div className="lg:col-span-2">

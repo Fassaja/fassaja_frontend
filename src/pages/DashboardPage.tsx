@@ -8,7 +8,7 @@ import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
 import { PriorityChart } from '@/components/dashboard/PriorityChart';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Card } from '@/components/common/Card';
-import { DashboardSkeleton } from '@/components/common/Skeletons';
+import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { useTasks } from '@/hooks/useTasks';
@@ -87,7 +87,7 @@ const DashboardPage: React.FC = () => {
         title={`Olá, ${user.name}! 👋`}
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
-        {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : <>
+        {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
         {/* Bob greeting banner (saudação — Bob "olá") */}
         <div className="mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary-vibrant to-primary-dark text-white p-5 sm:p-6 relative overflow-hidden">
           <div className="shrink-0 -my-2">

@@ -17,7 +17,7 @@ import {
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
-import { ReportsSkeleton } from '@/components/common/Skeletons';
+import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useTasks } from '@/hooks/useTasks';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -106,7 +106,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
-      {loading ? (showSkeleton ? <ReportsSkeleton /> : null) : <>
+      {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
       {/* Resumo com mascote */}
       <Card className="flex flex-col sm:flex-row items-center gap-6 mb-8">
         <Mascot state={summary.state} size="md" animate={true} />
