@@ -1,10 +1,12 @@
 import React from 'react';
-import { Trash2, Check, CalendarDays } from 'lucide-react';
+import { Trash2, Check, CalendarDays, Send, UserCheck, UserX } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
 import { formatDate } from '@/utils/date';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTasks } from '@/hooks/useTasks';
 
 interface TaskCardProps {
   task: Task;
@@ -34,9 +36,28 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onDelete,
   onClick,
 }) => {
+  const { account } = useAuth();
+  const { respondAssignment } = useTasks();
   const isCompleted = task.status === 'completed';
   const statusInfo = statusConfig[task.status];
   const priorityInfo = priorityConfig[task.priority];
+
+  const isMyProposal =
+    !!account && task.assigneeId === account.id && task.assignmentStatus === 'pending';
+
+  const assignment =
+    task.assigneeId && task.assigneeName
+      ? task.assignmentStatus === 'accepted'
+        ? { label: task.assigneeName, className: 'bg-emerald-50 text-emerald-700', icon: <UserCheck size={13} /> }
+        : task.assignmentStatus === 'rejected'
+        ? { label: `${task.assigneeName} recusou`, className: 'bg-rose-50 text-rose-600', icon: <UserX size={13} /> }
+        : { label: `Proposta: ${task.assigneeName}`, className: 'bg-amber-50 text-amber-700', icon: <Send size={12} /> }
+      : null;
+
+  const respond = (e: React.MouseEvent, action: 'accept' | 'reject') => {
+    e.stopPropagation();
+    if (account) respondAssignment(task.id, action);
+  };
 
   return (
     <motion.div
@@ -106,7 +127,36 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 {formatDate(task.dueDate)}
               </span>
             )}
+            {assignment && (
+              <span
+                className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${assignment.className}`}
+              >
+                {assignment.icon}
+                {assignment.label}
+              </span>
+            )}
           </div>
+
+          {/* Proposta de tarefa para o usuário atual */}
+          {isMyProposal && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2">
+              <span className="text-xs font-semibold text-amber-700 flex-1 min-w-0">
+                Esta tarefa foi proposta a você.
+              </span>
+              <button
+                onClick={e => respond(e, 'accept')}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-success text-white hover:bg-emerald-600 active:scale-95 transition-all"
+              >
+                Aceitar
+              </button>
+              <button
+                onClick={e => respond(e, 'reject')}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-border text-danger hover:bg-rose-50 active:scale-95 transition-all"
+              >
+                Recusar
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Actions (always tappable on touch, hover-reveal on desktop) */}

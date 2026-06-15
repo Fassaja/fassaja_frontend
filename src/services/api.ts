@@ -1,4 +1,28 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333/api';
+const TOKEN_KEY = 'fassaja_token';
+
+// Token de sessão (JWT) em memória, sincronizado com o localStorage.
+let authToken: string | null = (() => {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+})();
+
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // localStorage indisponível
+  }
+}
+
+export function getAuthToken(): string | null {
+  return authToken;
+}
 
 interface RequestOptions {
   method?: string;
@@ -8,9 +32,13 @@ interface RequestOptions {
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body } = options;
 
+  const headers: Record<string, string> = {};
+  if (body) headers['Content-Type'] = 'application/json';
+  if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
   const response = await fetch(`${API_URL}${path}`, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: Object.keys(headers).length ? headers : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
 

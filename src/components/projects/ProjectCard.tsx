@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Trash2, FolderOpen, ArrowRight } from 'lucide-react';
+import { Edit, Trash2, FolderOpen, ArrowRight, Users, User } from 'lucide-react';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
-import { formatDate } from '@/utils/date';
 
 interface ProjectCardProps {
   project: Project;
@@ -38,7 +37,20 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-bold text-text-primary truncate">{project.name}</h3>
-          <p className="text-xs text-text-soft">Criado em {formatDate(project.createdAt)}</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {project.type === 'team' ? (
+              <span
+                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: project.color + '26', color: project.color }}
+              >
+                <Users size={11} /> {project.teamName ?? 'Equipe'}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-bg-secondary text-text-secondary">
+                <User size={11} /> Solo
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           {onEdit && (

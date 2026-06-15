@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { EmptyState } from '@/components/common/EmptyState';
+import { TaskListSkeleton } from '@/components/common/Skeletons';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
+import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { TaskPriority } from '@/types/task';
 
 const PRIORITY_ORDER: Record<TaskPriority, number> = { high: 0, medium: 1, low: 2 };
@@ -16,7 +18,8 @@ const tabsConfig: { value: TaskPriority | 'all'; label: string; color: string }[
 ];
 
 const PrioritiesPage: React.FC = () => {
-  const { tasks, completeTask, deleteTask } = useTasks();
+  const { tasks, completeTask, deleteTask, loading } = useTasks();
+  const showSkeleton = useDeferredLoading(loading);
   const { projects } = useProjects();
   const [filter, setFilter] = useState<TaskPriority | 'all'>('all');
 
@@ -39,6 +42,7 @@ const PrioritiesPage: React.FC = () => {
 
   return (
     <AppLayout title="Prioridades" subtitle="Suas tarefas organizadas por nível de prioridade.">
+      {loading ? (showSkeleton ? <TaskListSkeleton /> : null) : <>
       {/* Priority tabs (contagem + filtro) */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1">
         {tabsConfig.map(tab => {
@@ -93,6 +97,7 @@ const PrioritiesPage: React.FC = () => {
           description="Você não tem tarefas em aberto com esse nível de prioridade."
         />
       )}
+      </>}
     </AppLayout>
   );
 };

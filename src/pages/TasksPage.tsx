@@ -4,15 +4,18 @@ import { TaskList } from '@/components/tasks/TaskList';
 import { TaskFilters } from '@/components/tasks/TaskFilters';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
+import { TaskListSkeleton } from '@/components/common/Skeletons';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
+import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useAuth } from '@/contexts/AuthContext';
-import { projectsService } from '@/services/projectsService';
 
 const TasksPage: React.FC = () => {
-  const { tasks, createTask, updateTask, completeTask, deleteTask } = useTasks();
+  const { tasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
+  const { projects } = useProjects();
+  const showSkeleton = useDeferredLoading(loading);
   const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
-  const [projects, setProjects] = React.useState<any[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const openNewTask = () => {
@@ -29,10 +32,6 @@ const TasksPage: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all');
   const [filterProject, setFilterProject] = useState<string | 'all'>('all');
-
-  React.useEffect(() => {
-    projectsService.getProjects().then(setProjects);
-  }, []);
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
@@ -80,6 +79,7 @@ const TasksPage: React.FC = () => {
         title="Minhas Tarefas"
         subtitle="Gerencie todas as suas tarefas em um só lugar."
       >
+        {loading ? (showSkeleton ? <TaskListSkeleton /> : null) : <>
         {/* Status tabs (contagem + filtro) */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
           {statusTabs.map(tab => {
@@ -135,6 +135,7 @@ const TasksPage: React.FC = () => {
             onEdit={handleEditTask}
           />
         </div>
+        </>}
       </AppLayout>
     </>
   );

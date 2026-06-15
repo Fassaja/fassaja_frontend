@@ -21,9 +21,9 @@ const ProfilePage: React.FC = () => {
   const [pw, setPw] = useState({ current: '', next: '' });
   const [pwMsg, setPwMsg] = useState<{ type: 'ok' | 'error'; text: string } | null>(null);
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = changePassword(pw.current, pw.next);
+    const result = await changePassword(pw.current, pw.next);
     if (result.ok) {
       setPwMsg({ type: 'ok', text: 'Senha atualizada com sucesso.' });
       setPw({ current: '', next: '' });

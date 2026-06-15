@@ -17,11 +17,14 @@ import {
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
+import { ReportsSkeleton } from '@/components/common/Skeletons';
 import { useTasks } from '@/hooks/useTasks';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 
 const ReportsPage: React.FC = () => {
-  const { tasks } = useTasks();
+  const { tasks, loading } = useTasks();
+  const showSkeleton = useDeferredLoading(loading);
   const stats = useDashboardStats(tasks);
 
   // Resumo com o bob conforme o desempenho geral.
@@ -103,6 +106,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
+      {loading ? (showSkeleton ? <ReportsSkeleton /> : null) : <>
       {/* Resumo com mascote */}
       <Card className="flex flex-col sm:flex-row items-center gap-6 mb-8">
         <Mascot state={summary.state} size="md" animate={true} />
@@ -222,6 +226,7 @@ const ReportsPage: React.FC = () => {
           </LineChart>
         </ResponsiveContainer>
       </Card>
+      </>}
     </AppLayout>
   );
 };

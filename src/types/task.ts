@@ -2,6 +2,8 @@ export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue';
 
 export type TaskPriority = 'low' | 'medium' | 'high';
 
+export type AssignmentStatus = 'pending' | 'accepted' | 'rejected';
+
 export interface Task {
   id: string;
   title: string;
@@ -12,4 +14,7 @@ export interface Task {
   dueDate?: string;
   createdAt: string;
   completedAt?: string;
+  assigneeId?: string;
+  assigneeName?: string;
+  assignmentStatus?: AssignmentStatus;
 }

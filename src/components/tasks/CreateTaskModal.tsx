@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
 import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
+import { Dropdown } from '@/components/common/Dropdown';
 import { DatePicker } from '@/components/common/DatePicker';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
-import { Project } from '@/types/project';
-import { projectsService } from '@/services/projectsService';
+import { TeamMember } from '@/types/team';
+import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/hooks/useTasks';
+import { useAuth } from '@/contexts/AuthContext';
+import { teamsService } from '@/services/teamsService';
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -41,21 +45,41 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   onClose,
   onCreateTask,
 }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { projects } = useProjects();
+  const { assignTask } = useTasks();
+  const { account } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState(emptyForm);
-
-  React.useEffect(() => {
-    projectsService.getProjects().then(setProjects);
-  }, []);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [assigneeId, setAssigneeId] = useState('');
 
   const set = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) =>
     setFormData(prev => ({ ...prev, [key]: value }));
 
+  const selectedProject = projects.find(p => p.id === formData.projectId);
+  const teamProject =
+    selectedProject && selectedProject.type === 'team' && selectedProject.teamId
+      ? selectedProject
+      : null;
+
+  useEffect(() => {
+    if (teamProject?.teamId) {
+      teamsService.getMembers(teamProject.teamId).then(setMembers).catch(() => setMembers([]));
+    } else {
+      setMembers([]);
+      setAssigneeId('');
+    }
+  }, [teamProject?.teamId]);
+
   const projectOptions: SelectableOption[] = [
     { value: '', label: 'Sem projeto' },
     ...projects.map(p => ({ value: p.id, label: p.name, color: p.color, dot: true })),
+  ];
+
+  const memberOptions = [
+    { value: '', label: 'Ninguém (sem responsável)' },
+    ...members.map(m => ({ value: m.userId, label: m.role === 'owner' ? `${m.name} (dono)` : m.name })),
   ];
 
   const handleClose = () => {
@@ -72,7 +96,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
     try {
       setLoading(true);
-      await onCreateTask({
+      const created = await onCreateTask({
         title: formData.title.trim(),
         description: formData.description || undefined,
         priority: formData.priority,
@@ -80,7 +104,12 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         projectId: formData.projectId || undefined,
         dueDate: formData.dueDate || undefined,
       });
+      // Em projeto de equipe, propõe a tarefa ao membro escolhido.
+      if (teamProject && assigneeId && account) {
+        await assignTask(created.id, assigneeId);
+      }
       setFormData(emptyForm);
+      setAssigneeId('');
       setError('');
       onClose();
     } catch (err) {
@@ -142,6 +171,16 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           value={formData.projectId}
           onChange={v => set('projectId', v)}
         />
+
+        {teamProject && (
+          <Dropdown
+            label="Atribuir a (proposta para a equipe)"
+            options={memberOptions}
+            value={assigneeId}
+            onChange={setAssigneeId}
+            fullWidth
+          />
+        )}
 
         <DatePicker
           label="Data de vencimento"

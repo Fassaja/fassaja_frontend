@@ -43,7 +43,7 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useUser();
-  const { isGuest, logout } = useAuth();
+  const { isGuest, logout, requireAuth } = useAuth();
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -106,7 +106,12 @@ export const Sidebar: React.FC = () => {
                 return (
                   <button
                     key={item.path}
-                    onClick={() => goTo('/login')}
+                    onClick={() => {
+                      setIsOpen(false);
+                      requireAuth(
+                        `"${item.label}" está disponível para quem tem conta. Faça login para acessar — ou continue como visitante usando o Dashboard e Minhas Tarefas.`,
+                      );
+                    }}
                     className={`${baseClass} w-full text-left`}
                     title="Entre para acessar"
                   >
@@ -245,7 +250,7 @@ export const Sidebar: React.FC = () => {
                 Tem alguma dúvida ou sugestão? A equipe Fassaja adora ouvir você.
               </p>
               <a
-                href="mailto:suporte@fassaja.com"
+                href="mailto:fassajasuporte@gmail.com"
                 className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-bg-secondary transition-colors"
               >
                 <span className="w-10 h-10 rounded-xl bg-primary-light text-primary-vibrant flex items-center justify-center">
@@ -253,7 +258,7 @@ export const Sidebar: React.FC = () => {
                 </span>
                 <span>
                   <span className="block text-sm font-semibold text-text-primary">E-mail</span>
-                  <span className="block text-xs text-text-secondary">suporte@fassaja.com</span>
+                  <span className="block text-xs text-text-secondary">fassajasuporte@gmail.com</span>
                 </span>
               </a>
               <a

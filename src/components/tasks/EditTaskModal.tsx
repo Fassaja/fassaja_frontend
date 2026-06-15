@@ -4,10 +4,14 @@ import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
 import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
+import { Dropdown } from '@/components/common/Dropdown';
 import { DatePicker } from '@/components/common/DatePicker';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
-import { Project } from '@/types/project';
-import { projectsService } from '@/services/projectsService';
+import { TeamMember } from '@/types/team';
+import { useProjects } from '@/hooks/useProjects';
+import { useTasks } from '@/hooks/useTasks';
+import { useAuth } from '@/contexts/AuthContext';
+import { teamsService } from '@/services/teamsService';
 
 interface EditTaskModalProps {
   isOpen: boolean;
@@ -34,9 +38,13 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   onClose,
   onUpdateTask,
 }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { projects } = useProjects();
+  const { assignTask } = useTasks();
+  const { account } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [assigneeId, setAssigneeId] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -45,10 +53,6 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     projectId: '',
     dueDate: '',
   });
-
-  useEffect(() => {
-    projectsService.getProjects().then(setProjects);
-  }, []);
 
   useEffect(() => {
     if (task) {
@@ -60,6 +64,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         projectId: task.projectId || '',
         dueDate: task.dueDate || '',
       });
+      setAssigneeId(task.assigneeId || '');
       setError('');
     }
   }, [task, isOpen]);
@@ -67,9 +72,28 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const set = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) =>
     setFormData(prev => ({ ...prev, [key]: value }));
 
+  const selectedProject = projects.find(p => p.id === formData.projectId);
+  const teamProject =
+    selectedProject && selectedProject.type === 'team' && selectedProject.teamId
+      ? selectedProject
+      : null;
+
+  useEffect(() => {
+    if (teamProject?.teamId) {
+      teamsService.getMembers(teamProject.teamId).then(setMembers).catch(() => setMembers([]));
+    } else {
+      setMembers([]);
+    }
+  }, [teamProject?.teamId]);
+
   const projectOptions: SelectableOption[] = [
     { value: '', label: 'Sem projeto' },
     ...projects.map(p => ({ value: p.id, label: p.name, color: p.color, dot: true })),
+  ];
+
+  const memberOptions = [
+    { value: '', label: 'Ninguém (sem responsável)' },
+    ...members.map(m => ({ value: m.userId, label: m.role === 'owner' ? `${m.name} (dono)` : m.name })),
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,6 +114,14 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         projectId: formData.projectId || undefined,
         dueDate: formData.dueDate || undefined,
       });
+      // Reconcilia a atribuição se mudou (em projeto de equipe).
+      const currentAssignee = task.assigneeId || '';
+      if (teamProject && assigneeId !== currentAssignee && account) {
+        await assignTask(task.id, assigneeId || null);
+      } else if (!teamProject && currentAssignee) {
+        // Saiu de um projeto de equipe: remove a atribuição.
+        await assignTask(task.id, null);
+      }
       onClose();
     } catch (err) {
       setError('Não foi possível salvar as alterações. Tente novamente.');
@@ -150,6 +182,16 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           value={formData.projectId}
           onChange={v => set('projectId', v)}
         />
+
+        {teamProject && (
+          <Dropdown
+            label="Atribuir a (proposta para a equipe)"
+            options={memberOptions}
+            value={assigneeId}
+            onChange={setAssigneeId}
+            fullWidth
+          />
+        )}
 
         <DatePicker
           label="Data de vencimento"

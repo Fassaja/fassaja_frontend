@@ -27,6 +27,14 @@ export const tasksService = {
     return api.patch<Task>(`/tasks/${id}/complete`, {});
   },
 
+  async assignTask(id: string, assigneeId: string | null): Promise<Task> {
+    return api.patch<Task>(`/tasks/${id}/assign`, { assigneeId });
+  },
+
+  async respondAssignment(id: string, action: 'accept' | 'reject'): Promise<Task> {
+    return api.patch<Task>(`/tasks/${id}/assignment`, { action });
+  },
+
   async getTasksByProject(projectId: string): Promise<Task[]> {
     const tasks = await api.get<Task[]>('/tasks');
     return tasks.filter(task => task.projectId === projectId);

@@ -4,12 +4,15 @@ import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { EditProjectModal } from '@/components/projects/EditProjectModal';
 import { EmptyState } from '@/components/common/EmptyState';
+import { ProjectsSkeleton } from '@/components/common/Skeletons';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
+import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { Project } from '@/types/project';
 
 const ProjectsPage: React.FC = () => {
-  const { projects, createProject, updateProject, deleteProject } = useProjects();
+  const { projects, createProject, updateProject, deleteProject, loading } = useProjects();
+  const showSkeleton = useDeferredLoading(loading);
   const { tasks } = useTasks();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>();
@@ -43,7 +46,9 @@ const ProjectsPage: React.FC = () => {
         title="Projetos"
         subtitle="Organize suas tarefas por projetos."
       >
-        {projects.length > 0 ? (
+        {loading ? (
+          showSkeleton ? <ProjectsSkeleton /> : null
+        ) : projects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map(project => {
               const stats = getProjectStats(project.id);

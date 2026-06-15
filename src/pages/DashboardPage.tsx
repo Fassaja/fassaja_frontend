@@ -9,17 +9,20 @@ import { PriorityChart } from '@/components/dashboard/PriorityChart';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Card } from '@/components/common/Card';
+import { DashboardSkeleton } from '@/components/common/Skeletons';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { MascotState } from '@/components/mascot/Mascot';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { isToday } from '@/utils/date';
 
 const DashboardPage: React.FC = () => {
-  const { tasks, completeTask, createTask } = useTasks();
+  const { tasks, completeTask, createTask, loading } = useTasks();
+  const showSkeleton = useDeferredLoading(loading);
   const { projects } = useProjects();
   const { user } = useUser();
   const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
@@ -76,6 +79,7 @@ const DashboardPage: React.FC = () => {
         title={`Olá, ${user.name}! 👋`}
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
+        {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : <>
         {/* Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
           <MetricCard
@@ -155,6 +159,7 @@ const DashboardPage: React.FC = () => {
             <QuickActions onNewTask={openNewTask} />
           </div>
         </div>
+        </>}
       </AppLayout>
     </>
   );

@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Lock } from 'lucide-react';
 import { useUser } from './UserContext';
+import { api, setAuthToken } from '@/services/api';
 
-interface StoredAccount {
+export interface Account {
+  id: string;
   name: string;
   email: string;
-  password: string;
 }
 
 type AuthStatus = 'guest' | 'authed';
@@ -17,13 +18,18 @@ interface AuthResult {
   error?: string;
 }
 
+interface AuthResponse {
+  token: string;
+  user: Account;
+}
+
 interface AuthContextValue {
   status: AuthStatus;
   isGuest: boolean;
-  account: { name: string; email: string } | null;
-  login: (email: string, password: string) => AuthResult;
-  register: (name: string, email: string, password: string) => AuthResult;
-  changePassword: (current: string, next: string) => AuthResult;
+  account: Account | null;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  register: (name: string, email: string, password: string) => Promise<AuthResult>;
+  changePassword: (current: string, next: string) => Promise<AuthResult>;
   logout: () => void;
   guestTaskLimit: number;
   guestTaskCount: number;
@@ -31,7 +37,6 @@ interface AuthContextValue {
   requireAuth: (reason?: string) => void;
 }
 
-const ACCOUNTS_KEY = 'fassaja_accounts';
 const SESSION_KEY = 'fassaja_session';
 const GUEST_KEY = 'fassaja_guest_tasks';
 const GUEST_TASK_LIMIT = 3;
@@ -57,12 +62,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const { updateUser } = useUser();
 
-  const [account, setAccount] = useState<{ name: string; email: string } | null>(() => {
-    const session = readJSON<{ email: string } | null>(SESSION_KEY, null);
-    if (!session) return null;
-    const acc = readJSON<StoredAccount[]>(ACCOUNTS_KEY, []).find(a => a.email === session.email);
-    return acc ? { name: acc.name, email: acc.email } : null;
-  });
+  const [account, setAccount] = useState<Account | null>(() =>
+    readJSON<Account | null>(SESSION_KEY, null),
+  );
 
   const [guest, setGuest] = useState<{ date: string; count: number }>(() => {
     const g = readJSON<{ date: string; count: number }>(GUEST_KEY, { date: todayISO(), count: 0 });
@@ -82,49 +84,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const persistSession = (email: string | null) =>
-    email
-      ? localStorage.setItem(SESSION_KEY, JSON.stringify({ email }))
+  const persistSession = (acc: Account | null) =>
+    acc
+      ? localStorage.setItem(SESSION_KEY, JSON.stringify(acc))
       : localStorage.removeItem(SESSION_KEY);
 
-  const login = (email: string, password: string): AuthResult => {
-    const accounts = readJSON<StoredAccount[]>(ACCOUNTS_KEY, []);
-    const acc = accounts.find(a => a.email.toLowerCase() === email.trim().toLowerCase());
-    if (!acc) return { ok: false, error: 'Não encontramos uma conta com esse e-mail.' };
-    if (acc.password !== password) return { ok: false, error: 'Senha incorreta.' };
-    persistSession(acc.email);
-    setAccount({ name: acc.name, email: acc.email });
-    updateUser({ name: acc.name, email: acc.email });
-    return { ok: true };
+  const adopt = (acc: Account) => {
+    persistSession(acc);
+    setAccount(acc);
+    updateUser({ name: acc.name, email: acc.email, role: 'Membro' });
   };
 
-  const register = (name: string, email: string, password: string): AuthResult => {
-    const accounts = readJSON<StoredAccount[]>(ACCOUNTS_KEY, []);
-    if (accounts.some(a => a.email.toLowerCase() === email.trim().toLowerCase())) {
-      return { ok: false, error: 'Já existe uma conta com esse e-mail.' };
+  const login = async (email: string, password: string): Promise<AuthResult> => {
+    try {
+      const res = await api.post<AuthResponse>('/auth/login', { email: email.trim(), password });
+      setAuthToken(res.token);
+      adopt(res.user);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
     }
-    const acc: StoredAccount = { name: name.trim(), email: email.trim(), password };
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify([...accounts, acc]));
-    persistSession(acc.email);
-    setAccount({ name: acc.name, email: acc.email });
-    updateUser({ name: acc.name, email: acc.email });
-    return { ok: true };
   };
 
-  const changePassword = (current: string, next: string): AuthResult => {
+  const register = async (name: string, email: string, password: string): Promise<AuthResult> => {
+    try {
+      const res = await api.post<AuthResponse>('/auth/register', {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
+      setAuthToken(res.token);
+      adopt(res.user);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
+  };
+
+  const changePassword = async (current: string, next: string): Promise<AuthResult> => {
     if (!account) return { ok: false, error: 'Faça login primeiro.' };
-    const accounts = readJSON<StoredAccount[]>(ACCOUNTS_KEY, []);
-    const idx = accounts.findIndex(a => a.email === account.email);
-    if (idx === -1) return { ok: false, error: 'Conta não encontrada.' };
-    if (accounts[idx].password !== current) return { ok: false, error: 'Senha atual incorreta.' };
-    if (next.length < 4) return { ok: false, error: 'A nova senha deve ter ao menos 4 caracteres.' };
-    accounts[idx] = { ...accounts[idx], password: next };
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    return { ok: true };
+    try {
+      await api.patch('/auth/password', { current, next });
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
   };
 
   const logout = () => {
     persistSession(null);
+    setAuthToken(null);
     setAccount(null);
     updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
     navigate('/login');
@@ -139,7 +148,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
   const requireAuth = (reason?: string) =>
-    setPrompt(reason ?? 'Crie uma conta gratuita para liberar todos os recursos.');
+    setPrompt(
+      reason ??
+        'Este recurso é exclusivo para quem tem conta. Faça login (ou crie uma conta gratuita) para liberar tudo — ou continue explorando como visitante.',
+    );
 
   const guestTaskCount = guest.date === todayISO() ? guest.count : 0;
 
@@ -163,10 +175,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       <ConfirmDialog
         isOpen={prompt !== null}
-        title="Entre para continuar"
+        title="Quer fazer login?"
         message={prompt ?? ''}
-        confirmLabel="Entrar ou criar conta"
-        cancelLabel="Agora não"
+        confirmLabel="Fazer login"
+        cancelLabel="Continuar como visitante"
         tone="primary"
         icon={<Lock size={24} />}
         onConfirm={() => navigate('/login')}

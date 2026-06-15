@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Check, FolderOpen } from 'lucide-react';
+import { Check, FolderOpen, User, Users } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
 import { Button } from '@/components/common/Button';
+import { OptionSelector } from '@/components/common/OptionSelector';
+import { Dropdown } from '@/components/common/Dropdown';
+import { useAuth } from '@/contexts/AuthContext';
+import { teamsService } from '@/services/teamsService';
+import { TeamSummary } from '@/types/team';
 import { Project } from '@/types/project';
 
 interface EditProjectModalProps {
@@ -30,9 +35,23 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   onClose,
   onUpdateProject,
 }) => {
+  const { account } = useAuth();
+  const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ name: '', description: '', color: colorOptions[0] });
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    color: colorOptions[0],
+    type: 'solo' as 'solo' | 'team',
+    teamId: '',
+  });
+
+  useEffect(() => {
+    if (isOpen && account) {
+      teamsService.listTeams().then(setTeams).catch(() => setTeams([]));
+    }
+  }, [isOpen, account]);
 
   useEffect(() => {
     if (project) {
@@ -40,6 +59,8 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
         name: project.name,
         description: project.description || '',
         color: project.color,
+        type: project.type ?? 'solo',
+        teamId: project.teamId ?? '',
       });
       setError('');
     }
@@ -57,6 +78,10 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
       setError('Dê um nome ao projeto antes de continuar.');
       return;
     }
+    if (formData.type === 'team' && !formData.teamId) {
+      setError('Selecione a equipe do projeto.');
+      return;
+    }
     if (!project) return;
 
     try {
@@ -65,6 +90,8 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
         name: formData.name.trim(),
         description: formData.description || undefined,
         color: formData.color,
+        type: formData.type,
+        teamId: formData.type === 'team' ? formData.teamId : undefined,
       });
       onClose();
     } catch (err) {
@@ -89,8 +116,11 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
             <p className="font-bold text-text-primary truncate">
               {formData.name.trim() || 'Nome do projeto'}
             </p>
-            <p className="text-xs text-text-secondary truncate">
-              {formData.description || 'Pré-visualização do projeto'}
+            <p className="text-xs text-text-secondary truncate flex items-center gap-1.5">
+              {formData.type === 'team' ? <Users size={12} /> : <User size={12} />}
+              {formData.type === 'team'
+                ? teams.find(t => t.id === formData.teamId)?.name ?? 'Projeto de equipe'
+                : 'Projeto solo'}
             </p>
           </div>
         </div>
@@ -115,6 +145,37 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
           disabled={loading}
           rows={3}
         />
+
+        <OptionSelector
+          label="Tipo de projeto"
+          options={[
+            { value: 'solo', label: 'Solo' },
+            { value: 'team', label: 'Equipe' },
+          ]}
+          value={formData.type}
+          onChange={v => setFormData(prev => ({ ...prev, type: v as 'solo' | 'team' }))}
+          layout="grid"
+          columns={2}
+        />
+
+        {formData.type === 'team' &&
+          (teams.length > 0 ? (
+            <Dropdown
+              label="Equipe"
+              options={teams.map(t => ({ value: t.id, label: t.name }))}
+              value={formData.teamId}
+              onChange={v => {
+                setFormData(prev => ({ ...prev, teamId: v }));
+                if (error) setError('');
+              }}
+              placeholder="Selecione a equipe"
+              fullWidth
+            />
+          ) : (
+            <p className="text-sm text-text-secondary bg-bg-secondary rounded-xl p-3">
+              Você ainda não tem equipes. Crie uma na aba <span className="font-semibold">Equipe</span>.
+            </p>
+          ))}
 
         <div>
           <label className="block text-sm font-medium text-text-primary mb-2">Cor</label>

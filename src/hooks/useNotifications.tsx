@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, CalendarClock, CheckCircle2 } from 'lucide-react';
-import { Task } from '@/types/task';
-import { tasksService } from '@/services/tasksService';
+import { useMemo } from 'react';
+import { AlertCircle, CalendarClock, CheckCircle2, Send } from 'lucide-react';
+import { useTasks } from '@/contexts/TasksContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { formatDate, isToday } from '@/utils/date';
 
 export interface NotificationItem {
@@ -12,14 +12,25 @@ export interface NotificationItem {
   tone: string;
 }
 
-export function useNotifications(active: boolean) {
-  const [tasks, setTasks] = useState<Task[]>([]);
-
-  useEffect(() => {
-    if (active) tasksService.getTasks().then(setTasks);
-  }, [active]);
+// Lê do cache compartilhado de tarefas (sem buscar de novo a cada navegação).
+export function useNotifications(_active?: boolean) {
+  const { tasks } = useTasks();
+  const { account } = useAuth();
 
   const items = useMemo<NotificationItem[]>(() => {
+    // Propostas de tarefa pendentes para o usuário atual.
+    const proposals = account
+      ? tasks
+          .filter(t => t.assigneeId === account.id && t.assignmentStatus === 'pending')
+          .map(t => ({
+            id: `p-${t.id}`,
+            icon: <Send size={18} />,
+            title: t.title,
+            detail: 'Tarefa proposta a você',
+            tone: '#FBBF24',
+          }))
+      : [];
+
     const overdue = tasks
       .filter(t => t.status === 'overdue')
       .map(t => ({
@@ -51,8 +62,8 @@ export function useNotifications(active: boolean) {
         tone: '#22C55E',
       }));
 
-    return [...overdue, ...today, ...doneToday];
-  }, [tasks]);
+    return [...proposals, ...overdue, ...today, ...doneToday];
+  }, [tasks, account]);
 
   return items;
 }

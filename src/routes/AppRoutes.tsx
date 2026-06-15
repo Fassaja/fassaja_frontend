@@ -11,6 +11,7 @@ import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import AuthPage from '@/pages/AuthPage';
+import JoinPage from '@/pages/JoinPage';
 import { useAuth } from '@/contexts/AuthContext';
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -24,6 +25,7 @@ export const AppRoutes: React.FC = () => {
       {/* Públicas (visitante) */}
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
+      <Route path="/join/:token" element={<JoinPage />} />
       <Route path="/" element={<DashboardPage />} />
       <Route path="/tasks" element={<TasksPage />} />
 

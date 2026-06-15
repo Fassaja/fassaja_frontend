@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
@@ -12,6 +12,8 @@ interface AuthPageProps {
 
 const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
   const { login, register } = useAuth();
   const isLogin = mode === 'login';
 
@@ -24,7 +26,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
     if (error) setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email.trim() || !form.password) {
       setError('Preencha e-mail e senha.');
@@ -37,12 +39,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
 
     setLoading(true);
     const result = isLogin
-      ? login(form.email, form.password)
-      : register(form.name, form.email, form.password);
+      ? await login(form.email, form.password)
+      : await register(form.name, form.email, form.password);
     setLoading(false);
 
     if (result.ok) {
-      navigate('/');
+      navigate(redirectTo);
     } else {
       setError(result.error ?? 'Algo deu errado. Tente novamente.');
     }
@@ -137,7 +139,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           <p className="text-sm text-text-secondary text-center mt-6">
             {isLogin ? 'Ainda não tem conta?' : 'Já tem uma conta?'}{' '}
             <button
-              onClick={() => navigate(isLogin ? '/register' : '/login')}
+              onClick={() =>
+                navigate(
+                  `${isLogin ? '/register' : '/login'}${
+                    redirectTo !== '/' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''
+                  }`,
+                )
+              }
               className="font-semibold text-primary-vibrant hover:text-primary-hover"
             >
               {isLogin ? 'Criar conta' : 'Entrar'}

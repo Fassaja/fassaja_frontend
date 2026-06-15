@@ -3,11 +3,14 @@ import { Check } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CalendarMonth } from '@/components/calendar/CalendarMonth';
 import { Card } from '@/components/common/Card';
+import { CalendarSkeleton } from '@/components/common/Skeletons';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
+import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 
 const CalendarPage: React.FC = () => {
-  const { tasks, completeTask } = useTasks();
+  const { tasks, completeTask, loading } = useTasks();
+  const showSkeleton = useDeferredLoading(loading);
   const { projects } = useProjects();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -24,6 +27,7 @@ const CalendarPage: React.FC = () => {
 
   return (
     <AppLayout title="Calendário" subtitle="Visualize suas tarefas por data.">
+      {loading ? (showSkeleton ? <CalendarSkeleton /> : null) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Calendar */}
         <div className="lg:col-span-2">
@@ -101,6 +105,7 @@ const CalendarPage: React.FC = () => {
           </Card>
         </div>
       </div>
+      )}
     </AppLayout>
   );
 };
