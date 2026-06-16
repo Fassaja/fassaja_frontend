@@ -1,21 +1,31 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BellOff } from 'lucide-react';
+import { BellOff, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { NotificationItem } from '@/hooks/useNotifications';
+import { NotificationItem } from '@/contexts/NotificationsContext';
 
 interface NotificationsMenuProps {
   isOpen: boolean;
   onClose: () => void;
   items: NotificationItem[];
+  onMarkRead: (id: string) => void;
+  onMarkAllRead: () => void;
 }
 
-export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ isOpen, onClose, items }) => {
+export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
+  isOpen,
+  onClose,
+  items,
+  onMarkRead,
+  onMarkAllRead,
+}) => {
   const navigate = useNavigate();
+  const hasUnread = items.some(i => !i.read);
 
-  const goToTasks = () => {
+  const openItem = (item: NotificationItem) => {
+    onMarkRead(item.id);
     onClose();
-    navigate('/tasks');
+    navigate(item.link);
   };
 
   return (
@@ -32,10 +42,14 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ isOpen, on
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <p className="font-bold text-text-primary">Notificações</p>
-              {items.length > 0 && (
-                <span className="text-xs font-semibold text-primary-vibrant bg-primary-light px-2 py-0.5 rounded-full">
-                  {items.length}
-                </span>
+              {hasUnread && (
+                <button
+                  type="button"
+                  onClick={onMarkAllRead}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary-vibrant hover:text-primary-hover"
+                >
+                  <CheckCheck size={14} /> Marcar todas
+                </button>
               )}
             </div>
 
@@ -49,9 +63,14 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ isOpen, on
                 items.map(item => (
                   <button
                     key={item.id}
-                    onClick={goToTasks}
-                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-bg-secondary text-left transition-colors"
+                    onClick={() => openItem(item)}
+                    className={`relative w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${
+                      item.read ? 'hover:bg-bg-secondary' : 'bg-primary-light/40 hover:bg-primary-light/60'
+                    }`}
                   >
+                    {!item.read && (
+                      <span className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary-vibrant" />
+                    )}
                     <span
                       className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                       style={{ backgroundColor: item.tone + '1A', color: item.tone }}
@@ -59,7 +78,11 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ isOpen, on
                       {item.icon}
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-sm font-medium text-text-primary truncate">
+                      <span
+                        className={`block text-sm truncate ${
+                          item.read ? 'font-medium text-text-secondary' : 'font-semibold text-text-primary'
+                        }`}
+                      >
                         {item.title}
                       </span>
                       <span className="block text-xs text-text-secondary">{item.detail}</span>
@@ -70,7 +93,10 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({ isOpen, on
             </div>
 
             <button
-              onClick={goToTasks}
+              onClick={() => {
+                onClose();
+                navigate('/tasks');
+              }}
               className="w-full py-2.5 text-sm font-semibold text-primary-vibrant hover:bg-bg-secondary border-t border-border transition-colors"
             >
               Ver todas as tarefas

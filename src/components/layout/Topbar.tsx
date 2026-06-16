@@ -25,8 +25,8 @@ export const Topbar: React.FC<TopbarProps> = ({
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const notifications = useNotifications(true);
-  const notificationCount = notifications.length;
+  const { items: notifications, unreadCount, markRead, markAllRead, refresh: refreshNotifications } =
+    useNotifications();
   const navigate = useNavigate();
   const { user } = useUser();
   const { isGuest, requireAuth } = useAuth();
@@ -93,15 +93,18 @@ export const Topbar: React.FC<TopbarProps> = ({
           <div className="relative">
             <button
               type="button"
-              aria-label={`Notificações${notificationCount ? `, ${notificationCount} novas` : ''}`}
+              aria-label={`Notificações${unreadCount ? `, ${unreadCount} novas` : ''}`}
               aria-expanded={showNotifications}
-              onClick={() => setShowNotifications(v => !v)}
+              onClick={() => {
+                setShowNotifications(v => !v);
+                refreshNotifications();
+              }}
               className="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
             >
               <Bell size={20} />
-              {notificationCount > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold text-white bg-primary-vibrant rounded-full">
-                  {notificationCount}
+                  {unreadCount}
                 </span>
               )}
             </button>
@@ -109,6 +112,8 @@ export const Topbar: React.FC<TopbarProps> = ({
               isOpen={showNotifications}
               onClose={() => setShowNotifications(false)}
               items={notifications}
+              onMarkRead={markRead}
+              onMarkAllRead={markAllRead}
             />
           </div>
 

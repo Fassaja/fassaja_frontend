@@ -5,6 +5,7 @@ import { CelebrationProvider } from '@/contexts/CelebrationContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProjectsProvider } from '@/contexts/ProjectsContext';
 import { TasksProvider } from '@/contexts/TasksContext';
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { AppRoutes } from '@/routes/AppRoutes';
 import { TopProgressBar } from '@/components/layout/TopProgressBar';
 
@@ -17,8 +18,10 @@ function App() {
             <AuthProvider>
               <ProjectsProvider>
                 <TasksProvider>
-                  <TopProgressBar />
-                  <AppRoutes />
+                  <NotificationsProvider>
+                    <TopProgressBar />
+                    <AppRoutes />
+                  </NotificationsProvider>
                 </TasksProvider>
               </ProjectsProvider>
             </AuthProvider>
