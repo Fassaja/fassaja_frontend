@@ -122,14 +122,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Ao montar logado, atualiza os dados a partir do banco (avatar, cooldowns).
   // Se o servidor disser que a sessão é inválida (401), encerra o estado local.
+  // Logo após confirmar o e-mail (?verified=1), assume a sessão do cookie e entra no app.
   useEffect(() => {
-    if (!account) return;
-    api
-      .get<Account>('/auth/me')
-      .then(syncAccount)
-      .catch((err: Error & { status?: number }) => {
-        if (err.status === 401) window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
-      });
+    const justVerified = new URLSearchParams(window.location.search).get('verified') === '1';
+    if (account) {
+      api
+        .get<Account>('/auth/me')
+        .then(syncAccount)
+        .catch((err: Error & { status?: number }) => {
+          if (err.status === 401) window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+        });
+    } else if (justVerified) {
+      api
+        .get<Account>('/auth/me')
+        .then(acc => {
+          adopt(acc);
+          navigate('/', { replace: true }); // limpa o ?verified=1 da URL
+        })
+        .catch(() => undefined);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
