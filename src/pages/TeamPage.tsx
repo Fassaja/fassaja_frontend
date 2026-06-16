@@ -96,6 +96,21 @@ const TeamPage: React.FC = () => {
     }
   };
 
+  // Revoga o link atual e gera um novo (invalida links antigos compartilhados).
+  const rotateInvite = async () => {
+    if (!selectedId) return;
+    setCopied(false);
+    setInviteToken('');
+    setInviteLoading(true);
+    try {
+      await invitesService.revokeInvites(selectedId);
+      const { token } = await invitesService.createInvite(selectedId);
+      setInviteToken(token);
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(inviteLink);
@@ -212,9 +227,20 @@ const TeamPage: React.FC = () => {
               {copied ? 'Copiado' : 'Copiar'}
             </Button>
           </div>
-          <p className="text-xs text-text-soft">
-            O mesmo link serve para várias pessoas. Cada pedido aparece em "Pedidos pendentes".
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-text-soft">
+              O link expira em 7 dias e serve para várias pessoas. Cada pedido aparece em "Pedidos
+              pendentes".
+            </p>
+            <button
+              type="button"
+              onClick={rotateInvite}
+              disabled={inviteLoading}
+              className="shrink-0 text-xs font-semibold text-primary-vibrant hover:text-primary-hover disabled:opacity-60"
+            >
+              Gerar novo link
+            </button>
+          </div>
         </div>
       </Modal>
 

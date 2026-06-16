@@ -7,6 +7,10 @@ export const invitesService = {
     return api.post<{ token: string }>(`/teams/${teamId}/invites`, {});
   },
 
+  async revokeInvites(teamId: string): Promise<void> {
+    await api.delete<void>(`/teams/${teamId}/invites`);
+  },
+
   getInviteState(token: string): Promise<InviteState> {
     return api.get<InviteState>(`/invites/${token}`);
   },
