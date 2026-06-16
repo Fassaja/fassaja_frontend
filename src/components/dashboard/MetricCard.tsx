@@ -40,7 +40,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       </div>
 
       {comparison && (
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
           <span
             className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
               comparison.isPositive ? 'text-success' : 'text-danger'

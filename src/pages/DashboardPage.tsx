@@ -105,7 +105,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-5 mb-6">
           <MetricCard
             title="Total de Tarefas"
             value={stats.total}
