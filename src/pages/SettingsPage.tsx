@@ -41,9 +41,9 @@ const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked,
 );
 
 const notifLabels: { key: keyof NotificationPrefs; label: string; hint: string }[] = [
-  { key: 'pending', label: 'Tarefas pendentes', hint: 'Avisos sobre tarefas em aberto' },
-  { key: 'deadline', label: 'Prazos próximos', hint: 'Quando uma tarefa está perto de vencer' },
-  { key: 'daily', label: 'Lembretes diários', hint: 'Um resumo do seu dia' },
+  { key: 'pending', label: 'Tarefas que vencem hoje', hint: 'Mostra no sino o que vence hoje' },
+  { key: 'deadline', label: 'Tarefas atrasadas', hint: 'Mostra no sino as tarefas atrasadas' },
+  { key: 'daily', label: 'Resumo diário', hint: 'Mostra no sino o que você concluiu hoje' },
 ];
 
 const SettingsPage: React.FC = () => {
@@ -63,18 +63,23 @@ const SettingsPage: React.FC = () => {
             <Input
               label="Meta diária de tarefas"
               type="number"
+              min={0}
               value={user.dailyGoal}
-              onChange={e => updateUser({ dailyGoal: Number(e.target.value) || 0 })}
+              onChange={e => updateUser({ dailyGoal: Math.max(0, Number(e.target.value) || 0) })}
               placeholder="5"
             />
             <Input
               label="Meta semanal de tarefas"
               type="number"
+              min={0}
               value={user.weeklyGoal}
-              onChange={e => updateUser({ weeklyGoal: Number(e.target.value) || 0 })}
+              onChange={e => updateUser({ weeklyGoal: Math.max(0, Number(e.target.value) || 0) })}
               placeholder="25"
             />
           </div>
+          <p className="text-xs text-text-soft mt-3">
+            As metas aparecem no progresso da Dashboard. Tudo é salvo automaticamente.
+          </p>
         </Card>
 
         {/* Appearance */}
@@ -100,6 +105,9 @@ const SettingsPage: React.FC = () => {
         {/* Notifications */}
         <Card>
           <SectionHeader icon={<Bell size={18} />} color="#8B5CF6" title="Notificações" />
+          <p className="text-xs text-text-soft -mt-4 mb-4">
+            Escolha o que aparece no sino do topo.
+          </p>
           <div className="space-y-1">
             {notifLabels.map(item => (
               <div

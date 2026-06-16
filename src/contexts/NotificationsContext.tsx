@@ -9,6 +9,7 @@ import React, {
 import { AlertCircle, CalendarClock, CheckCircle2, Send, UserPlus } from 'lucide-react';
 import { useTasks } from './TasksContext';
 import { useAuth } from './AuthContext';
+import { useUser } from './UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
 import { formatDate, isToday } from '@/utils/date';
@@ -59,6 +60,8 @@ function loadReadIds(userId: string | undefined): Set<string> {
 export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { tasks } = useTasks();
   const { account } = useAuth();
+  const { user } = useUser();
+  const prefs = user.notifications;
   const userId = account?.id;
 
   const [readIds, setReadIds] = useState<Set<string>>(() => loadReadIds(userId));
@@ -138,48 +141,57 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       }),
     );
 
-    tasks
-      .filter(t => t.status === 'overdue')
-      .forEach(t =>
-        raw.push({
-          id: `o-${t.id}`,
-          icon: <AlertCircle size={18} />,
-          title: t.title,
-          detail: t.dueDate ? `Atrasada desde ${formatDate(t.dueDate)}` : 'Tarefa atrasada',
-          tone: '#F43F5E',
-          link: '/tasks',
-        }),
-      );
+    // "Prazos próximos" controla as atrasadas.
+    if (prefs.deadline) {
+      tasks
+        .filter(t => t.status === 'overdue')
+        .forEach(t =>
+          raw.push({
+            id: `o-${t.id}`,
+            icon: <AlertCircle size={18} />,
+            title: t.title,
+            detail: t.dueDate ? `Atrasada desde ${formatDate(t.dueDate)}` : 'Tarefa atrasada',
+            tone: '#F43F5E',
+            link: '/tasks',
+          }),
+        );
+    }
 
-    tasks
-      .filter(t => t.status !== 'completed' && t.dueDate && isToday(t.dueDate))
-      .forEach(t =>
-        raw.push({
-          id: `t-${t.id}`,
-          icon: <CalendarClock size={18} />,
-          title: t.title,
-          detail: 'Vence hoje',
-          tone: '#2477FF',
-          link: '/tasks',
-        }),
-      );
+    // "Tarefas pendentes" controla as que vencem hoje.
+    if (prefs.pending) {
+      tasks
+        .filter(t => t.status !== 'completed' && t.dueDate && isToday(t.dueDate))
+        .forEach(t =>
+          raw.push({
+            id: `t-${t.id}`,
+            icon: <CalendarClock size={18} />,
+            title: t.title,
+            detail: 'Vence hoje',
+            tone: '#2477FF',
+            link: '/tasks',
+          }),
+        );
+    }
 
-    tasks
-      .filter(t => t.status === 'completed' && t.completedAt && isToday(t.completedAt))
-      .slice(0, 2)
-      .forEach(t =>
-        raw.push({
-          id: `d-${t.id}`,
-          icon: <CheckCircle2 size={18} />,
-          title: t.title,
-          detail: 'Concluída hoje',
-          tone: '#22C55E',
-          link: '/tasks',
-        }),
-      );
+    // "Lembretes diários" controla o resumo de concluídas hoje.
+    if (prefs.daily) {
+      tasks
+        .filter(t => t.status === 'completed' && t.completedAt && isToday(t.completedAt))
+        .slice(0, 2)
+        .forEach(t =>
+          raw.push({
+            id: `d-${t.id}`,
+            icon: <CheckCircle2 size={18} />,
+            title: t.title,
+            detail: 'Concluída hoje',
+            tone: '#22C55E',
+            link: '/tasks',
+          }),
+        );
+    }
 
     return raw.map(item => ({ ...item, read: readIds.has(item.id) }));
-  }, [tasks, account, joinRequests, readIds]);
+  }, [tasks, account, joinRequests, readIds, prefs]);
 
   const unreadCount = useMemo(() => items.filter(i => !i.read).length, [items]);
 
