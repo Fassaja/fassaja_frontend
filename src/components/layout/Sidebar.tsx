@@ -24,6 +24,7 @@ import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/', free: true },
@@ -40,6 +41,9 @@ export const Sidebar: React.FC = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+
+  // Trava o scroll da página atrás enquanto o menu (drawer mobile) está aberto.
+  useBodyScrollLock(isOpen);
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useUser();
@@ -74,7 +78,7 @@ export const Sidebar: React.FC = () => {
           lg:translate-x-0
         `}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-y-auto">
           {/* Logo */}
           <div className="pt-6 pb-3 flex justify-center">
             <div className="w-full h-20 flex items-center justify-center overflow-hidden">
