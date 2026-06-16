@@ -101,7 +101,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       </div>
 
       <button
-        onClick={() => navigate('/tasks')}
+        onClick={() => navigate(`/tasks?project=${project.id}`)}
         className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border bg-white/70 text-sm font-semibold text-text-primary hover:bg-white transition-colors"
       >
         Ver tarefas

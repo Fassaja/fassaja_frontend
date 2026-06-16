@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { TaskList } from '@/components/tasks/TaskList';
 import { TaskFilters } from '@/components/tasks/TaskFilters';
@@ -28,10 +29,14 @@ const TasksPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>();
 
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all');
-  const [filterProject, setFilterProject] = useState<string | 'all'>('all');
+  // Pré-seleciona o projeto vindo de "Ver tarefas" em Projetos (?project=ID).
+  const [filterProject, setFilterProject] = useState<string | 'all'>(
+    () => searchParams.get('project') ?? 'all',
+  );
 
   const handleEditTask = (task: Task) => {
     setSelectedTask(task);
