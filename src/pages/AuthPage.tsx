@@ -113,6 +113,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               <strong className="text-text-primary">{registeredEmail}</strong>. Clique nele para
               ativar sua conta.
             </p>
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+              ⚠️ Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico — e
+              marque como "não é spam" para receber os próximos.
+            </div>
             <button
               type="button"
               onClick={handleResend}
