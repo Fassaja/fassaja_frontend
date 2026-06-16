@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, MailCheck } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
@@ -24,6 +24,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const [loading, setLoading] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const [resendMsg, setResendMsg] = useState('');
+
+  // Ao alternar entre /register e /login (mesmo componente é reaproveitado),
+  // limpa a tela de "confirme seu e-mail" para mostrar o formulário certo.
+  useEffect(() => {
+    setRegisteredEmail(null);
+    setResendMsg('');
+    setError('');
+  }, [mode]);
 
   const set = (key: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
