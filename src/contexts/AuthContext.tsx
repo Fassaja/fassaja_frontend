@@ -72,7 +72,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
-  const { updateUser } = useUser();
+  const { updateUser, setScope } = useUser();
 
   const [account, setAccount] = useState<Account | null>(() =>
     readJSON<Account | null>(SESSION_KEY, null),
@@ -91,6 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // sobrado um nome de uma sessão anterior no navegador.
   useEffect(() => {
     if (!account) {
+      setScope(null);
       updateUser({ name: 'Visitante', email: '', role: 'Conta visitante', avatar: undefined });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthenticated(true);
     // Descarta a sandbox local do visitante ao assumir uma conta real.
     guestTasksStore.clear();
+    setScope(acc.id); // carrega metas/preferências/sequência desta conta
     syncAccount(acc);
   };
 
@@ -126,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const justVerified = new URLSearchParams(window.location.search).get('verified') === '1';
     if (account) {
+      setScope(account.id); // recarga já logado: carrega os dados desta conta
       api
         .get<Account>('/auth/me')
         .then(syncAccount)
@@ -221,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void api.post('/auth/logout', {}).catch(() => undefined);
     persistSession(null);
     setAuthenticated(false);
+    setScope(null);
     setAccount(null);
     updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
     navigate('/login');
@@ -231,6 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handler = () => {
       persistSession(null);
       setAuthenticated(false);
+      setScope(null);
       setAccount(null);
       updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
       navigate('/login?expired=1');

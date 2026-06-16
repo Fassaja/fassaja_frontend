@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { mockUser } from '@/data/mockUser';
 
 export interface NotificationPrefs {
@@ -22,9 +22,17 @@ interface UserContextValue {
   user: UserProfile;
   updateUser: (patch: Partial<UserProfile>) => void;
   recordProductiveDay: () => void;
+  // Troca o "escopo" dos dados por conta (id do usuário) ou null (visitante).
+  setScope: (scope: string | null) => void;
 }
 
 const STORAGE_KEY = 'fassaja_user';
+
+// Dados (metas/preferências/sequência) são por conta: guest na chave legada,
+// usuários autenticados em chaves próprias — evita vazar entre contas no mesmo navegador.
+function storageKey(scope: string): string {
+  return scope === 'guest' ? STORAGE_KEY : `${STORAGE_KEY}_${scope}`;
+}
 
 const defaultUser: UserProfile = {
   name: 'Visitante',
@@ -37,9 +45,9 @@ const defaultUser: UserProfile = {
   productiveDays: [],
 };
 
-function loadUser(): UserProfile {
+function loadUser(scope: string): UserProfile {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey(scope));
     if (raw) return { ...defaultUser, ...JSON.parse(raw) };
   } catch {
     // ignora JSON inválido
@@ -51,6 +59,7 @@ const UserContext = createContext<UserContextValue>({
   user: defaultUser,
   updateUser: () => {},
   recordProductiveDay: () => {},
+  setScope: () => {},
 });
 
 export const useUser = () => useContext(UserContext);
@@ -84,15 +93,23 @@ export function initialsOf(name: string): string {
 }
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile>(loadUser);
+  const [scope, setScopeState] = useState<string>('guest');
+  const [user, setUser] = useState<UserProfile>(() => loadUser('guest'));
 
+  // Persiste sempre na chave do escopo atual.
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      localStorage.setItem(storageKey(scope), JSON.stringify(user));
     } catch {
       // armazenamento indisponível
     }
-  }, [user]);
+  }, [user, scope]);
+
+  const setScope = useCallback((s: string | null) => {
+    const sc = s ?? 'guest';
+    setScopeState(sc);
+    setUser(loadUser(sc)); // carrega os dados daquela conta
+  }, []);
 
   const updateUser = (patch: Partial<UserProfile>) =>
     setUser(prev => ({ ...prev, ...patch }));
@@ -105,7 +122,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
   return (
-    <UserContext.Provider value={{ user, updateUser, recordProductiveDay }}>
+    <UserContext.Provider value={{ user, updateUser, recordProductiveDay, setScope }}>
       {children}
     </UserContext.Provider>
   );
