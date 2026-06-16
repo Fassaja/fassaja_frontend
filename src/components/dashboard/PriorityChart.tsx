@@ -5,6 +5,7 @@ import { Task } from '@/types/task';
 
 interface PriorityChartProps {
   tasks: Task[];
+  children?: React.ReactNode; // conteúdo extra dentro do mesmo card (ex.: sequência)
 }
 
 const SEGMENTS = [
@@ -13,7 +14,7 @@ const SEGMENTS = [
   { key: 'low', label: 'Baixa', color: '#22C55E' },
 ] as const;
 
-export const PriorityChart: React.FC<PriorityChartProps> = ({ tasks }) => {
+export const PriorityChart: React.FC<PriorityChartProps> = ({ tasks, children }) => {
   const { data, total } = useMemo(() => {
     const counts = SEGMENTS.map(seg => ({
       ...seg,
@@ -69,6 +70,8 @@ export const PriorityChart: React.FC<PriorityChartProps> = ({ tasks }) => {
           ))}
         </ul>
       </div>
+
+      {children && <div className="mt-6 pt-6 border-t border-border">{children}</div>}
     </Card>
   );
 };

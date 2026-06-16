@@ -7,10 +7,10 @@ interface MetricCardProps {
   value: number;
   icon: React.ReactNode;
   color: string;
+  // Variação vs semana passada: percent pode ser negativo; good = cor verde.
   comparison?: {
-    value: number;
-    isPositive: boolean;
-    period: string;
+    percent: number;
+    good: boolean;
   };
 }
 
@@ -41,19 +41,19 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
       {comparison && (
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-          <span
-            className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
-              comparison.isPositive ? 'text-success' : 'text-danger'
-            }`}
-          >
-            {comparison.isPositive ? (
-              <TrendingUp size={14} />
-            ) : (
-              <TrendingDown size={14} />
-            )}
-            {comparison.value}%
-          </span>
-          <span className="text-xs text-text-secondary">vs {comparison.period}</span>
+          {comparison.percent === 0 ? (
+            <span className="text-xs font-semibold text-text-soft">0%</span>
+          ) : (
+            <span
+              className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
+                comparison.good ? 'text-success' : 'text-danger'
+              }`}
+            >
+              {comparison.percent > 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+              {Math.abs(comparison.percent)}%
+            </span>
+          )}
+          <span className="text-xs text-text-secondary">vs semana passada</span>
         </div>
       )}
     </Card>

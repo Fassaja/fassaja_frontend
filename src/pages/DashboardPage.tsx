@@ -6,6 +6,7 @@ import { WeeklyOverviewChart } from '@/components/dashboard/WeeklyOverviewChart'
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
 import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
 import { PriorityChart } from '@/components/dashboard/PriorityChart';
+import { StreakContent } from '@/components/dashboard/StreakCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Card } from '@/components/common/Card';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
@@ -111,28 +112,28 @@ const DashboardPage: React.FC = () => {
             value={stats.total}
             icon={<ListTodo size={22} />}
             color="#2477FF"
-            comparison={{ value: 12, isPositive: true, period: 'semana passada' }}
+            comparison={stats.comparisons.total}
           />
           <MetricCard
             title="Concluídas"
             value={stats.completed}
             icon={<CheckCircle size={22} />}
             color="#22C55E"
-            comparison={{ value: 18, isPositive: true, period: 'semana passada' }}
+            comparison={stats.comparisons.completed}
           />
           <MetricCard
             title="Em Andamento"
             value={stats.inProgress}
             icon={<Clock size={22} />}
             color="#FBBF24"
-            comparison={{ value: 5, isPositive: false, period: 'semana passada' }}
+            comparison={stats.comparisons.inProgress}
           />
           <MetricCard
             title="Atrasadas"
             value={stats.overdue}
             icon={<AlertCircle size={22} />}
             color="#F43F5E"
-            comparison={{ value: 2, isPositive: false, period: 'semana passada' }}
+            comparison={stats.comparisons.overdue}
           />
         </div>
 
@@ -177,7 +178,9 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
           <div className="lg:col-span-1">
-            <PriorityChart tasks={tasks} />
+            <PriorityChart tasks={tasks}>
+              <StreakContent />
+            </PriorityChart>
           </div>
         </div>
         </>}
