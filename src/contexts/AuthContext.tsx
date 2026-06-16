@@ -22,6 +22,11 @@ interface AuthResult {
   error?: string;
 }
 
+interface RegisterResult extends AuthResult {
+  needsVerification?: boolean;
+  message?: string;
+}
+
 interface AuthResponse {
   token: string;
   user: Account;
@@ -32,7 +37,8 @@ interface AuthContextValue {
   isGuest: boolean;
   account: Account | null;
   login: (email: string, password: string) => Promise<AuthResult>;
-  register: (name: string, email: string, password: string) => Promise<AuthResult>;
+  register: (name: string, email: string, password: string) => Promise<RegisterResult>;
+  resendVerification: (email: string) => Promise<AuthResult>;
   changePassword: (current: string, next: string) => Promise<AuthResult>;
   updateName: (name: string) => Promise<AuthResult>;
   updateAvatar: (avatar: string | null) => Promise<AuthResult>;
@@ -137,14 +143,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<AuthResult> => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+  ): Promise<RegisterResult> => {
     try {
-      const res = await api.post<AuthResponse>('/auth/register', {
+      // Não loga: o usuário precisa confirmar o e-mail antes.
+      const res = await api.post<{ message: string }>('/auth/register', {
         name: name.trim(),
         email: email.trim(),
         password,
       });
-      adopt(res.user);
+      return { ok: true, needsVerification: true, message: res.message };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
+  };
+
+  const resendVerification = async (email: string): Promise<AuthResult> => {
+    try {
+      await api.post('/auth/resend-verification', { email: email.trim() });
       return { ok: true };
     } catch (err) {
       return { ok: false, error: (err as Error).message };
@@ -234,6 +253,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         account,
         login,
         register,
+        resendVerification,
         changePassword,
         updateName,
         updateAvatar,

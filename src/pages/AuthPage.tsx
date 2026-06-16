@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, MailCheck } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -15,12 +15,15 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
   const sessionExpired = searchParams.get('expired') === '1';
-  const { login, register } = useAuth();
+  const verifiedParam = searchParams.get('verified'); // '1' ok | '0' inválido
+  const { login, register, resendVerification } = useAuth();
   const isLogin = mode === 'login';
 
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
+  const [resendMsg, setResendMsg] = useState('');
 
   const set = (key: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -39,16 +42,28 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
     }
 
     setLoading(true);
-    const result = isLogin
-      ? await login(form.email, form.password)
-      : await register(form.name, form.email, form.password);
+    if (isLogin) {
+      const result = await login(form.email, form.password);
+      setLoading(false);
+      if (result.ok) navigate(redirectTo);
+      else setError(result.error ?? 'Algo deu errado. Tente novamente.');
+      return;
+    }
+    const result = await register(form.name, form.email, form.password);
     setLoading(false);
-
     if (result.ok) {
-      navigate(redirectTo);
+      // Não loga: mostra a tela de "confirme seu e-mail".
+      setRegisteredEmail(form.email.trim());
     } else {
       setError(result.error ?? 'Algo deu errado. Tente novamente.');
     }
+  };
+
+  const handleResend = async () => {
+    if (!registeredEmail) return;
+    setResendMsg('');
+    const r = await resendVerification(registeredEmail);
+    setResendMsg(r.ok ? 'E-mail reenviado. Confira sua caixa de entrada.' : (r.error ?? 'Falha ao reenviar.'));
   };
 
   return (
@@ -87,6 +102,37 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             </div>
           </div>
 
+          {registeredEmail ? (
+          <div className="text-center">
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-primary-light flex items-center justify-center">
+              <MailCheck size={28} className="text-primary-vibrant" />
+            </div>
+            <h2 className="text-2xl font-bold text-text-primary">Confirme seu e-mail</h2>
+            <p className="text-text-secondary mt-2">
+              Enviamos um link de confirmação para{' '}
+              <strong className="text-text-primary">{registeredEmail}</strong>. Clique nele para
+              ativar sua conta.
+            </p>
+            <button
+              type="button"
+              onClick={handleResend}
+              className="mt-5 text-sm font-semibold text-primary-vibrant hover:text-primary-hover"
+            >
+              Não recebeu? Reenviar e-mail
+            </button>
+            {resendMsg && <p className="text-sm text-success mt-2">{resendMsg}</p>}
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                className="text-sm font-semibold text-text-secondary hover:text-text-primary"
+              >
+                Voltar para o login
+              </button>
+            </div>
+          </div>
+          ) : (
+          <>
           <h2 className="text-2xl font-bold text-text-primary">
             {isLogin ? 'Bem-vindo de volta 👋' : 'Crie sua conta'}
           </h2>
@@ -99,6 +145,17 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           {sessionExpired && isLogin && (
             <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
               Sua sessão expirou. Entre novamente para continuar.
+            </div>
+          )}
+
+          {verifiedParam === '1' && isLogin && (
+            <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+              E-mail confirmado! Faça login para entrar.
+            </div>
+          )}
+          {verifiedParam === '0' && isLogin && (
+            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              Link inválido ou expirado. Faça login para reenviar a confirmação.
             </div>
           )}
 
@@ -172,6 +229,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           <p className="text-xs text-text-soft text-center mt-2">
             Visitantes usam o Dashboard e Minhas Tarefas, com até 3 tarefas por dia.
           </p>
+          </>
+          )}
         </div>
       </div>
     </div>
