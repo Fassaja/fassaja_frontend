@@ -1,10 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Users, Plus, Crown, Trash2, UserPlus, Link2, Copy, Check, Clock } from 'lucide-react';
+import {
+  Users,
+  Plus,
+  Crown,
+  Trash2,
+  UserPlus,
+  Link2,
+  Copy,
+  Check,
+  Clock,
+  FolderOpen,
+} from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
+import { Dropdown } from '@/components/common/Dropdown';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
@@ -12,9 +24,22 @@ import { useAuth } from '@/contexts/AuthContext';
 import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
-import { TeamSummary, TeamMember, PendingRequest } from '@/types/team';
+import { TeamSummary, TeamMember, PendingRequest, TeamProjectSummary } from '@/types/team';
 
 const AVATAR_COLORS = ['#2477FF', '#8B5CF6', '#22C55E', '#FB7185', '#FBBF24', '#2DD4BF'];
+
+// Cargos sugeridos para os membros da equipe ('' = sem cargo).
+const ROLE_OPTIONS = [
+  { value: '', label: 'Sem cargo' },
+  { value: 'Gerente de Projeto', label: 'Gerente de Projeto' },
+  { value: 'Desenvolvedor(a)', label: 'Desenvolvedor(a)' },
+  { value: 'Designer', label: 'Designer' },
+  { value: 'Produto', label: 'Produto' },
+  { value: 'Marketing', label: 'Marketing' },
+  { value: 'Analista', label: 'Analista' },
+  { value: 'QA / Testes', label: 'QA / Testes' },
+  { value: 'Suporte', label: 'Suporte' },
+];
 
 const TeamPage: React.FC = () => {
   const { account } = useAuth();
@@ -37,6 +62,8 @@ const TeamPage: React.FC = () => {
   const [inviteToken, setInviteToken] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const [teamProjects, setTeamProjects] = useState<TeamProjectSummary[]>([]);
 
   const selectedTeam = teams.find(t => t.id === selectedId) ?? null;
   const isOwner = selectedTeam?.ownerId === userId;
@@ -61,10 +88,19 @@ const TeamPage: React.FC = () => {
   useEffect(() => {
     if (!selectedId) {
       setMembers([]);
+      setTeamProjects([]);
       return;
     }
     teamsService.getMembers(selectedId).then(setMembers).catch(() => setMembers([]));
+    teamsService.getProjects(selectedId).then(setTeamProjects).catch(() => setTeamProjects([]));
   }, [selectedId]);
+
+  const saveTitle = async (userId: string, value: string) => {
+    if (!selectedId) return;
+    setMembers(prev => prev.map(m => (m.userId === userId ? { ...m, title: value || null } : m)));
+    await teamsService.setMemberTitle(selectedId, userId, value);
+    setMembers(await teamsService.getMembers(selectedId));
+  };
 
   const loadRequests = useCallback(async () => {
     if (!selectedId || !isOwner || !userId) {
@@ -353,26 +389,52 @@ const TeamPage: React.FC = () => {
                 {members.map((m, i) => (
                   <div
                     key={m.userId}
-                    className="group flex items-center gap-3 p-3 rounded-xl border border-border"
+                    className="group flex items-start gap-3 p-3 rounded-xl border border-border"
                   >
-                    <div
-                      className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold shrink-0"
-                      style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
-                    >
-                      {initialsOf(m.name)}
-                    </div>
+                    {m.avatar ? (
+                      <img
+                        src={m.avatar}
+                        alt={m.name}
+                        className="w-11 h-11 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div
+                        className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold shrink-0"
+                        style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
+                      >
+                        {initialsOf(m.name)}
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-text-primary truncate flex items-center gap-1.5">
                         {m.name}
                         {m.role === 'owner' && <Crown size={14} className="text-amber-500 shrink-0" />}
                       </p>
                       <p className="text-xs text-text-secondary truncate">{m.email}</p>
+
+                      {isOwner ? (
+                        <div className="mt-1.5">
+                          <Dropdown
+                            size="sm"
+                            value={m.title ?? ''}
+                            options={ROLE_OPTIONS}
+                            onChange={v => saveTitle(m.userId, v)}
+                            placeholder="Definir cargo"
+                          />
+                        </div>
+                      ) : (
+                        m.title && (
+                          <span className="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
+                            {m.title}
+                          </span>
+                        )
+                      )}
                     </div>
                     {isOwner && m.role !== 'owner' && (
                       <button
                         onClick={() => setRemoving(m)}
                         aria-label="Remover membro"
-                        className="p-2 rounded-lg text-danger opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-rose-50 transition-all"
+                        className="p-2 rounded-lg text-danger opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-rose-50 transition-all shrink-0"
                       >
                         <Trash2 size={15} />
                       </button>
@@ -380,6 +442,35 @@ const TeamPage: React.FC = () => {
                   </div>
                 ))}
               </div>
+
+              {teamProjects.length > 0 && (
+                <div className="mt-6 pt-5 border-t border-border">
+                  <h3 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
+                    <FolderOpen size={16} className="text-primary-vibrant" /> Projetos da equipe (
+                    {teamProjects.length})
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {teamProjects.map(p => (
+                      <div
+                        key={p.id}
+                        className="flex items-center gap-3 p-3 rounded-xl border border-border"
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: p.color }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-text-primary truncate">{p.name}</p>
+                          <p className="text-xs text-text-secondary">
+                            {p.taskCount} {p.taskCount === 1 ? 'tarefa' : 'tarefas'} ·{' '}
+                            {p.completedCount} concluída{p.completedCount === 1 ? '' : 's'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
           )}
         </div>

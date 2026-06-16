@@ -12,6 +12,16 @@ export interface TeamMember {
   name: string;
   email: string;
   role: string; // owner | member
+  title?: string | null; // cargo personalizado na equipe
+  avatar?: string | null;
+}
+
+export interface TeamProjectSummary {
+  id: string;
+  name: string;
+  color: string;
+  taskCount: number;
+  completedCount: number;
 }
 
 export interface InviteState {
