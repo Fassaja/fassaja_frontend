@@ -115,9 +115,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Ao montar logado, atualiza os dados a partir do banco (avatar, cooldowns).
+  // Se o servidor disser que a sessão é inválida (401), encerra o estado local.
   useEffect(() => {
     if (!account) return;
-    api.get<Account>('/auth/me').then(syncAccount).catch(() => undefined);
+    api
+      .get<Account>('/auth/me')
+      .then(syncAccount)
+      .catch((err: Error & { status?: number }) => {
+        if (err.status === 401) window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -194,6 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const handler = () => {
       persistSession(null);
+      setAuthenticated(false);
       setAccount(null);
       updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
       navigate('/login?expired=1');
