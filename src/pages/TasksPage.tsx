@@ -5,6 +5,7 @@ import { TaskList } from '@/components/tasks/TaskList';
 import { TaskFilters } from '@/components/tasks/TaskFilters';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
+import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
@@ -27,6 +28,7 @@ const TasksPage: React.FC = () => {
     setShowCreateModal(true);
   };
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>();
 
   const [searchParams] = useSearchParams();
@@ -38,7 +40,13 @@ const TasksPage: React.FC = () => {
     () => searchParams.get('project') ?? 'all',
   );
 
+  const handleOpenTask = (task: Task) => {
+    setSelectedTask(task);
+    setShowDetailModal(true);
+  };
+
   const handleEditTask = (task: Task) => {
+    setShowDetailModal(false);
     setSelectedTask(task);
     setShowEditModal(true);
   };
@@ -67,6 +75,17 @@ const TasksPage: React.FC = () => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCreateTask={createTask}
+      />
+
+      <TaskDetailModal
+        isOpen={showDetailModal}
+        task={selectedTask}
+        project={projects.find(p => p.id === selectedTask?.projectId)}
+        onClose={() => {
+          setShowDetailModal(false);
+          setSelectedTask(undefined);
+        }}
+        onEdit={handleEditTask}
       />
 
       <EditTaskModal
@@ -137,7 +156,7 @@ const TasksPage: React.FC = () => {
             filterProject={filterProject}
             onComplete={completeTask}
             onDelete={deleteTask}
-            onEdit={handleEditTask}
+            onEdit={handleOpenTask}
           />
         </div>
         </>}
