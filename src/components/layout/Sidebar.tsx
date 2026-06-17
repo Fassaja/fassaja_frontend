@@ -18,6 +18,8 @@ import {
   MessageCircle,
   Lock,
   LogIn,
+  Timer,
+  ExternalLink,
 } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
@@ -139,6 +141,24 @@ export const Sidebar: React.FC = () => {
                 </Link>
               );
             })}
+
+            {/* Parceiro — Focuss Pomodoro (somente desktop) */}
+            <a
+              href="https://focuss-pomodoro.onrender.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:flex items-center gap-3 px-4 py-2.5 mt-1 rounded-xl font-medium text-[15px] text-primary-dark/80 hover:bg-primary-light hover:text-primary-dark transition-colors duration-200 border border-dashed border-primary-vibrant/30"
+              title="Parceiro do Fassaja — abre em nova aba"
+            >
+              <Timer size={20} className="text-primary-vibrant shrink-0" />
+              <span className="flex-1 min-w-0">
+                Focuss Pomodoro
+                <span className="block text-[10px] font-semibold text-text-soft leading-none mt-0.5">
+                  Parceiro
+                </span>
+              </span>
+              <ExternalLink size={14} className="text-text-soft shrink-0" />
+            </a>
           </nav>
 
           {/* Guest CTA / User profile */}
