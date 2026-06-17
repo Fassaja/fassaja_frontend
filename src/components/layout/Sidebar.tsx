@@ -20,6 +20,7 @@ import {
   LogIn,
   Timer,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
@@ -36,6 +37,7 @@ const navItems = [
   { icon: Flag, label: 'Prioridades', path: '/priorities', free: false },
   { icon: BarChart3, label: 'Relatórios', path: '/reports', free: false },
   { icon: Users, label: 'Equipe', path: '/team', free: false },
+  { icon: Sparkles, label: 'Assistente IA', path: '/ai', free: false },
 ];
 
 export const Sidebar: React.FC = () => {

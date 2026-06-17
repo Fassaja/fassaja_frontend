@@ -9,6 +9,7 @@ import ReportsPage from '@/pages/ReportsPage';
 import TeamPage from '@/pages/TeamPage';
 import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
+import AiAssistantPage from '@/pages/AiAssistantPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import AuthPage from '@/pages/AuthPage';
 import JoinPage from '@/pages/JoinPage';
@@ -35,6 +36,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/priorities" element={<RequireAuth><PrioritiesPage /></RequireAuth>} />
       <Route path="/reports" element={<RequireAuth><ReportsPage /></RequireAuth>} />
       <Route path="/team" element={<RequireAuth><TeamPage /></RequireAuth>} />
+      <Route path="/ai" element={<RequireAuth><AiAssistantPage /></RequireAuth>} />
       <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
       <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
 
