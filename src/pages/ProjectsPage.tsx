@@ -4,6 +4,7 @@ import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { EditProjectModal } from '@/components/projects/EditProjectModal';
 import { EmptyState } from '@/components/common/EmptyState';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
@@ -16,26 +17,22 @@ const ProjectsPage: React.FC = () => {
   const { tasks, deleteTask } = useTasks();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>();
+  const [deletingProject, setDeletingProject] = useState<Project | undefined>();
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDeleteProject = async (project: Project) => {
-    const projectTasks = tasks.filter(t => t.projectId === project.id);
+  const deletingTasks = deletingProject
+    ? tasks.filter(t => t.projectId === deletingProject.id)
+    : [];
 
-    if (projectTasks.length === 0) {
-      if (window.confirm(`Deseja deletar o projeto "${project.name}"?`)) {
-        await deleteProject(project.id);
-      }
-      return;
-    }
-
-    const message =
-      `O projeto "${project.name}" possui ${projectTasks.length} ` +
-      `${projectTasks.length === 1 ? 'tarefa' : 'tarefas'}.\n\n` +
-      `Clique em OK para excluir o projeto E todas as suas tarefas.\n` +
-      `Clique em Cancelar para não excluir nada.`;
-
-    if (window.confirm(message)) {
-      await Promise.all(projectTasks.map(t => deleteTask(t.id)));
-      await deleteProject(project.id);
+  const confirmDeleteProject = async () => {
+    if (!deletingProject) return;
+    try {
+      setIsDeleting(true);
+      await Promise.all(deletingTasks.map(t => deleteTask(t.id)));
+      await deleteProject(deletingProject.id);
+      setDeletingProject(undefined);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -62,6 +59,37 @@ const ProjectsPage: React.FC = () => {
         onUpdateProject={updateProject}
       />
 
+      <ConfirmDialog
+        isOpen={!!deletingProject}
+        mascotState="confused"
+        tone="danger"
+        title={`Excluir "${deletingProject?.name}"?`}
+        message={
+          deletingTasks.length > 0
+            ? `Este projeto tem ${deletingTasks.length} ${
+                deletingTasks.length === 1 ? 'tarefa vinculada' : 'tarefas vinculadas'
+              }.`
+            : 'Esta ação não pode ser desfeita.'
+        }
+        hint={
+          deletingTasks.length > 0 ? (
+            <>
+              <strong className="text-text-primary">Atenção:</strong> ao continuar, o projeto e{' '}
+              <strong className="text-text-primary">
+                todas as {deletingTasks.length === 1 ? 'sua tarefa' : `suas ${deletingTasks.length} tarefas`}
+              </strong>{' '}
+              serão excluídos. Esta ação não pode ser desfeita.
+            </>
+          ) : undefined
+        }
+        confirmLabel={
+          deletingTasks.length > 0 ? 'Excluir projeto e tarefas' : 'Excluir projeto'
+        }
+        cancelLabel="Cancelar"
+        onConfirm={confirmDeleteProject}
+        onClose={() => !isDeleting && setDeletingProject(undefined)}
+      />
+
       <AppLayout
         onNewTask={() => setShowCreateModal(true)}
         actionLabel="Novo Projeto"
@@ -81,7 +109,7 @@ const ProjectsPage: React.FC = () => {
                   taskCount={stats.total}
                   completedCount={stats.completed}
                   onEdit={() => setEditingProject(project)}
-                  onDelete={() => handleDeleteProject(project)}
+                  onDelete={() => setDeletingProject(project)}
                 />
               );
             })}

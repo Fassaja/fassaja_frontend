@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export type MascotState = 'happy' | 'strong' | 'confused' | 'sad' | 'error' | 'celebrate';
+export type MascotState = 'happy' | 'strong' | 'confused' | 'sad' | 'error' | 'celebrate' | 'investigate';
 
 interface MascotProps {
   state?: MascotState;
@@ -24,6 +24,7 @@ const mascotImages: Record<MascotState, string> = {
   sad: '/bobtriste.png',
   error: '/boberror404.png',
   celebrate: '/bobparabens.png',
+  investigate: '/bobinvestigador.png',
 };
 
 export const Mascot: React.FC<MascotProps> = ({

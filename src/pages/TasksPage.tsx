@@ -6,6 +6,7 @@ import { TaskFilters } from '@/components/tasks/TaskFilters';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
@@ -30,6 +31,19 @@ const TasksPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>();
+  const [deletingTask, setDeletingTask] = useState<Task | undefined>();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const confirmDeleteTask = async () => {
+    if (!deletingTask) return;
+    try {
+      setIsDeleting(true);
+      await deleteTask(deletingTask.id);
+      setDeletingTask(undefined);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,6 +112,24 @@ const TasksPage: React.FC = () => {
         onUpdateTask={updateTask}
       />
 
+      <ConfirmDialog
+        isOpen={!!deletingTask}
+        mascotState="investigate"
+        tone="danger"
+        title="Excluir esta tarefa?"
+        message={deletingTask ? `"${deletingTask.title}"` : ''}
+        hint={
+          <>
+            <strong className="text-text-primary">Atenção:</strong> esta tarefa será removida
+            permanentemente. Esta ação não pode ser desfeita.
+          </>
+        }
+        confirmLabel="Excluir tarefa"
+        cancelLabel="Cancelar"
+        onConfirm={confirmDeleteTask}
+        onClose={() => !isDeleting && setDeletingTask(undefined)}
+      />
+
       <AppLayout
         onNewTask={openNewTask}
         title="Minhas Tarefas"
@@ -155,7 +187,10 @@ const TasksPage: React.FC = () => {
             filterPriority={filterPriority}
             filterProject={filterProject}
             onComplete={completeTask}
-            onDelete={deleteTask}
+            onDelete={taskId => {
+              const task = tasks.find(t => t.id === taskId);
+              if (task) setDeletingTask(task);
+            }}
             onEdit={handleOpenTask}
           />
         </div>
