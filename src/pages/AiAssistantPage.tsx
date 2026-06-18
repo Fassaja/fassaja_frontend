@@ -13,7 +13,7 @@ import { DatePicker } from '@/components/common/DatePicker';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Modal } from '@/components/common/Modal';
 import { useCelebration } from '@/contexts/CelebrationContext';
-import { aiService } from '@/services/aiService';
+import { aiService, AiStatus } from '@/services/aiService';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary, TeamMember } from '@/types/team';
 import { useProjects } from '@/contexts/ProjectsContext';
@@ -84,18 +84,20 @@ const AiAssistantPage: React.FC = () => {
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
-  const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<AiStatus | null>(null);
   const [success, setSuccess] = useState<{ name: string; count: number } | null>(null);
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Descobre, ao abrir a tela, se a IA real está ativa ou em modo demonstração.
+  const aiEnabled = status?.aiEnabled ?? null;
+
+  // Status da IA (ativa? usos restantes) ao abrir a tela.
   useEffect(() => {
     aiService
       .status()
-      .then((s) => setAiEnabled(s.aiEnabled))
-      .catch(() => setAiEnabled(null));
+      .then(setStatus)
+      .catch(() => setStatus(null));
     teamsService
       .listTeams()
       .then(setTeams)
@@ -116,7 +118,10 @@ const AiAssistantPage: React.FC = () => {
     }
   };
 
-  const canGenerate = documentText.trim().length > 0 && !generating && !extracting;
+  // Sem usos restantes (só no modo IA real) bloqueia a geração.
+  const outOfUses = !!status?.aiEnabled && status.remaining <= 0;
+  const canGenerate =
+    documentText.trim().length > 0 && !generating && !extracting && !outOfUses;
 
   const handlePickFile = () => {
     setImportError(null);
@@ -180,6 +185,8 @@ const AiAssistantPage: React.FC = () => {
         })),
       });
       setMembers([]);
+      // Atualiza os usos restantes (o uso da IA foi consumido).
+      aiService.status().then(setStatus).catch(() => {});
     } catch (err) {
       setGenerateError(
         err instanceof Error ? err.message : 'Não foi possível gerar o rascunho.',
@@ -290,7 +297,7 @@ const AiAssistantPage: React.FC = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.docx,.txt,.md,.csv,.json,.html,.rtf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+              accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
               className="hidden"
               onChange={handleFileSelected}
             />
@@ -316,7 +323,7 @@ const AiAssistantPage: React.FC = () => {
           )}
 
           <Textarea
-            label="Cole o conteúdo, ou importe um arquivo (PDF, Word .docx ou texto)"
+            label="Cole o conteúdo, ou importe um arquivo (PDF, Word .docx, .txt ou .md)"
             placeholder="Cole aqui o texto do documento que a IA deve usar como base — ou use o botão Importar arquivo."
             rows={10}
             value={documentText}
@@ -342,6 +349,16 @@ const AiAssistantPage: React.FC = () => {
           </Button>
 
           {generateError && <p className="text-xs text-danger">{generateError}</p>}
+
+          {aiEnabled && status && (
+            <p className="text-xs text-text-soft">
+              Usos da IA nesta semana:{' '}
+              <strong className={status.remaining === 0 ? 'text-danger' : 'text-text-primary'}>
+                {status.remaining} de {status.limit} restantes
+              </strong>
+              .
+            </p>
+          )}
 
           <p className="text-xs text-text-soft">
             Nada é salvo até você revisar e aprovar o rascunho.

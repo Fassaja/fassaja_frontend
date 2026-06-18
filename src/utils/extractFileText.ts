@@ -1,10 +1,10 @@
 /**
  * Extração de texto de arquivos, 100% no navegador (sem back-end, sem custo).
  *
- * Suporta:
+ * Suporta apenas:
  *   - PDF  → via pdfjs-dist (PDF.js da Mozilla)
  *   - DOCX → via mammoth
- *   - texto puro (.txt, .md, .csv, .json, .html, .rtf) → leitura direta
+ *   - texto (.txt, .md) → leitura direta
  *
  * Não suporta .doc antigo (Word 97-2003, binário) — só o .docx moderno.
  */
@@ -14,7 +14,7 @@ import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-const TEXT_EXTENSIONS = ['.txt', '.md', '.csv', '.json', '.html', '.rtf'];
+const TEXT_EXTENSIONS = ['.txt', '.md'];
 
 export type SupportedKind = 'pdf' | 'docx' | 'text';
 
@@ -67,7 +67,7 @@ export async function extractFileText(file: File): Promise<string> {
 
   if (kind === null) {
     throw new UnsupportedFileError(
-      'Formato não suportado. Use PDF, Word (.docx) ou texto (.txt, .md, .csv).',
+      'Formato não suportado. Use apenas PDF, Word (.docx), .txt ou .md.',
     );
   }
 

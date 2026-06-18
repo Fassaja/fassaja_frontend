@@ -41,10 +41,17 @@ export interface ApplyResult {
   createdCount: number;
 }
 
+export interface AiStatus {
+  aiEnabled: boolean;
+  limit: number;
+  used: number;
+  remaining: number;
+}
+
 export const aiService = {
-  /** Diz se a IA real está ativa (há chave) ou se está em modo demonstração. */
-  async status(): Promise<{ aiEnabled: boolean }> {
-    return api.get<{ aiEnabled: boolean }>('/ai/status');
+  /** Status da IA: ativa? e quantos usos restam nesta semana. */
+  async status(): Promise<AiStatus> {
+    return api.get<AiStatus>('/ai/status');
   },
 
   /** Pede à IA um rascunho de projeto + cards a partir do documento. */
