@@ -12,39 +12,11 @@ html {
 }
 
 body {
-  @apply bg-bg-main text-text-primary dark:bg-gray-900 dark:text-gray-100;
+  @apply bg-bg-main text-text-primary;
 }
 
 input, textarea, select {
-  @apply focus:outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100;
-}
-
-/* Dark mode tweaks */
-.dark {
-  --color-bg-main: #111827;
-  --color-text-primary: #f3f4f6;
-  --color-text-secondary: #9ca3af;
-  --color-border: #374151;
-}
-
-.dark .bg-white {
-  @apply bg-gray-800;
-}
-
-.dark .border-border {
-  @apply border-gray-700;
-}
-
-.dark .bg-gray-100 {
-  @apply bg-gray-800;
-}
-
-.dark .hover\:bg-gray-100:hover {
-  @apply bg-gray-700;
-}
-
-.dark .bg-gray-50 {
-  @apply bg-gray-800;
+  @apply focus:outline-none;
 }
 
 /* Barra de progresso de navegação (NProgress-like) */

@@ -1,9 +1,8 @@
 import React from 'react';
-import { Moon, Sun, Bell, Target } from 'lucide-react';
+import { Bell, Target } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useUser, NotificationPrefs } from '@/contexts/UserContext';
 
 const SectionHeader: React.FC<{ icon: React.ReactNode; color: string; title: string }> = ({
@@ -47,7 +46,6 @@ const notifLabels: { key: keyof NotificationPrefs; label: string; hint: string }
 ];
 
 const SettingsPage: React.FC = () => {
-  const { theme, toggleTheme } = useTheme();
   const { user, updateUser } = useUser();
 
   const toggleNotif = (key: keyof NotificationPrefs) =>
@@ -82,26 +80,6 @@ const SettingsPage: React.FC = () => {
           </p>
         </Card>
 
-        {/* Appearance */}
-        <Card>
-          <SectionHeader
-            icon={theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
-            color="#FBBF24"
-            title="Aparência"
-          />
-          <div className="flex items-center justify-between p-4 bg-bg-secondary dark:bg-gray-800 rounded-xl">
-            <div>
-              <p className="font-medium text-text-primary">
-                {theme === 'dark' ? 'Modo escuro' : 'Modo claro'}
-              </p>
-              <p className="text-sm text-text-secondary">
-                {theme === 'dark' ? 'Interface com fundo escuro' : 'Interface com fundo claro'}
-              </p>
-            </div>
-            <Toggle checked={theme === 'dark'} onChange={toggleTheme} />
-          </div>
-        </Card>
-
         {/* Notifications */}
         <Card>
           <SectionHeader icon={<Bell size={18} />} color="#8B5CF6" title="Notificações" />
@@ -112,7 +90,7 @@ const SettingsPage: React.FC = () => {
             {notifLabels.map(item => (
               <div
                 key={item.key}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-bg-secondary dark:hover:bg-gray-800 transition-colors"
+                className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-bg-secondary transition-colors"
               >
                 <div>
                   <p className="text-text-primary font-medium">{item.label}</p>
@@ -121,16 +99,6 @@ const SettingsPage: React.FC = () => {
                 <Toggle checked={user.notifications[item.key]} onChange={() => toggleNotif(item.key)} />
               </div>
             ))}
-          </div>
-        </Card>
-
-        {/* About */}
-        <Card>
-          <h3 className="text-lg font-bold text-text-primary mb-4">Sobre o Fassaja</h3>
-          <div className="space-y-2 text-sm text-text-secondary">
-            <p><strong className="text-text-primary">Versão:</strong> 1.0.0</p>
-            <p><strong className="text-text-primary">Desenvolvido com:</strong> React, TypeScript, Tailwind CSS</p>
-            <p>Seu gerenciador de tarefas com mascote amigável e interface intuitiva.</p>
           </div>
         </Card>
       </div>
