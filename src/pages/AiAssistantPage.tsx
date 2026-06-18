@@ -456,6 +456,16 @@ const AiAssistantPage: React.FC = () => {
           <p className="text-xs text-text-soft">
             Nada é salvo até você revisar e aprovar o rascunho.
           </p>
+
+          {aiEnabled && (
+            <p className="flex items-start gap-1.5 text-xs text-text-soft">
+              <Info size={13} className="mt-0.5 shrink-0" />
+              <span>
+                Ao gerar, o conteúdo do documento é enviado para a IA (Anthropic) para
+                processamento. Evite incluir dados sensíveis que não devam ser compartilhados.
+              </span>
+            </p>
+          )}
         </Card>
 
         {/* COLUNA DIREITA — rascunho */}
