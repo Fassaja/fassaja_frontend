@@ -30,8 +30,11 @@ export interface ApplyCardPayload {
 
 /** Corpo enviado a /ai/apply (rascunho aprovado pelo usuário). */
 export interface ApplyDraftPayload {
-  name: string;
-  color: string;
+  // Se informado, adiciona os cards a este projeto existente.
+  projectId?: string;
+  // Usados ao criar um projeto novo:
+  name?: string;
+  color?: string;
   description?: string;
   teamId?: string;
   cards: ApplyCardPayload[];

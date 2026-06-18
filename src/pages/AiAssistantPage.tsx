@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Trash2, Plus, Check, RotateCcw, FileText, Upload, Info } from 'lucide-react';
+import { Sparkles, Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -11,6 +11,8 @@ import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
 import { DatePicker } from '@/components/common/DatePicker';
 import { EmptyState } from '@/components/common/EmptyState';
+import { Skeleton } from '@/components/common/Skeletons';
+import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
 import { useCelebration } from '@/contexts/CelebrationContext';
 import { aiService, AiStatus, DraftMode } from '@/services/aiService';
@@ -50,7 +52,8 @@ interface ProjectDraft {
   color: string;
   cards: DraftCard[];
   generatedBy: 'ai' | 'demo';
-  teamId: string; // '' = projeto individual (sem equipe)
+  teamId: string; // '' = projeto individual (sem equipe) — só p/ projeto novo
+  targetProjectId: string; // '' = criar novo; senão, adicionar a este projeto
 }
 
 const priorityLabel: Record<DraftPriority, string> = {
@@ -67,11 +70,14 @@ const priorityVariant: Record<DraftPriority, 'default' | 'warning' | 'danger'> =
 
 const PALETTE = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'];
 
+// Mesmo limite validado no back-end (DraftRequestDto).
+const MAX_DOC_CHARS = 50000;
+
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 const AiAssistantPage: React.FC = () => {
   const navigate = useNavigate();
-  const { refresh: refreshProjects } = useProjects();
+  const { projects, refresh: refreshProjects } = useProjects();
   const { refresh: refreshTasks } = useTasks();
   const { celebrate } = useCelebration();
   const [documentText, setDocumentText] = useState('');
@@ -82,6 +88,7 @@ const AiAssistantPage: React.FC = () => {
   const [fileName, setFileName] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
@@ -119,22 +126,46 @@ const AiAssistantPage: React.FC = () => {
     }
   };
 
+  // Escolhe o destino: '' = novo projeto; senão, um projeto existente.
+  const handleSelectProject = async (projectId: string) => {
+    setDraft((d) =>
+      d ? { ...d, targetProjectId: projectId, cards: d.cards.map((c) => ({ ...c, assigneeId: '' })) } : d,
+    );
+    const proj = projects.find((p) => p.id === projectId);
+    if (projectId && proj?.type === 'team' && proj.teamId) {
+      try {
+        setMembers(await teamsService.getMembers(proj.teamId));
+      } catch {
+        setMembers([]);
+      }
+    } else {
+      setMembers([]);
+    }
+  };
+
   // Sem usos restantes (só no modo IA real) bloqueia a geração.
   const outOfUses = !!status?.aiEnabled && status.remaining <= 0;
+  const overLimit = documentText.length > MAX_DOC_CHARS;
   const canGenerate =
-    documentText.trim().length > 0 && !generating && !extracting && !outOfUses;
+    documentText.trim().length > 0 && !generating && !extracting && !outOfUses && !overLimit;
+
+  // Há equipe ativa? (projeto novo com time, ou projeto existente do tipo equipe)
+  const selectedProject = draft?.targetProjectId
+    ? projects.find((p) => p.id === draft.targetProjectId)
+    : undefined;
+  const teamActive = draft
+    ? draft.targetProjectId
+      ? selectedProject?.type === 'team'
+      : !!draft.teamId
+    : false;
 
   const handlePickFile = () => {
     setImportError(null);
     fileInputRef.current?.click();
   };
 
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    // Permite reimportar o mesmo arquivo depois (reseta o input).
-    e.target.value = '';
-    if (!file) return;
-
+  // Lê um arquivo (PDF/DOCX/TXT/MD) e joga o texto no campo do documento.
+  const processFile = async (file: File) => {
     setExtracting(true);
     setImportError(null);
     try {
@@ -163,6 +194,20 @@ const AiAssistantPage: React.FC = () => {
     }
   };
 
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Permite reimportar o mesmo arquivo depois (reseta o input).
+    e.target.value = '';
+    if (file) processFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
+  };
+
   const handleGenerate = async () => {
     setGenerating(true);
     setGenerateError(null);
@@ -176,6 +221,7 @@ const AiAssistantPage: React.FC = () => {
         color: result.color,
         generatedBy: result.generatedBy,
         teamId: '',
+        targetProjectId: '',
         cards: result.cards.map((c) => ({
           id: uid(),
           title: c.title,
@@ -226,19 +272,24 @@ const AiAssistantPage: React.FC = () => {
     setApplying(true);
     setApplyError(null);
     try {
-      const result = await aiService.apply({
-        name: draft.name,
-        color: draft.color,
-        description: draft.description || undefined,
-        teamId: draft.teamId || undefined,
-        cards: draft.cards.map((c) => ({
-          title: c.title,
-          description: c.description || undefined,
-          priority: c.priority,
-          dueDate: c.dueDate || undefined,
-          assigneeId: c.assigneeId || undefined,
-        })),
-      });
+      const cards = draft.cards.map((c) => ({
+        title: c.title,
+        description: c.description || undefined,
+        priority: c.priority,
+        dueDate: c.dueDate || undefined,
+        assigneeId: c.assigneeId || undefined,
+      }));
+      const result = await aiService.apply(
+        draft.targetProjectId
+          ? { projectId: draft.targetProjectId, cards }
+          : {
+              name: draft.name,
+              color: draft.color,
+              description: draft.description || undefined,
+              teamId: draft.teamId || undefined,
+              cards,
+            },
+      );
       // Atualiza as listas para o projeto/cards recém-criados aparecerem.
       await Promise.all([refreshProjects(), refreshTasks()]);
       setDraft(null);
@@ -270,7 +321,17 @@ const AiAssistantPage: React.FC = () => {
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* COLUNA ESQUERDA — entrada */}
-        <Card className="flex flex-col gap-4">
+        <Card
+          className={`flex flex-col gap-4 transition-all ${
+            dragging ? 'ring-2 ring-primary-vibrant ring-offset-2 bg-primary-light/30' : ''
+          }`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+        >
           {aiEnabled === false && (
             <div className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
               <Info size={16} className="mt-0.5 shrink-0" />
@@ -350,12 +411,18 @@ const AiAssistantPage: React.FC = () => {
 
           <Textarea
             label="Cole o conteúdo, ou importe um arquivo (PDF, Word .docx, .txt ou .md)"
-            placeholder="Cole aqui o texto do documento que a IA deve usar como base — ou use o botão Importar arquivo."
+            placeholder="Cole o texto aqui, use o botão Importar arquivo, ou arraste um arquivo para esta área."
             rows={10}
             value={documentText}
             onChange={(e) => setDocumentText(e.target.value)}
             error={importError ?? undefined}
           />
+          <div className="-mt-2 flex justify-end">
+            <span className={`text-xs ${overLimit ? 'text-danger font-medium' : 'text-text-soft'}`}>
+              {documentText.length.toLocaleString('pt-BR')} / {MAX_DOC_CHARS.toLocaleString('pt-BR')}
+              {overLimit && ' — documento muito grande'}
+            </span>
+          </div>
 
           <Textarea
             label="O que você quer? (comando)"
@@ -394,7 +461,31 @@ const AiAssistantPage: React.FC = () => {
         {/* COLUNA DIREITA — rascunho */}
         <div>
           <AnimatePresence mode="wait">
-            {!draft ? (
+            {generating ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Card className="h-full flex flex-col items-center gap-5 py-8">
+                  <Mascot state="strong" size="md" />
+                  <p className="font-medium text-text-primary">
+                    A IA está montando os cards...
+                  </p>
+                  <div className="w-full space-y-3">
+                    <Skeleton className="h-5 w-1/2" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-2/3" />
+                    <div className="pt-2 space-y-3">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ) : !draft ? (
               <motion.div
                 key="empty"
                 initial={{ opacity: 0 }}
@@ -425,57 +516,90 @@ const AiAssistantPage: React.FC = () => {
                     ) : (
                       <Badge variant="warning">Demonstração (genérico)</Badge>
                     )}
-                    <button
-                      onClick={reset}
-                      className="flex items-center gap-1 text-xs text-text-soft hover:text-text-primary transition-colors"
-                    >
-                      <RotateCcw size={14} /> Descartar
-                    </button>
-                  </div>
-
-                  <Input
-                    label="Nome do projeto"
-                    value={draft.name}
-                    onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                  />
-
-                  <Textarea
-                    label="Descrição"
-                    rows={2}
-                    value={draft.description}
-                    onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-                  />
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-text-primary">Cor:</span>
-                    {PALETTE.map((c) => (
+                    <div className="flex items-center gap-3">
                       <button
-                        key={c}
-                        onClick={() => setDraft({ ...draft, color: c })}
-                        className={`w-6 h-6 rounded-full border-2 transition-transform ${
-                          draft.color === c ? 'border-text-primary scale-110' : 'border-transparent'
-                        }`}
-                        style={{ backgroundColor: c }}
-                        aria-label={`Cor ${c}`}
-                      />
-                    ))}
+                        onClick={handleGenerate}
+                        disabled={!canGenerate}
+                        className="flex items-center gap-1 text-xs text-text-soft hover:text-primary-vibrant transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Gera um novo rascunho com o mesmo documento (consome 1 uso)."
+                      >
+                        <RefreshCw size={14} /> Gerar de novo
+                      </button>
+                      <button
+                        onClick={reset}
+                        className="flex items-center gap-1 text-xs text-text-soft hover:text-text-primary transition-colors"
+                      >
+                        <RotateCcw size={14} /> Descartar
+                      </button>
+                    </div>
                   </div>
 
                   <Select
-                    label="Equipe (opcional)"
-                    value={draft.teamId}
-                    onChange={handleSelectTeam}
-                    placeholder="Sem equipe (projeto individual)"
+                    label="Destino"
+                    value={draft.targetProjectId}
+                    onChange={handleSelectProject}
                     options={[
-                      { value: '', label: 'Sem equipe (projeto individual)' },
-                      ...teams.map((t) => ({ value: t.id, label: t.name })),
+                      { value: '', label: '➕ Criar um projeto novo' },
+                      ...projects.map((p) => ({ value: p.id, label: p.name })),
                     ]}
-                    helperText={
-                      draft.teamId
-                        ? 'Você poderá definir um responsável em cada card.'
-                        : 'Escolha uma equipe para poder atribuir responsáveis aos cards.'
-                    }
                   />
+
+                  {!draft.targetProjectId && (
+                    <>
+                      <Input
+                        label="Nome do projeto"
+                        value={draft.name}
+                        onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                      />
+
+                      <Textarea
+                        label="Descrição"
+                        rows={2}
+                        value={draft.description}
+                        onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                      />
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-text-primary">Cor:</span>
+                        {PALETTE.map((c) => (
+                          <button
+                            key={c}
+                            onClick={() => setDraft({ ...draft, color: c })}
+                            className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                              draft.color === c ? 'border-text-primary scale-110' : 'border-transparent'
+                            }`}
+                            style={{ backgroundColor: c }}
+                            aria-label={`Cor ${c}`}
+                          />
+                        ))}
+                      </div>
+
+                      <Select
+                        label="Equipe (opcional)"
+                        value={draft.teamId}
+                        onChange={handleSelectTeam}
+                        placeholder="Sem equipe (projeto individual)"
+                        options={[
+                          { value: '', label: 'Sem equipe (projeto individual)' },
+                          ...teams.map((t) => ({ value: t.id, label: t.name })),
+                        ]}
+                        helperText={
+                          draft.teamId
+                            ? 'Você poderá definir um responsável em cada card.'
+                            : 'Escolha uma equipe para poder atribuir responsáveis aos cards.'
+                        }
+                      />
+                    </>
+                  )}
+
+                  {draft.targetProjectId && (
+                    <p className="text-xs text-text-secondary">
+                      Os cards serão adicionados ao projeto selecionado.
+                      {selectedProject?.type === 'team'
+                        ? ' Você pode definir um responsável em cada card.'
+                        : ''}
+                    </p>
+                  )}
                 </Card>
 
                 {/* Cards propostos */}
@@ -534,7 +658,7 @@ const AiAssistantPage: React.FC = () => {
                           value={card.dueDate}
                           onChange={(v) => updateCard(card.id, { dueDate: v })}
                         />
-                        {draft.teamId && (
+                        {teamActive && (
                           <Select
                             label="Responsável"
                             value={card.assigneeId}
@@ -555,7 +679,11 @@ const AiAssistantPage: React.FC = () => {
 
                 <Button
                   onClick={handleApprove}
-                  disabled={draft.cards.length === 0 || !draft.name.trim() || applying}
+                  disabled={
+                    draft.cards.length === 0 ||
+                    (!draft.targetProjectId && !draft.name.trim()) ||
+                    applying
+                  }
                   isLoading={applying}
                   icon={<Check size={18} />}
                   className="w-full"
