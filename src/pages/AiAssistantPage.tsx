@@ -13,7 +13,7 @@ import { DatePicker } from '@/components/common/DatePicker';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Modal } from '@/components/common/Modal';
 import { useCelebration } from '@/contexts/CelebrationContext';
-import { aiService, AiStatus } from '@/services/aiService';
+import { aiService, AiStatus, DraftMode } from '@/services/aiService';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary, TeamMember } from '@/types/team';
 import { useProjects } from '@/contexts/ProjectsContext';
@@ -76,6 +76,7 @@ const AiAssistantPage: React.FC = () => {
   const { celebrate } = useCelebration();
   const [documentText, setDocumentText] = useState('');
   const [command, setCommand] = useState('');
+  const [mode, setMode] = useState<DraftMode>('structure');
   const [generating, setGenerating] = useState(false);
   const [draft, setDraft] = useState<ProjectDraft | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -167,7 +168,7 @@ const AiAssistantPage: React.FC = () => {
     setGenerateError(null);
     setApplyError(null);
     try {
-      const result = await aiService.draft(documentText, command || undefined);
+      const result = await aiService.draft(documentText, command || undefined, mode);
       // O back-end devolve cards sem id; adicionamos um id local para edição.
       setDraft({
         name: result.name,
@@ -278,6 +279,31 @@ const AiAssistantPage: React.FC = () => {
               </span>
             </div>
           )}
+
+          {/* Modo: estruturar projeto x analisar melhorias */}
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { id: 'structure', label: 'Estruturar projeto' },
+              { id: 'improve', label: 'Analisar melhorias' },
+            ] as { id: DraftMode; label: string }[]).map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id)}
+                className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                  mode === m.id
+                    ? 'border-primary-vibrant bg-primary-light text-primary-dark'
+                    : 'border-border bg-white text-text-secondary hover:bg-bg-secondary'
+                }`}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <p className="-mt-1 text-xs text-text-soft">
+            {mode === 'structure'
+              ? 'A IA monta um projeto com os passos do documento.'
+              : 'A IA analisa o documento e sugere tarefas de melhoria.'}
+          </p>
 
           <div className="flex items-center justify-between gap-2 text-text-primary">
             <div className="flex items-center gap-2">

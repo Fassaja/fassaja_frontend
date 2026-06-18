@@ -1,6 +1,7 @@
 import { api } from './api';
 
 export type DraftPriority = 'low' | 'medium' | 'high';
+export type DraftMode = 'structure' | 'improve';
 
 export interface DraftCardPayload {
   title: string;
@@ -55,8 +56,8 @@ export const aiService = {
   },
 
   /** Pede à IA um rascunho de projeto + cards a partir do documento. */
-  async draft(documentText: string, command?: string): Promise<DraftResponse> {
-    return api.post<DraftResponse>('/ai/draft', { documentText, command });
+  async draft(documentText: string, command?: string, mode?: DraftMode): Promise<DraftResponse> {
+    return api.post<DraftResponse>('/ai/draft', { documentText, command, mode });
   },
 
   /** Cria de verdade o projeto e os cards aprovados. */
