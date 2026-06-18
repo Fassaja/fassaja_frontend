@@ -11,6 +11,8 @@ import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
 import { DatePicker } from '@/components/common/DatePicker';
 import { EmptyState } from '@/components/common/EmptyState';
+import { Modal } from '@/components/common/Modal';
+import { useCelebration } from '@/contexts/CelebrationContext';
 import { aiService } from '@/services/aiService';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary, TeamMember } from '@/types/team';
@@ -71,6 +73,7 @@ const AiAssistantPage: React.FC = () => {
   const navigate = useNavigate();
   const { refresh: refreshProjects } = useProjects();
   const { refresh: refreshTasks } = useTasks();
+  const { celebrate } = useCelebration();
   const [documentText, setDocumentText] = useState('');
   const [command, setCommand] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -82,6 +85,7 @@ const AiAssistantPage: React.FC = () => {
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
+  const [success, setSuccess] = useState<{ name: string; count: number } | null>(null);
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -233,10 +237,10 @@ const AiAssistantPage: React.FC = () => {
       setDocumentText('');
       setCommand('');
       setFileName(null);
-      window.alert(
-        `Projeto "${result.project.name}" criado com ${result.createdCount} card(s)!`,
-      );
-      navigate('/projects');
+      setMembers([]);
+      // Popup de sucesso + confete. A navegação acontece quando o usuário decide.
+      setSuccess({ name: result.project.name, count: result.createdCount });
+      celebrate('Projeto criado com sucesso!', 'goal');
     } catch (err) {
       setApplyError(
         err instanceof Error ? err.message : 'Não foi possível criar o projeto.',
@@ -522,6 +526,47 @@ const AiAssistantPage: React.FC = () => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Popup de sucesso */}
+      <Modal
+        isOpen={!!success}
+        onClose={() => setSuccess(null)}
+        title="Tudo certo!"
+        size="sm"
+      >
+        <div className="flex flex-col items-center text-center gap-4 py-2">
+          <motion.img
+            src="/bobheroi.png"
+            alt="Bob herói comemorando"
+            className="w-32 h-32 object-contain drop-shadow-lg"
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+          />
+          <div>
+            <p className="font-semibold text-text-primary">
+              Projeto "{success?.name}" criado!
+            </p>
+            <p className="text-sm text-text-secondary mt-1">
+              {success?.count} card(s) adicionado(s) com sucesso.
+            </p>
+          </div>
+          <div className="flex w-full gap-2 pt-2">
+            <Button variant="secondary" className="flex-1" onClick={() => setSuccess(null)}>
+              Continuar aqui
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => {
+                setSuccess(null);
+                navigate('/projects');
+              }}
+            >
+              Ver projetos
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </AppLayout>
   );
 };
