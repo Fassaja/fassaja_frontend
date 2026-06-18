@@ -13,9 +13,31 @@ import { Project } from '@/types/project';
 const ProjectsPage: React.FC = () => {
   const { projects, createProject, updateProject, deleteProject, loading } = useProjects();
   const showSkeleton = useDeferredLoading(loading);
-  const { tasks } = useTasks();
+  const { tasks, deleteTask } = useTasks();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>();
+
+  const handleDeleteProject = async (project: Project) => {
+    const projectTasks = tasks.filter(t => t.projectId === project.id);
+
+    if (projectTasks.length === 0) {
+      if (window.confirm(`Deseja deletar o projeto "${project.name}"?`)) {
+        await deleteProject(project.id);
+      }
+      return;
+    }
+
+    const message =
+      `O projeto "${project.name}" possui ${projectTasks.length} ` +
+      `${projectTasks.length === 1 ? 'tarefa' : 'tarefas'}.\n\n` +
+      `Clique em OK para excluir o projeto E todas as suas tarefas.\n` +
+      `Clique em Cancelar para não excluir nada.`;
+
+    if (window.confirm(message)) {
+      await Promise.all(projectTasks.map(t => deleteTask(t.id)));
+      await deleteProject(project.id);
+    }
+  };
 
   const getProjectStats = (projectId: string) => {
     const projectTasks = tasks.filter(t => t.projectId === projectId);
@@ -59,11 +81,7 @@ const ProjectsPage: React.FC = () => {
                   taskCount={stats.total}
                   completedCount={stats.completed}
                   onEdit={() => setEditingProject(project)}
-                  onDelete={() => {
-                    if (window.confirm(`Deseja deletar o projeto "${project.name}"?`)) {
-                      deleteProject(project.id);
-                    }
-                  }}
+                  onDelete={() => handleDeleteProject(project)}
                 />
               );
             })}
