@@ -1,5 +1,22 @@
+/**
+ * Interpreta a string de data no fuso LOCAL.
+ *
+ * Datas "só-dia" (YYYY-MM-DD, como as que o DatePicker gera) seriam lidas pelo
+ * `new Date()` como meia-noite UTC, o que joga o dia para trás em fusos a oeste
+ * de Greenwich (todo o Brasil). Aqui montamos a data com os componentes locais
+ * para evitar esse off-by-one. Timestamps completos (com hora/'T'/'Z') seguem
+ * sendo interpretados como instantes, preservando o comportamento atual.
+ */
+function parseDate(dateString: string): Date {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString);
+  if (dateOnly) {
+    return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+  }
+  return new Date(dateString);
+}
+
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   return date.toLocaleDateString('pt-BR', {
     day: 'numeric',
     month: 'short',
@@ -8,7 +25,7 @@ export function formatDate(dateString: string): string {
 }
 
 export function formatDateWithDay(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   return date.toLocaleDateString('pt-BR', {
     weekday: 'short',
     day: 'numeric',
@@ -17,7 +34,7 @@ export function formatDateWithDay(dateString: string): string {
 }
 
 export function formatTime(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   return date.toLocaleTimeString('pt-BR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -25,7 +42,7 @@ export function formatTime(dateString: string): string {
 }
 
 export function isToday(dateString: string): boolean {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   const today = new Date();
   return (
     date.getDate() === today.getDate() &&
@@ -35,14 +52,14 @@ export function isToday(dateString: string): boolean {
 }
 
 export function isOverdue(dateString: string): boolean {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return date < today;
 }
 
 export function isTomorrow(dateString: string): boolean {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   return (
@@ -53,7 +70,7 @@ export function isTomorrow(dateString: string): boolean {
 }
 
 export function isThisWeek(dateString: string): boolean {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   const today = new Date();
   const firstDay = new Date(today);
   firstDay.setDate(today.getDate() - today.getDay());
@@ -64,7 +81,7 @@ export function isThisWeek(dateString: string): boolean {
 }
 
 export function getDayOfWeek(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
   return days[date.getDay()];
 }

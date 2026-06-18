@@ -1,5 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { CelebrationProvider } from '@/contexts/CelebrationContext';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -12,6 +13,7 @@ import { TopProgressBar } from '@/components/layout/TopProgressBar';
 function App() {
   return (
     <ThemeProvider>
+      <ToastProvider>
       <UserProvider>
         <CelebrationProvider>
           <BrowserRouter>
@@ -28,6 +30,7 @@ function App() {
           </BrowserRouter>
         </CelebrationProvider>
       </UserProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

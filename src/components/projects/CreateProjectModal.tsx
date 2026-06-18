@@ -7,6 +7,7 @@ import { Button } from '@/components/common/Button';
 import { OptionSelector } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary } from '@/types/team';
 import { Project } from '@/types/project';
@@ -34,6 +35,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onCreateProject,
 }) => {
   const { account } = useAuth();
+  const toast = useToast();
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -79,6 +81,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       });
       setFormData({ name: '', description: '', color: colorOptions[0], type: 'solo', teamId: '' });
       setError('');
+      toast.success('Projeto criado.');
       onClose();
     } catch (err) {
       setError('Não foi possível criar o projeto. Tente novamente.');

@@ -11,6 +11,7 @@ import { TeamMember } from '@/types/team';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { teamsService } from '@/services/teamsService';
 
 interface CreateTaskModalProps {
@@ -48,6 +49,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const { projects } = useProjects();
   const { assignTask } = useTasks();
   const { account } = useAuth();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState(emptyForm);
@@ -111,6 +113,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       setFormData(emptyForm);
       setAssigneeId('');
       setError('');
+      toast.success('Tarefa criada.');
       onClose();
     } catch (err) {
       setError('Não foi possível criar a tarefa. Tente novamente.');

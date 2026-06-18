@@ -9,12 +9,14 @@ import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
+import { useToast } from '@/contexts/ToastContext';
 import { Project } from '@/types/project';
 
 const ProjectsPage: React.FC = () => {
   const { projects, createProject, updateProject, deleteProject, loading } = useProjects();
   const showSkeleton = useDeferredLoading(loading);
   const { tasks, deleteTask } = useTasks();
+  const toast = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | undefined>();
   const [deletingProject, setDeletingProject] = useState<Project | undefined>();
@@ -26,11 +28,19 @@ const ProjectsPage: React.FC = () => {
 
   const confirmDeleteProject = async () => {
     if (!deletingProject) return;
+    const taskCount = deletingTasks.length;
     try {
       setIsDeleting(true);
       await Promise.all(deletingTasks.map(t => deleteTask(t.id)));
       await deleteProject(deletingProject.id);
+      toast.success(
+        taskCount > 0
+          ? `Projeto e ${taskCount} ${taskCount === 1 ? 'tarefa excluídos' : 'tarefas excluídos'}.`
+          : 'Projeto excluído.',
+      );
       setDeletingProject(undefined);
+    } catch {
+      toast.error('Não foi possível excluir o projeto. Tente novamente.');
     } finally {
       setIsDeleting(false);
     }

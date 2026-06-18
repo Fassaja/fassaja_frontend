@@ -7,6 +7,7 @@ import { Button } from '@/components/common/Button';
 import { OptionSelector } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary } from '@/types/team';
 import { Project } from '@/types/project';
@@ -36,6 +37,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   onUpdateProject,
 }) => {
   const { account } = useAuth();
+  const toast = useToast();
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -93,6 +95,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
         type: formData.type,
         teamId: formData.type === 'team' ? formData.teamId : undefined,
       });
+      toast.success('Alterações salvas.');
       onClose();
     } catch (err) {
       setError('Não foi possível salvar as alterações. Tente novamente.');

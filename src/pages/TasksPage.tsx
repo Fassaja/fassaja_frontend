@@ -13,12 +13,14 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 
 const TasksPage: React.FC = () => {
   const { tasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
   const { projects } = useProjects();
   const showSkeleton = useDeferredLoading(loading);
   const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
+  const toast = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const openNewTask = () => {
@@ -39,7 +41,10 @@ const TasksPage: React.FC = () => {
     try {
       setIsDeleting(true);
       await deleteTask(deletingTask.id);
+      toast.success('Tarefa excluída.');
       setDeletingTask(undefined);
+    } catch {
+      toast.error('Não foi possível excluir a tarefa. Tente novamente.');
     } finally {
       setIsDeleting(false);
     }

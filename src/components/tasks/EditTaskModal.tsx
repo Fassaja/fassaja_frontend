@@ -11,6 +11,7 @@ import { TeamMember } from '@/types/team';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { teamsService } from '@/services/teamsService';
 
 interface EditTaskModalProps {
@@ -41,6 +42,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const { projects } = useProjects();
   const { assignTask } = useTasks();
   const { account } = useAuth();
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -122,6 +124,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         // Saiu de um projeto de equipe: remove a atribuição.
         await assignTask(task.id, null);
       }
+      toast.success('Alterações salvas.');
       onClose();
     } catch (err) {
       setError('Não foi possível salvar as alterações. Tente novamente.');
