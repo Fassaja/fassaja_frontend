@@ -22,19 +22,19 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   comparison,
 }) => {
   return (
-    <Card hoverable className="flex flex-col gap-3">
-      <div className="flex items-center gap-3">
+    <Card hoverable padding="none" className="flex flex-col gap-2 p-4 sm:gap-3 sm:p-6">
+      <div className="flex items-center gap-2 sm:gap-3">
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+          className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0"
           style={{ backgroundColor: color + '1A', color }}
         >
           {icon}
         </div>
-        <p className="text-sm font-medium text-text-secondary">{title}</p>
+        <p className="text-xs sm:text-sm font-medium text-text-secondary leading-tight">{title}</p>
       </div>
 
       <div className="flex items-end justify-between gap-2">
-        <h3 className="text-4xl font-extrabold text-text-primary leading-none tracking-tight">
+        <h3 className="text-2xl sm:text-4xl font-extrabold text-text-primary leading-none tracking-tight">
           {value}
         </h3>
       </div>

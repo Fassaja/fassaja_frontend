@@ -85,7 +85,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             type="button"
             aria-label="Buscar"
             onClick={() => setShowSearch(true)}
-            className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+            className="hidden sm:flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
           >
             <Search size={20} />
           </button>
@@ -122,9 +122,9 @@ export const Topbar: React.FC<TopbarProps> = ({
               onClick={onNewTask}
               size="md"
               icon={<Plus size={18} />}
-              className="rounded-xl shadow-sm shadow-primary-vibrant/20"
+              className="rounded-xl shadow-sm shadow-primary-vibrant/20 whitespace-nowrap"
             >
-              <span className="hidden sm:inline">{actionLabel}</span>
+              {actionLabel}
             </Button>
           )}
 
