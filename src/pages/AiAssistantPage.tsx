@@ -8,8 +8,12 @@ import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
 import { Textarea } from '@/components/common/Textarea';
 import { Input } from '@/components/common/Input';
+import { Select } from '@/components/common/Select';
+import { DatePicker } from '@/components/common/DatePicker';
 import { EmptyState } from '@/components/common/EmptyState';
 import { aiService } from '@/services/aiService';
+import { teamsService } from '@/services/teamsService';
+import { TeamSummary, TeamMember } from '@/types/team';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { useTasks } from '@/contexts/TasksContext';
 
@@ -34,6 +38,8 @@ interface DraftCard {
   title: string;
   description: string;
   priority: DraftPriority;
+  dueDate: string; // 'YYYY-MM-DD' ou ''
+  assigneeId: string; // id do membro responsável, ou ''
 }
 
 interface ProjectDraft {
@@ -42,6 +48,7 @@ interface ProjectDraft {
   color: string;
   cards: DraftCard[];
   generatedBy: 'ai' | 'demo';
+  teamId: string; // '' = projeto individual (sem equipe)
 }
 
 const priorityLabel: Record<DraftPriority, string> = {
@@ -75,6 +82,8 @@ const AiAssistantPage: React.FC = () => {
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState<boolean | null>(null);
+  const [teams, setTeams] = useState<TeamSummary[]>([]);
+  const [members, setMembers] = useState<TeamMember[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Descobre, ao abrir a tela, se a IA real está ativa ou em modo demonstração.
@@ -83,7 +92,25 @@ const AiAssistantPage: React.FC = () => {
       .status()
       .then((s) => setAiEnabled(s.aiEnabled))
       .catch(() => setAiEnabled(null));
+    teamsService
+      .listTeams()
+      .then(setTeams)
+      .catch(() => setTeams([]));
   }, []);
+
+  // Troca o time do projeto: busca os membros e limpa responsáveis antigos.
+  const handleSelectTeam = async (teamId: string) => {
+    setDraft((d) => (d ? { ...d, teamId, cards: d.cards.map((c) => ({ ...c, assigneeId: '' })) } : d));
+    if (!teamId) {
+      setMembers([]);
+      return;
+    }
+    try {
+      setMembers(await teamsService.getMembers(teamId));
+    } catch {
+      setMembers([]);
+    }
+  };
 
   const canGenerate = documentText.trim().length > 0 && !generating && !extracting;
 
@@ -138,13 +165,17 @@ const AiAssistantPage: React.FC = () => {
         description: result.description,
         color: result.color,
         generatedBy: result.generatedBy,
+        teamId: '',
         cards: result.cards.map((c) => ({
           id: uid(),
           title: c.title,
           description: c.description ?? '',
           priority: c.priority,
+          dueDate: '',
+          assigneeId: '',
         })),
       });
+      setMembers([]);
     } catch (err) {
       setGenerateError(
         err instanceof Error ? err.message : 'Não foi possível gerar o rascunho.',
@@ -171,7 +202,7 @@ const AiAssistantPage: React.FC = () => {
             ...d,
             cards: [
               ...d.cards,
-              { id: uid(), title: '', description: '', priority: 'medium' },
+              { id: uid(), title: '', description: '', priority: 'medium', dueDate: '', assigneeId: '' },
             ],
           }
         : d,
@@ -187,10 +218,13 @@ const AiAssistantPage: React.FC = () => {
         name: draft.name,
         color: draft.color,
         description: draft.description || undefined,
+        teamId: draft.teamId || undefined,
         cards: draft.cards.map((c) => ({
           title: c.title,
           description: c.description || undefined,
           priority: c.priority,
+          dueDate: c.dueDate || undefined,
+          assigneeId: c.assigneeId || undefined,
         })),
       });
       // Atualiza as listas para o projeto/cards recém-criados aparecerem.
@@ -379,6 +413,22 @@ const AiAssistantPage: React.FC = () => {
                       />
                     ))}
                   </div>
+
+                  <Select
+                    label="Equipe (opcional)"
+                    value={draft.teamId}
+                    onChange={handleSelectTeam}
+                    placeholder="Sem equipe (projeto individual)"
+                    options={[
+                      { value: '', label: 'Sem equipe (projeto individual)' },
+                      ...teams.map((t) => ({ value: t.id, label: t.name })),
+                    ]}
+                    helperText={
+                      draft.teamId
+                        ? 'Você poderá definir um responsável em cada card.'
+                        : 'Escolha uma equipe para poder atribuir responsáveis aos cards.'
+                    }
+                  />
                 </Card>
 
                 {/* Cards propostos */}
@@ -429,6 +479,26 @@ const AiAssistantPage: React.FC = () => {
                             </Badge>
                           </button>
                         ))}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <DatePicker
+                          label="Data"
+                          value={card.dueDate}
+                          onChange={(v) => updateCard(card.id, { dueDate: v })}
+                        />
+                        {draft.teamId && (
+                          <Select
+                            label="Responsável"
+                            value={card.assigneeId}
+                            onChange={(v) => updateCard(card.id, { assigneeId: v })}
+                            placeholder="Sem responsável"
+                            options={[
+                              { value: '', label: 'Sem responsável' },
+                              ...members.map((m) => ({ value: m.userId, label: m.name })),
+                            ]}
+                          />
+                        )}
                       </div>
                     </Card>
                   ))}

@@ -18,13 +18,22 @@ export interface DraftResponse {
   generatedBy: 'ai' | 'demo';
 }
 
+/** Um card no momento de criar (pode ter data e responsável). */
+export interface ApplyCardPayload {
+  title: string;
+  description?: string;
+  priority: DraftPriority;
+  dueDate?: string;
+  assigneeId?: string;
+}
+
 /** Corpo enviado a /ai/apply (rascunho aprovado pelo usuário). */
 export interface ApplyDraftPayload {
   name: string;
   color: string;
   description?: string;
-  type?: 'solo' | 'team';
-  cards: DraftCardPayload[];
+  teamId?: string;
+  cards: ApplyCardPayload[];
 }
 
 export interface ApplyResult {
