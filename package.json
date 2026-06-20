@@ -29,5 +29,11 @@
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
     "vite": "^5.0.8"
+  },
+  "comments": {
+    "overrides": "esbuild 0.25 corrige o GHSA do dev-server (resposta legível por qualquer site) sem subir vite para major 8. Só afeta `vite dev`; o build estático de produção não é impactado."
+  },
+  "overrides": {
+    "esbuild": "^0.25.0"
   }
 }
