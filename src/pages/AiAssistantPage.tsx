@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle } from 'lucide-react';
+import { Sparkles, Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle, Lightbulb, X } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -69,6 +69,8 @@ const priorityVariant: Record<DraftPriority, 'default' | 'warning' | 'danger'> =
   high: 'danger',
 };
 
+const priorityOrder: Record<DraftPriority, number> = { high: 0, medium: 1, low: 2 };
+
 const PALETTE = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'];
 
 // Mesmo limite validado no back-end (DraftRequestDto).
@@ -86,6 +88,10 @@ const AiAssistantPage: React.FC = () => {
   const [mode, setMode] = useState<DraftMode>('structure');
   const [generating, setGenerating] = useState(false);
   const [draft, setDraft] = useState<ProjectDraft | null>(null);
+  // Sugestões de melhoria (modo "improve"): a pessoa escolhe quais viram cards.
+  const [suggestions, setSuggestions] = useState<DraftCard[]>([]);
+  // Ids de sugestões já adicionadas (ficam marcadas, não somem).
+  const [addedIds, setAddedIds] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [extracting, setExtracting] = useState(false);
@@ -229,6 +235,15 @@ const AiAssistantPage: React.FC = () => {
     try {
       const result = await aiService.draft(documentText, command || undefined, mode);
       // O back-end devolve cards sem id; adicionamos um id local para edição.
+      const mapped: DraftCard[] = result.cards.map((c) => ({
+        id: uid(),
+        title: c.title,
+        description: c.description ?? '',
+        priority: c.priority,
+        dueDate: '',
+        assigneeId: '',
+      }));
+      const improve = mode === 'improve';
       setDraft({
         name: result.name,
         description: result.description,
@@ -236,15 +251,11 @@ const AiAssistantPage: React.FC = () => {
         generatedBy: result.generatedBy,
         teamId: '',
         targetProjectId: '',
-        cards: result.cards.map((c) => ({
-          id: uid(),
-          title: c.title,
-          description: c.description ?? '',
-          priority: c.priority,
-          dueDate: '',
-          assigneeId: '',
-        })),
+        // No modo melhoria, os cards começam vazios — a pessoa adiciona as sugestões.
+        cards: improve ? [] : mapped,
       });
+      setSuggestions(improve ? mapped : []);
+      setAddedIds([]);
       setMembers([]);
       // Atualiza os usos restantes (o uso da IA foi consumido).
       aiService.status().then(setStatus).catch(() => {});
@@ -265,6 +276,28 @@ const AiAssistantPage: React.FC = () => {
 
   const removeCard = (id: string) => {
     setDraft((d) => (d ? { ...d, cards: d.cards.filter((c) => c.id !== id) } : d));
+  };
+
+  // Adiciona a sugestão aos cards e a marca como "adicionada" (continua visível).
+  const addSuggestion = (id: string) => {
+    if (addedIds.includes(id)) return;
+    const s = suggestions.find((x) => x.id === id);
+    if (!s) return;
+    setDraft((d) => (d ? { ...d, cards: [...d.cards, s] } : d));
+    setAddedIds((prev) => [...prev, id]);
+  };
+
+  const addAllSuggestions = () => {
+    const toAdd = suggestions.filter((s) => !addedIds.includes(s.id));
+    if (toAdd.length === 0) return;
+    setDraft((d) => (d ? { ...d, cards: [...d.cards, ...toAdd] } : d));
+    setAddedIds((prev) => [...prev, ...toAdd.map((s) => s.id)]);
+  };
+
+  // Descartar tira o balão da lista (com animação de saída).
+  const dismissSuggestion = (id: string) => {
+    setSuggestions((prev) => prev.filter((x) => x.id !== id));
+    setAddedIds((prev) => prev.filter((x) => x !== id));
   };
 
   const addCard = () => {
@@ -325,6 +358,8 @@ const AiAssistantPage: React.FC = () => {
 
   const reset = () => {
     setDraft(null);
+    setSuggestions([]);
+    setAddedIds([]);
     setApplyError(null);
   };
 
@@ -334,17 +369,19 @@ const AiAssistantPage: React.FC = () => {
       subtitle="Cole um documento, descreva o que quer, e a IA monta o projeto e os cards para você revisar."
     >
       {/* HERO */}
-      <div className="mb-6 overflow-hidden rounded-2xl border border-primary-vibrant/20 bg-gradient-to-r from-primary-light via-primary-light/40 to-white">
+      <div className="mb-6 overflow-hidden rounded-2xl border border-primary-vibrant/30 bg-gradient-to-r from-primary-light via-primary-light/60 to-white shadow-sm">
         <div className="flex items-center gap-4 p-5 sm:p-6">
-          <img
+          <motion.img
             src="/bobapontando.png"
             alt=""
-            className="hidden sm:block w-20 h-20 object-contain drop-shadow-md shrink-0"
+            className="hidden sm:block w-24 h-24 object-contain drop-shadow-md shrink-0"
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-primary-vibrant" />
-              <h2 className="font-bold text-text-primary">
+              <h2 className="text-lg font-bold text-text-primary">
                 Transforme documentos em projetos
               </h2>
             </div>
@@ -360,6 +397,7 @@ const AiAssistantPage: React.FC = () => {
             className="shrink-0"
           >
             <span className="hidden sm:inline">Como usar</span>
+            <span className="hidden sm:inline font-normal text-text-soft">· ~1 min</span>
           </Button>
         </div>
       </div>
@@ -455,8 +493,8 @@ const AiAssistantPage: React.FC = () => {
           )}
 
           <Textarea
-            label="Cole o conteúdo, ou importe um arquivo (PDF, Word .docx, .txt ou .md)"
-            placeholder="Cole o texto aqui, use o botão Importar arquivo, ou arraste um arquivo para esta área."
+            label="Documento (PDF, Word .docx, .txt ou .md)"
+            placeholder="Cole, importe ou arraste seu documento aqui."
             rows={10}
             value={documentText}
             onChange={(e) => setDocumentText(e.target.value)}
@@ -505,10 +543,7 @@ const AiAssistantPage: React.FC = () => {
           {aiEnabled && (
             <p className="flex items-start gap-1.5 text-xs text-text-soft">
               <Info size={13} className="mt-0.5 shrink-0" />
-              <span>
-                Ao gerar, o conteúdo do documento é enviado para a IA (Anthropic) para
-                processamento. Evite incluir dados sensíveis que não devam ser compartilhados.
-              </span>
+              <span>Seu documento é enviado à IA (Anthropic) para análise.</span>
             </p>
           )}
         </Card>
@@ -657,7 +692,100 @@ const AiAssistantPage: React.FC = () => {
                   )}
                 </Card>
 
-                {/* Cards propostos */}
+                {/* Sugestões + cards lado a lado (em telas largas) quando há sugestões */}
+                <div className={`grid items-start gap-4 ${suggestions.length > 0 ? 'xl:grid-cols-2' : 'grid-cols-1'}`}>
+                {/* Sugestões de melhoria (balões) — modo "Analisar melhorias" */}
+                {suggestions.length > 0 && (
+                  <Card className="flex flex-col gap-3 border-purple-200 bg-purple-50/40">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Lightbulb size={18} className="text-purple-500" />
+                        <h3 className="font-semibold text-text-primary">Sugestões de melhoria</h3>
+                      </div>
+                      <button
+                        onClick={addAllSuggestions}
+                        className="text-xs font-medium text-primary-vibrant hover:underline"
+                      >
+                        Adicionar todas
+                      </button>
+                    </div>
+                    <p className="-mt-1 text-xs text-text-soft">
+                      💭 Ideias da IA. Toque em <Plus size={11} className="inline" /> para virar um card.
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      <AnimatePresence>
+                      {[...suggestions]
+                        .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+                        .map((s) => {
+                          const added = addedIds.includes(s.id);
+                          return (
+                            <motion.div
+                              key={s.id}
+                              layout
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, x: 60, scale: 0.85 }}
+                              transition={{ duration: 0.2 }}
+                              className={`relative flex items-start gap-2 rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-colors ${
+                                added ? 'border-green-200 bg-green-50/60' : 'border-purple-200 bg-white'
+                              }`}
+                            >
+                              <span
+                                className={`absolute -bottom-1 left-4 h-3 w-3 rotate-45 border-b border-r ${
+                                  added ? 'border-green-200 bg-green-50' : 'border-purple-200 bg-white'
+                                }`}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-text-primary">{s.title}</p>
+                                {s.description && (
+                                  <p className="mt-0.5 text-xs text-text-secondary">{s.description}</p>
+                                )}
+                                <div className="mt-1.5 flex items-center gap-1.5">
+                                  <Badge variant={priorityVariant[s.priority]}>
+                                    {priorityLabel[s.priority]}
+                                  </Badge>
+                                  {added && (
+                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
+                                      <Check size={12} /> Adicionado
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-1 shrink-0">
+                                {added ? (
+                                  <span
+                                    title="Já adicionado"
+                                    className="rounded-md bg-green-100 p-1 text-green-600"
+                                  >
+                                    <Check size={14} />
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => addSuggestion(s.id)}
+                                    title="Adicionar aos cards"
+                                    className="rounded-md bg-primary-vibrant p-1 text-white transition-colors hover:bg-primary-hover"
+                                  >
+                                    <Plus size={14} />
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => dismissSuggestion(s.id)}
+                                  title="Descartar sugestão"
+                                  className="rounded-md p-1 text-text-soft transition-colors hover:text-danger"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Cards (estrutura base, sempre à direita) */}
+                <div className="flex flex-col gap-3 min-w-0">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-text-primary">
                     Cards ({draft.cards.length})
@@ -668,6 +796,11 @@ const AiAssistantPage: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-3">
+                  {draft.cards.length === 0 && (
+                    <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-text-soft">
+                      Nenhum card ainda. Adicione as sugestões acima 💭 ou crie um card manualmente.
+                    </p>
+                  )}
                   {draft.cards.map((card) => (
                     <Card key={card.id} padding="sm" className="flex flex-col gap-2">
                       <div className="flex items-start gap-2">
@@ -728,6 +861,8 @@ const AiAssistantPage: React.FC = () => {
                       </div>
                     </Card>
                   ))}
+                </div>
+                </div>
                 </div>
 
                 {applyError && <p className="text-xs text-danger">{applyError}</p>}

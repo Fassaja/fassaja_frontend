@@ -18,27 +18,27 @@ const STEPS: Step[] = [
   {
     image: '/bobOla.png',
     title: 'Oi! Eu sou o assistente de IA 🤖',
-    text: 'Me dê um documento e eu transformo em um projeto com tarefas prontas pra você revisar. Vou te mostrar como em 4 passos rápidos.',
+    text: 'Transformo documentos em projetos com tarefas. Veja em 4 passos.',
   },
   {
     image: '/bobapontando.png',
     title: '1. Envie o conteúdo',
-    text: 'Cole um texto, clique em "Importar arquivo" ou simplesmente arraste um PDF, Word (.docx), .txt ou .md para a área de entrada.',
+    text: 'Cole um texto, importe ou arraste um PDF, Word, .txt ou .md.',
   },
   {
     image: '/bobinvestigador.png',
     title: '2. Escolha o modo e gere',
-    text: 'Use "Estruturar projeto" para virar um plano de execução, ou "Analisar melhorias" para a IA sugerir o que melhorar. Escreva um comando (opcional) e clique em Gerar rascunho.',
+    text: '"Estruturar projeto" vira um plano. "Analisar melhorias" sugere o que melhorar. Clique em Gerar.',
   },
   {
-    image: '/bobduvidoso.png',
+    image: '/bobforte.png',
     title: '3. Revise e ajuste',
-    text: 'Edite os cards à vontade: título, descrição, prioridade, data e responsável. Você pode criar um projeto novo ou adicionar a um existente.',
+    text: 'Edite os cards: título, prioridade, data e responsável. Crie um projeto novo ou some a um existente.',
   },
   {
     image: '/bobheroi.png',
     title: '4. Aprove e pronto! 🎉',
-    text: 'Clique em "Aprovar e criar" e os cards viram tarefas de verdade. Você tem 5 usos de IA por semana. Bora começar!',
+    text: 'Aprove e os cards viram tarefas. São 5 usos de IA por semana. Bora!',
   },
 ];
 
