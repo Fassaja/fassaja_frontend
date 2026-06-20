@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw } from 'lucide-react';
+import { Sparkles, Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { Skeleton } from '@/components/common/Skeletons';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
+import { AiHowToModal } from '@/components/ai/AiHowToModal';
 import { useCelebration } from '@/contexts/CelebrationContext';
 import { aiService, AiStatus, DraftMode } from '@/services/aiService';
 import { teamsService } from '@/services/teamsService';
@@ -93,7 +94,20 @@ const AiAssistantPage: React.FC = () => {
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
   const [status, setStatus] = useState<AiStatus | null>(null);
+  const [showHowTo, setShowHowTo] = useState(false);
   const [success, setSuccess] = useState<{ name: string; count: number } | null>(null);
+
+  // Mostra o tutorial automaticamente na primeira visita.
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem('fassaja_ai_tour_seen')) {
+        setShowHowTo(true);
+        localStorage.setItem('fassaja_ai_tour_seen', '1');
+      }
+    } catch {
+      /* localStorage indisponível: ignora */
+    }
+  }, []);
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -319,6 +333,37 @@ const AiAssistantPage: React.FC = () => {
       title="Assistente de IA"
       subtitle="Cole um documento, descreva o que quer, e a IA monta o projeto e os cards para você revisar."
     >
+      {/* HERO */}
+      <div className="mb-6 overflow-hidden rounded-2xl border border-primary-vibrant/20 bg-gradient-to-r from-primary-light via-primary-light/40 to-white">
+        <div className="flex items-center gap-4 p-5 sm:p-6">
+          <img
+            src="/bobapontando.png"
+            alt=""
+            className="hidden sm:block w-20 h-20 object-contain drop-shadow-md shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-primary-vibrant" />
+              <h2 className="font-bold text-text-primary">
+                Transforme documentos em projetos
+              </h2>
+            </div>
+            <p className="text-sm text-text-secondary mt-1">
+              Envie um texto ou arquivo e deixe a IA montar os cards. Você revisa e aprova.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<HelpCircle size={16} />}
+            onClick={() => setShowHowTo(true)}
+            className="shrink-0"
+          >
+            <span className="hidden sm:inline">Como usar</span>
+          </Button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* COLUNA ESQUERDA — entrada */}
         <Card
@@ -707,6 +752,9 @@ const AiAssistantPage: React.FC = () => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Tutorial passo a passo */}
+      <AiHowToModal isOpen={showHowTo} onClose={() => setShowHowTo(false)} />
 
       {/* Popup de sucesso */}
       <Modal
