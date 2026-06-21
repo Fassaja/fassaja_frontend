@@ -21,7 +21,9 @@ import {
   Timer,
   ExternalLink,
   Sparkles,
+  PlayCircle,
 } from 'lucide-react';
+import { OPEN_TOUR_EVENT } from './PlatformTourModal';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -275,6 +277,25 @@ export const Sidebar: React.FC = () => {
               <p className="text-sm text-text-secondary">
                 Tem alguma dúvida ou sugestão? A equipe Fassaja adora ouvir você.
               </p>
+              <button
+                onClick={() => {
+                  setShowHelp(false);
+                  window.dispatchEvent(new Event(OPEN_TOUR_EVENT));
+                }}
+                className="flex w-full items-center gap-3 p-3 rounded-xl border border-border hover:bg-bg-secondary transition-colors text-left"
+              >
+                <span className="w-10 h-10 rounded-xl bg-primary-light text-primary-vibrant flex items-center justify-center">
+                  <PlayCircle size={18} />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-text-primary">
+                    Ver tutorial do Fassaja
+                  </span>
+                  <span className="block text-xs text-text-secondary">
+                    Um tour rápido pelos principais recursos
+                  </span>
+                </span>
+              </button>
               <a
                 href="mailto:fassajasuporte@gmail.com"
                 className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-bg-secondary transition-colors"

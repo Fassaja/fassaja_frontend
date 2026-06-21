@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { PlatformTourModal } from './PlatformTourModal';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </div>
         </main>
       </div>
+      <PlatformTourModal />
     </div>
   );
 };

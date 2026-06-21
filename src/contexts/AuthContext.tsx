@@ -169,6 +169,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: email.trim(),
         password,
       });
+      // Marca como usuário novo para abrir o tour de boas-vindas no 1º acesso.
+      try {
+        localStorage.setItem('fassaja_new_user', '1');
+      } catch {
+        /* ignora */
+      }
       return { ok: true, needsVerification: true, message: res.message };
     } catch (err) {
       return { ok: false, error: (err as Error).message };
