@@ -158,7 +158,9 @@ const ReportsPage: React.FC = () => {
   return (
     <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
       {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
-      {/* Resumo com mascote */}
+      {/* Resumo com mascote + estatísticas — só na Visão geral */}
+      {view === 'overview' && (
+      <>
       <Card className="flex flex-col sm:flex-row items-center gap-6 mb-8">
         <Mascot state={summary.state} size="md" animate={true} />
         <div className="text-center sm:text-left">
@@ -169,7 +171,6 @@ const ReportsPage: React.FC = () => {
         </div>
       </Card>
 
-      {/* Stats Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="text-center py-4">
           <p className="text-3xl font-bold text-text-primary">{stats.total}</p>
@@ -188,6 +189,8 @@ const ReportsPage: React.FC = () => {
           <p className="text-sm text-text-secondary">Em Andamento</p>
         </Card>
       </div>
+      </>
+      )}
 
       {/* Seletor de visões */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1">

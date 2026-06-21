@@ -25,6 +25,9 @@ function startOfDay(d: Date): number {
 
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
+// Largura da coluna de rótulos (deve casar entre régua, linhas e marcador de hoje).
+const LABEL_W = '11rem';
+
 export const ScheduleMapView: React.FC<ScheduleMapViewProps> = ({ tasks, projects }) => {
   const scheduled = useMemo(
     () => tasks.filter(t => t.dueDate).sort((a, b) => a.dueDate!.localeCompare(b.dueDate!)),
@@ -95,7 +98,7 @@ export const ScheduleMapView: React.FC<ScheduleMapViewProps> = ({ tasks, project
       <div className="overflow-x-auto">
         <div className="min-w-[640px]">
           {/* Régua de meses */}
-          <div className="relative h-6 ml-44 border-b border-border mb-2">
+          <div className="relative h-6 border-b border-border mb-2" style={{ marginLeft: LABEL_W }}>
             {model.ticks.map((tick, i) => (
               <span
                 key={i}
@@ -112,7 +115,7 @@ export const ScheduleMapView: React.FC<ScheduleMapViewProps> = ({ tasks, project
             {model.todayPct >= 0 && model.todayPct <= 100 && (
               <div
                 className="absolute top-0 bottom-0 right-0 pointer-events-none z-10"
-                style={{ left: '11rem' }}
+                style={{ left: LABEL_W }}
                 aria-hidden
               >
                 <div
@@ -127,7 +130,7 @@ export const ScheduleMapView: React.FC<ScheduleMapViewProps> = ({ tasks, project
               const color = colorOf(row.task);
               return (
                 <div key={row.task.id} className="flex items-center gap-0">
-                  <div className="w-44 shrink-0 pr-3">
+                  <div className="shrink-0 pr-3" style={{ width: LABEL_W }}>
                     <p
                       className={`text-sm truncate ${
                         row.task.status === 'completed' ? 'text-text-soft line-through' : 'text-text-primary'
