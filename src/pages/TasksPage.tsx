@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { LayoutGrid, List } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { TaskList } from '@/components/tasks/TaskList';
+import { TaskBoard } from '@/components/tasks/TaskBoard';
 import { TaskFilters } from '@/components/tasks/TaskFilters';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
@@ -51,6 +53,7 @@ const TasksPage: React.FC = () => {
   };
 
   const [searchParams] = useSearchParams();
+  const [view, setView] = useState<'board' | 'list'>('board');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all');
@@ -141,7 +144,37 @@ const TasksPage: React.FC = () => {
         subtitle="Gerencie todas as suas tarefas em um só lugar."
       >
         {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
-        {/* Status tabs (contagem + filtro) */}
+        {/* Alternador de visão: Quadro (por status) ou Lista (por data) */}
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="inline-flex p-1 rounded-xl bg-bg-secondary border border-border">
+            <button
+              onClick={() => setView('board')}
+              aria-pressed={view === 'board'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                view === 'board' ? 'bg-white text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <LayoutGrid size={16} /> Quadro
+            </button>
+            <button
+              onClick={() => setView('list')}
+              aria-pressed={view === 'list'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                view === 'list' ? 'bg-white text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <List size={16} /> Lista
+            </button>
+          </div>
+          {view === 'board' && (
+            <p className="hidden sm:block text-xs text-text-secondary">
+              Clique no status de um card para movê-lo de coluna.
+            </p>
+          )}
+        </div>
+
+        {/* Status tabs (contagem + filtro) — só na visão Lista */}
+        {view === 'list' && (
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1 -mx-1 px-1">
           {statusTabs.map(tab => {
             const active = filterStatus === tab.value;
@@ -168,6 +201,7 @@ const TasksPage: React.FC = () => {
             );
           })}
         </div>
+        )}
 
         {/* Filters */}
         <TaskFilters
@@ -182,22 +216,38 @@ const TasksPage: React.FC = () => {
           onReset={handleResetFilters}
         />
 
-        {/* Task List */}
+        {/* Tarefas: Quadro (por status) ou Lista (por data) */}
         <div className="mt-6">
-          <TaskList
-            tasks={tasks}
-            projects={projects}
-            searchTerm={searchTerm}
-            filterStatus={filterStatus}
-            filterPriority={filterPriority}
-            filterProject={filterProject}
-            onComplete={completeTask}
-            onDelete={taskId => {
-              const task = tasks.find(t => t.id === taskId);
-              if (task) setDeletingTask(task);
-            }}
-            onEdit={handleOpenTask}
-          />
+          {view === 'board' ? (
+            <TaskBoard
+              tasks={tasks}
+              projects={projects}
+              searchTerm={searchTerm}
+              filterPriority={filterPriority}
+              filterProject={filterProject}
+              onComplete={completeTask}
+              onDelete={taskId => {
+                const task = tasks.find(t => t.id === taskId);
+                if (task) setDeletingTask(task);
+              }}
+              onEdit={handleOpenTask}
+            />
+          ) : (
+            <TaskList
+              tasks={tasks}
+              projects={projects}
+              searchTerm={searchTerm}
+              filterStatus={filterStatus}
+              filterPriority={filterPriority}
+              filterProject={filterProject}
+              onComplete={completeTask}
+              onDelete={taskId => {
+                const task = tasks.find(t => t.id === taskId);
+                if (task) setDeletingTask(task);
+              }}
+              onEdit={handleOpenTask}
+            />
+          )}
         </div>
         </>}
       </AppLayout>

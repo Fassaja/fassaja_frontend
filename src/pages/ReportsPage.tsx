@@ -14,14 +14,30 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { BarChart3, GitBranch, CalendarRange, Sparkles, Spade } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { EapView } from '@/components/reports/EapView';
+import { ScheduleMapView } from '@/components/reports/ScheduleMapView';
+import { XpView } from '@/components/reports/XpView';
+import { PlanningPokerView } from '@/components/reports/PlanningPokerView';
 import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
+
+type ReportView = 'overview' | 'eap' | 'schedule' | 'xp' | 'poker';
+
+const VIEWS: { value: ReportView; label: string; icon: React.ReactNode }[] = [
+  { value: 'overview', label: 'Visão geral', icon: <BarChart3 size={16} /> },
+  { value: 'eap', label: 'EAP', icon: <GitBranch size={16} /> },
+  { value: 'schedule', label: 'Cronograma', icon: <CalendarRange size={16} /> },
+  { value: 'xp', label: 'XP', icon: <Sparkles size={16} /> },
+  { value: 'poker', label: 'Planning Poker', icon: <Spade size={16} /> },
+];
 
 const WEEK_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
@@ -35,9 +51,11 @@ function sameDay(a: Date, b: Date): boolean {
 
 const ReportsPage: React.FC = () => {
   const { tasks, loading } = useTasks();
+  const { projects } = useProjects();
   const showSkeleton = useDeferredLoading(loading);
   const stats = useDashboardStats(tasks);
   const [period, setPeriod] = useState('week');
+  const [view, setView] = useState<ReportView>('overview');
 
   // Resumo com o bob conforme o desempenho geral.
   const getSummary = (): { state: MascotState; title: string; message: string } => {
@@ -171,7 +189,35 @@ const ReportsPage: React.FC = () => {
         </Card>
       </div>
 
-      {stats.total === 0 ? (
+      {/* Seletor de visões */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1">
+        {VIEWS.map(v => {
+          const active = view === v.value;
+          return (
+            <button
+              key={v.value}
+              onClick={() => setView(v.value)}
+              aria-pressed={active}
+              className={`shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97] ${
+                active
+                  ? 'border-transparent bg-primary-vibrant text-white shadow-sm'
+                  : 'bg-white border-border text-text-secondary hover:bg-bg-secondary'
+              }`}
+            >
+              {v.icon}
+              {v.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {view === 'eap' && <EapView tasks={tasks} projects={projects} />}
+      {view === 'schedule' && <ScheduleMapView tasks={tasks} projects={projects} />}
+      {view === 'xp' && <XpView tasks={tasks} />}
+      {view === 'poker' && <PlanningPokerView tasks={tasks} />}
+
+      {view === 'overview' && (
+      stats.total === 0 ? (
         <Card className="flex flex-col items-center text-center py-12">
           <Mascot state="confused" size="md" animate />
           <p className="text-text-primary font-semibold mt-3">Sem dados ainda</p>
@@ -280,6 +326,7 @@ const ReportsPage: React.FC = () => {
         </ResponsiveContainer>
       </Card>
       </>
+      )
       )}
       </>}
     </AppLayout>
