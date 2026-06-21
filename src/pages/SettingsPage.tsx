@@ -75,7 +75,7 @@ const SettingsPage: React.FC = () => {
               placeholder="25"
             />
           </div>
-          <p className="text-xs text-text-soft mt-3">
+          <p className="text-xs text-text-secondary mt-3">
             As metas aparecem no progresso da Dashboard. Tudo é salvo automaticamente.
           </p>
         </Card>
@@ -83,7 +83,7 @@ const SettingsPage: React.FC = () => {
         {/* Notifications */}
         <Card>
           <SectionHeader icon={<Bell size={18} />} color="#8B5CF6" title="Notificações" />
-          <p className="text-xs text-text-soft -mt-4 mb-4">
+          <p className="text-xs text-text-secondary -mt-4 mb-4">
             Escolha o que aparece no sino do topo.
           </p>
           <div className="space-y-1">

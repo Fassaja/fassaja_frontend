@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, MailCheck } from 'lucide-react';
+import { ArrowRight, MailCheck, CheckSquare, CalendarDays, BarChart3, Sparkles } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -89,6 +89,23 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             Tarefas, projetos, calendário e relatórios — tudo num só lugar, com aquele empurrãozinho
             motivacional do Bob.
           </p>
+
+          <div className="mt-8 grid grid-cols-2 gap-2.5 w-full max-w-sm">
+            {[
+              { icon: <CheckSquare size={16} />, label: 'Tarefas e projetos' },
+              { icon: <CalendarDays size={16} />, label: 'Calendário' },
+              { icon: <BarChart3 size={16} />, label: 'Relatórios' },
+              { icon: <Sparkles size={16} />, label: 'XP e conquistas' },
+            ].map(f => (
+              <div
+                key={f.label}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 backdrop-blur-sm text-sm font-semibold text-left"
+              >
+                <span className="text-white/90 shrink-0">{f.icon}</span>
+                {f.label}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="absolute -right-16 -bottom-16 w-72 h-72 rounded-full bg-white/10" />
@@ -238,7 +255,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             Continuar como visitante
             <ArrowRight size={16} />
           </button>
-          <p className="text-xs text-text-soft text-center mt-2">
+          <p className="text-xs text-text-secondary text-center mt-2">
             Visitantes usam o Dashboard e Minhas Tarefas, com até 3 tarefas por dia.
           </p>
           </>

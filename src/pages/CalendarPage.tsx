@@ -46,13 +46,33 @@ const CalendarPage: React.FC = () => {
         {/* Tasks for selected date */}
         <div>
           <Card>
-            <h3 className="text-lg font-bold text-text-primary mb-4">
-              {selectedDate.toLocaleDateString('pt-BR', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
-            </h3>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="min-w-0">
+                <h3 className="text-lg font-bold text-text-primary capitalize leading-tight">
+                  {selectedDate.toLocaleDateString('pt-BR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                  })}
+                </h3>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  {tasksForSelectedDate.length === 0
+                    ? 'Nenhuma tarefa nesta data'
+                    : `${tasksForSelectedDate.length} tarefa${tasksForSelectedDate.length === 1 ? '' : 's'} nesta data`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const now = new Date();
+                  setCurrentDate(now);
+                  setSelectedDate(now);
+                }}
+                className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-primary-vibrant bg-primary-light hover:brightness-95 active:scale-95 transition-all"
+              >
+                Hoje
+              </button>
+            </div>
 
             {tasksForSelectedDate.length > 0 ? (
               <ul className="space-y-3">

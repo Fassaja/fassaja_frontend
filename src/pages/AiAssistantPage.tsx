@@ -446,7 +446,7 @@ const AiAssistantPage: React.FC = () => {
               </button>
             ))}
           </div>
-          <p className="-mt-1 text-xs text-text-soft">
+          <p className="-mt-1 text-xs text-text-secondary">
             {mode === 'structure'
               ? 'A IA monta um projeto com os passos do documento.'
               : 'A IA analisa o documento e sugere tarefas de melhoria.'}
@@ -504,7 +504,7 @@ const AiAssistantPage: React.FC = () => {
             error={importError ?? undefined}
           />
           <div className="-mt-2 flex justify-end">
-            <span className={`text-xs ${overLimit ? 'text-danger font-medium' : 'text-text-soft'}`}>
+            <span className={`text-xs ${overLimit ? 'text-danger font-medium' : 'text-text-secondary'}`}>
               {documentText.length.toLocaleString('pt-BR')} / {MAX_DOC_CHARS.toLocaleString('pt-BR')}
               {overLimit && ' — documento muito grande'}
             </span>
@@ -533,7 +533,7 @@ const AiAssistantPage: React.FC = () => {
           {generateError && <p className="text-xs text-danger">{generateError}</p>}
 
           {aiEnabled && status && (
-            <p className="text-xs text-text-soft">
+            <p className="text-xs text-text-secondary">
               Usos da IA nesta semana:{' '}
               <strong className={status.remaining === 0 ? 'text-danger' : 'text-text-primary'}>
                 {status.remaining} de {status.limit} restantes
@@ -542,12 +542,12 @@ const AiAssistantPage: React.FC = () => {
             </p>
           )}
 
-          <p className="text-xs text-text-soft">
+          <p className="text-xs text-text-secondary">
             Nada é salvo até você revisar e aprovar o rascunho.
           </p>
 
           {aiEnabled && (
-            <p className="flex items-start gap-1.5 text-xs text-text-soft">
+            <p className="flex items-start gap-1.5 text-xs text-text-secondary">
               <Info size={13} className="mt-0.5 shrink-0" />
               <span>Seu documento é enviado à IA (Anthropic) para análise.</span>
             </p>
@@ -618,14 +618,14 @@ const AiAssistantPage: React.FC = () => {
                       <button
                         onClick={handleGenerate}
                         disabled={!canGenerate}
-                        className="flex items-center gap-1 text-xs text-text-soft hover:text-primary-vibrant transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1 text-xs text-text-secondary hover:text-primary-vibrant transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         title="Gera um novo rascunho com o mesmo documento (consome 1 uso)."
                       >
                         <RefreshCw size={14} /> Gerar de novo
                       </button>
                       <button
                         onClick={reset}
-                        className="flex items-center gap-1 text-xs text-text-soft hover:text-text-primary transition-colors"
+                        className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
                       >
                         <RotateCcw size={14} /> Descartar
                       </button>
@@ -717,7 +717,7 @@ const AiAssistantPage: React.FC = () => {
                         Adicionar todas
                       </button>
                     </div>
-                    <p className="-mt-1 text-xs text-text-soft">
+                    <p className="-mt-1 text-xs text-text-secondary">
                       💭 Ideias da IA. Toque em <Plus size={11} className="inline" /> para virar um card.
                     </p>
                     <div className="flex flex-col gap-3">
@@ -805,7 +805,7 @@ const AiAssistantPage: React.FC = () => {
 
                 <div className="flex flex-col gap-3">
                   {draft.cards.length === 0 && (
-                    <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-text-soft">
+                    <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-text-secondary">
                       Nenhum card ainda. Adicione as sugestões acima 💭 ou crie um card manualmente.
                     </p>
                   )}

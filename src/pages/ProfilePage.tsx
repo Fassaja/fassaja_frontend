@@ -251,7 +251,7 @@ const ProfilePage: React.FC = () => {
                 {account?.nameChangedAt && ` — em ${availableOn(account.nameChangedAt)}`}.
               </p>
             ) : (
-              <p className="text-xs text-text-soft">
+              <p className="text-xs text-text-secondary">
                 Ao salvar, você só poderá alterar o nome novamente daqui a 30 dias.
               </p>
             )}
@@ -311,7 +311,7 @@ const ProfilePage: React.FC = () => {
                 }}
                 placeholder="Pelo menos 8 caracteres, com letra e número"
               />
-              <p className="sm:col-span-2 text-xs text-text-soft -mt-1">
+              <p className="sm:col-span-2 text-xs text-text-secondary -mt-1">
                 Após alterar, você só poderá trocar a senha novamente daqui a 30 dias.
               </p>
               <div className="sm:col-span-2 flex items-center gap-4">

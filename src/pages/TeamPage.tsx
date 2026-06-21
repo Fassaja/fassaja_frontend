@@ -264,7 +264,7 @@ const TeamPage: React.FC = () => {
             </Button>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <p className="text-xs text-text-soft">
+            <p className="text-xs text-text-secondary">
               O link expira em 7 dias e serve para várias pessoas. Cada pedido aparece em "Pedidos
               pendentes".
             </p>
@@ -443,34 +443,48 @@ const TeamPage: React.FC = () => {
                 ))}
               </div>
 
-              {teamProjects.length > 0 && (
-                <div className="mt-6 pt-5 border-t border-border">
-                  <h3 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
-                    <FolderOpen size={16} className="text-primary-vibrant" /> Projetos da equipe (
-                    {teamProjects.length})
-                  </h3>
+              <div className="mt-6 pt-5 border-t border-border">
+                <h3 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
+                  <FolderOpen size={16} className="text-primary-vibrant" /> Projetos da equipe (
+                  {teamProjects.length})
+                </h3>
+                {teamProjects.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {teamProjects.map(p => (
-                      <div
-                        key={p.id}
-                        className="flex items-center gap-3 p-3 rounded-xl border border-border"
-                      >
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ backgroundColor: p.color }}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-text-primary truncate">{p.name}</p>
-                          <p className="text-xs text-text-secondary">
+                    {teamProjects.map(p => {
+                      const pct = p.taskCount ? Math.round((p.completedCount / p.taskCount) * 100) : 0;
+                      return (
+                        <div key={p.id} className="p-3 rounded-xl border border-border">
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: p.color }}
+                            />
+                            <p className="text-sm font-semibold text-text-primary truncate flex-1 min-w-0">
+                              {p.name}
+                            </p>
+                            <span className="text-xs font-bold text-text-secondary shrink-0">{pct}%</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-bg-secondary overflow-hidden mt-2">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{ width: `${pct}%`, backgroundColor: p.color }}
+                            />
+                          </div>
+                          <p className="text-xs text-text-secondary mt-2">
                             {p.taskCount} {p.taskCount === 1 ? 'tarefa' : 'tarefas'} ·{' '}
                             {p.completedCount} concluída{p.completedCount === 1 ? '' : 's'}
                           </p>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-text-secondary">
+                    Projetos atribuídos a esta equipe aparecem aqui. Crie um projeto do tipo equipe
+                    para começar a acompanhar o progresso em conjunto.
+                  </p>
+                )}
+              </div>
             </Card>
           )}
         </div>

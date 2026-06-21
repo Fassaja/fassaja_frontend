@@ -3,6 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { EditProjectModal } from '@/components/projects/EditProjectModal';
+import { Card } from '@/components/common/Card';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
@@ -53,6 +54,9 @@ const ProjectsPage: React.FC = () => {
       completed: projectTasks.filter(t => t.status === 'completed').length,
     };
   };
+
+  const overallCompleted = tasks.filter(t => t.status === 'completed').length;
+  const overallPct = tasks.length ? Math.round((overallCompleted / tasks.length) * 100) : 0;
 
   return (
     <>
@@ -109,21 +113,53 @@ const ProjectsPage: React.FC = () => {
         {loading ? (
           showSkeleton ? <LoadingScreen /> : null
         ) : projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map(project => {
-              const stats = getProjectStats(project.id);
-              return (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  taskCount={stats.total}
-                  completedCount={stats.completed}
-                  onEdit={() => setEditingProject(project)}
-                  onDelete={() => setDeletingProject(project)}
-                />
-              );
-            })}
-          </div>
+          <>
+            {/* Resumo geral dos projetos */}
+            <Card className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+              <div className="flex gap-6 sm:gap-8">
+                <div>
+                  <p className="text-2xl font-extrabold text-text-primary leading-none">{projects.length}</p>
+                  <p className="text-xs text-text-secondary mt-1">Projetos</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-extrabold text-text-primary leading-none">{tasks.length}</p>
+                  <p className="text-xs text-text-secondary mt-1">Tarefas</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-extrabold text-success leading-none">{overallCompleted}</p>
+                  <p className="text-xs text-text-secondary mt-1">Concluídas</p>
+                </div>
+              </div>
+              <div className="flex-1 sm:max-w-xs sm:ml-auto">
+                <div className="flex justify-between text-xs font-semibold text-text-secondary mb-1">
+                  <span>Progresso geral</span>
+                  <span>{overallPct}%</span>
+                </div>
+                <div className="h-2.5 rounded-full bg-bg-secondary overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-primary-vibrant to-turquoise transition-all"
+                    style={{ width: `${overallPct}%` }}
+                  />
+                </div>
+              </div>
+            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map(project => {
+                const stats = getProjectStats(project.id);
+                return (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    taskCount={stats.total}
+                    completedCount={stats.completed}
+                    onEdit={() => setEditingProject(project)}
+                    onDelete={() => setDeletingProject(project)}
+                  />
+                );
+              })}
+            </div>
+          </>
         ) : (
           <EmptyState
             mascotState="confused"
