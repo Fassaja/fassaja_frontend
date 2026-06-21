@@ -1,12 +1,13 @@
-import React from 'react';
-import { Trash2, Check, CalendarDays, Send, UserCheck, UserX } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trash2, Check, CalendarDays, Send, UserCheck, UserX, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Task } from '@/types/task';
+import { Task, TaskStatus } from '@/types/task';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
 import { formatDate } from '@/utils/date';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
+import { useToast } from '@/contexts/ToastContext';
 
 interface TaskCardProps {
   task: Task;
@@ -16,11 +17,94 @@ interface TaskCardProps {
   onClick?: (task: Task) => void;
 }
 
-const statusConfig: Record<Task['status'], { label: string; className: string }> = {
-  pending: { label: 'Pendente', className: 'bg-slate-100 text-slate-600' },
-  in_progress: { label: 'Em andamento', className: 'bg-primary-light text-primary-vibrant' },
-  completed: { label: 'Concluída', className: 'bg-emerald-100 text-emerald-700' },
-  overdue: { label: 'Atrasada', className: 'bg-rose-100 text-rose-600' },
+const statusConfig: Record<Task['status'], { label: string; className: string; dot: string }> = {
+  pending: { label: 'Pendente', className: 'bg-slate-100 text-slate-600', dot: '#64748B' },
+  in_progress: { label: 'Em andamento', className: 'bg-primary-light text-primary-vibrant', dot: '#2477FF' },
+  completed: { label: 'Concluída', className: 'bg-emerald-100 text-emerald-700', dot: '#22C55E' },
+  overdue: { label: 'Atrasada', className: 'bg-rose-100 text-rose-600', dot: '#F43F5E' },
+};
+
+// Status que o usuário pode escolher direto no card (overdue é calculado pelo servidor).
+const STATUS_CHOICES: TaskStatus[] = ['pending', 'in_progress', 'completed'];
+
+interface StatusSelectProps {
+  task: Task;
+}
+
+/** Badge de status que vira um menu para trocar pendente/andamento/concluída sem abrir o editar. */
+const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
+  const { updateTask, completeTask } = useTasks();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const current = statusConfig[task.status];
+
+  const change = async (e: React.MouseEvent, next: TaskStatus) => {
+    e.stopPropagation();
+    setOpen(false);
+    if (next === task.status || busy) return;
+    try {
+      setBusy(true);
+      // Concluir passa pelo completeTask (cuida do completedAt + comemoração).
+      if (next === 'completed') await completeTask(task.id);
+      else await updateTask(task.id, { status: next });
+      toast.success(`Status: ${statusConfig[next].label}`);
+    } catch {
+      toast.error('Não foi possível mudar o status. Tente novamente.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={e => {
+          e.stopPropagation();
+          setOpen(v => !v);
+        }}
+        disabled={busy}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title="Mudar status"
+        className={`inline-flex items-center gap-1.5 text-xs font-semibold pl-2.5 pr-1.5 py-1 rounded-full transition-all hover:brightness-95 active:scale-95 disabled:opacity-60 ${current.className}`}
+      >
+        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: current.dot }} />
+        {current.label}
+        <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={e => { e.stopPropagation(); setOpen(false); }} />
+          <div
+            role="menu"
+            className="absolute left-0 top-full mt-1.5 z-40 w-44 rounded-xl border border-border bg-white shadow-lg overflow-hidden py-1"
+            onClick={e => e.stopPropagation()}
+          >
+            {STATUS_CHOICES.map(value => {
+              const opt = statusConfig[value];
+              const isCurrent = value === task.status;
+              return (
+                <button
+                  key={value}
+                  role="menuitemradio"
+                  aria-checked={isCurrent}
+                  onClick={e => change(e, value)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: opt.dot }} />
+                  <span className="flex-1 text-left">{opt.label}</span>
+                  {isCurrent && <Check size={15} className="text-primary-vibrant shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
 };
 
 const priorityConfig: Record<Task['priority'], { label: string; color: string; className: string }> = {
@@ -39,7 +123,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const { account } = useAuth();
   const { respondAssignment } = useTasks();
   const isCompleted = task.status === 'completed';
-  const statusInfo = statusConfig[task.status];
   const priorityInfo = priorityConfig[task.priority];
 
   const isMyProposal =
@@ -103,9 +186,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 items-center">
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.className}`}>
-              {statusInfo.label}
-            </span>
+            <StatusSelect task={task} />
             <span
               className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${priorityInfo.className}`}
             >

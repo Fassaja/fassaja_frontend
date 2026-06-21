@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  @apply transition-colors duration-200;
-}
-
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -15,8 +11,12 @@ body {
   @apply bg-bg-main text-text-primary;
 }
 
-input, textarea, select {
-  @apply focus:outline-none;
+/* Foco-visível baseline: controles sem anel próprio ainda mostram foco
+   no teclado (acessibilidade). Componentes com anel (Button, Input,
+   Textarea) já definem o próprio focus(-visible):outline-none e o ring. */
+:focus-visible {
+  outline: 2px solid theme('colors.primary.vibrant');
+  outline-offset: 2px;
 }
 
 /* Barra de progresso de navegação (NProgress-like) */
