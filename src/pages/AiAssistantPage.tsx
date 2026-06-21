@@ -402,8 +402,8 @@ const AiAssistantPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* COLUNA ESQUERDA — entrada */}
+      <div className="flex flex-col gap-6">
+        {/* ENTRADA (em cima, largura total) */}
         <Card
           className={`flex flex-col gap-4 transition-all ${
             dragging ? 'ring-2 ring-primary-vibrant ring-offset-2 bg-primary-light/30' : ''
@@ -424,6 +424,9 @@ const AiAssistantPage: React.FC = () => {
             </div>
           )}
 
+          {/* Entrada em 2 colunas (em telas largas): documento | comando */}
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <div className="flex flex-col gap-4">
           {/* Modo: estruturar projeto x analisar melhorias */}
           <div className="grid grid-cols-2 gap-2">
             {([
@@ -506,7 +509,10 @@ const AiAssistantPage: React.FC = () => {
               {overLimit && ' — documento muito grande'}
             </span>
           </div>
+          </div>
 
+          {/* Célula direita: comando + ação */}
+          <div className="flex flex-col gap-4">
           <Textarea
             label="O que você quer? (comando)"
             placeholder='Ex.: "Crie um projeto para este cliente com os cards de cada etapa."'
@@ -546,9 +552,11 @@ const AiAssistantPage: React.FC = () => {
               <span>Seu documento é enviado à IA (Anthropic) para análise.</span>
             </p>
           )}
+          </div>
+          </div>
         </Card>
 
-        {/* COLUNA DIREITA — rascunho */}
+        {/* RASCUNHO (embaixo, largura total) */}
         <div>
           <AnimatePresence mode="wait">
             {generating ? (
@@ -693,10 +701,10 @@ const AiAssistantPage: React.FC = () => {
                 </Card>
 
                 {/* Sugestões + cards lado a lado (em telas largas) quando há sugestões */}
-                <div className={`grid items-start gap-4 ${suggestions.length > 0 ? 'xl:grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`grid items-start gap-4 ${suggestions.length > 0 ? '2xl:grid-cols-5' : 'grid-cols-1'}`}>
                 {/* Sugestões de melhoria (balões) — modo "Analisar melhorias" */}
                 {suggestions.length > 0 && (
-                  <Card className="flex flex-col gap-3 border-purple-200 bg-purple-50/40">
+                  <Card className="flex flex-col gap-3 border-purple-200 bg-purple-50/40 2xl:col-span-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Lightbulb size={18} className="text-purple-500" />
@@ -785,7 +793,7 @@ const AiAssistantPage: React.FC = () => {
                 )}
 
                 {/* Cards (estrutura base, sempre à direita) */}
-                <div className="flex flex-col gap-3 min-w-0">
+                <div className="flex flex-col gap-3 min-w-0 2xl:col-span-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-text-primary">
                     Cards ({draft.cards.length})
