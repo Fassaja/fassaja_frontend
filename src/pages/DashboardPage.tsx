@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { CheckCircle, Clock, AlertCircle, ListTodo } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, ListTodo, Sparkles, Flame } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { WeeklyOverviewChart } from '@/components/dashboard/WeeklyOverviewChart';
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
 import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
-import { PriorityChart } from '@/components/dashboard/PriorityChart';
+import { XpCard } from '@/components/dashboard/XpCard';
 import { StreakContent } from '@/components/dashboard/StreakCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Card } from '@/components/common/Card';
@@ -16,9 +16,10 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
-import { useUser } from '@/contexts/UserContext';
+import { useUser, computeStreak } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { isToday } from '@/utils/date';
+import { computeXp } from '@/utils/xp';
 
 const DashboardPage: React.FC = () => {
   const { tasks, completeTask, createTask, loading } = useTasks();
@@ -28,6 +29,19 @@ const DashboardPage: React.FC = () => {
   const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
   const stats = useDashboardStats(tasks);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+
+  // Gamificação para os chips do banner (nível + sequência).
+  const xp = computeXp(tasks);
+  const streak = (() => {
+    const days = new Set<string>(user.productiveDays);
+    tasks.forEach(t => {
+      if (t.status === 'completed' && t.completedAt) {
+        const d = new Date(t.completedAt);
+        days.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+      }
+    });
+    return computeStreak(Array.from(days));
+  })();
 
   const openNewTask = () => {
     if (isGuest && guestTaskCount >= guestTaskLimit) {
@@ -101,8 +115,20 @@ const DashboardPage: React.FC = () => {
                 ? 'Crie sua primeira tarefa e bora começar.'
                 : 'Pronto para mais um dia produtivo?'}
             </p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-white text-xs font-bold backdrop-blur-sm">
+                <Sparkles size={13} /> Nível {xp.level}
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-white text-xs font-bold backdrop-blur-sm">
+                <Flame size={13} /> {streak} {streak === 1 ? 'dia' : 'dias'} de sequência
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-white text-xs font-bold backdrop-blur-sm">
+                {xp.xp} XP
+              </span>
+            </div>
           </div>
           <div className="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-white/10" />
+          <div className="absolute right-16 -top-12 w-28 h-28 rounded-full bg-white/5" />
         </div>
 
         {/* Metrics */}
@@ -178,9 +204,9 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
           <div className="lg:col-span-1">
-            <PriorityChart tasks={tasks}>
+            <XpCard tasks={tasks}>
               <StreakContent />
-            </PriorityChart>
+            </XpCard>
           </div>
         </div>
         </>}

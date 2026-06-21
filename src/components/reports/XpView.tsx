@@ -3,14 +3,11 @@ import { Star, Flame, Trophy, Zap, CheckCircle2, ShieldCheck, Lock } from 'lucid
 import { Task } from '@/types/task';
 import { Card } from '@/components/common/Card';
 import { useUser, computeStreak } from '@/contexts/UserContext';
+import { computeXp, XP_PER_LEVEL } from '@/utils/xp';
 
 interface XpViewProps {
   tasks: Task[];
 }
-
-// Pontos por tarefa concluída, ponderados pela prioridade.
-const POINTS: Record<Task['priority'], number> = { low: 10, medium: 20, high: 30 };
-const XP_PER_LEVEL = 100;
 
 function isoOf(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -20,20 +17,14 @@ export const XpView: React.FC<XpViewProps> = ({ tasks }) => {
   const { user } = useUser();
 
   const data = useMemo(() => {
-    const completed = tasks.filter(t => t.status === 'completed');
-    const xp = completed.reduce((sum, t) => sum + POINTS[t.priority], 0);
-    const level = Math.floor(xp / XP_PER_LEVEL) + 1;
-    const intoLevel = xp % XP_PER_LEVEL;
-    const pctToNext = Math.round((intoLevel / XP_PER_LEVEL) * 100);
-
+    const base = computeXp(tasks);
     const activeDays = new Set<string>(user.productiveDays);
-    completed.forEach(t => {
-      if (t.completedAt) activeDays.add(isoOf(new Date(t.completedAt)));
+    tasks.forEach(t => {
+      if (t.status === 'completed' && t.completedAt) activeDays.add(isoOf(new Date(t.completedAt)));
     });
     const streak = computeStreak(Array.from(activeDays));
     const overdue = tasks.filter(t => t.status === 'overdue').length;
-
-    return { completedCount: completed.length, xp, level, intoLevel, pctToNext, streak, overdue };
+    return { ...base, streak, overdue };
   }, [tasks, user.productiveDays]);
 
   const achievements = [
