@@ -72,10 +72,14 @@ export function isTomorrow(dateString: string): boolean {
 export function isThisWeek(dateString: string): boolean {
   const date = parseDate(dateString);
   const today = new Date();
+  // Normaliza para o início do dia: senão a hora atual contamina os limites
+  // da semana e datas à meia-noite (domingo) caem fora por engano.
+  today.setHours(0, 0, 0, 0);
   const firstDay = new Date(today);
-  firstDay.setDate(today.getDate() - today.getDay());
+  firstDay.setDate(today.getDate() - today.getDay()); // domingo 00:00
   const lastDay = new Date(firstDay);
   lastDay.setDate(firstDay.getDate() + 6);
+  lastDay.setHours(23, 59, 59, 999); // sábado 23:59
 
   return date >= firstDay && date <= lastDay;
 }

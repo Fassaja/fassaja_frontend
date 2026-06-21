@@ -24,11 +24,17 @@ function check(name: string, cond: boolean) {
   }
 }
 
-// Datas relativas a "agora", em ISO (YYYY-MM-DD).
+// Datas relativas a "agora", em ISO (YYYY-MM-DD) no fuso LOCAL — para casar
+// com o parseDate do util (que lê 'YYYY-MM-DD' como dia local). Usar
+// toISOString() aqui introduziria um descasamento UTC×local sem relação com o
+// que se testa.
 const iso = (offset: number) => {
   const d = new Date();
   d.setDate(d.getDate() + offset);
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 };
 
 // isToday / isTomorrow
