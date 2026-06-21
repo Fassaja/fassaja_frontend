@@ -29,10 +29,14 @@ export const PlanningPokerView: React.FC<PlanningPokerViewProps> = ({ tasks }) =
     [estimates, tasks],
   );
 
-  const totalPoints = estimatedRows.reduce((sum, r) => {
-    const n = Number(r.value);
-    return Number.isFinite(n) ? sum + n : sum;
-  }, 0);
+  const numericValues = estimatedRows
+    .map(r => Number(r.value))
+    .filter(n => Number.isFinite(n));
+  const totalPoints = numericValues.reduce((sum, n) => sum + n, 0);
+  const average = numericValues.length
+    ? Math.round((totalPoints / numericValues.length) * 10) / 10
+    : 0;
+  const pendingCount = estimable.filter(t => estimates[t.id] === undefined).length;
 
   if (estimable.length === 0) {
     return (
@@ -53,6 +57,22 @@ export const PlanningPokerView: React.FC<PlanningPokerViewProps> = ({ tasks }) =
         usando os números de Fibonacci: quanto maior a carta, maior o esforço. Escolha uma tarefa e
         clique numa carta. As estimativas ficam salvas neste navegador.
       </p>
+
+      {/* Resumo das estimativas */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="text-center py-4">
+          <p className="text-2xl font-bold text-text-primary">{estimatedRows.length}</p>
+          <p className="text-xs text-text-secondary">Estimadas</p>
+        </Card>
+        <Card className="text-center py-4">
+          <p className="text-2xl font-bold text-amber-500">{pendingCount}</p>
+          <p className="text-xs text-text-secondary">Sem estimativa</p>
+        </Card>
+        <Card className="text-center py-4">
+          <p className="text-2xl font-bold text-primary-vibrant">{average || '—'}</p>
+          <p className="text-xs text-text-secondary">Média (pts)</p>
+        </Card>
+      </div>
 
       {/* Mesa de estimativa */}
       <Card>

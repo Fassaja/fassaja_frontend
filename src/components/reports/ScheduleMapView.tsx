@@ -3,6 +3,7 @@ import { CalendarRange } from 'lucide-react';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
+import { formatDate } from '@/utils/date';
 
 interface ScheduleMapViewProps {
   tasks: Task[];
@@ -75,6 +76,26 @@ export const ScheduleMapView: React.FC<ScheduleMapViewProps> = ({ tasks, project
     return project?.color ?? STATUS_COLOR[t.status];
   };
 
+  // Legenda: projetos presentes no cronograma (+ "Sem projeto" se houver).
+  const legend = useMemo(() => {
+    const items: { name: string; color: string }[] = [];
+    const seen = new Set<string>();
+    let hasOrphan = false;
+    scheduled.forEach(t => {
+      const project = projects.find(p => p.id === t.projectId);
+      if (project) {
+        if (!seen.has(project.id)) {
+          seen.add(project.id);
+          items.push({ name: project.name, color: project.color });
+        }
+      } else {
+        hasOrphan = true;
+      }
+    });
+    if (hasOrphan) items.push({ name: 'Sem projeto', color: STATUS_COLOR.pending });
+    return items;
+  }, [scheduled, projects]);
+
   if (!model) {
     return (
       <Card className="flex flex-col items-center text-center py-12">
@@ -114,14 +135,17 @@ export const ScheduleMapView: React.FC<ScheduleMapViewProps> = ({ tasks, project
             {/* Marcador de hoje — overlay alinhado só à área das barras (após os rótulos) */}
             {model.todayPct >= 0 && model.todayPct <= 100 && (
               <div
-                className="absolute top-0 bottom-0 right-0 pointer-events-none z-10"
+                className="absolute -top-6 bottom-0 right-0 pointer-events-none z-10"
                 style={{ left: LABEL_W }}
-                aria-hidden
               >
                 <div
                   className="absolute top-0 bottom-0 w-px bg-primary-vibrant/70"
                   style={{ left: `${model.todayPct}%` }}
-                />
+                >
+                  <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-md bg-primary-vibrant text-white text-[10px] font-bold leading-none whitespace-nowrap">
+                    hoje
+                  </span>
+                </div>
               </div>
             )}
             {model.rows.map(row => {
@@ -149,6 +173,7 @@ export const ScheduleMapView: React.FC<ScheduleMapViewProps> = ({ tasks, project
                         backgroundColor: color + '24',
                         border: `1px solid ${color}66`,
                       }}
+                      title={`${row.task.title} · prazo ${formatDate(row.task.dueDate!)}`}
                     >
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
                     </div>
@@ -160,8 +185,19 @@ export const ScheduleMapView: React.FC<ScheduleMapViewProps> = ({ tasks, project
         </div>
       </div>
 
+      {legend.length > 0 && (
+        <div className="flex flex-wrap gap-x-4 gap-y-2 mt-5 pt-4 border-t border-border">
+          {legend.map(item => (
+            <span key={item.name} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.name}
+            </span>
+          ))}
+        </div>
+      )}
+
       {undated > 0 && (
-        <p className="text-xs text-text-secondary mt-5">
+        <p className="text-xs text-text-secondary mt-4">
           {undated} tarefa{undated === 1 ? '' : 's'} sem data de vencimento não aparece
           {undated === 1 ? '' : 'm'} no cronograma.
         </p>

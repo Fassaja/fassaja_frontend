@@ -2,8 +2,8 @@ import React, { useMemo, useState } from 'react';
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   PieChart,
   Pie,
   Cell,
@@ -11,7 +11,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
+  LabelList,
   ResponsiveContainer,
 } from 'recharts';
 import { BarChart3, GitBranch, CalendarRange, Sparkles, Spade } from 'lucide-react';
@@ -38,6 +38,17 @@ const VIEWS: { value: ReportView; label: string; icon: React.ReactNode }[] = [
   { value: 'xp', label: 'XP', icon: <Sparkles size={16} /> },
   { value: 'poker', label: 'Planning Poker', icon: <Spade size={16} /> },
 ];
+
+// Estilo compartilhado dos gráficos (eixos limpos + tooltip da marca).
+const AXIS_PROPS = { tickLine: false, axisLine: false, tick: { fontSize: 12, fill: '#64748B' } } as const;
+const GRID_COLOR = '#E3EAF3';
+const TOOLTIP_STYLE = {
+  borderRadius: 12,
+  border: '1px solid #E3EAF3',
+  boxShadow: '0 4px 12px -2px rgba(6,27,73,0.12)',
+  fontSize: 13,
+} as const;
+const PRIORITY_COLORS = ['#22C55E', '#FBBF24', '#8B5CF6'];
 
 const WEEK_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
@@ -152,8 +163,7 @@ const ReportsPage: React.FC = () => {
     });
   }, [tasks, period]);
 
-  // Baixa, Média, Alta (mesma paleta de prioridade do app).
-  const colors = ['#22C55E', '#FBBF24', '#8B5CF6'];
+  const priorityTotal = priorityData.reduce((s, d) => s + d.value, 0);
 
   return (
     <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
@@ -231,24 +241,27 @@ const ReportsPage: React.FC = () => {
       ) : (
       <>
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Status Distribution */}
         <Card>
-          <h3 className="text-lg font-bold text-text-primary mb-4">
-            Tarefas por Status
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={statusData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5EAF2" />
-              <XAxis dataKey="name" stroke="#667085" />
-              <YAxis stroke="#667085" />
+          <h3 className="text-lg font-bold text-text-primary mb-1">Tarefas por status</h3>
+          <p className="text-sm text-text-secondary mb-4">Quantas tarefas há em cada etapa.</p>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={statusData} margin={{ top: 16, right: 8, left: -16, bottom: 0 }}>
+              <CartesianGrid vertical={false} stroke={GRID_COLOR} />
+              <XAxis dataKey="name" {...AXIS_PROPS} />
+              <YAxis allowDecimals={false} {...AXIS_PROPS} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #E5EAF2',
-                }}
+                cursor={{ fill: 'rgba(36,119,255,0.06)' }}
+                contentStyle={TOOLTIP_STYLE}
+                formatter={(value: number) => [value, 'Tarefas']}
               />
-              <Bar dataKey="value" fill="#2477FF" radius={[8, 8, 0, 0]}>
+              <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={64}>
+                <LabelList
+                  dataKey="value"
+                  position="top"
+                  style={{ fill: '#0F172A', fontSize: 13, fontWeight: 700 }}
+                />
                 {statusData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
@@ -259,34 +272,50 @@ const ReportsPage: React.FC = () => {
 
         {/* Priority Distribution */}
         <Card>
-          <h3 className="text-lg font-bold text-text-primary mb-4">
-            Tarefas por Prioridade
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={priorityData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value}`}
-                outerRadius={80}
-                fill="#2477FF"
-                dataKey="value"
-              >
-                {priorityData.map((_entry, index) => (
-                  <Cell key={`cell-${index}`} fill={colors[index]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          <h3 className="text-lg font-bold text-text-primary mb-1">Tarefas por prioridade</h3>
+          <p className="text-sm text-text-secondary mb-4">Como seu esforço está distribuído.</p>
+          <div className="relative">
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={priorityData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={62}
+                  outerRadius={92}
+                  paddingAngle={2}
+                  cornerRadius={6}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {priorityData.map((_entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PRIORITY_COLORS[index]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(value: number) => [value, 'Tarefas']} />
+              </PieChart>
+            </ResponsiveContainer>
+            {/* Total no centro da rosca */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-3xl font-extrabold text-text-primary leading-none">{priorityTotal}</span>
+              <span className="text-xs text-text-secondary">tarefas</span>
+            </div>
+          </div>
+          <div className="flex justify-center flex-wrap gap-x-5 gap-y-2 mt-4">
+            {priorityData.map((d, i) => (
+              <span key={d.name} className="inline-flex items-center gap-1.5 text-sm">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PRIORITY_COLORS[i] }} />
+                <span className="text-text-secondary">{d.name}</span>
+                <span className="font-bold text-text-primary">{d.value}</span>
+              </span>
+            ))}
+          </div>
         </Card>
       </div>
 
       {/* Trend Chart */}
       <Card>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between gap-3 mb-1">
           <h3 className="text-lg font-bold text-text-primary">Tendência</h3>
           <Dropdown
             options={[
@@ -299,34 +328,49 @@ const ReportsPage: React.FC = () => {
             menuAlign="right"
           />
         </div>
+        <p className="text-sm text-text-secondary mb-4">Tarefas criadas e concluídas ao longo do tempo.</p>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={trendData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5EAF2" />
-            <XAxis dataKey="day" stroke="#667085" />
-            <YAxis stroke="#667085" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: '#fff',
-                border: '1px solid #E5EAF2',
-              }}
-            />
-            <Legend />
-            <Line
+          <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22C55E" stopOpacity={0.25} />
+                <stop offset="100%" stopColor="#22C55E" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#2477FF" stopOpacity={0.25} />
+                <stop offset="100%" stopColor="#2477FF" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke={GRID_COLOR} />
+            <XAxis dataKey="day" {...AXIS_PROPS} />
+            <YAxis allowDecimals={false} {...AXIS_PROPS} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Area
               type="monotone"
               dataKey="completed"
-              stroke="#22C55E"
               name="Concluídas"
-              strokeWidth={2}
+              stroke="#22C55E"
+              strokeWidth={2.5}
+              fill="url(#gradCompleted)"
             />
-            <Line
+            <Area
               type="monotone"
               dataKey="created"
-              stroke="#2477FF"
               name="Criadas"
-              strokeWidth={2}
+              stroke="#2477FF"
+              strokeWidth={2.5}
+              fill="url(#gradCreated)"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
+        <div className="flex justify-center gap-5 mt-3 text-sm">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-3 h-1.5 rounded-full bg-success" /> <span className="text-text-secondary">Concluídas</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-3 h-1.5 rounded-full bg-primary-vibrant" /> <span className="text-text-secondary">Criadas</span>
+          </span>
+        </div>
       </Card>
       </>
       )

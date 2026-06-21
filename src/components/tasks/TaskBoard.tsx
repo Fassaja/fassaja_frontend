@@ -90,14 +90,14 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[calc(100vh-16rem)]">
       {columns.map(col => (
         <section
           key={col.key}
-          className="flex flex-col rounded-2xl border border-border bg-bg-secondary/60"
+          className="flex flex-col rounded-2xl border border-border bg-bg-secondary/60 md:min-h-0 md:overflow-hidden"
         >
           {/* Cabeçalho da coluna */}
-          <header className="flex items-center gap-2 px-4 pt-4 pb-3">
+          <header className="flex items-center gap-2 px-4 pt-4 pb-3 shrink-0">
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: col.color }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -110,8 +110,8 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
             </div>
           </header>
 
-          {/* Corpo da coluna */}
-          <div className={`flex-1 space-y-3 px-3 pb-3 rounded-b-2xl ${col.tint}`}>
+          {/* Corpo da coluna — scroll próprio no desktop */}
+          <div className={`flex-1 space-y-3 px-3 pb-3 rounded-b-2xl md:min-h-0 md:overflow-y-auto ${col.tint}`}>
             <div className="pt-3 space-y-3">
               {col.items.length > 0 ? (
                 col.items.map(task => (

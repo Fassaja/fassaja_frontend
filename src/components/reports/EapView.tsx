@@ -49,6 +49,17 @@ export const EapView: React.FC<EapViewProps> = ({ tasks, projects }) => {
   const isOpen = (id: string) => open[id] !== false; // aberto por padrão
   const toggle = (id: string) => setOpen(prev => ({ ...prev, [id]: !isOpen(id) }));
 
+  const overall = useMemo(() => {
+    const all = branches.flatMap(b => b.tasks);
+    const done = all.filter(t => t.status === 'completed').length;
+    return {
+      projects: branches.length,
+      tasks: all.length,
+      done,
+      pct: all.length ? Math.round((done / all.length) * 100) : 0,
+    };
+  }, [branches]);
+
   if (branches.length === 0) {
     return (
       <Card className="flex flex-col items-center text-center py-12">
@@ -68,6 +79,36 @@ export const EapView: React.FC<EapViewProps> = ({ tasks, projects }) => {
         A <strong className="text-text-primary">EAP (Estrutura Analítica do Projeto)</strong> quebra
         cada projeto em suas tarefas, mostrando o quanto já foi entregue.
       </p>
+
+      {/* Resumo geral */}
+      <Card className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex gap-6 sm:gap-8">
+          <div>
+            <p className="text-2xl font-extrabold text-text-primary leading-none">{overall.projects}</p>
+            <p className="text-xs text-text-secondary mt-1">Projetos</p>
+          </div>
+          <div>
+            <p className="text-2xl font-extrabold text-text-primary leading-none">{overall.tasks}</p>
+            <p className="text-xs text-text-secondary mt-1">Tarefas</p>
+          </div>
+          <div>
+            <p className="text-2xl font-extrabold text-success leading-none">{overall.done}</p>
+            <p className="text-xs text-text-secondary mt-1">Concluídas</p>
+          </div>
+        </div>
+        <div className="flex-1 sm:max-w-xs sm:ml-auto">
+          <div className="flex justify-between text-xs font-semibold text-text-secondary mb-1">
+            <span>Progresso geral</span>
+            <span>{overall.pct}%</span>
+          </div>
+          <div className="h-2.5 rounded-full bg-bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary-vibrant to-turquoise transition-all"
+              style={{ width: `${overall.pct}%` }}
+            />
+          </div>
+        </div>
+      </Card>
 
       {branches.map(branch => {
         const done = branch.tasks.filter(t => t.status === 'completed').length;

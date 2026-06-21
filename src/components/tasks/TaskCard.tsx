@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Trash2, Check, CalendarDays, Send, UserCheck, UserX, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Task, TaskStatus } from '@/types/task';
@@ -32,12 +33,41 @@ interface StatusSelectProps {
 }
 
 /** Badge de status que vira um menu para trocar pendente/andamento/concluída sem abrir o editar. */
+const MENU_W = 176; // 11rem
+const MENU_H = 148; // ~3 itens + padding
+
 const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
   const { updateTask, completeTask } = useTasks();
   const toast = useToast();
+  const btnRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const current = statusConfig[task.status];
+
+  // Menu via portal com posição fixa: não é cortado por colunas com scroll.
+  const openMenu = () => {
+    const rect = btnRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const openUp = rect.bottom + MENU_H > window.innerHeight;
+    setPos({
+      top: openUp ? rect.top - MENU_H - 6 : rect.bottom + 6,
+      left: Math.min(rect.left, window.innerWidth - MENU_W - 8),
+    });
+    setOpen(true);
+  };
+
+  // Fecha ao rolar/redimensionar para o menu não "descolar" do botão.
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [open]);
 
   const change = async (e: React.MouseEvent, next: TaskStatus) => {
     e.stopPropagation();
@@ -57,12 +87,13 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
   };
 
   return (
-    <div className="relative">
+    <>
       <button
+        ref={btnRef}
         type="button"
         onClick={e => {
           e.stopPropagation();
-          setOpen(v => !v);
+          open ? setOpen(false) : openMenu();
         }}
         disabled={busy}
         aria-haspopup="menu"
@@ -75,12 +106,16 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
         <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
-      {open && (
+      {open && pos && createPortal(
         <>
-          <div className="fixed inset-0 z-30" onClick={e => { e.stopPropagation(); setOpen(false); }} />
+          <div
+            className="fixed inset-0 z-[60]"
+            onClick={e => { e.stopPropagation(); setOpen(false); }}
+          />
           <div
             role="menu"
-            className="absolute left-0 top-full mt-1.5 z-40 w-44 rounded-xl border border-border bg-white shadow-lg overflow-hidden py-1"
+            style={{ position: 'fixed', top: pos.top, left: pos.left, width: MENU_W }}
+            className="z-[61] rounded-xl border border-border bg-white shadow-lg overflow-hidden py-1"
             onClick={e => e.stopPropagation()}
           >
             {STATUS_CHOICES.map(value => {
@@ -101,9 +136,10 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
               );
             })}
           </div>
-        </>
+        </>,
+        document.body,
       )}
-    </div>
+    </>
   );
 };
 
