@@ -127,7 +127,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
       toast.success('Alterações salvas.');
       onClose();
     } catch (err) {
-      setError('Não foi possível salvar as alterações. Tente novamente.');
+      setError((err as Error).message || 'Não foi possível salvar as alterações. Tente novamente.');
       console.error(err);
     } finally {
       setLoading(false);

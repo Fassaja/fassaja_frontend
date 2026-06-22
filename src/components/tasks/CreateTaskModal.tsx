@@ -116,7 +116,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       toast.success('Tarefa criada.');
       onClose();
     } catch (err) {
-      setError('Não foi possível criar a tarefa. Tente novamente.');
+      setError((err as Error).message || 'Não foi possível criar a tarefa. Tente novamente.');
       console.error(err);
     } finally {
       setLoading(false);
