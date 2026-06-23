@@ -14,14 +14,13 @@ import {
   LabelList,
   ResponsiveContainer,
 } from 'recharts';
-import { BarChart3, GitBranch, CalendarRange, Sparkles, Spade } from 'lucide-react';
+import { BarChart3, GitBranch, Sparkles, Spade } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { EapView } from '@/components/reports/EapView';
-import { ScheduleMapView } from '@/components/reports/ScheduleMapView';
 import { XpView } from '@/components/reports/XpView';
 import { PlanningPokerView } from '@/components/reports/PlanningPokerView';
 import { useTasks } from '@/hooks/useTasks';
@@ -29,12 +28,11 @@ import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 
-type ReportView = 'overview' | 'eap' | 'schedule' | 'xp' | 'poker';
+type ReportView = 'overview' | 'eap' | 'xp' | 'poker';
 
 const VIEWS: { value: ReportView; label: string; icon: React.ReactNode }[] = [
   { value: 'overview', label: 'Visão geral', icon: <BarChart3 size={16} /> },
   { value: 'eap', label: 'EAP', icon: <GitBranch size={16} /> },
-  { value: 'schedule', label: 'Cronograma', icon: <CalendarRange size={16} /> },
   { value: 'xp', label: 'XP', icon: <Sparkles size={16} /> },
   { value: 'poker', label: 'Planning Poker', icon: <Spade size={16} /> },
 ];
@@ -225,7 +223,6 @@ const ReportsPage: React.FC = () => {
       </div>
 
       {view === 'eap' && <EapView tasks={tasks} projects={projects} />}
-      {view === 'schedule' && <ScheduleMapView tasks={tasks} projects={projects} />}
       {view === 'xp' && <XpView tasks={tasks} />}
       {view === 'poker' && <PlanningPokerView tasks={tasks} />}
 

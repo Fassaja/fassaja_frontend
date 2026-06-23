@@ -46,7 +46,7 @@ export const EapView: React.FC<EapViewProps> = ({ tasks, projects }) => {
   }, [tasks, projects]);
 
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const isOpen = (id: string) => open[id] !== false; // aberto por padrão
+  const isOpen = (id: string) => open[id] === true; // fechado por padrão
   const toggle = (id: string) => setOpen(prev => ({ ...prev, [id]: !isOpen(id) }));
 
   const overall = useMemo(() => {
