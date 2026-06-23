@@ -16,6 +16,10 @@ interface TaskCardProps {
   onComplete?: (taskId: string) => void;
   onDelete?: (taskId: string) => void;
   onClick?: (task: Task) => void;
+  /** Modo de seleção em massa: o card vira um item selecionável. */
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (taskId: string) => void;
 }
 
 const statusConfig: Record<Task['status'], { label: string; className: string; dot: string }> = {
@@ -99,11 +103,11 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
         aria-haspopup="menu"
         aria-expanded={open}
         title="Mudar status"
-        className={`inline-flex items-center gap-1.5 text-xs font-semibold pl-2.5 pr-1.5 py-1 rounded-full transition-all hover:brightness-95 active:scale-95 disabled:opacity-60 ${current.className}`}
+        className={`inline-flex items-center gap-1 text-[11px] font-semibold pl-2 pr-1 py-0.5 rounded-full transition-all hover:brightness-95 active:scale-95 disabled:opacity-60 ${current.className}`}
       >
-        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: current.dot }} />
+        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: current.dot }} />
         {current.label}
-        <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && pos && createPortal(
@@ -155,11 +159,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onComplete,
   onDelete,
   onClick,
+  selectionMode = false,
+  selected = false,
+  onToggleSelect,
 }) => {
   const { account } = useAuth();
   const { respondAssignment } = useTasks();
   const isCompleted = task.status === 'completed';
   const priorityInfo = priorityConfig[task.priority];
+  const statusInfo = statusConfig[task.status];
 
   const isMyProposal =
     !!account && task.assigneeId === account.id && task.assignmentStatus === 'pending';
@@ -167,10 +175,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const assignment =
     task.assigneeId && task.assigneeName
       ? task.assignmentStatus === 'accepted'
-        ? { label: task.assigneeName, className: 'bg-emerald-50 text-emerald-700', icon: <UserCheck size={13} /> }
+        ? { label: task.assigneeName, className: 'bg-emerald-50 text-emerald-700', icon: <UserCheck size={12} /> }
         : task.assignmentStatus === 'rejected'
-        ? { label: `${task.assigneeName} recusou`, className: 'bg-rose-50 text-rose-600', icon: <UserX size={13} /> }
-        : { label: `Proposta: ${task.assigneeName}`, className: 'bg-amber-50 text-amber-700', icon: <Send size={12} /> }
+        ? { label: `${task.assigneeName} recusou`, className: 'bg-rose-50 text-rose-600', icon: <UserX size={12} /> }
+        : { label: `Proposta: ${task.assigneeName}`, className: 'bg-amber-50 text-amber-700', icon: <Send size={11} /> }
       : null;
 
   const respond = (e: React.MouseEvent, action: 'accept' | 'reject') => {
@@ -178,75 +186,107 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     if (account) respondAssignment(task.id, action);
   };
 
+  const handleClick = () => {
+    if (selectionMode) onToggleSelect?.(task.id);
+    else onClick?.(task);
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.18 }}
     >
       <Card
         hoverable
-        onClick={() => onClick?.(task)}
-        className="flex items-start gap-4 group"
+        onClick={handleClick}
+        padding="none"
+        className={`flex items-start gap-3 p-3.5 group ${
+          selected ? 'ring-2 ring-primary-vibrant border-primary-vibrant' : ''
+        }`}
       >
-        {/* Checkbox */}
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            onComplete?.(task.id);
-          }}
-          aria-label={isCompleted ? 'Tarefa concluída' : 'Marcar como concluída'}
-          className={`w-6 h-6 mt-0.5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-            isCompleted
-              ? 'bg-success text-white'
-              : 'border-2 border-border hover:border-primary-vibrant'
-          }`}
-        >
-          {isCompleted && <Check size={15} strokeWidth={3} />}
-        </button>
+        {/* Controle à esquerda: seleção (modo massa) ou concluir (normal) */}
+        {selectionMode ? (
+          <span
+            aria-hidden
+            className={`w-5 h-5 mt-0.5 rounded-md flex items-center justify-center shrink-0 border-2 transition-colors ${
+              selected
+                ? 'bg-primary-vibrant border-primary-vibrant text-white'
+                : 'border-border group-hover:border-primary-vibrant'
+            }`}
+          >
+            {selected && <Check size={13} strokeWidth={3} />}
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              onComplete?.(task.id);
+            }}
+            aria-label={isCompleted ? 'Tarefa concluída' : 'Marcar como concluída'}
+            className={`w-5 h-5 mt-0.5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+              isCompleted
+                ? 'bg-success text-white'
+                : 'border-2 border-border hover:border-primary-vibrant'
+            }`}
+          >
+            {isCompleted && <Check size={13} strokeWidth={3} />}
+          </button>
+        )}
 
-        {/* Content */}
+        {/* Conteúdo */}
         <div className="flex-1 min-w-0">
           <h4
-            className={`font-semibold mb-1 ${isCompleted ? 'line-through text-text-soft' : 'text-text-primary'}`}
+            className={`text-sm font-semibold leading-snug truncate ${
+              isCompleted ? 'line-through text-text-soft' : 'text-text-primary'
+            }`}
           >
             {task.title}
           </h4>
           {task.description && (
-            <p className="text-sm text-text-secondary line-clamp-2 mb-3">
+            <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">
               {task.description}
             </p>
           )}
 
           {/* Badges */}
-          <div className="flex flex-wrap gap-2 items-center">
-            <StatusSelect task={task} />
+          <div className="flex flex-wrap gap-1.5 items-center mt-2">
+            {selectionMode ? (
+              <span
+                className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${statusInfo.className}`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusInfo.dot }} />
+                {statusInfo.label}
+              </span>
+            ) : (
+              <StatusSelect task={task} />
+            )}
             <span
-              className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${priorityInfo.className}`}
+              className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${priorityInfo.className}`}
             >
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: priorityInfo.color }} />
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: priorityInfo.color }} />
               {priorityInfo.label}
             </span>
             {project && (
               <span
-                className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full text-text-primary"
+                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full text-text-primary"
                 style={{ backgroundColor: project.color + '1A' }}
               >
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: project.color }} />
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: project.color }} />
                 {project.name}
               </span>
             )}
             {task.dueDate && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary">
-                <CalendarDays size={14} className="text-text-soft" />
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-text-secondary">
+                <CalendarDays size={12} className="text-text-soft" />
                 {formatDate(task.dueDate)}
               </span>
             )}
             {assignment && (
               <span
-                className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${assignment.className}`}
+                className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${assignment.className}`}
               >
                 {assignment.icon}
                 {assignment.label}
@@ -255,8 +295,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
 
           {/* Proposta de tarefa para o usuário atual */}
-          {isMyProposal && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2">
+          {isMyProposal && !selectionMode && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2">
               <span className="text-xs font-semibold text-amber-700 flex-1 min-w-0">
                 Esta tarefa foi proposta a você.
               </span>
@@ -276,21 +316,21 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           )}
         </div>
 
-        {/* Actions (always tappable on touch, hover-reveal on desktop) */}
-        <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-          {onDelete && (
+        {/* Ações (escondidas no modo seleção; a exclusão em massa cuida disso) */}
+        {!selectionMode && onDelete && (
+          <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <button
               onClick={e => {
                 e.stopPropagation();
                 onDelete(task.id);
               }}
               aria-label="Excluir tarefa"
-              className="p-2 hover:bg-rose-50 rounded-lg text-danger transition-colors"
+              className="p-1.5 hover:bg-rose-50 rounded-lg text-danger transition-colors"
             >
-              <Trash2 size={16} />
+              <Trash2 size={15} />
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </Card>
     </motion.div>
   );

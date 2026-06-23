@@ -15,6 +15,9 @@ interface TaskListProps {
   filterStatus?: TaskStatus | 'all';
   filterPriority?: TaskPriority | 'all';
   filterProject?: string | 'all';
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (taskId: string) => void;
 }
 
 type GroupKey = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later' | 'nodate' | 'completed';
@@ -53,6 +56,9 @@ export const TaskList: React.FC<TaskListProps> = ({
   filterStatus = 'all',
   filterPriority = 'all',
   filterProject = 'all',
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
 }) => {
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -114,6 +120,9 @@ export const TaskList: React.FC<TaskListProps> = ({
                   onComplete={onComplete}
                   onDelete={onDelete}
                   onClick={onEdit}
+                  selectionMode={selectionMode}
+                  selected={selectedIds?.has(task.id)}
+                  onToggleSelect={onToggleSelect}
                 />
               ))}
             </div>

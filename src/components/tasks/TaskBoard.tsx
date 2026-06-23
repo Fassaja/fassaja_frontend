@@ -13,6 +13,9 @@ interface TaskBoardProps {
   searchTerm?: string;
   filterPriority?: TaskPriority | 'all';
   filterProject?: string | 'all';
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (taskId: string) => void;
 }
 
 type ColumnKey = 'pending' | 'in_progress' | 'completed';
@@ -62,6 +65,9 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
   searchTerm = '',
   filterPriority = 'all',
   filterProject = 'all',
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
 }) => {
   const filtered = useMemo(() => {
     return tasks.filter(task => {
@@ -122,6 +128,9 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
                     onComplete={onComplete}
                     onDelete={onDelete}
                     onClick={onEdit}
+                    selectionMode={selectionMode}
+                    selected={selectedIds?.has(task.id)}
+                    onToggleSelect={onToggleSelect}
                   />
                 ))
               ) : (
