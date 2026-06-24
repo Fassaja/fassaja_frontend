@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, FolderOpen, User, Users } from 'lucide-react';
+import { Check, FolderOpen, Lock, User, Users } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
@@ -41,6 +41,8 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // O servidor barrou a edição por falta de permissão (não é o dono).
+  const [forbidden, setForbidden] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -65,8 +67,14 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
         teamId: project.teamId ?? '',
       });
       setError('');
+      setForbidden(false);
     }
   }, [project, isOpen]);
+
+  // Só o dono pode editar. Quando o dono é desconhecido (dados antigos), liberamos
+  // e deixamos o servidor decidir — o erro 403 é tratado no submit.
+  const isOwner = !project?.ownerId || !account || project.ownerId === account.id;
+  const canEdit = isOwner && !forbidden;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -76,6 +84,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!project || !canEdit) return;
     if (!formData.name.trim()) {
       setError('Dê um nome ao projeto antes de continuar.');
       return;
@@ -84,7 +93,6 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
       setError('Selecione a equipe do projeto.');
       return;
     }
-    if (!project) return;
 
     try {
       setLoading(true);
@@ -98,7 +106,12 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
       toast.success('Alterações salvas.');
       onClose();
     } catch (err) {
-      setError('Não foi possível salvar as alterações. Tente novamente.');
+      // 403: o usuário não é o dono — mostra o aviso de permissão em vez de erro genérico.
+      if ((err as { status?: number }).status === 403) {
+        setForbidden(true);
+      } else {
+        setError('Não foi possível salvar as alterações. Tente novamente.');
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -108,6 +121,16 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Editar Projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
+        {!canEdit && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+            <Lock size={18} className="shrink-0 mt-0.5" />
+            <span>
+              Apenas o dono do projeto pode alterar estas informações. Você pode visualizá-las, mas
+              não tem permissão para editá-las.
+            </span>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
@@ -135,7 +158,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
           value={formData.name}
           onChange={handleChange}
           error={error && !formData.name.trim() ? error : undefined}
-          disabled={loading}
+          disabled={loading || !canEdit}
           autoFocus
         />
 
@@ -145,7 +168,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
           placeholder="Para que serve este projeto? (opcional)"
           value={formData.description}
           onChange={handleChange}
-          disabled={loading}
+          disabled={loading || !canEdit}
           rows={3}
         />
 
@@ -159,6 +182,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
           onChange={v => setFormData(prev => ({ ...prev, type: v as 'solo' | 'team' }))}
           layout="grid"
           columns={2}
+          disabled={loading || !canEdit}
         />
 
         {formData.type === 'team' &&
@@ -173,6 +197,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
               }}
               placeholder="Selecione a equipe"
               fullWidth
+              disabled={loading || !canEdit}
             />
           ) : (
             <p className="text-sm text-text-secondary bg-bg-secondary rounded-xl p-3">
@@ -191,9 +216,10 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
                   type="button"
                   aria-label={`Cor ${color}`}
                   aria-pressed={selected}
+                  disabled={loading || !canEdit}
                   onClick={() => setFormData(prev => ({ ...prev, color }))}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white transition-transform ${
-                    selected ? 'ring-2 ring-offset-2 ring-offset-white scale-105' : 'hover:scale-105'
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white transition-transform disabled:cursor-not-allowed disabled:opacity-60 ${
+                    selected ? 'ring-2 ring-offset-2 ring-offset-white scale-105' : 'enabled:hover:scale-105'
                   }`}
                   style={{ backgroundColor: color, ...(selected ? { '--tw-ring-color': color } as React.CSSProperties : {}) }}
                 >
@@ -216,16 +242,18 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
             disabled={loading}
             className="flex-1 rounded-xl"
           >
-            Cancelar
+            {canEdit ? 'Cancelar' : 'Fechar'}
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            isLoading={loading}
-            className="flex-1 rounded-xl"
-          >
-            Salvar alterações
-          </Button>
+          {canEdit && (
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={loading}
+              className="flex-1 rounded-xl"
+            >
+              Salvar alterações
+            </Button>
+          )}
         </div>
       </form>
     </Modal>

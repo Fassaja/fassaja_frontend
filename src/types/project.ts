@@ -7,4 +7,6 @@ export interface Project {
   type?: 'solo' | 'team';
   teamId?: string;
   teamName?: string;
+  /** Dono do projeto. Apenas ele pode editar/excluir (projetos de equipe são lidos por todos). */
+  ownerId?: string;
 }

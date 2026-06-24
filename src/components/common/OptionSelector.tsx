@@ -17,6 +17,7 @@ interface OptionSelectorProps {
   /** Layout: inline pills that wrap, or an even grid. */
   layout?: 'wrap' | 'grid';
   columns?: number;
+  disabled?: boolean;
 }
 
 const DEFAULT = '#2477FF';
@@ -28,6 +29,7 @@ export const OptionSelector: React.FC<OptionSelectorProps> = ({
   onChange,
   layout = 'wrap',
   columns = 3,
+  disabled = false,
 }) => {
   return (
     <div className="w-full">
@@ -54,10 +56,12 @@ export const OptionSelector: React.FC<OptionSelectorProps> = ({
               type="button"
               role="radio"
               aria-checked={selected}
+              disabled={disabled}
               onClick={() => onChange(option.value)}
               className={`
                 inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-semibold
                 transition-all duration-150 active:scale-[0.96] focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60
+                disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100
                 ${selected
                   ? 'shadow-sm'
                   : 'border-border text-text-secondary hover:border-text-soft hover:bg-bg-secondary'}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Edit, Trash2, FolderOpen, ArrowRight, Users, User } from 'lucide-react';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProjectCardProps {
   project: Project;
@@ -20,7 +21,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onDelete,
 }) => {
   const navigate = useNavigate();
+  const { account } = useAuth();
   const progressPercent = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
+  // Em projetos de equipe, membros que não são donos veem o projeto mas não podem excluí-lo.
+  const isOwner = !project.ownerId || !account || project.ownerId === account.id;
 
   return (
     <Card
@@ -62,7 +66,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               <Edit size={15} />
             </button>
           )}
-          {onDelete && (
+          {onDelete && isOwner && (
             <button
               onClick={() => onDelete(project.id)}
               aria-label="Excluir projeto"

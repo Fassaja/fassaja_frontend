@@ -17,6 +17,7 @@ interface DropdownProps {
   /** Compact trigger (used inside cards/headers). */
   size?: 'sm' | 'md';
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -28,6 +29,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   menuAlign = 'left',
   size = 'md',
   fullWidth = false,
+  disabled = false,
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -60,12 +62,14 @@ export const Dropdown: React.FC<DropdownProps> = ({
         <button
           type="button"
           onClick={() => setOpen(v => !v)}
+          disabled={disabled}
           aria-haspopup="listbox"
           aria-expanded={open}
           className={`
             ${fullWidth ? 'w-full' : ''} ${triggerPad}
             inline-flex items-center justify-between gap-2 rounded-xl border bg-white font-medium text-text-primary
             transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60
+            disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border
             ${open ? 'border-primary-vibrant ring-4 ring-primary-light/60' : 'border-border hover:border-primary-vibrant/50'}
           `}
         >

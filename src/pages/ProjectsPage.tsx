@@ -40,8 +40,12 @@ const ProjectsPage: React.FC = () => {
           : 'Projeto excluído.',
       );
       setDeletingProject(undefined);
-    } catch {
-      toast.error('Não foi possível excluir o projeto. Tente novamente.');
+    } catch (err) {
+      toast.error(
+        (err as { status?: number }).status === 403
+          ? 'Apenas o dono do projeto pode excluí-lo.'
+          : 'Não foi possível excluir o projeto. Tente novamente.',
+      );
     } finally {
       setIsDeleting(false);
     }
