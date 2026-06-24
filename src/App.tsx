@@ -4,6 +4,7 @@ import { UserProvider } from '@/contexts/UserContext';
 import { CelebrationProvider } from '@/contexts/CelebrationContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProjectsProvider } from '@/contexts/ProjectsContext';
+import { TagsProvider } from '@/contexts/TagsContext';
 import { TasksProvider } from '@/contexts/TasksContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { AppRoutes } from '@/routes/AppRoutes';
@@ -17,12 +18,14 @@ function App() {
           <BrowserRouter>
             <AuthProvider>
               <ProjectsProvider>
-                <TasksProvider>
-                  <NotificationsProvider>
-                    <TopProgressBar />
-                    <AppRoutes />
-                  </NotificationsProvider>
-                </TasksProvider>
+                <TagsProvider>
+                  <TasksProvider>
+                    <NotificationsProvider>
+                      <TopProgressBar />
+                      <AppRoutes />
+                    </NotificationsProvider>
+                  </TasksProvider>
+                </TagsProvider>
               </ProjectsProvider>
             </AuthProvider>
           </BrowserRouter>

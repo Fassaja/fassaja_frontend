@@ -278,6 +278,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 {project.name}
               </span>
             )}
+            {(task.tags ?? []).map(tag => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: tag.color + '1A', color: tag.color }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tag.color }} />
+                {tag.name}
+              </span>
+            ))}
             {task.dueDate && (
               <span className="inline-flex items-center gap-1 text-[11px] font-medium text-text-secondary">
                 <CalendarDays size={12} className="text-text-soft" />

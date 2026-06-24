@@ -6,6 +6,7 @@ import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
 import { DatePicker } from '@/components/common/DatePicker';
+import { TagSelector } from './TagSelector';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
 import { TeamMember } from '@/types/team';
 import { useProjects } from '@/hooks/useProjects';
@@ -48,13 +49,14 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 }) => {
   const { projects } = useProjects();
   const { assignTask } = useTasks();
-  const { account } = useAuth();
+  const { account, isGuest } = useAuth();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState(emptyForm);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [assigneeId, setAssigneeId] = useState('');
+  const [tagIds, setTagIds] = useState<string[]>([]);
 
   const set = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) =>
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -86,6 +88,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
   const handleClose = () => {
     setError('');
+    setTagIds([]);
     onClose();
   };
 
@@ -105,6 +108,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         status: formData.status,
         projectId: formData.projectId || undefined,
         dueDate: formData.dueDate || undefined,
+        tagIds: tagIds.length ? tagIds : undefined,
       });
       // Em projeto de equipe, propõe a tarefa ao membro escolhido.
       if (teamProject && assigneeId && account) {
@@ -112,6 +116,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       }
       setFormData(emptyForm);
       setAssigneeId('');
+      setTagIds([]);
       setError('');
       toast.success('Tarefa criada.');
       onClose();
@@ -184,6 +189,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             fullWidth
           />
         )}
+
+        {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
 
         <DatePicker
           label="Data de vencimento"

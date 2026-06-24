@@ -6,6 +6,7 @@ import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
 import { DatePicker } from '@/components/common/DatePicker';
+import { TagSelector } from './TagSelector';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
 import { TeamMember } from '@/types/team';
 import { useProjects } from '@/hooks/useProjects';
@@ -41,12 +42,13 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 }) => {
   const { projects } = useProjects();
   const { assignTask } = useTasks();
-  const { account } = useAuth();
+  const { account, isGuest } = useAuth();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [assigneeId, setAssigneeId] = useState('');
+  const [tagIds, setTagIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -67,6 +69,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         dueDate: task.dueDate || '',
       });
       setAssigneeId(task.assigneeId || '');
+      setTagIds((task.tags ?? []).map(t => t.id));
       setError('');
     }
   }, [task, isOpen]);
@@ -115,6 +118,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         status: formData.status,
         projectId: formData.projectId || undefined,
         dueDate: formData.dueDate || undefined,
+        // Sempre envia (mesmo []) para o backend substituir o conjunto de tags.
+        ...(isGuest ? {} : { tagIds }),
       });
       // Reconcilia a atribuição se mudou (em projeto de equipe).
       const currentAssignee = task.assigneeId || '';
@@ -195,6 +200,8 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             fullWidth
           />
         )}
+
+        {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
 
         <DatePicker
           label="Data de vencimento"

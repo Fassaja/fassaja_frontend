@@ -13,6 +13,7 @@ import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
+import { useTags } from '@/contexts/TagsContext';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -20,6 +21,7 @@ import { useToast } from '@/contexts/ToastContext';
 const TasksPage: React.FC = () => {
   const { tasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
   const { projects } = useProjects();
+  const { tags } = useTags();
   const showSkeleton = useDeferredLoading(loading);
   const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
   const toast = useToast();
@@ -61,6 +63,10 @@ const TasksPage: React.FC = () => {
   const [filterProject, setFilterProject] = useState<string | 'all'>(
     () => searchParams.get('project') ?? 'all',
   );
+  // Filtro por tags (OR: mostra tarefas com qualquer das tags marcadas).
+  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const toggleTagFilter = (id: string) =>
+    setFilterTags(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
 
   // --- Modo de seleção em massa ---
   const [selectionMode, setSelectionMode] = useState(false);
@@ -68,18 +74,27 @@ const TasksPage: React.FC = () => {
   const [showBulkDelete, setShowBulkDelete] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
+  // Pré-filtra por tag (corte transversal). O board/lista aplicam os demais
+  // filtros sobre este subconjunto, então não precisam conhecer tags.
+  const tasksForView = useMemo(() => {
+    if (filterTags.length === 0) return tasks;
+    return tasks.filter(task =>
+      filterTags.some(id => (task.tags ?? []).some(t => t.id === id)),
+    );
+  }, [tasks, filterTags]);
+
   // Tarefas que aparecem na visão atual (mesmos filtros do board/lista).
   // Usado pelo "Selecionar tudo" para mirar exatamente o que está visível.
   const visibleTasks = useMemo(() => {
     const term = searchTerm.toLowerCase();
-    return tasks.filter(task => {
+    return tasksForView.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(term);
       const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
       const matchesProject = filterProject === 'all' || task.projectId === filterProject;
       const matchesStatus = view === 'list' ? filterStatus === 'all' || task.status === filterStatus : true;
       return matchesSearch && matchesPriority && matchesProject && matchesStatus;
     });
-  }, [tasks, searchTerm, filterPriority, filterProject, filterStatus, view]);
+  }, [tasksForView, searchTerm, filterPriority, filterProject, filterStatus, view]);
 
   const visibleSelectedCount = visibleTasks.filter(t => selectedIds.has(t.id)).length;
   const allVisibleSelected = visibleTasks.length > 0 && visibleSelectedCount === visibleTasks.length;
@@ -143,6 +158,7 @@ const TasksPage: React.FC = () => {
     setFilterStatus('all');
     setFilterPriority('all');
     setFilterProject('all');
+    setFilterTags([]);
   };
 
   const statusTabs: { value: TaskStatus | 'all'; label: string; count: number; color: string }[] = [
@@ -154,7 +170,7 @@ const TasksPage: React.FC = () => {
   ];
 
   const hasActiveFilters =
-    searchTerm !== '' || filterPriority !== 'all' || filterProject !== 'all';
+    searchTerm !== '' || filterPriority !== 'all' || filterProject !== 'all' || filterTags.length > 0;
 
   return (
     <>
@@ -349,6 +365,9 @@ const TasksPage: React.FC = () => {
           filterProject={filterProject}
           onProjectChange={setFilterProject}
           projects={projects}
+          tags={tags}
+          filterTags={filterTags}
+          onToggleTag={toggleTagFilter}
           hasActiveFilters={hasActiveFilters}
           onReset={handleResetFilters}
         />
@@ -357,7 +376,7 @@ const TasksPage: React.FC = () => {
         <div className="mt-6">
           {view === 'board' ? (
             <TaskBoard
-              tasks={tasks}
+              tasks={tasksForView}
               projects={projects}
               searchTerm={searchTerm}
               filterPriority={filterPriority}
@@ -374,7 +393,7 @@ const TasksPage: React.FC = () => {
             />
           ) : (
             <TaskList
-              tasks={tasks}
+              tasks={tasksForView}
               projects={projects}
               searchTerm={searchTerm}
               filterStatus={filterStatus}

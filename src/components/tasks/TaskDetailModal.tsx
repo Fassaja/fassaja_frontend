@@ -8,6 +8,7 @@ import {
   User,
   Clock,
   CheckCircle2,
+  Tags,
 } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Task } from '@/types/task';
@@ -150,6 +151,23 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   </span>
                 )}
               </span>
+            </Field>
+          )}
+
+          {task.tags && task.tags.length > 0 && (
+            <Field icon={<Tags size={18} />} label="Tags">
+              <div className="flex flex-wrap gap-1.5">
+                {task.tags.map(tag => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: tag.color + '1A', color: tag.color }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tag.color }} />
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
             </Field>
           )}
 

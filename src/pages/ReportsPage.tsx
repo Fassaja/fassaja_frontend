@@ -163,6 +163,19 @@ const ReportsPage: React.FC = () => {
 
   const priorityTotal = priorityData.reduce((s, d) => s + d.value, 0);
 
+  // Tarefas por tag (corte transversal aos projetos) — top 10 por volume.
+  const tagData = useMemo(() => {
+    const map = new Map<string, { name: string; color: string; value: number }>();
+    tasks.forEach(t =>
+      (t.tags ?? []).forEach(tag => {
+        const cur = map.get(tag.id);
+        if (cur) cur.value += 1;
+        else map.set(tag.id, { name: tag.name, color: tag.color, value: 1 });
+      }),
+    );
+    return [...map.values()].sort((a, b) => b.value - a.value).slice(0, 10);
+  }, [tasks]);
+
   return (
     <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
       {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
@@ -309,6 +322,40 @@ const ReportsPage: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      {/* Tasks by tag — corte transversal aos projetos */}
+      {tagData.length > 0 && (
+      <Card className="mb-6">
+        <h3 className="text-lg font-bold text-text-primary mb-1">Tarefas por tag</h3>
+        <p className="text-sm text-text-secondary mb-4">Seu esforço por área — atravessa todos os projetos.</p>
+        <ResponsiveContainer width="100%" height={Math.max(160, tagData.length * 48)}>
+          <BarChart
+            layout="vertical"
+            data={tagData}
+            margin={{ top: 4, right: 28, left: 8, bottom: 0 }}
+          >
+            <CartesianGrid horizontal={false} stroke={GRID_COLOR} />
+            <XAxis type="number" allowDecimals={false} {...AXIS_PROPS} />
+            <YAxis type="category" dataKey="name" width={100} {...AXIS_PROPS} />
+            <Tooltip
+              cursor={{ fill: 'rgba(36,119,255,0.06)' }}
+              contentStyle={TOOLTIP_STYLE}
+              formatter={(value: number) => [value, 'Tarefas']}
+            />
+            <Bar dataKey="value" radius={[0, 8, 8, 0]} maxBarSize={28}>
+              <LabelList
+                dataKey="value"
+                position="right"
+                style={{ fill: '#0F172A', fontSize: 13, fontWeight: 700 }}
+              />
+              {tagData.map((entry, index) => (
+                <Cell key={`tag-${index}`} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+      )}
 
       {/* Trend Chart */}
       <Card>
