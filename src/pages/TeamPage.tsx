@@ -20,6 +20,7 @@ import { Dropdown } from '@/components/common/Dropdown';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { TeamChat } from '@/components/team/TeamChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
@@ -486,6 +487,11 @@ const TeamPage: React.FC = () => {
                 )}
               </div>
             </Card>
+          )}
+
+          {/* Chat da equipe (mensagens efêmeras de 7 dias) */}
+          {selectedTeam && (
+            <TeamChat key={selectedTeam.id} teamId={selectedTeam.id} currentUserId={userId} />
           )}
         </div>
       )}
