@@ -23,7 +23,7 @@ export default {
         text: {
           primary: '#0F172A',
           secondary: '#64748B',
-          soft: '#7A8AA0',
+          soft: '#5F6E85', // escurecido p/ contraste AA (~5.2:1 em fundo branco)
         },
         border: '#E3EAF3',
         success: '#22C55E',

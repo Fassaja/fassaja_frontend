@@ -199,7 +199,8 @@ export const TeamChat: React.FC<TeamChatProps> = ({
             onChange={e => setInput(e.target.value)}
             placeholder="Escreva uma mensagem…"
             maxLength={2000}
-            className="flex-1 px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm text-text-primary placeholder:text-text-soft focus:outline-none focus:border-primary-vibrant"
+            aria-label="Escreva uma mensagem"
+            className="flex-1 px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm text-text-primary placeholder:text-text-soft transition-shadow focus:outline-none focus:border-primary-vibrant focus:ring-4 focus:ring-primary-light/60"
           />
           <button
             type="submit"

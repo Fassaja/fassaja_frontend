@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { UserProvider } from '@/contexts/UserContext';
@@ -13,6 +14,7 @@ import { TopProgressBar } from '@/components/layout/TopProgressBar';
 
 function App() {
   return (
+    <MotionConfig reducedMotion="user">
     <ToastProvider>
       <UserProvider>
         <CelebrationProvider>
@@ -35,6 +37,7 @@ function App() {
         </CelebrationProvider>
       </UserProvider>
       </ToastProvider>
+    </MotionConfig>
   );
 }
 
