@@ -3,44 +3,30 @@ import {
   Users,
   Plus,
   Crown,
-  Trash2,
   UserPlus,
   Link2,
   Copy,
   Check,
   Clock,
   FolderOpen,
+  Settings,
+  VolumeX,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import { Dropdown } from '@/components/common/Dropdown';
 import { EmptyState } from '@/components/common/EmptyState';
-import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { TeamChat } from '@/components/team/TeamChat';
+import { TeamSettingsModal } from '@/components/team/TeamSettingsModal';
+import { AVATAR_COLORS } from '@/components/team/teamConstants';
 import { useAuth } from '@/contexts/AuthContext';
 import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
 import { TeamSummary, TeamMember, PendingRequest, TeamProjectSummary } from '@/types/team';
-
-const AVATAR_COLORS = ['#2477FF', '#8B5CF6', '#22C55E', '#FB7185', '#FBBF24', '#2DD4BF'];
-
-// Cargos sugeridos para os membros da equipe ('' = sem cargo).
-const ROLE_OPTIONS = [
-  { value: '', label: 'Sem cargo' },
-  { value: 'Gerente de Projeto', label: 'Gerente de Projeto' },
-  { value: 'Desenvolvedor(a)', label: 'Desenvolvedor(a)' },
-  { value: 'Designer', label: 'Designer' },
-  { value: 'Produto', label: 'Produto' },
-  { value: 'Marketing', label: 'Marketing' },
-  { value: 'Analista', label: 'Analista' },
-  { value: 'QA / Testes', label: 'QA / Testes' },
-  { value: 'Suporte', label: 'Suporte' },
-];
 
 const TeamPage: React.FC = () => {
   const { account } = useAuth();
@@ -56,7 +42,7 @@ const TeamPage: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
-  const [removing, setRemoving] = useState<TeamMember | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [showInvite, setShowInvite] = useState(false);
@@ -96,12 +82,18 @@ const TeamPage: React.FC = () => {
     teamsService.getProjects(selectedId).then(setTeamProjects).catch(() => setTeamProjects([]));
   }, [selectedId]);
 
-  const saveTitle = async (userId: string, value: string) => {
-    if (!selectedId) return;
-    setMembers(prev => prev.map(m => (m.userId === userId ? { ...m, title: value || null } : m)));
-    await teamsService.setMemberTitle(selectedId, userId, value);
-    setMembers(await teamsService.getMembers(selectedId));
-  };
+  // Recarrega equipes (nome/cor/contagem) e a lista de membros após edições no modal.
+  const handleTeamChanged = useCallback(async () => {
+    await loadTeams();
+    if (selectedId) {
+      setMembers(await teamsService.getMembers(selectedId).catch(() => []));
+    }
+  }, [loadTeams, selectedId]);
+
+  const handleTeamDeleted = useCallback(async () => {
+    setShowSettings(false);
+    await loadTeams();
+  }, [loadTeams]);
 
   const loadRequests = useCallback(async () => {
     if (!selectedId || !isOwner || !userId) {
@@ -187,14 +179,7 @@ const TeamPage: React.FC = () => {
     }
   };
 
-  const confirmRemove = async () => {
-    if (!removing || !selectedId || !userId) return;
-    await teamsService.removeMember(selectedId, removing.userId);
-    setRemoving(null);
-    const updated = await teamsService.getMembers(selectedId);
-    setMembers(updated);
-    loadTeams();
-  };
+  const currentMuted = !!members.find(m => m.userId === userId)?.muted;
 
   return (
     <AppLayout
@@ -229,17 +214,18 @@ const TeamPage: React.FC = () => {
         </form>
       </Modal>
 
-      <ConfirmDialog
-        isOpen={!!removing}
-        title="Remover membro?"
-        message={`${removing?.name ?? ''} deixará de fazer parte de "${selectedTeam?.name ?? ''}".`}
-        confirmLabel="Remover"
-        cancelLabel="Cancelar"
-        tone="danger"
-        icon={<Trash2 size={22} />}
-        onConfirm={confirmRemove}
-        onClose={() => setRemoving(null)}
-      />
+      {/* Team settings / edit mode (owner only) */}
+      {selectedTeam && isOwner && (
+        <TeamSettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false)}
+          team={selectedTeam}
+          members={members}
+          projects={teamProjects}
+          onChanged={handleTeamChanged}
+          onDeleted={handleTeamDeleted}
+        />
+      )}
 
       {/* Invite link modal */}
       <Modal isOpen={showInvite} onClose={() => setShowInvite(false)} title="Convidar para a equipe" size="md">
@@ -300,9 +286,10 @@ const TeamPage: React.FC = () => {
                 <button
                   key={team.id}
                   onClick={() => setSelectedId(team.id)}
+                  style={active ? { backgroundColor: team.color } : undefined}
                   className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97] ${
                     active
-                      ? 'bg-primary-vibrant border-transparent text-white shadow-sm'
+                      ? 'border-transparent text-white shadow-sm'
                       : 'bg-white border-border text-text-secondary hover:bg-bg-secondary'
                   }`}
                 >
@@ -329,24 +316,41 @@ const TeamPage: React.FC = () => {
           {/* Selected team */}
           {selectedTeam && (
             <Card>
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-lg font-bold text-text-primary">{selectedTeam.name}</h2>
-                  <p className="text-sm text-text-secondary">
-                    {selectedTeam.memberCount} {selectedTeam.memberCount === 1 ? 'membro' : 'membros'}
-                    {isOwner && ' · você é o dono'}
-                  </p>
+              <div className="flex items-center justify-between mb-5 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ backgroundColor: selectedTeam.color }}
+                  />
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-bold text-text-primary truncate">{selectedTeam.name}</h2>
+                    <p className="text-sm text-text-secondary">
+                      {selectedTeam.memberCount} {selectedTeam.memberCount === 1 ? 'membro' : 'membros'}
+                      {isOwner && ' · você é o dono'}
+                    </p>
+                  </div>
                 </div>
                 {isOwner && (
-                  <Button
-                    onClick={openInvite}
-                    variant="secondary"
-                    size="sm"
-                    icon={<UserPlus size={16} />}
-                    className="rounded-xl"
-                  >
-                    Convidar
-                  </Button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      onClick={openInvite}
+                      variant="secondary"
+                      size="sm"
+                      icon={<UserPlus size={16} />}
+                      className="rounded-xl"
+                    >
+                      Convidar
+                    </Button>
+                    <Button
+                      onClick={() => setShowSettings(true)}
+                      variant="secondary"
+                      size="sm"
+                      icon={<Settings size={16} />}
+                      className="rounded-xl"
+                    >
+                      Gerenciar
+                    </Button>
+                  </div>
                 )}
               </div>
 
@@ -413,33 +417,19 @@ const TeamPage: React.FC = () => {
                       </p>
                       <p className="text-xs text-text-secondary truncate">{m.email}</p>
 
-                      {isOwner ? (
-                        <div className="mt-1.5">
-                          <Dropdown
-                            size="sm"
-                            value={m.title ?? ''}
-                            options={ROLE_OPTIONS}
-                            onChange={v => saveTitle(m.userId, v)}
-                            placeholder="Definir cargo"
-                          />
-                        </div>
-                      ) : (
-                        m.title && (
-                          <span className="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
+                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                        {m.title && (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
                             {m.title}
                           </span>
-                        )
-                      )}
+                        )}
+                        {m.muted && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-100 text-danger">
+                            <VolumeX size={11} /> Silenciado
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    {isOwner && m.role !== 'owner' && (
-                      <button
-                        onClick={() => setRemoving(m)}
-                        aria-label="Remover membro"
-                        className="p-2 rounded-lg text-danger opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:bg-rose-50 transition-all shrink-0"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
                   </div>
                 ))}
               </div>
@@ -491,7 +481,12 @@ const TeamPage: React.FC = () => {
 
           {/* Chat da equipe (mensagens efêmeras de 7 dias) */}
           {selectedTeam && (
-            <TeamChat key={selectedTeam.id} teamId={selectedTeam.id} currentUserId={userId} />
+            <TeamChat
+              key={selectedTeam.id}
+              teamId={selectedTeam.id}
+              currentUserId={userId}
+              muted={currentMuted}
+            />
           )}
         </div>
       )}

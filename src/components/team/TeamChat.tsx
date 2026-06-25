@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, MessagesSquare } from 'lucide-react';
+import { Send, MessagesSquare, VolumeX } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Message } from '@/types/message';
 import { messagesService } from '@/services/messagesService';
@@ -9,6 +9,8 @@ import { initialsOf } from '@/contexts/UserContext';
 interface TeamChatProps {
   teamId: string;
   currentUserId?: string;
+  /** Quando true, o usuário foi silenciado pelo dono e não pode enviar mensagens. */
+  muted?: boolean;
 }
 
 const POLL_MS = 4000;
@@ -34,7 +36,7 @@ function merge(existing: Message[], incoming: Message[]): Message[] {
   return [...map.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-export const TeamChat: React.FC<TeamChatProps> = ({ teamId, currentUserId }) => {
+export const TeamChat: React.FC<TeamChatProps> = ({ teamId, currentUserId, muted = false }) => {
   const toast = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -97,7 +99,7 @@ export const TeamChat: React.FC<TeamChatProps> = ({ teamId, currentUserId }) => 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || sending) return;
+    if (!text || sending || muted) return;
     setSending(true);
     try {
       const msg = await messagesService.send(teamId, text);
@@ -167,24 +169,31 @@ export const TeamChat: React.FC<TeamChatProps> = ({ teamId, currentUserId }) => 
         )}
       </div>
 
-      <form onSubmit={handleSend} className="flex items-center gap-2 p-3 border-t border-border">
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          placeholder="Escreva uma mensagem…"
-          maxLength={2000}
-          className="flex-1 px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm text-text-primary placeholder:text-text-soft focus:outline-none focus:border-primary-vibrant"
-        />
-        <button
-          type="submit"
-          disabled={!input.trim() || sending}
-          aria-label="Enviar mensagem"
-          className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary-vibrant text-white hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
-        >
-          <Send size={17} />
-        </button>
-      </form>
+      {muted ? (
+        <div className="flex items-center justify-center gap-2 p-3 border-t border-border text-sm text-text-secondary">
+          <VolumeX size={16} className="text-danger" />
+          Você foi silenciado e não pode enviar mensagens.
+        </div>
+      ) : (
+        <form onSubmit={handleSend} className="flex items-center gap-2 p-3 border-t border-border">
+          <input
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="Escreva uma mensagem…"
+            maxLength={2000}
+            className="flex-1 px-3.5 py-2.5 rounded-xl border border-border bg-white text-sm text-text-primary placeholder:text-text-soft focus:outline-none focus:border-primary-vibrant"
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || sending}
+            aria-label="Enviar mensagem"
+            className="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary-vibrant text-white hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100"
+          >
+            <Send size={17} />
+          </button>
+        </form>
+      )}
     </Card>
   );
 };

@@ -1,6 +1,7 @@
 export interface TeamSummary {
   id: string;
   name: string;
+  color: string; // cor de identidade da equipe
   ownerId: string;
   createdAt: string;
   role: string; // owner | member
@@ -14,6 +15,7 @@ export interface TeamMember {
   role: string; // owner | member
   title?: string | null; // cargo personalizado na equipe
   avatar?: string | null;
+  muted?: boolean; // silenciado no chat da equipe
 }
 
 export interface TeamProjectSummary {

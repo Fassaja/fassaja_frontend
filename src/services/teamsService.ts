@@ -11,6 +11,15 @@ export const teamsService = {
     return api.post<TeamSummary>('/teams', { name });
   },
 
+  // Dono renomeia e/ou troca a cor da equipe.
+  updateTeam(teamId: string, data: { name?: string; color?: string }): Promise<TeamSummary> {
+    return api.patch<TeamSummary>(`/teams/${teamId}`, data);
+  },
+
+  async deleteTeam(teamId: string): Promise<void> {
+    await api.delete<void>(`/teams/${teamId}`);
+  },
+
   getMembers(teamId: string): Promise<TeamMember[]> {
     return api.get<TeamMember[]>(`/teams/${teamId}/members`);
   },
@@ -21,6 +30,10 @@ export const teamsService = {
 
   async setMemberTitle(teamId: string, userId: string, title: string): Promise<void> {
     await api.patch<void>(`/teams/${teamId}/members/${userId}`, { title });
+  },
+
+  async setMemberMute(teamId: string, userId: string, muted: boolean): Promise<void> {
+    await api.patch<void>(`/teams/${teamId}/members/${userId}/mute`, { muted });
   },
 
   async removeMember(teamId: string, userId: string): Promise<void> {
