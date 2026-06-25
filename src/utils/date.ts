@@ -15,6 +15,23 @@ function parseDate(dateString: string): Date {
   return new Date(dateString);
 }
 
+/**
+ * Converte um Date para 'YYYY-MM-DD' usando os componentes LOCAIS (não UTC).
+ * `toISOString()` converteria para UTC e jogaria o dia para frente/trás em
+ * fusos diferentes de Greenwich — daí este helper para datas "só-dia".
+ */
+export function toISODate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/** Hoje no fuso local, como 'YYYY-MM-DD'. */
+export function todayISO(): string {
+  return toISODate(new Date());
+}
+
 export function formatDate(dateString: string): string {
   const date = parseDate(dateString);
   return date.toLocaleDateString('pt-BR', {

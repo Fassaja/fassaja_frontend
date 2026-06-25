@@ -10,12 +10,7 @@ import { useEvents } from '@/contexts/EventsContext';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { CalendarEvent } from '@/types/event';
 import { reminderLabel } from '@/utils/eventReminders';
-
-function toISO(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate(),
-  ).padStart(2, '0')}`;
-}
+import { toISODate } from '@/utils/date';
 
 // Ordena: dia inteiro primeiro, depois por horário de início.
 function byTime(a: CalendarEvent, b: CalendarEvent): number {
@@ -40,7 +35,7 @@ const AgendaPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
 
-  const selectedISO = toISO(selectedDate);
+  const selectedISO = toISODate(selectedDate);
   const dayEvents = useMemo(
     () => events.filter(e => e.date === selectedISO).sort(byTime),
     [events, selectedISO],

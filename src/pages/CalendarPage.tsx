@@ -8,6 +8,7 @@ import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
+import { toISODate } from '@/utils/date';
 
 const CalendarPage: React.FC = () => {
   const { tasks, completeTask, loading } = useTasks();
@@ -23,7 +24,7 @@ const CalendarPage: React.FC = () => {
 
   const visibleTasks = tasks.filter(t => matchesFilter(t.projectId));
 
-  const selectedDateStr = selectedDate.toISOString().split('T')[0];
+  const selectedDateStr = toISODate(selectedDate);
   const tasksForSelectedDate = visibleTasks.filter(t => t.dueDate === selectedDateStr);
 
   return (

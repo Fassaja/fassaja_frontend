@@ -36,6 +36,14 @@ export const teamsService = {
     await api.patch<void>(`/teams/${teamId}/members/${userId}/mute`, { muted });
   },
 
+  async setMemberPermissions(
+    teamId: string,
+    userId: string,
+    canManageTasks: boolean,
+  ): Promise<void> {
+    await api.patch<void>(`/teams/${teamId}/members/${userId}/permissions`, { canManageTasks });
+  },
+
   async removeMember(teamId: string, userId: string): Promise<void> {
     await api.delete<void>(`/teams/${teamId}/members/${userId}`);
   },

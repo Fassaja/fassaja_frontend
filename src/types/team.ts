@@ -16,6 +16,7 @@ export interface TeamMember {
   title?: string | null; // cargo personalizado na equipe
   avatar?: string | null;
   muted?: boolean; // silenciado no chat da equipe
+  canManageTasks?: boolean; // pode atribuir/excluir tarefas de qualquer um na equipe
 }
 
 export interface TeamProjectSummary {

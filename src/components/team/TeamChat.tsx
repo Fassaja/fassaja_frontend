@@ -11,6 +11,8 @@ interface TeamChatProps {
   currentUserId?: string;
   /** Quando true, o usuário foi silenciado pelo dono e não pode enviar mensagens. */
   muted?: boolean;
+  /** Foto de perfil por id de autor (vem da lista de membros da equipe). */
+  avatarById?: Record<string, string | undefined>;
 }
 
 const POLL_MS = 4000;
@@ -36,7 +38,12 @@ function merge(existing: Message[], incoming: Message[]): Message[] {
   return [...map.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-export const TeamChat: React.FC<TeamChatProps> = ({ teamId, currentUserId, muted = false }) => {
+export const TeamChat: React.FC<TeamChatProps> = ({
+  teamId,
+  currentUserId,
+  muted = false,
+  avatarById = {},
+}) => {
   const toast = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -124,7 +131,7 @@ export const TeamChat: React.FC<TeamChatProps> = ({ teamId, currentUserId, muted
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-3 h-80 bg-bg-secondary/40"
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-3 h-[32rem] bg-bg-secondary/40"
       >
         {loading ? (
           <p className="text-sm text-text-soft text-center py-8">Carregando mensagens…</p>
@@ -137,15 +144,25 @@ export const TeamChat: React.FC<TeamChatProps> = ({ teamId, currentUserId, muted
         ) : (
           messages.map(m => {
             const mine = m.authorId === currentUserId;
+            const avatar = avatarById[m.authorId];
             return (
               <div key={m.id} className={`flex gap-2.5 ${mine ? 'flex-row-reverse' : ''}`}>
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                  style={{ backgroundColor: colorFor(m.authorId) }}
-                  title={m.authorName}
-                >
-                  {initialsOf(m.authorName)}
-                </div>
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    alt={m.authorName}
+                    title={m.authorName}
+                    className="w-9 h-9 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                    style={{ backgroundColor: colorFor(m.authorId) }}
+                    title={m.authorName}
+                  >
+                    {initialsOf(m.authorName)}
+                  </div>
+                )}
                 <div className={`min-w-0 max-w-[75%] ${mine ? 'items-end' : ''} flex flex-col`}>
                   {!mine && (
                     <span className="text-[11px] font-semibold text-text-secondary mb-0.5 px-1">

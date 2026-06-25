@@ -20,7 +20,8 @@ import { reminderTriggerDate, eventStartDate, eventEndDate } from '@/utils/event
 // Texto de quando o evento acontece (reaproveitado no sino e no push).
 function whenLabel(e: CalendarEvent): string {
   const day = isToday(e.date) ? 'Hoje' : formatDate(e.date);
-  return e.allDay ? `${day} • dia inteiro` : `${day} às ${e.startTime ?? ''}`.trim();
+  if (e.allDay) return `${day} • dia inteiro`;
+  return e.startTime ? `${day} às ${e.startTime}` : day;
 }
 
 export interface NotificationItem {

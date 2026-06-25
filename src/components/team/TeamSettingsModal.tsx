@@ -10,6 +10,7 @@ import {
   Check,
   AlertTriangle,
   FolderOpen,
+  ShieldCheck,
 } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
@@ -163,6 +164,23 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
       onChanged();
     } catch (err) {
       toast.error((err as Error).message || 'Não foi possível atualizar.');
+    } finally {
+      setBusyMember(null);
+    }
+  };
+
+  const togglePermission = async (m: TeamMember) => {
+    setBusyMember(m.userId);
+    try {
+      await teamsService.setMemberPermissions(team.id, m.userId, !m.canManageTasks);
+      toast.success(
+        m.canManageTasks
+          ? `${m.name} não gerencia mais as tarefas.`
+          : `${m.name} agora pode gerenciar tarefas da equipe.`,
+      );
+      onChanged();
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível atualizar a permissão.');
     } finally {
       setBusyMember(null);
     }
@@ -331,6 +349,11 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                         <VolumeX size={11} /> Silenciado
                       </span>
                     )}
+                    {!isOwner && m.canManageTasks && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
+                        <ShieldCheck size={11} /> Gerente de tarefas
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-text-secondary truncate">{m.email}</p>
                   {isOwner ? (
@@ -340,16 +363,39 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                       </span>
                     )
                   ) : (
-                    <div className="mt-1.5">
-                      <Dropdown
-                        size="sm"
-                        value={m.title ?? ''}
-                        options={ROLE_OPTIONS}
-                        onChange={v => saveTitle(m.userId, v)}
-                        placeholder="Definir cargo"
-                        disabled={busy}
-                      />
-                    </div>
+                    <>
+                      <div className="mt-1.5">
+                        <Dropdown
+                          size="sm"
+                          value={m.title ?? ''}
+                          options={ROLE_OPTIONS}
+                          onChange={v => saveTitle(m.userId, v)}
+                          placeholder="Definir cargo"
+                          disabled={busy}
+                        />
+                      </div>
+                      <label className="mt-2 flex items-center gap-2 cursor-pointer select-none">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={!!m.canManageTasks}
+                          disabled={busy}
+                          onClick={() => togglePermission(m)}
+                          className={`relative w-9 h-5 rounded-full transition-colors disabled:opacity-50 ${
+                            m.canManageTasks ? 'bg-primary-vibrant' : 'bg-border'
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                              m.canManageTasks ? 'translate-x-4' : ''
+                            }`}
+                          />
+                        </button>
+                        <span className="text-xs text-text-secondary">
+                          Gerente de tarefas (criar, atribuir e excluir)
+                        </span>
+                      </label>
+                    </>
                   )}
                 </div>
                 {!isOwner && (

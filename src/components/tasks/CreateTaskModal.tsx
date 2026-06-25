@@ -86,6 +86,12 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     ...members.map(m => ({ value: m.userId, label: m.role === 'owner' ? `${m.name} (dono)` : m.name })),
   ];
 
+  // Em projeto de equipe, só o dono ou um "gerente de tarefas" pode criar.
+  // A lista de membros (já carregada) traz canManageTasks (true para o dono).
+  const myMembership = members.find(m => m.userId === account?.id);
+  const blockedByPermission =
+    !!teamProject && members.length > 0 && !myMembership?.canManageTasks;
+
   const handleClose = () => {
     setError('');
     setTagIds([]);
@@ -96,6 +102,10 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     e.preventDefault();
     if (!formData.title.trim()) {
       setError('Dê um título para a tarefa antes de continuar.');
+      return;
+    }
+    if (blockedByPermission) {
+      setError('Você não tem permissão para criar tarefas neste projeto de equipe.');
       return;
     }
 
@@ -180,7 +190,14 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           onChange={v => set('projectId', v)}
         />
 
-        {teamProject && (
+        {blockedByPermission && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            Você não pode criar tarefas neste projeto de equipe. Peça ao dono para te tornar
+            <span className="font-semibold"> gerente de tarefas</span>.
+          </p>
+        )}
+
+        {teamProject && !blockedByPermission && (
           <Dropdown
             label="Atribuir a (proposta para a equipe)"
             options={memberOptions}
@@ -218,6 +235,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             type="submit"
             variant="primary"
             isLoading={loading}
+            disabled={blockedByPermission}
             className="flex-1 rounded-xl"
           >
             Criar tarefa

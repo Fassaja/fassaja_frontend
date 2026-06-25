@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { CalendarEvent } from '@/types/event';
+import { toISODate } from '@/utils/date';
 
 interface AgendaMonthProps {
   date: Date; // mês exibido
@@ -17,11 +18,6 @@ const MONTH_NAMES = [
 ];
 const WEEK_DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-// ISO 'YYYY-MM-DD' a partir de componentes locais (evita off-by-one de fuso).
-function toISO(y: number, m: number, d: number): string {
-  return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-}
-
 export const AgendaMonth: React.FC<AgendaMonthProps> = ({
   date,
   onDateChange,
@@ -35,16 +31,11 @@ export const AgendaMonth: React.FC<AgendaMonthProps> = ({
   const startingDayOfWeek = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  const today = new Date();
-  const todayISO = toISO(today.getFullYear(), today.getMonth(), today.getDate());
-  const selectedISO = toISO(
-    selectedDate.getFullYear(),
-    selectedDate.getMonth(),
-    selectedDate.getDate(),
-  );
+  const todayISO = toISODate(new Date());
+  const selectedISO = toISODate(selectedDate);
 
   const eventsForDay = (day: number) => {
-    const iso = toISO(year, month, day);
+    const iso = toISODate(new Date(year, month, day));
     return events.filter(e => e.date === iso);
   };
 
@@ -88,7 +79,7 @@ export const AgendaMonth: React.FC<AgendaMonthProps> = ({
         {cells.map((day, index) => {
           if (!day) return <div key={index} className="h-12 sm:h-14" />;
 
-          const iso = toISO(year, month, day);
+          const iso = toISODate(new Date(year, month, day));
           const dayEvents = eventsForDay(day);
           const isToday = iso === todayISO;
           const isSelected = iso === selectedISO;

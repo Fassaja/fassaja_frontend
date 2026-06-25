@@ -3,6 +3,7 @@ import { Task } from '@/types/task';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { toISODate } from '@/utils/date';
 
 interface CalendarMonthProps {
   date: Date;
@@ -41,7 +42,7 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   const getTasksForDate = (day: number) => {
-    const dateStr = new Date(year, month, day).toISOString().split('T')[0];
+    const dateStr = toISODate(new Date(year, month, day));
     return tasks.filter(t => t.dueDate === dateStr);
   };
 

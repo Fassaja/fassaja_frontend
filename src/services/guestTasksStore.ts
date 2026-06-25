@@ -2,19 +2,8 @@ import { Task } from '@/types/task';
 
 // Sandbox local do visitante: tarefas vivem só no navegador (não tocam o backend).
 // Isolamento total — visitante nunca vê dados de ninguém.
+// O status "atrasada" é derivado no TasksContext (fuso local), não aqui.
 const STORE_KEY = 'fassaja_guest_tasks_data';
-
-function todayISO(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-// Aplica a regra de "atrasada" em tempo de leitura, igual ao backend.
-function withDerivedStatus(task: Task): Task {
-  if (task.status !== 'completed' && task.dueDate && task.dueDate < todayISO()) {
-    return { ...task, status: 'overdue' };
-  }
-  return task;
-}
 
 function readRaw(): Task[] {
   try {
@@ -43,7 +32,7 @@ function newId(): string {
 
 export const guestTasksStore = {
   getAll(): Task[] {
-    return readRaw().map(withDerivedStatus);
+    return readRaw();
   },
 
   create(input: Omit<Task, 'id' | 'createdAt'>): Task {
@@ -54,7 +43,7 @@ export const guestTasksStore = {
       completedAt: input.status === 'completed' ? new Date().toISOString() : undefined,
     };
     write([...readRaw(), task]);
-    return withDerivedStatus(task);
+    return task;
   },
 
   update(id: string, updates: Partial<Task>): Task | undefined {
@@ -67,7 +56,7 @@ export const guestTasksStore = {
     const merged: Task = { ...tasks[idx], ...updates, completedAt };
     tasks[idx] = merged;
     write(tasks);
-    return withDerivedStatus(merged);
+    return merged;
   },
 
   complete(id: string): Task | undefined {

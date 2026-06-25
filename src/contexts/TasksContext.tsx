@@ -1,11 +1,27 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { Task } from '@/types/task';
 import { tasksService } from '@/services/tasksService';
 import { guestTasksStore } from '@/services/guestTasksStore';
 import { useCelebration } from './CelebrationContext';
 import { useUser } from './UserContext';
 import { useAuth } from './AuthContext';
-import { isToday } from '@/utils/date';
+import { isToday, isOverdue } from '@/utils/date';
+
+// Deriva "atrasada" no fuso LOCAL do usuário (o backend devolve o status real).
+// Fonte única da verdade: toda tarefa exposta pelo contexto passa por aqui.
+function deriveStatus(task: Task): Task {
+  if (task.status !== 'completed' && task.dueDate && isOverdue(task.dueDate)) {
+    return { ...task, status: 'overdue' };
+  }
+  return task;
+}
 
 interface TasksContextValue {
   tasks: Task[];
@@ -26,7 +42,9 @@ const TasksContext = createContext<TasksContextValue>({} as TasksContextValue);
 export const useTasks = () => useContext(TasksContext);
 
 export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [rawTasks, setRawTasks] = useState<Task[]>([]);
+  // Status "overdue" é calculado aqui (fuso local), não vem pronto do servidor.
+  const tasks = useMemo(() => rawTasks.map(deriveStatus), [rawTasks]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { celebrate } = useCelebration();
@@ -38,7 +56,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!silent) setLoading(true);
       // Visitante: tarefas só do navegador (sandbox local). Autenticado: API.
       const data = isGuest ? guestTasksStore.getAll() : await tasksService.getTasks();
-      setTasks(data);
+      setRawTasks(data);
       setError(null);
     } catch (err) {
       setError(err as Error);
@@ -60,7 +78,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const newTask = isGuest
         ? guestTasksStore.create(task)
         : await tasksService.createTask(task);
-      setTasks(prev => [...prev, newTask]);
+      setRawTasks(prev => [...prev, newTask]);
       if (isGuest) noteGuestTask();
       return newTask;
     } catch (err) {
@@ -75,7 +93,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ? guestTasksStore.update(id, updates)
         : await tasksService.updateTask(id, updates);
       if (updated) {
-        setTasks(prev => prev.map(t => (t.id === id ? updated : t)));
+        setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
       }
       return updated;
     } catch (err) {
@@ -91,7 +109,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ? guestTasksStore.complete(id)
         : await tasksService.completeTask(id);
       if (updated) {
-        setTasks(prev => prev.map(t => (t.id === id ? updated : t)));
+        setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
         if (!wasCompleted) {
           recordProductiveDay();
           const doneTodayBefore = tasks.filter(
@@ -118,7 +136,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       if (isGuest) guestTasksStore.remove(id);
       else await tasksService.deleteTask(id);
-      setTasks(prev => prev.filter(t => t.id !== id));
+      setRawTasks(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       setError(err as Error);
       throw err;
@@ -128,7 +146,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const assignTask = useCallback(
     async (id: string, assigneeId: string | null) => {
       const updated = await tasksService.assignTask(id, assigneeId);
-      setTasks(prev => prev.map(t => (t.id === id ? updated : t)));
+      setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
       return updated;
     },
     [],
@@ -137,7 +155,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const respondAssignment = useCallback(
     async (id: string, action: 'accept' | 'reject') => {
       const updated = await tasksService.respondAssignment(id, action);
-      setTasks(prev => prev.map(t => (t.id === id ? updated : t)));
+      setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
       return updated;
     },
     [],

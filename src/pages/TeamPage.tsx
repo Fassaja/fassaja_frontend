@@ -11,6 +11,7 @@ import {
   FolderOpen,
   Settings,
   VolumeX,
+  ShieldCheck,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
@@ -180,6 +181,12 @@ const TeamPage: React.FC = () => {
   };
 
   const currentMuted = !!members.find(m => m.userId === userId)?.muted;
+
+  // Fotos de perfil por id, para o chat exibir o avatar de quem fala.
+  const avatarById = members.reduce<Record<string, string | undefined>>((acc, m) => {
+    if (m.avatar) acc[m.userId] = m.avatar;
+    return acc;
+  }, {});
 
   return (
     <AppLayout
@@ -428,6 +435,11 @@ const TeamPage: React.FC = () => {
                             <VolumeX size={11} /> Silenciado
                           </span>
                         )}
+                        {m.role !== 'owner' && m.canManageTasks && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
+                            <ShieldCheck size={11} /> Gerente de tarefas
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -486,6 +498,7 @@ const TeamPage: React.FC = () => {
               teamId={selectedTeam.id}
               currentUserId={userId}
               muted={currentMuted}
+              avatarById={avatarById}
             />
           )}
         </div>
