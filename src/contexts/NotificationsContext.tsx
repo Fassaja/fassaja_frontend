@@ -6,13 +6,22 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { AlertCircle, CalendarClock, CheckCircle2, Send, UserPlus } from 'lucide-react';
+import { AlertCircle, Bell, CalendarClock, CheckCircle2, Send, UserPlus } from 'lucide-react';
 import { useTasks } from './TasksContext';
+import { useEvents } from './EventsContext';
 import { useAuth } from './AuthContext';
 import { useUser } from './UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
 import { formatDate, isToday } from '@/utils/date';
+import { CalendarEvent } from '@/types/event';
+import { reminderTriggerDate, eventStartDate, eventEndDate } from '@/utils/eventReminders';
+
+// Texto de quando o evento acontece (reaproveitado no sino e no push).
+function whenLabel(e: CalendarEvent): string {
+  const day = isToday(e.date) ? 'Hoje' : formatDate(e.date);
+  return e.allDay ? `${day} • dia inteiro` : `${day} às ${e.startTime ?? ''}`.trim();
+}
 
 export interface NotificationItem {
   id: string;
@@ -59,6 +68,7 @@ function loadReadIds(userId: string | undefined): Set<string> {
 
 export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { tasks } = useTasks();
+  const { events } = useEvents();
   const { account } = useAuth();
   const { user } = useUser();
   const prefs = user.notifications;
@@ -66,6 +76,12 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const [readIds, setReadIds] = useState<Set<string>>(() => loadReadIds(userId));
   const [joinRequests, setJoinRequests] = useState<JoinRequestInfo[]>([]);
+  // "Relógio" que avança de minuto em minuto para reavaliar lembretes por tempo.
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 60000);
+    return () => clearInterval(id);
+  }, []);
 
   // Recarrega o estado de "lido" ao trocar de usuário.
   useEffect(() => {
@@ -173,6 +189,26 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         );
     }
 
+    // Lembretes da Agenda: aparecem do horário do lembrete até o fim do evento.
+    if (prefs.events) {
+      const now = Date.now();
+      events.forEach(e => {
+        const trigger = reminderTriggerDate(e);
+        const end = eventEndDate(e);
+        if (!trigger || !end) return;
+        if (now >= trigger.getTime() && now <= end.getTime()) {
+          raw.push({
+            id: `ev-${e.id}`,
+            icon: <Bell size={18} />,
+            title: e.title,
+            detail: whenLabel(e),
+            tone: e.color,
+            link: '/agenda',
+          });
+        }
+      });
+    }
+
     // "Lembretes diários" controla o resumo de concluídas hoje.
     if (prefs.daily) {
       tasks
@@ -191,9 +227,61 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     return raw.map(item => ({ ...item, read: readIds.has(item.id) }));
-  }, [tasks, account, joinRequests, readIds, prefs]);
+    // `tick` força a reavaliação periódica dos lembretes baseados em horário.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, events, account, joinRequests, readIds, prefs, tick]);
 
   const unreadCount = useMemo(() => items.filter(i => !i.read).length, [items]);
+
+  // Dispara notificações do navegador (push) — uma única vez por lembrete.
+  useEffect(() => {
+    if (!userId || !prefs.events) return;
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+
+    const storageKey = `fassaja_event_fired_${userId}`;
+    const loadFired = (): Set<string> => {
+      try {
+        return new Set(JSON.parse(localStorage.getItem(storageKey) ?? '[]') as string[]);
+      } catch {
+        return new Set();
+      }
+    };
+
+    const fire = () => {
+      if (Notification.permission !== 'granted') return;
+      const fired = loadFired();
+      const now = Date.now();
+      let changed = false;
+      events.forEach(e => {
+        const trigger = reminderTriggerDate(e);
+        const start = eventStartDate(e);
+        if (!trigger || !start) return;
+        const key = `${e.id}@${trigger.getTime()}`;
+        // Janela: do disparo até 5 min após o início (não alerta eventos antigos).
+        if (now >= trigger.getTime() && now <= start.getTime() + 5 * 60000 && !fired.has(key)) {
+          try {
+            new Notification(e.title, { body: whenLabel(e), tag: key });
+          } catch {
+            /* alguns navegadores exigem Service Worker; ignora */
+          }
+          fired.add(key);
+          changed = true;
+        }
+      });
+      if (changed) {
+        try {
+          // Guarda só as 200 chaves mais recentes para não crescer sem limite.
+          localStorage.setItem(storageKey, JSON.stringify([...fired].slice(-200)));
+        } catch {
+          /* localStorage indisponível */
+        }
+      }
+    };
+
+    fire();
+    const id = setInterval(fire, 30000);
+    return () => clearInterval(id);
+  }, [events, userId, prefs.events]);
 
   const markRead = useCallback(
     (id: string) => {

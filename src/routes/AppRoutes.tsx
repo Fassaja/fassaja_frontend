@@ -4,6 +4,7 @@ import DashboardPage from '@/pages/DashboardPage';
 import TasksPage from '@/pages/TasksPage';
 import ProjectsPage from '@/pages/ProjectsPage';
 import CalendarPage from '@/pages/CalendarPage';
+import AgendaPage from '@/pages/AgendaPage';
 import PrioritiesPage from '@/pages/PrioritiesPage';
 import ReportsPage from '@/pages/ReportsPage';
 import TeamPage from '@/pages/TeamPage';
@@ -33,6 +34,7 @@ export const AppRoutes: React.FC = () => {
       {/* Exigem conta */}
       <Route path="/projects" element={<RequireAuth><ProjectsPage /></RequireAuth>} />
       <Route path="/calendar" element={<RequireAuth><CalendarPage /></RequireAuth>} />
+      <Route path="/agenda" element={<RequireAuth><AgendaPage /></RequireAuth>} />
       <Route path="/priorities" element={<RequireAuth><PrioritiesPage /></RequireAuth>} />
       <Route path="/reports" element={<RequireAuth><ReportsPage /></RequireAuth>} />
       <Route path="/team" element={<RequireAuth><TeamPage /></RequireAuth>} />

@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ProjectsProvider } from '@/contexts/ProjectsContext';
 import { TagsProvider } from '@/contexts/TagsContext';
 import { TasksProvider } from '@/contexts/TasksContext';
+import { EventsProvider } from '@/contexts/EventsContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { AppRoutes } from '@/routes/AppRoutes';
 import { TopProgressBar } from '@/components/layout/TopProgressBar';
@@ -20,10 +21,12 @@ function App() {
               <ProjectsProvider>
                 <TagsProvider>
                   <TasksProvider>
-                    <NotificationsProvider>
-                      <TopProgressBar />
-                      <AppRoutes />
-                    </NotificationsProvider>
+                    <EventsProvider>
+                      <NotificationsProvider>
+                        <TopProgressBar />
+                        <AppRoutes />
+                      </NotificationsProvider>
+                    </EventsProvider>
                   </TasksProvider>
                 </TagsProvider>
               </ProjectsProvider>

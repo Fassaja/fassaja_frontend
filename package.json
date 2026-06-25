@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types test/date.unit.mts",
+    "test": "node --experimental-strip-types test/date.unit.mts && node --experimental-strip-types test/eventReminders.unit.mts",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

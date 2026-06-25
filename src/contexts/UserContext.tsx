@@ -5,6 +5,7 @@ export interface NotificationPrefs {
   pending: boolean;
   deadline: boolean;
   daily: boolean;
+  events: boolean; // lembretes de eventos da Agenda
 }
 
 export interface UserProfile {
@@ -41,7 +42,7 @@ const defaultUser: UserProfile = {
   avatar: undefined,
   dailyGoal: mockUser.dailyGoal,
   weeklyGoal: mockUser.weeklyGoal,
-  notifications: { pending: true, deadline: true, daily: true },
+  notifications: { pending: true, deadline: true, daily: true, events: true },
   productiveDays: [],
 };
 

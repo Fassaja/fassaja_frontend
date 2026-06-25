@@ -43,6 +43,7 @@ const notifLabels: { key: keyof NotificationPrefs; label: string; hint: string }
   { key: 'pending', label: 'Tarefas que vencem hoje', hint: 'Mostra no sino o que vence hoje' },
   { key: 'deadline', label: 'Tarefas atrasadas', hint: 'Mostra no sino as tarefas atrasadas' },
   { key: 'daily', label: 'Resumo diário', hint: 'Mostra no sino o que você concluiu hoje' },
+  { key: 'events', label: 'Lembretes da Agenda', hint: 'Avisa quando um evento está próximo' },
 ];
 
 const SettingsPage: React.FC = () => {
