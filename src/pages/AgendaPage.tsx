@@ -131,6 +131,12 @@ const AgendaPage: React.FC = () => {
                               <span className="truncate">{e.location}</span>
                             </p>
                           )}
+                          {e.link && (
+                            <p className="inline-flex items-center gap-1.5 text-xs text-primary-vibrant mt-1 ml-0 w-full truncate">
+                              <Link2 size={12} className="shrink-0" />
+                              <span className="truncate">{e.link}</span>
+                            </p>
+                          )}
                           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                             {e.reminderMinutes !== null && e.reminderMinutes !== undefined && (
                               <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-bg-secondary text-text-secondary">

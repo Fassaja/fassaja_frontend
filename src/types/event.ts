@@ -9,6 +9,7 @@ export interface CalendarEvent {
   allDay: boolean;
   color: string;
   location?: string;
+  link?: string; // link opcional (ex.: chamada de vídeo)
   reminderMinutes?: number | null; // lembrete: minutos antes do início (null = sem)
   taskId?: string; // vínculo opcional a uma tarefa
   taskTitle?: string; // título da tarefa vinculada (somente leitura)
@@ -25,6 +26,7 @@ export type EventInput = {
   allDay: boolean;
   color: string;
   location?: string;
+  link?: string;
   reminderMinutes?: number | null;
   // Instante absoluto (ISO/UTC) do lembrete, calculado no cliente p/ o cron do back.
   reminderAt?: string | null;
