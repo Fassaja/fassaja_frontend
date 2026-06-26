@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Trash2, MapPin, Link2, Check, AlertTriangle, Bell } from 'lucide-react';
+import { Trash2, MapPin, Link2, Check, AlertTriangle, Bell, Repeat } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Textarea } from '@/components/common/Textarea';
@@ -13,6 +13,11 @@ import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
 import { CalendarEvent } from '@/types/event';
 import { REMINDER_OPTIONS, reminderTriggerDate } from '@/utils/eventReminders';
+import {
+  WEEKDAY_OPTIONS,
+  REPEAT_OPTIONS,
+  expandWeekdayDates,
+} from '@/utils/eventRecurrence';
 import { pushService, pushSupported } from '@/services/pushService';
 
 // Suporte a notificações do navegador (ausente em browsers antigos).
@@ -58,6 +63,10 @@ export const EventModal: React.FC<EventModalProps> = ({
   const [description, setDescription] = useState('');
   const [taskId, setTaskId] = useState('');
   const [reminder, setReminder] = useState(''); // '' = sem lembrete; senão minutos
+  // Recorrência semanal (apenas na criação): dias da semana escolhidos e por
+  // quanto tempo repetir. Vazio => evento único na data escolhida.
+  const [weekdays, setWeekdays] = useState<number[]>([]);
+  const [repeatWeeks, setRepeatWeeks] = useState(REPEAT_OPTIONS[2].value); // 3 meses
 
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -87,6 +96,9 @@ export const EventModal: React.FC<EventModalProps> = ({
           ? String(event.reminderMinutes)
           : '',
       );
+      // Edição mexe num único evento; a recorrência só aparece na criação.
+      setWeekdays([]);
+      setRepeatWeeks(REPEAT_OPTIONS[2].value);
     } else {
       setTitle('');
       setDate(defaultDate ?? '');
@@ -98,8 +110,17 @@ export const EventModal: React.FC<EventModalProps> = ({
       setDescription('');
       setTaskId('');
       setReminder('');
+      setWeekdays([]);
+      setRepeatWeeks(REPEAT_OPTIONS[2].value);
     }
   }, [isOpen, event, defaultDate]);
+
+  // Alterna um dia da semana no seletor de recorrência.
+  const toggleWeekday = (value: number) => {
+    setWeekdays(prev =>
+      prev.includes(value) ? prev.filter(d => d !== value) : [...prev, value].sort((a, b) => a - b),
+    );
+  };
 
   // Ao ativar um lembrete, pede permissão e inscreve este dispositivo no Web
   // Push (assim o aviso chega mesmo com o app fechado). Falha silenciosa no iOS
@@ -144,34 +165,45 @@ export const EventModal: React.FC<EventModalProps> = ({
     }
 
     const reminderMinutes = reminder === '' ? null : Number(reminder);
-    // Instante absoluto (UTC) do lembrete — o cliente conhece o fuso; o cron do
-    // backend só compara com agora.
-    const reminderAt =
-      reminderMinutes === null
-        ? null
-        : reminderTriggerDate({ date, startTime, allDay, reminderMinutes })?.toISOString() ?? null;
 
-    const payload = {
+    // Monta o payload de um evento para uma data específica. O instante do
+    // lembrete (UTC) é recalculado por data — o cliente conhece o fuso; o cron
+    // do backend só compara com agora.
+    const buildPayload = (eventDate: string) => ({
       title: trimmed,
       description: description.trim() || undefined,
-      date,
+      date: eventDate,
       allDay,
       startTime: allDay ? null : startTime || null,
       endTime: allDay ? null : endTime || null,
       color,
       location: location.trim() || undefined,
       reminderMinutes,
-      reminderAt,
+      reminderAt:
+        reminderMinutes === null
+          ? null
+          : reminderTriggerDate({ date: eventDate, startTime, allDay, reminderMinutes })?.toISOString() ??
+            null,
       taskId: taskId || null,
-    };
+    });
 
     setSaving(true);
     try {
       if (isEditing && event) {
-        await updateEvent(event.id, payload);
+        await updateEvent(event.id, buildPayload(date));
         toast.success('Evento atualizado.');
+      } else if (weekdays.length > 0) {
+        // Evento rotineiro: cria uma cópia para cada dia da semana escolhido
+        // dentro do horizonte de repetição.
+        const dates = expandWeekdayDates(date, weekdays, Number(repeatWeeks));
+        for (const d of dates) {
+          await createEvent(buildPayload(d));
+        }
+        toast.success(
+          dates.length === 1 ? 'Evento criado.' : `${dates.length} eventos criados.`,
+        );
       } else {
-        await createEvent(payload);
+        await createEvent(buildPayload(date));
         toast.success('Evento criado.');
       }
       onClose();
@@ -235,6 +267,50 @@ export const EventModal: React.FC<EventModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <TimePicker label="Início" value={startTime} onChange={setStartTime} />
             <TimePicker label="Término" value={endTime} onChange={setEndTime} menuAlign="right" />
+          </div>
+        )}
+
+        {/* Repetir nos dias da semana (só na criação; edição mexe num único evento) */}
+        {!isEditing && (
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-1.5">
+              <Repeat size={15} className="text-text-secondary" /> Repetir nos dias
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {WEEKDAY_OPTIONS.map(d => {
+                const selected = weekdays.includes(d.value);
+                return (
+                  <button
+                    key={d.value}
+                    type="button"
+                    onClick={() => toggleWeekday(d.value)}
+                    aria-pressed={selected}
+                    aria-label={d.label}
+                    title={d.label}
+                    className={`w-9 h-9 rounded-full text-sm font-semibold transition-all active:scale-90 ${
+                      selected
+                        ? 'bg-primary-vibrant text-white shadow'
+                        : 'bg-bg-secondary text-text-secondary hover:text-text-primary'
+                    }`}
+                  >
+                    {d.short}
+                  </button>
+                );
+              })}
+            </div>
+            {weekdays.length > 0 && (
+              <div className="mt-3">
+                <Dropdown
+                  options={REPEAT_OPTIONS.map(o => ({ value: o.value, label: o.label }))}
+                  value={repeatWeeks}
+                  onChange={setRepeatWeeks}
+                  fullWidth
+                />
+                <p className="mt-1.5 text-xs text-text-secondary">
+                  O evento será criado em cada dia escolhido, a partir da data acima.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
