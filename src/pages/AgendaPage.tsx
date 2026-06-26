@@ -26,6 +26,11 @@ function timeLabel(e: CalendarEvent): string {
   return 'Sem horário';
 }
 
+// Garante um href navegável: se a pessoa não digitou o protocolo, assume https.
+function toHref(link: string): string {
+  return /^https?:\/\//i.test(link) ? link : `https://${link}`;
+}
+
 const AgendaPage: React.FC = () => {
   const { events, loading } = useEvents();
   const showSkeleton = useDeferredLoading(loading);
@@ -110,12 +115,15 @@ const AgendaPage: React.FC = () => {
               {dayEvents.length > 0 ? (
                 <ul className="space-y-2.5">
                   {dayEvents.map(e => (
-                    <li key={e.id}>
-                      <button
-                        type="button"
-                        onClick={() => openEdit(e)}
-                        className="w-full text-left flex items-stretch gap-3 p-3 rounded-xl border border-border hover:border-primary-vibrant/50 hover:bg-bg-secondary/60 transition-all"
-                      >
+                    <li key={e.id} className="relative">
+                      <div className="flex items-stretch gap-3 p-3 rounded-xl border border-border hover:border-primary-vibrant/50 hover:bg-bg-secondary/60 transition-all">
+                        {/* Clicar no card abre a edição; fica por baixo do link (overlay). */}
+                        <button
+                          type="button"
+                          onClick={() => openEdit(e)}
+                          aria-label={`Editar ${e.title}`}
+                          className="absolute inset-0 rounded-xl"
+                        />
                         <span
                           className="w-1.5 rounded-full shrink-0"
                           style={{ backgroundColor: e.color }}
@@ -131,6 +139,18 @@ const AgendaPage: React.FC = () => {
                               <span className="truncate">{e.location}</span>
                             </p>
                           )}
+                          {e.link && (
+                            <a
+                              href={toHref(e.link)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={ev => ev.stopPropagation()}
+                              className="relative z-10 inline-flex items-center gap-1.5 text-xs text-primary-vibrant mt-1 ml-0 max-w-full truncate hover:underline"
+                            >
+                              <Link2 size={12} className="shrink-0" />
+                              <span className="truncate">{e.link}</span>
+                            </a>
+                          )}
                           <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                             {e.reminderMinutes !== null && e.reminderMinutes !== undefined && (
                               <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-bg-secondary text-text-secondary">
@@ -144,7 +164,7 @@ const AgendaPage: React.FC = () => {
                             )}
                           </div>
                         </div>
-                      </button>
+                      </div>
                     </li>
                   ))}
                 </ul>

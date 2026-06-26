@@ -60,6 +60,7 @@ export const EventModal: React.FC<EventModalProps> = ({
   const [endTime, setEndTime] = useState('');
   const [color, setColor] = useState(EVENT_COLORS[0]);
   const [location, setLocation] = useState('');
+  const [link, setLink] = useState('');
   const [description, setDescription] = useState('');
   const [taskId, setTaskId] = useState('');
   const [reminder, setReminder] = useState(''); // '' = sem lembrete; senão minutos
@@ -89,6 +90,7 @@ export const EventModal: React.FC<EventModalProps> = ({
       setEndTime(event.endTime ?? '');
       setColor(event.color);
       setLocation(event.location ?? '');
+      setLink(event.link ?? '');
       setDescription(event.description ?? '');
       setTaskId(event.taskId ?? '');
       setReminder(
@@ -107,6 +109,7 @@ export const EventModal: React.FC<EventModalProps> = ({
       setEndTime('10:00');
       setColor(EVENT_COLORS[0]);
       setLocation('');
+      setLink('');
       setDescription('');
       setTaskId('');
       setReminder('');
@@ -178,6 +181,7 @@ export const EventModal: React.FC<EventModalProps> = ({
       endTime: allDay ? null : endTime || null,
       color,
       location: location.trim() || undefined,
+      link: link.trim() || undefined,
       reminderMinutes,
       reminderAt:
         reminderMinutes === null
@@ -372,9 +376,18 @@ export const EventModal: React.FC<EventModalProps> = ({
           label="Local (opcional)"
           value={location}
           onChange={e => setLocation(e.target.value)}
-          placeholder="Ex.: Sala 3 ou link da chamada"
+          placeholder="Ex.: Sala 3"
           maxLength={200}
           icon={<MapPin size={18} />}
+        />
+
+        <Input
+          label="Link (opcional)"
+          value={link}
+          onChange={e => setLink(e.target.value)}
+          placeholder="Ex.: link da chamada ou site"
+          maxLength={500}
+          icon={<Link2 size={18} />}
         />
 
         {/* Vínculo com tarefa */}
