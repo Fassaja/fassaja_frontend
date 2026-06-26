@@ -323,7 +323,7 @@ const TeamPage: React.FC = () => {
           {/* Selected team */}
           {selectedTeam && (
             <Card>
-              <div className="flex items-center justify-between mb-5 gap-3">
+              <div className="flex flex-col gap-3 mb-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3 min-w-0">
                   <span
                     className="w-3 h-3 rounded-full shrink-0"
@@ -344,7 +344,7 @@ const TeamPage: React.FC = () => {
                       variant="secondary"
                       size="sm"
                       icon={<UserPlus size={16} />}
-                      className="rounded-xl"
+                      className="flex-1 rounded-xl sm:flex-none"
                     >
                       Convidar
                     </Button>
@@ -353,7 +353,7 @@ const TeamPage: React.FC = () => {
                       variant="secondary"
                       size="sm"
                       icon={<Settings size={16} />}
-                      className="rounded-xl"
+                      className="flex-1 rounded-xl sm:flex-none"
                     >
                       Gerenciar
                     </Button>
