@@ -25,6 +25,7 @@ import {
   PlayCircle,
 } from 'lucide-react';
 import { OPEN_TOUR_EVENT } from './PlatformTourModal';
+import { NotificationsHelp } from './NotificationsHelp';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -279,6 +280,9 @@ export const Sidebar: React.FC = () => {
               <p className="text-sm text-text-secondary">
                 Tem alguma dúvida ou sugestão? A equipe Fassaja adora ouvir você.
               </p>
+
+              <NotificationsHelp />
+
               <button
                 onClick={() => {
                   setShowHelp(false);

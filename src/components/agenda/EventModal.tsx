@@ -12,7 +12,8 @@ import { useEvents } from '@/contexts/EventsContext';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
 import { CalendarEvent } from '@/types/event';
-import { REMINDER_OPTIONS } from '@/utils/eventReminders';
+import { REMINDER_OPTIONS, reminderTriggerDate } from '@/utils/eventReminders';
+import { pushService, pushSupported } from '@/services/pushService';
 
 // Suporte a notificações do navegador (ausente em browsers antigos).
 const notificationsSupported = typeof window !== 'undefined' && 'Notification' in window;
@@ -100,11 +101,16 @@ export const EventModal: React.FC<EventModalProps> = ({
     }
   }, [isOpen, event, defaultDate]);
 
-  // Pede permissão ao navegador quando o usuário ativa um lembrete pela 1ª vez.
+  // Ao ativar um lembrete, pede permissão e inscreve este dispositivo no Web
+  // Push (assim o aviso chega mesmo com o app fechado). Falha silenciosa no iOS
+  // fora do PWA — o passo a passo fica no "Fale conosco".
   const handleReminderChange = (value: string) => {
     setReminder(value);
-    if (value && notificationsSupported && Notification.permission === 'default') {
-      Notification.requestPermission().then(p => setPermission(p));
+    if (value && pushSupported() && Notification.permission !== 'denied') {
+      pushService
+        .enable()
+        .catch(() => {})
+        .finally(() => setPermission(Notification.permission));
     }
   };
 
@@ -137,6 +143,14 @@ export const EventModal: React.FC<EventModalProps> = ({
       return;
     }
 
+    const reminderMinutes = reminder === '' ? null : Number(reminder);
+    // Instante absoluto (UTC) do lembrete — o cliente conhece o fuso; o cron do
+    // backend só compara com agora.
+    const reminderAt =
+      reminderMinutes === null
+        ? null
+        : reminderTriggerDate({ date, startTime, allDay, reminderMinutes })?.toISOString() ?? null;
+
     const payload = {
       title: trimmed,
       description: description.trim() || undefined,
@@ -146,7 +160,8 @@ export const EventModal: React.FC<EventModalProps> = ({
       endTime: allDay ? null : endTime || null,
       color,
       location: location.trim() || undefined,
-      reminderMinutes: reminder === '' ? null : Number(reminder),
+      reminderMinutes,
+      reminderAt,
       taskId: taskId || null,
     };
 

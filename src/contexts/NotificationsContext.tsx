@@ -15,7 +15,7 @@ import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
 import { formatDate, isToday } from '@/utils/date';
 import { CalendarEvent } from '@/types/event';
-import { reminderTriggerDate, eventStartDate, eventEndDate } from '@/utils/eventReminders';
+import { reminderTriggerDate, eventEndDate } from '@/utils/eventReminders';
 
 // Texto de quando o evento acontece (reaproveitado no sino e no push).
 function whenLabel(e: CalendarEvent): string {
@@ -234,55 +234,9 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const unreadCount = useMemo(() => items.filter(i => !i.read).length, [items]);
 
-  // Dispara notificações do navegador (push) — uma única vez por lembrete.
-  useEffect(() => {
-    if (!userId || !prefs.events) return;
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-
-    const storageKey = `fassaja_event_fired_${userId}`;
-    const loadFired = (): Set<string> => {
-      try {
-        return new Set(JSON.parse(localStorage.getItem(storageKey) ?? '[]') as string[]);
-      } catch {
-        return new Set();
-      }
-    };
-
-    const fire = () => {
-      if (Notification.permission !== 'granted') return;
-      const fired = loadFired();
-      const now = Date.now();
-      let changed = false;
-      events.forEach(e => {
-        const trigger = reminderTriggerDate(e);
-        const start = eventStartDate(e);
-        if (!trigger || !start) return;
-        const key = `${e.id}@${trigger.getTime()}`;
-        // Janela: do disparo até 5 min após o início (não alerta eventos antigos).
-        if (now >= trigger.getTime() && now <= start.getTime() + 5 * 60000 && !fired.has(key)) {
-          try {
-            new Notification(e.title, { body: whenLabel(e), tag: key });
-          } catch {
-            /* alguns navegadores exigem Service Worker; ignora */
-          }
-          fired.add(key);
-          changed = true;
-        }
-      });
-      if (changed) {
-        try {
-          // Guarda só as 200 chaves mais recentes para não crescer sem limite.
-          localStorage.setItem(storageKey, JSON.stringify([...fired].slice(-200)));
-        } catch {
-          /* localStorage indisponível */
-        }
-      }
-    };
-
-    fire();
-    const id = setInterval(fire, 30000);
-    return () => clearInterval(id);
-  }, [events, userId, prefs.events]);
+  // Obs.: a notificação do SISTEMA (mesmo com o app fechado) é enviada pelo
+  // backend via Web Push (ver módulo push/cron de lembretes). Aqui o contexto
+  // cuida só do sino in-app, evitando notificação duplicada.
 
   const markRead = useCallback(
     (id: string) => {

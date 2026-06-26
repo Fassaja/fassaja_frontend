@@ -26,5 +26,7 @@ export type EventInput = {
   color: string;
   location?: string;
   reminderMinutes?: number | null;
+  // Instante absoluto (ISO/UTC) do lembrete, calculado no cliente p/ o cron do back.
+  reminderAt?: string | null;
   taskId?: string | null;
 };
