@@ -6,6 +6,7 @@ import { Mascot } from '@/components/mascot/Mascot';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { AgendaMonth } from '@/components/agenda/AgendaMonth';
 import { EventModal } from '@/components/agenda/EventModal';
+import { AgendaNotificationBanner } from '@/components/agenda/AgendaNotificationBanner';
 import { useEvents } from '@/contexts/EventsContext';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { CalendarEvent } from '@/types/event';
@@ -67,6 +68,8 @@ const AgendaPage: React.FC = () => {
       {loading ? (
         showSkeleton ? <LoadingScreen /> : null
       ) : (
+        <>
+        <AgendaNotificationBanner />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <AgendaMonth
@@ -162,6 +165,7 @@ const AgendaPage: React.FC = () => {
             </Card>
           </div>
         </div>
+        </>
       )}
 
       <EventModal
