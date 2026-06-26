@@ -15,7 +15,6 @@ export interface TeamMember {
   role: string; // owner | member
   title?: string | null; // cargo personalizado na equipe
   avatar?: string | null;
-  muted?: boolean; // silenciado no chat da equipe
   canManageTasks?: boolean; // pode atribuir/excluir tarefas de qualquer um na equipe
 }
 

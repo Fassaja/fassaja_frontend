@@ -5,8 +5,6 @@ import {
   ListTodo,
   Crown,
   Trash2,
-  VolumeX,
-  Volume2,
   Check,
   AlertTriangle,
   FolderOpen,
@@ -151,19 +149,6 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
       onChanged();
     } catch (err) {
       toast.error((err as Error).message || 'Não foi possível salvar o cargo.');
-    } finally {
-      setBusyMember(null);
-    }
-  };
-
-  const toggleMute = async (m: TeamMember) => {
-    setBusyMember(m.userId);
-    try {
-      await teamsService.setMemberMute(team.id, m.userId, !m.muted);
-      toast.success(m.muted ? `${m.name} pode falar no chat.` : `${m.name} foi silenciado no chat.`);
-      onChanged();
-    } catch (err) {
-      toast.error((err as Error).message || 'Não foi possível atualizar.');
     } finally {
       setBusyMember(null);
     }
@@ -344,11 +329,6 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                   <p className="font-semibold text-text-primary truncate flex items-center gap-1.5">
                     {m.name}
                     {isOwner && <Crown size={14} className="text-amber-500 shrink-0" />}
-                    {m.muted && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-danger">
-                        <VolumeX size={11} /> Silenciado
-                      </span>
-                    )}
                     {!isOwner && m.canManageTasks && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
                         <ShieldCheck size={11} /> Gerente de tarefas
@@ -399,30 +379,15 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                   )}
                 </div>
                 {!isOwner && (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => toggleMute(m)}
-                      disabled={busy}
-                      aria-label={m.muted ? 'Reativar no chat' : 'Silenciar no chat'}
-                      title={m.muted ? 'Reativar no chat' : 'Silenciar no chat'}
-                      className={`p-2 rounded-lg transition-colors disabled:opacity-50 ${
-                        m.muted
-                          ? 'text-amber-600 hover:bg-amber-50'
-                          : 'text-text-secondary hover:bg-bg-secondary'
-                      }`}
-                    >
-                      {m.muted ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                    </button>
-                    <button
-                      onClick={() => setRemoving(m)}
-                      disabled={busy}
-                      aria-label="Remover membro"
-                      title="Remover da equipe"
-                      className="p-2 rounded-lg text-danger hover:bg-rose-50 transition-colors disabled:opacity-50"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setRemoving(m)}
+                    disabled={busy}
+                    aria-label="Remover membro"
+                    title="Remover da equipe"
+                    className="p-2 rounded-lg text-danger hover:bg-rose-50 transition-colors disabled:opacity-50 shrink-0"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 )}
               </div>
             );

@@ -32,10 +32,6 @@ export const teamsService = {
     await api.patch<void>(`/teams/${teamId}/members/${userId}`, { title });
   },
 
-  async setMemberMute(teamId: string, userId: string, muted: boolean): Promise<void> {
-    await api.patch<void>(`/teams/${teamId}/members/${userId}/mute`, { muted });
-  },
-
   async setMemberPermissions(
     teamId: string,
     userId: string,
