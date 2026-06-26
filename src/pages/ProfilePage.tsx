@@ -199,10 +199,14 @@ const ProfilePage: React.FC = () => {
           </div>
         </Card>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* Quick stats — empilha no celular (3 colunas estreitas não cabem em linha) */}
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
           {stats.map(s => (
-            <Card key={s.label} className="flex items-center gap-3 py-4">
+            <Card
+              key={s.label}
+              padding="sm"
+              className="flex flex-col items-center text-center gap-1.5 sm:flex-row sm:items-center sm:text-left sm:gap-3 sm:p-5"
+            >
               <span
                 className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                 style={{ backgroundColor: s.color + '1A', color: s.color }}
@@ -210,8 +214,8 @@ const ProfilePage: React.FC = () => {
                 {s.icon}
               </span>
               <div className="min-w-0">
-                <p className="text-xl font-extrabold text-text-primary leading-none">{s.value}</p>
-                <p className="text-xs text-text-secondary mt-1 truncate">{s.label}</p>
+                <p className="text-lg sm:text-xl font-extrabold text-text-primary leading-none">{s.value}</p>
+                <p className="text-[11px] sm:text-xs text-text-secondary mt-1 truncate">{s.label}</p>
               </div>
             </Card>
           ))}

@@ -22,6 +22,7 @@ interface DropdownProps {
 }
 
 const MENU_MAX_H = 256; // max-h-64
+const MENU_MAX_W = 256; // max-w-[16rem]
 const GAP = 8;
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -57,8 +58,14 @@ export const Dropdown: React.FC<DropdownProps> = ({
       maxHeight: Math.max(120, Math.min(MENU_MAX_H, (openUp ? spaceAbove : spaceBelow) - GAP)),
       zIndex: 80, // acima de modais (z-70)
     };
-    if (menuAlign === 'right') style.right = window.innerWidth - r.right;
-    else style.left = r.left;
+    // Mantém o menu dentro da viewport (evita vazar a borda em telas estreitas).
+    const estWidth = Math.min(MENU_MAX_W, Math.max(r.width, 176));
+    const maxOffset = Math.max(GAP, window.innerWidth - GAP - estWidth);
+    if (menuAlign === 'right') {
+      style.right = Math.min(Math.max(window.innerWidth - r.right, GAP), maxOffset);
+    } else {
+      style.left = Math.min(Math.max(r.left, GAP), maxOffset);
+    }
     if (openUp) style.bottom = window.innerHeight - r.top + GAP;
     else style.top = r.bottom + GAP;
     setMenuStyle(style);
