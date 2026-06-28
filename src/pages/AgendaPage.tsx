@@ -6,6 +6,7 @@ import { Mascot } from '@/components/mascot/Mascot';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { AgendaMonth } from '@/components/agenda/AgendaMonth';
 import { EventModal } from '@/components/agenda/EventModal';
+import { EventDetailModal } from '@/components/agenda/EventDetailModal';
 import { AgendaNotificationBanner } from '@/components/agenda/AgendaNotificationBanner';
 import { useEvents } from '@/contexts/EventsContext';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -40,6 +41,8 @@ const AgendaPage: React.FC = () => {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [viewing, setViewing] = useState<CalendarEvent | null>(null);
 
   const selectedISO = toISODate(selectedDate);
   const dayEvents = useMemo(
@@ -52,7 +55,14 @@ const AgendaPage: React.FC = () => {
     setModalOpen(true);
   };
 
+  // Clique no evento abre a visualização bonita; o "Editar" de lá abre o form.
+  const openDetail = (event: CalendarEvent) => {
+    setViewing(event);
+    setDetailOpen(true);
+  };
+
   const openEdit = (event: CalendarEvent) => {
+    setDetailOpen(false);
     setEditing(event);
     setModalOpen(true);
   };
@@ -117,11 +127,11 @@ const AgendaPage: React.FC = () => {
                   {dayEvents.map(e => (
                     <li key={e.id} className="relative">
                       <div className="flex items-stretch gap-3 p-3 rounded-xl border border-border hover:border-primary-vibrant/50 hover:bg-bg-secondary/60 transition-all">
-                        {/* Clicar no card abre a edição; fica por baixo do link (overlay). */}
+                        {/* Clicar no card abre a visualização do evento (overlay). */}
                         <button
                           type="button"
-                          onClick={() => openEdit(e)}
-                          aria-label={`Editar ${e.title}`}
+                          onClick={() => openDetail(e)}
+                          aria-label={`Ver ${e.title}`}
                           className="absolute inset-0 rounded-xl"
                         />
                         <span
@@ -187,6 +197,13 @@ const AgendaPage: React.FC = () => {
         </div>
         </>
       )}
+
+      <EventDetailModal
+        isOpen={detailOpen}
+        event={viewing}
+        onClose={() => setDetailOpen(false)}
+        onEdit={openEdit}
+      />
 
       <EventModal
         isOpen={modalOpen}
