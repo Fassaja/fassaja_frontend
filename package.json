@@ -30,10 +30,11 @@
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.2.2",
-    "vite": "^5.0.8"
+    "vite": "^6.4.3"
   },
   "comments": {
-    "overrides": "esbuild 0.25 corrige o GHSA do dev-server (resposta legível por qualquer site) sem subir vite para major 8. Só afeta `vite dev`; o build estático de produção não é impactado."
+    "vite": "6.4.3 corrige as GHSAs de path-traversal / fs.deny do dev-server (afetavam <=6.4.2). Bump mínimo de major: plugin-react 4.7 já suporta vite 6; build de produção (estático) inalterado.",
+    "overrides": "esbuild 0.25 corrige o GHSA do dev-server (resposta legível por qualquer site). Mantido como pin defensivo (vite 6 já usa esbuild 0.25). Só afeta `vite dev`; o build estático de produção não é impactado."
   },
   "overrides": {
     "esbuild": "^0.25.0"
