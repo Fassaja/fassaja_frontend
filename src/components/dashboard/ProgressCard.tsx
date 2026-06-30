@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/common/Card';
+import { CountUp } from '@/components/common/CountUp';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 
 interface GoalProgress {
@@ -94,9 +95,12 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-extrabold text-text-primary leading-none">
-              {percentage}%
-            </span>
+            <CountUp
+              value={percentage}
+              suffix="%"
+              durationMs={1000}
+              className="text-2xl font-extrabold text-text-primary leading-none"
+            />
             <span className="text-[11px] text-text-secondary mt-0.5">{label}</span>
           </div>
         </div>

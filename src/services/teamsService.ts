@@ -1,5 +1,6 @@
 import { api } from './api';
 import { TeamSummary, TeamMember, TeamProjectSummary } from '@/types/team';
+import { Task } from '@/types/task';
 
 export const teamsService = {
   // O usuário atual vem do token (Authorization header), não da query.
@@ -26,6 +27,11 @@ export const teamsService = {
 
   getProjects(teamId: string): Promise<TeamProjectSummary[]> {
     return api.get<TeamProjectSummary[]>(`/teams/${teamId}/projects`);
+  },
+
+  // Tarefas dos projetos da equipe (todos os membros veem).
+  getTasks(teamId: string): Promise<Task[]> {
+    return api.get<Task[]>(`/teams/${teamId}/tasks`);
   },
 
   async setMemberTitle(teamId: string, userId: string, title: string): Promise<void> {

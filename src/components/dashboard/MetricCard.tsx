@@ -1,6 +1,7 @@
 import React from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card } from '@/components/common/Card';
+import { CountUp } from '@/components/common/CountUp';
 
 interface MetricCardProps {
   title: string;
@@ -35,7 +36,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
       <div className="flex items-end justify-between gap-2">
         <h3 className="text-2xl sm:text-4xl font-extrabold text-text-primary leading-none tracking-tight">
-          {value}
+          <CountUp value={value} />
         </h3>
       </div>
 

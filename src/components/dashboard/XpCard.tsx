@@ -1,6 +1,8 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Sparkles, Star } from 'lucide-react';
 import { Card } from '@/components/common/Card';
+import { CountUp } from '@/components/common/CountUp';
 import { Task } from '@/types/task';
 import { computeXp, XP_PER_LEVEL } from '@/utils/xp';
 
@@ -17,7 +19,7 @@ export const XpCard: React.FC<XpCardProps> = ({ tasks, children }) => {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-text-primary">Seu nível</h3>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-light text-primary-vibrant text-sm font-bold">
-          <Sparkles size={15} /> {xp.xp} XP
+          <Sparkles size={15} /> <CountUp value={xp.xp} /> XP
         </span>
       </div>
 
@@ -40,9 +42,11 @@ export const XpCard: React.FC<XpCardProps> = ({ tasks, children }) => {
             <span>{xp.intoLevel}/{XP_PER_LEVEL}</span>
           </div>
           <div className="h-2.5 rounded-full bg-bg-secondary overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary-vibrant to-turquoise transition-all"
-              style={{ width: `${xp.pctToNext}%` }}
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary-vibrant to-turquoise"
+              initial={{ width: 0 }}
+              animate={{ width: `${xp.pctToNext}%` }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             />
           </div>
           <p className="text-xs text-text-secondary mt-2">
