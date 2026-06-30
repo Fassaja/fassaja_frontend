@@ -20,6 +20,11 @@ export function setAuthenticated(value: boolean): void {
 // O AuthContext escuta para encerrar a sessão e levar ao /login.
 export const SESSION_EXPIRED_EVENT = 'fassaja:session-expired';
 
+// Endpoints de "entrada" de auth: um 401 aqui é credencial inválida ou ausência
+// de sessão — não expiração. As demais rotas /auth/* (password/profile/avatar)
+// são autenticadas, então um 401 nelas DEVE encerrar a sessão.
+const AUTH_ENTRY_RE = /^\/auth\/(login|register|resend-verification|verify|logout|me)\b/;
+
 interface RequestOptions {
   method?: string;
   body?: unknown;
@@ -39,9 +44,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     credentials: 'include',
   });
 
-  // Sessão expirada/inválida num request autenticado (fora das rotas de auth):
-  // encerra a sessão localmente e avisa a aplicação.
-  if (response.status === 401 && authed && !path.startsWith('/auth/')) {
+  // Sessão expirada/inválida num request autenticado (fora dos endpoints de
+  // entrada de auth): encerra a sessão localmente e avisa a aplicação.
+  if (response.status === 401 && authed && !AUTH_ENTRY_RE.test(path)) {
     authed = false;
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));

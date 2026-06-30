@@ -13,6 +13,7 @@ import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { CalendarEvent } from '@/types/event';
 import { reminderLabel } from '@/utils/eventReminders';
 import { toISODate } from '@/utils/date';
+import { toExternalHref } from '@/utils/url';
 
 // Ordena: dia inteiro primeiro, depois por horário de início.
 function byTime(a: CalendarEvent, b: CalendarEvent): number {
@@ -25,11 +26,6 @@ function timeLabel(e: CalendarEvent): string {
   if (e.startTime && e.endTime) return `${e.startTime} – ${e.endTime}`;
   if (e.startTime) return e.startTime;
   return 'Sem horário';
-}
-
-// Garante um href navegável: se a pessoa não digitou o protocolo, assume https.
-function toHref(link: string): string {
-  return /^https?:\/\//i.test(link) ? link : `https://${link}`;
 }
 
 const AgendaPage: React.FC = () => {
@@ -151,7 +147,7 @@ const AgendaPage: React.FC = () => {
                           )}
                           {e.link && (
                             <a
-                              href={toHref(e.link)}
+                              href={toExternalHref(e.link)}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={ev => ev.stopPropagation()}
