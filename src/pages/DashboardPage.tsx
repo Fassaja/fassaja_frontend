@@ -116,13 +116,13 @@ const DashboardPage: React.FC = () => {
             bannerIsDay ? 'from-primary-vibrant to-primary-dark' : 'from-[#243089] to-[#0a1640]'
           }`}
         >
-          {/* Cena decorativa (dia/noite). Se a imagem faltar, sobra só o gradiente. */}
+          {/* Cena decorativa (dia/noite): só no desktop. No mobile fica só o gradiente azul. */}
           <img
             src={bannerSrc}
             alt=""
             aria-hidden="true"
             draggable={false}
-            className="absolute inset-0 h-full w-full object-cover object-right scale-105 pointer-events-none select-none"
+            className="hidden md:block absolute inset-0 h-full w-full object-cover object-right scale-105 pointer-events-none select-none"
           />
           <div className="shrink-0 -my-2 relative z-10">
             <Mascot state="happy" size="sm" animate />
