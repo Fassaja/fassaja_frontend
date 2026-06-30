@@ -5,6 +5,7 @@ import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { isInternalPath } from '@/utils/url';
 
 interface AuthPageProps {
   mode: 'login' | 'register';
@@ -13,7 +14,10 @@ interface AuthPageProps {
 const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get('redirect') || '/';
+  // Só aceita caminho interno: blinda contra open redirect (mesmo que um dia
+  // troquemos navigate() por window.location).
+  const rawRedirect = searchParams.get('redirect') || '/';
+  const redirectTo = isInternalPath(rawRedirect) ? rawRedirect : '/';
   const sessionExpired = searchParams.get('expired') === '1';
   const verifiedParam = searchParams.get('verified'); // '1' ok | '0' inválido
   const { login, register, resendVerification } = useAuth();

@@ -5,6 +5,7 @@ import { Lock } from 'lucide-react';
 import { useUser } from './UserContext';
 import { api, setAuthenticated, SESSION_EXPIRED_EVENT } from '@/services/api';
 import { guestTasksStore } from '@/services/guestTasksStore';
+import { clearAccountStorage } from '@/utils/accountStorage';
 
 export interface Account {
   id: string;
@@ -97,10 +98,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const persistSession = (acc: Account | null) =>
-    acc
-      ? localStorage.setItem(SESSION_KEY, JSON.stringify(acc))
-      : localStorage.removeItem(SESSION_KEY);
+  // Salva a sessão. A limpeza (logout/expiração) é feita por clearAccountStorage,
+  // que também apaga o perfil/notificações espelhados desta conta.
+  const persistSession = (acc: Account) =>
+    localStorage.setItem(SESSION_KEY, JSON.stringify(acc));
 
   // Persiste a conta e espelha nome/email/avatar para o UserContext.
   const syncAccount = (acc: Account) => {
@@ -140,9 +141,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .get<Account>('/auth/me')
         .then(acc => {
           adopt(acc);
-          navigate('/', { replace: true }); // limpa o ?verified=1 da URL
+          navigate('/', { replace: true }); // logado: entra no app e limpa o ?verified=1
         })
-        .catch(() => undefined);
+        .catch(() => {
+          // O cookie de sessão não chegou (ex.: deploy cross-domain em que o link
+          // de verificação não passou pelo proxy do front). Em vez de deixar a
+          // pessoa presa como visitante, leva à tela de login já confirmado.
+          navigate('/login?verified=1', { replace: true });
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -228,7 +234,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     // Limpa o cookie de sessão no servidor (best-effort).
     void api.post('/auth/logout', {}).catch(() => undefined);
-    persistSession(null);
+    // Apaga toda a PII espelhada desta conta (sessão + perfil + notificações),
+    // não só o sinalizador de sessão — evita resíduo em dispositivo compartilhado.
+    clearAccountStorage(account?.id);
     setAuthenticated(false);
     setScope(null);
     setAccount(null);
@@ -239,7 +247,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sessão expirada (401 num request autenticado): encerra e leva ao login.
   useEffect(() => {
     const handler = () => {
-      persistSession(null);
+      // Sem id no closure (efeito montado com []): clearAccountStorage deriva da
+      // sessão salva para apagar também o perfil/notificações espelhados.
+      clearAccountStorage();
       setAuthenticated(false);
       setScope(null);
       setAccount(null);

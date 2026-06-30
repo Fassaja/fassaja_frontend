@@ -25,7 +25,9 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || '/agenda';
+  const raw = (event.notification.data && event.notification.data.url) || '/agenda';
+  // Só caminhos internos: evita abrir origem/esquema externo a partir do payload de push.
+  const url = typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/agenda';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const client of list) {
