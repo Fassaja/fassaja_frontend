@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Flame } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { useUser, computeStreak } from '@/contexts/UserContext';
@@ -12,6 +13,7 @@ function isoOf(d: Date): string {
 export const StreakContent: React.FC = () => {
   const { user } = useUser();
   const { tasks } = useTasks();
+  const reduce = useReducedMotion();
 
   const activeDays = new Set<string>(user.productiveDays);
   tasks.forEach(t => {
@@ -36,7 +38,14 @@ export const StreakContent: React.FC = () => {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-bold text-text-primary">Sequência produtiva</h3>
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-600 font-bold text-sm">
-          <Flame size={16} />
+          <motion.span
+            className="inline-flex"
+            initial={reduce || streak === 0 ? false : { scale: 0.4, rotate: -12 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 14 }}
+          >
+            <Flame size={16} />
+          </motion.span>
           {streak} {streak === 1 ? 'dia' : 'dias'}
         </span>
       </div>
@@ -51,7 +60,13 @@ export const StreakContent: React.FC = () => {
 
       <div className="flex justify-between gap-2">
         {weekStrip.map((day, i) => (
-          <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+          <motion.div
+            key={i}
+            className="flex-1 flex flex-col items-center gap-1.5"
+            initial={reduce ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: reduce ? 0 : 0.25 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+          >
             <div
               className={`w-full aspect-square max-w-[44px] rounded-xl flex items-center justify-center transition-colors ${
                 day.active ? 'bg-amber-400 text-white' : 'bg-bg-secondary text-text-soft'
@@ -60,7 +75,7 @@ export const StreakContent: React.FC = () => {
               {day.active ? <Flame size={16} /> : ''}
             </div>
             <span className="text-[11px] text-text-secondary">{day.letter}</span>
-          </div>
+          </motion.div>
         ))}
       </div>
     </>

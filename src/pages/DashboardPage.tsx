@@ -77,6 +77,13 @@ const DashboardPage: React.FC = () => {
     return 'Boa noite! 🌙';
   })();
 
+  // Cena de fundo do banner conforme o horário: dia das 5h às 17h, noite das 17h às 5h.
+  const bannerIsDay = (() => {
+    const h = new Date().getHours();
+    return h >= 5 && h < 17;
+  })();
+  const bannerSrc = bannerIsDay ? '/dia.png' : '/noite.png';
+
   const progressCopy = (() => {
     if (progressMascot === 'sad')
       return { headline: 'Atenção!', message: 'Você tem tarefas atrasadas. Bora colocar em dia?' };
@@ -103,9 +110,21 @@ const DashboardPage: React.FC = () => {
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
         {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
-        {/* Bob greeting banner (saudação — Bob "olá") */}
-        <div className="mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary-vibrant to-primary-dark text-white p-5 sm:p-6 relative overflow-hidden">
-          <div className="shrink-0 -my-2">
+        {/* Bob greeting banner — cena de fundo muda com o horário (dia/noite) */}
+        <div
+          className={`mb-6 flex items-center gap-4 rounded-2xl text-white p-5 sm:p-6 relative overflow-hidden bg-gradient-to-br ${
+            bannerIsDay ? 'from-primary-vibrant to-primary-dark' : 'from-[#243089] to-[#0a1640]'
+          }`}
+        >
+          {/* Cena decorativa (dia/noite). Se a imagem faltar, sobra só o gradiente. */}
+          <img
+            src={bannerSrc}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover object-right scale-105 pointer-events-none select-none"
+          />
+          <div className="shrink-0 -my-2 relative z-10">
             <Mascot state="happy" size="sm" animate />
           </div>
           <div className="relative z-10">
@@ -127,8 +146,6 @@ const DashboardPage: React.FC = () => {
               </span>
             </div>
           </div>
-          <div className="absolute -right-10 -bottom-10 w-40 h-40 rounded-full bg-white/10" />
-          <div className="absolute right-16 -top-12 w-28 h-28 rounded-full bg-white/5" />
         </div>
 
         {/* Metrics */}
