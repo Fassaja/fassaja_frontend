@@ -11,7 +11,18 @@ import {
   FolderOpen,
   Settings,
   ShieldCheck,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  Mail,
+  CheckCircle2,
+  Circle,
+  Calendar,
+  ListChecks,
+  ArrowRight,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Modal } from '@/components/common/Modal';
@@ -26,10 +37,72 @@ import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
 import { TeamSummary, TeamMember, PendingRequest, TeamProjectSummary } from '@/types/team';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CountUp } from '@/components/common/CountUp';
+import { Badge } from '@/components/common/Badge';
+import { Task } from '@/types/task';
+import { sortTeamTasks } from '@/utils/teamTasks';
+import { isToday, isTomorrow, formatDate } from '@/utils/date';
+
+const PRIORITY_LABEL: Record<Task['priority'], string> = {
+  low: 'Baixa',
+  medium: 'Média',
+  high: 'Alta',
+};
+const PRIORITY_VARIANT: Record<Task['priority'], 'default' | 'warning' | 'danger'> = {
+  low: 'default',
+  medium: 'warning',
+  high: 'danger',
+};
+
+// Rótulo + cor do prazo de uma tarefa no painel da equipe.
+function dueLabel(t: Task): { text: string; cls: string } {
+  if (t.status === 'completed') return { text: 'Concluída', cls: 'text-success' };
+  if (!t.dueDate) return { text: 'Sem prazo', cls: 'text-text-soft' };
+  if (isToday(t.dueDate)) return { text: 'Hoje', cls: 'text-danger' };
+  if (isTomorrow(t.dueDate)) return { text: 'Amanhã', cls: 'text-amber-600' };
+  return { text: formatDate(t.dueDate), cls: 'text-text-secondary' };
+}
+
+// Cor de avatar estável por usuário (não muda se a lista reordena).
+function memberColor(id: string): string {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
+// Cartão de métrica do "pulso" da equipe (ícone + número + rótulo + subtítulo).
+const TeamStat: React.FC<{
+  icon: React.ReactNode;
+  value: number;
+  suffix?: string;
+  label: string;
+  sub: string;
+  tint: string;
+}> = ({ icon, value, suffix, label, sub, tint }) => (
+  <div className="flex items-center gap-3 rounded-2xl border border-border bg-white p-4">
+    <span
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+      style={{ backgroundColor: tint + '1A', color: tint }}
+    >
+      {icon}
+    </span>
+    <div className="min-w-0">
+      <CountUp
+        value={value}
+        suffix={suffix}
+        className="text-2xl font-extrabold text-text-primary leading-none"
+      />
+      <p className="mt-1 truncate text-sm font-semibold leading-tight text-text-primary">{label}</p>
+      <p className="truncate text-xs leading-tight text-text-secondary">{sub}</p>
+    </div>
+  </div>
+);
 
 const TeamPage: React.FC = () => {
   const { account } = useAuth();
   const userId = account?.id;
+  const navigate = useNavigate();
 
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -50,10 +123,32 @@ const TeamPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const [teamProjects, setTeamProjects] = useState<TeamProjectSummary[]>([]);
+  const [teamTasks, setTeamTasks] = useState<Task[]>([]);
+  const [projIndex, setProjIndex] = useState(0);
 
   const selectedTeam = teams.find(t => t.id === selectedId) ?? null;
   const isOwner = selectedTeam?.ownerId === userId;
   const inviteLink = inviteToken ? `${window.location.origin}/join/${inviteToken}` : '';
+
+  // Métricas do "pulso" da equipe (derivadas dos projetos carregados).
+  const activeProjects = teamProjects.filter(
+    p => p.taskCount > 0 && p.completedCount < p.taskCount,
+  ).length;
+  const avgCompletion = teamProjects.length
+    ? Math.round(
+        teamProjects.reduce(
+          (s, p) => s + (p.taskCount ? (p.completedCount / p.taskCount) * 100 : 0),
+          0,
+        ) / teamProjects.length,
+      )
+    : 0;
+  const safeProjIndex = teamProjects.length ? Math.min(projIndex, teamProjects.length - 1) : 0;
+  const currentProject = teamProjects[safeProjIndex];
+  const currentPct =
+    currentProject && currentProject.taskCount
+      ? Math.round((currentProject.completedCount / currentProject.taskCount) * 100)
+      : 0;
+  const visibleTasks = sortTeamTasks(teamTasks).slice(0, 6);
 
   const loadTeams = useCallback(async () => {
     if (!userId) return;
@@ -75,10 +170,12 @@ const TeamPage: React.FC = () => {
     if (!selectedId) {
       setMembers([]);
       setTeamProjects([]);
+      setTeamTasks([]);
       return;
     }
     teamsService.getMembers(selectedId).then(setMembers).catch(() => setMembers([]));
     teamsService.getProjects(selectedId).then(setTeamProjects).catch(() => setTeamProjects([]));
+    teamsService.getTasks(selectedId).then(setTeamTasks).catch(() => setTeamTasks([]));
   }, [selectedId]);
 
   // Recarrega equipes (nome/cor/contagem) e a lista de membros após edições no modal.
@@ -109,6 +206,11 @@ const TeamPage: React.FC = () => {
   useEffect(() => {
     loadRequests();
   }, [loadRequests]);
+
+  // Volta o carrossel de projetos ao primeiro item ao trocar de equipe.
+  useEffect(() => {
+    setProjIndex(0);
+  }, [selectedId]);
 
   const openInvite = async () => {
     if (!selectedId || !userId) return;
@@ -320,7 +422,12 @@ const TeamPage: React.FC = () => {
                     style={{ backgroundColor: selectedTeam.color }}
                   />
                   <div className="min-w-0">
-                    <h2 className="text-lg font-bold text-text-primary truncate">{selectedTeam.name}</h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-bold text-text-primary truncate">{selectedTeam.name}</h2>
+                      <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-bold text-primary-vibrant">
+                        Equipe atual
+                      </span>
+                    </div>
                     <p className="text-sm text-text-secondary">
                       {selectedTeam.memberCount} {selectedTeam.memberCount === 1 ? 'membro' : 'membros'}
                       {isOwner && ' · você é o dono'}
@@ -349,6 +456,39 @@ const TeamPage: React.FC = () => {
                     </Button>
                   </div>
                 )}
+              </div>
+
+              {/* Pulso da equipe */}
+              <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <TeamStat
+                  icon={<Users size={20} />}
+                  value={selectedTeam.memberCount}
+                  label="Membros"
+                  sub="Total na equipe"
+                  tint="#2477FF"
+                />
+                <TeamStat
+                  icon={<FolderOpen size={20} />}
+                  value={activeProjects}
+                  label={activeProjects === 1 ? 'Projeto ativo' : 'Projetos ativos'}
+                  sub="Em andamento"
+                  tint="#8B5CF6"
+                />
+                <TeamStat
+                  icon={<TrendingUp size={20} />}
+                  value={avgCompletion}
+                  suffix="%"
+                  label="Conclusão média"
+                  sub="Dos projetos"
+                  tint="#2DD4BF"
+                />
+                <TeamStat
+                  icon={<Mail size={20} />}
+                  value={requests.length}
+                  label="Pedidos pendentes"
+                  sub="Aguardando aprovação"
+                  tint="#FBBF24"
+                />
               </div>
 
               {isOwner && requests.length > 0 && (
@@ -387,93 +527,278 @@ const TeamPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {members.map((m, i) => (
-                  <div
-                    key={m.userId}
-                    className="group flex items-start gap-3 p-3 rounded-xl border border-border"
-                  >
-                    {m.avatar ? (
-                      <img
-                        src={m.avatar}
-                        alt={m.name}
-                        className="w-11 h-11 rounded-full object-cover shrink-0"
-                      />
-                    ) : (
-                      <div
-                        className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold shrink-0"
-                        style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
-                      >
-                        {initialsOf(m.name)}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-text-primary truncate flex items-center gap-1.5">
-                        {m.name}
-                        {m.role === 'owner' && <Crown size={14} className="text-amber-500 shrink-0" />}
-                      </p>
-                      <p className="text-xs text-text-secondary truncate">{m.email}</p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {members.map(m => {
+                  const isOwnerCard = m.role === 'owner';
+                  return (
+                    <div
+                      key={m.userId}
+                      className={`relative flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-colors ${
+                        isOwnerCard
+                          ? 'border-primary-vibrant/40 bg-primary-light/25 ring-1 ring-primary-vibrant/15'
+                          : 'border-border bg-white hover:border-primary-vibrant/40'
+                      }`}
+                    >
+                      {isOwnerCard ? (
+                        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                          <Crown size={12} /> Dono
+                        </span>
+                      ) : (
+                        isOwner && (
+                          <button
+                            type="button"
+                            onClick={() => setShowSettings(true)}
+                            aria-label={`Gerenciar ${m.name}`}
+                            title="Gerenciar membro"
+                            className="absolute right-2.5 top-2.5 rounded-lg p-1.5 text-text-soft transition-colors hover:bg-bg-secondary hover:text-primary-vibrant"
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                        )
+                      )}
 
-                      <div className="flex flex-wrap items-center gap-1 mt-1">
-                        {m.title && (
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
-                            {m.title}
-                          </span>
-                        )}
-                        {m.role !== 'owner' && m.canManageTasks && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
-                            <ShieldCheck size={11} /> Gerente de tarefas
-                          </span>
-                        )}
+                      {m.avatar ? (
+                        <img src={m.avatar} alt={m.name} className="h-16 w-16 rounded-full object-cover" />
+                      ) : (
+                        <div
+                          className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white"
+                          style={{ backgroundColor: memberColor(m.userId) }}
+                        >
+                          {initialsOf(m.name)}
+                        </div>
+                      )}
+
+                      <div className="w-full min-w-0">
+                        <p className="flex items-center justify-center gap-1.5 truncate font-bold text-text-primary">
+                          {m.name}
+                          {isOwnerCard && <Crown size={14} className="shrink-0 text-amber-500" />}
+                        </p>
+                        <p className="truncate text-xs text-text-secondary">{m.email}</p>
                       </div>
+
+                      {(m.title || (!isOwnerCard && m.canManageTasks)) && (
+                        <div className="flex flex-wrap items-center justify-center gap-1">
+                          {m.title && (
+                            <span className="rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-semibold text-primary-vibrant">
+                              {m.title}
+                            </span>
+                          )}
+                          {!isOwnerCard && m.canManageTasks && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-semibold text-primary-vibrant">
+                              <ShieldCheck size={11} /> Gerente de tarefas
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              <div className="mt-6 pt-5 border-t border-border">
-                <h3 className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
+            </Card>
+          )}
+
+          {/* Projetos (carrossel) + Tarefas da equipe, lado a lado */}
+          {selectedTeam && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+              <div className="lg:col-span-2">
+            <Card>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-text-primary">
                   <FolderOpen size={16} className="text-primary-vibrant" /> Projetos da equipe (
                   {teamProjects.length})
                 </h3>
-                {teamProjects.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {teamProjects.map(p => {
-                      const pct = p.taskCount ? Math.round((p.completedCount / p.taskCount) * 100) : 0;
-                      return (
-                        <div key={p.id} className="p-3 rounded-xl border border-border">
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: p.color }}
-                            />
-                            <p className="text-sm font-semibold text-text-primary truncate flex-1 min-w-0">
-                              {p.name}
-                            </p>
-                            <span className="text-xs font-bold text-text-secondary shrink-0">{pct}%</span>
-                          </div>
-                          <div className="h-1.5 rounded-full bg-bg-secondary overflow-hidden mt-2">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{ width: `${pct}%`, backgroundColor: p.color }}
-                            />
-                          </div>
-                          <p className="text-xs text-text-secondary mt-2">
-                            {p.taskCount} {p.taskCount === 1 ? 'tarefa' : 'tarefas'} ·{' '}
-                            {p.completedCount} concluída{p.completedCount === 1 ? '' : 's'}
-                          </p>
-                        </div>
-                      );
-                    })}
+                {teamProjects.length > 1 && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setProjIndex(i => (i - 1 + teamProjects.length) % teamProjects.length)
+                      }
+                      aria-label="Projeto anterior"
+                      className="rounded-lg border border-border p-1.5 text-text-secondary transition-all hover:border-primary-vibrant/50 hover:text-primary-vibrant active:scale-95"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <span className="w-9 text-center text-xs font-semibold tabular-nums text-text-secondary">
+                      {safeProjIndex + 1}/{teamProjects.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setProjIndex(i => (i + 1) % teamProjects.length)}
+                      aria-label="Próximo projeto"
+                      className="rounded-lg border border-border p-1.5 text-text-secondary transition-all hover:border-primary-vibrant/50 hover:text-primary-vibrant active:scale-95"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
                   </div>
-                ) : (
-                  <p className="text-sm text-text-secondary">
-                    Projetos atribuídos a esta equipe aparecem aqui. Crie um projeto do tipo equipe
-                    para começar a acompanhar o progresso em conjunto.
-                  </p>
                 )}
               </div>
+
+              {currentProject ? (
+                <>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentProject.id}
+                      initial={{ opacity: 0, x: 14 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -14 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className="rounded-2xl border border-border p-4"
+                    >
+                      <div className="mb-3 flex items-center gap-2.5">
+                        <span
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: currentProject.color }}
+                        />
+                        <p className="min-w-0 flex-1 truncate text-base font-bold text-text-primary">
+                          {currentProject.name}
+                        </p>
+                        <span className="shrink-0 text-sm font-bold text-text-secondary">
+                          {currentPct}%
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-bg-secondary">
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: currentProject.color }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${currentPct}%` }}
+                          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        />
+                      </div>
+                      <div className="mt-4 grid grid-cols-3 gap-2">
+                        <div className="rounded-xl bg-bg-secondary/60 p-2.5 text-center">
+                          <p className="text-base font-extrabold leading-none text-text-primary">
+                            {currentProject.taskCount}
+                          </p>
+                          <p className="mt-1 text-[11px] text-text-secondary">Tarefas</p>
+                        </div>
+                        <div className="rounded-xl bg-bg-secondary/60 p-2.5 text-center">
+                          <p className="text-base font-extrabold leading-none text-text-primary">
+                            {currentProject.completedCount}
+                          </p>
+                          <p className="mt-1 text-[11px] text-text-secondary">Concluídas</p>
+                        </div>
+                        <div className="rounded-xl bg-bg-secondary/60 p-2.5 text-center">
+                          <p className="text-base font-extrabold leading-none text-text-primary">
+                            {currentPct}%
+                          </p>
+                          <p className="mt-1 text-[11px] text-text-secondary">Progresso</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {teamProjects.length > 1 && (
+                    <div className="mt-4 flex justify-center gap-1.5">
+                      {teamProjects.map((p, i) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setProjIndex(i)}
+                          aria-label={`Ir para o projeto ${i + 1}`}
+                          className={`h-1.5 rounded-full transition-all ${
+                            i === safeProjIndex
+                              ? 'w-5 bg-primary-vibrant'
+                              : 'w-1.5 bg-border hover:bg-text-soft'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-text-secondary">
+                  Projetos atribuídos a esta equipe aparecem aqui. Crie um projeto do tipo equipe para
+                  começar a acompanhar o progresso em conjunto.
+                </p>
+              )}
             </Card>
+              </div>
+
+              <div className="lg:col-span-3">
+                <Card className="flex h-full flex-col">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="flex items-center gap-2 text-sm font-bold text-text-primary">
+                      <ListChecks size={16} className="text-primary-vibrant" /> Tarefas da equipe
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/tasks')}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary-vibrant transition-colors hover:text-primary-hover"
+                    >
+                      Ver todas as tarefas <ArrowRight size={14} />
+                    </button>
+                  </div>
+
+                  {visibleTasks.length > 0 ? (
+                    <div className="flex-1 divide-y divide-border">
+                      {visibleTasks.map(t => {
+                        const due = dueLabel(t);
+                        const assignee = members.find(mm => mm.userId === t.assigneeId);
+                        const done = t.status === 'completed';
+                        return (
+                          <div key={t.id} className="flex items-center gap-3 py-2.5">
+                            {done ? (
+                              <CheckCircle2 size={18} className="shrink-0 text-success" />
+                            ) : (
+                              <Circle size={18} className="shrink-0 text-text-soft" />
+                            )}
+                            <p
+                              className={`min-w-0 flex-1 truncate text-sm font-medium ${
+                                done ? 'text-text-soft line-through' : 'text-text-primary'
+                              }`}
+                            >
+                              {t.title}
+                            </p>
+                            <span
+                              className={`hidden shrink-0 items-center gap-1 text-xs font-medium sm:inline-flex ${due.cls}`}
+                            >
+                              <Calendar size={12} /> {due.text}
+                            </span>
+                            <Badge variant={PRIORITY_VARIANT[t.priority]} className="shrink-0">
+                              {PRIORITY_LABEL[t.priority]}
+                            </Badge>
+                            {t.assigneeId ? (
+                              assignee?.avatar ? (
+                                <img
+                                  src={assignee.avatar}
+                                  alt={assignee.name}
+                                  className="h-7 w-7 shrink-0 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div
+                                  title={assignee?.name ?? t.assigneeName}
+                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                                  style={{ backgroundColor: memberColor(t.assigneeId) }}
+                                >
+                                  {initialsOf(assignee?.name ?? t.assigneeName ?? '?')}
+                                </div>
+                              )
+                            ) : (
+                              <span className="h-7 w-7 shrink-0" aria-hidden="true" />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-1 items-center justify-center py-8 text-center text-sm text-text-secondary">
+                      Nenhuma tarefa nos projetos da equipe ainda.
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/tasks')}
+                    className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-sm font-semibold text-text-secondary transition-colors hover:border-primary-vibrant/50 hover:text-primary-vibrant"
+                  >
+                    <Plus size={16} /> Nova tarefa
+                  </button>
+                </Card>
+              </div>
+            </div>
           )}
         </div>
       )}
