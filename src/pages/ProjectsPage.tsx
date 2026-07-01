@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PageTour } from '@/components/onboarding/PageTour';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { EditProjectModal } from '@/components/projects/EditProjectModal';
@@ -114,6 +115,7 @@ const ProjectsPage: React.FC = () => {
         title="Projetos"
         subtitle="Organize suas tarefas por projetos."
       >
+        <PageTour id="projects" />
         {loading ? (
           showSkeleton ? <LoadingScreen /> : null
         ) : projects.length > 0 ? (

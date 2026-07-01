@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { BarChart3, GitBranch, Sparkles, Spade } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PageTour } from '@/components/onboarding/PageTour';
 import { Card } from '@/components/common/Card';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
@@ -178,6 +179,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
+      <PageTour id="reports" />
       {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
       {/* Resumo com mascote + estatísticas — só na Visão geral */}
       {view === 'overview' && (

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PageTour } from '@/components/onboarding/PageTour';
 import { Card } from '@/components/common/Card';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
@@ -287,6 +288,7 @@ const TeamPage: React.FC = () => {
       title="Equipe"
       subtitle="As pessoas que tocam os projetos com você."
     >
+      <PageTour id="team" />
       {/* Create team modal */}
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Criar equipe" size="md">
         <form onSubmit={handleCreate} className="space-y-5">

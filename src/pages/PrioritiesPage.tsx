@@ -1,6 +1,7 @@
 import React from 'react';
 import { Flag } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PageTour } from '@/components/onboarding/PageTour';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
@@ -24,6 +25,7 @@ const PrioritiesPage: React.FC = () => {
 
   return (
     <AppLayout title="Prioridades" subtitle="O que é prioridade alta e ainda está em aberto.">
+      <PageTour id="priorities" />
       {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
       {highTasks.length > 0 ? (
         <>

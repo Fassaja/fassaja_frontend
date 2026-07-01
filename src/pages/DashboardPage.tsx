@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, Clock, AlertCircle, ListTodo, Sparkles, Flame } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PageTour } from '@/components/onboarding/PageTour';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { WeeklyOverviewChart } from '@/components/dashboard/WeeklyOverviewChart';
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
@@ -109,6 +110,7 @@ const DashboardPage: React.FC = () => {
         title={`Olá, ${user.name}! 👋`}
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
+        <PageTour id="dashboard" />
         {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
         {/* Bob greeting banner — cena de fundo muda com o horário (dia/noite) */}
         <div

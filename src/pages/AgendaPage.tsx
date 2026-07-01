@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Plus, Clock, MapPin, Link2, Bell } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PageTour } from '@/components/onboarding/PageTour';
 import { Card } from '@/components/common/Card';
 import { Mascot } from '@/components/mascot/Mascot';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
@@ -76,6 +77,7 @@ const AgendaPage: React.FC = () => {
       onNewTask={openCreate}
       actionLabel="Novo evento"
     >
+      <PageTour id="agenda" />
       {loading ? (
         showSkeleton ? <LoadingScreen /> : null
       ) : (

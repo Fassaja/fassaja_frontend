@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Check } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PageTour } from '@/components/onboarding/PageTour';
 import { CalendarMonth } from '@/components/calendar/CalendarMonth';
 import { Card } from '@/components/common/Card';
 import { Mascot } from '@/components/mascot/Mascot';
@@ -29,6 +30,7 @@ const CalendarPage: React.FC = () => {
 
   return (
     <AppLayout title="Calendário" subtitle="Visualize suas tarefas por data.">
+      <PageTour id="calendar" />
       {loading ? (showSkeleton ? <LoadingScreen /> : null) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Calendar */}

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { LayoutGrid, List, ListChecks, Trash2, Check, Minus, X } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { PageTour } from '@/components/onboarding/PageTour';
 import { TaskList } from '@/components/tasks/TaskList';
 import { TaskBoard } from '@/components/tasks/TaskBoard';
 import { TaskFilters } from '@/components/tasks/TaskFilters';
@@ -242,6 +243,7 @@ const TasksPage: React.FC = () => {
         title="Minhas Tarefas"
         subtitle="Gerencie todas as suas tarefas em um só lugar."
       >
+        <PageTour id="tasks" />
         {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
         {/* Barra de seleção em massa OU alternador de visão */}
         {selectionMode ? (
