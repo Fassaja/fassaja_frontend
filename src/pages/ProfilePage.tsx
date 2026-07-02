@@ -9,15 +9,19 @@ import {
   Loader2,
   Lock,
   Pencil,
+  Sparkles,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
 import { StreakCard } from '@/components/dashboard/StreakCard';
 import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { useTasks } from '@/hooks/useTasks';
+import { computeXp } from '@/utils/xp';
 
 const COOLDOWN_DAYS = 30;
 
@@ -31,6 +35,11 @@ function cooldownLeft(iso?: string | null): number {
 // Data em que a próxima alteração ficará disponível.
 function availableOn(iso: string): string {
   return new Date(new Date(iso).getTime() + COOLDOWN_DAYS * 86400000).toLocaleDateString('pt-BR');
+}
+
+// Plural correto ("1 dia" / "3 dias") em vez do "dia(s)".
+function days(n: number): string {
+  return n === 1 ? '1 dia' : `${n} dias`;
 }
 
 // Redimensiona a imagem no navegador (256x256, JPEG) para um data URL leve.
@@ -63,6 +72,8 @@ const ProfilePage: React.FC = () => {
   const { user } = useUser();
   const { account, changePassword, updateName, updateAvatar } = useAuth();
   const { tasks } = useTasks();
+  const toast = useToast();
+  const xp = computeXp(tasks);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Avatar
@@ -92,11 +103,12 @@ const ProfilePage: React.FC = () => {
     setNameLoading(true);
     const result = await updateName(trimmed);
     setNameLoading(false);
-    setNameMsg(
-      result.ok
-        ? { type: 'ok', text: 'Nome atualizado.' }
-        : { type: 'error', text: result.error ?? 'Não foi possível alterar o nome.' },
-    );
+    if (result.ok) {
+      setNameMsg(null);
+      toast.success('Nome atualizado. 👋');
+    } else {
+      setNameMsg({ type: 'error', text: result.error ?? 'Não foi possível alterar o nome.' });
+    }
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -105,8 +117,9 @@ const ProfilePage: React.FC = () => {
     const result = await changePassword(pw.current, pw.next);
     setPwLoading(false);
     if (result.ok) {
-      setPwMsg({ type: 'ok', text: 'Senha atualizada com sucesso.' });
+      setPwMsg(null);
       setPw({ current: '', next: '' });
+      toast.success('Senha atualizada com sucesso. 🔒');
     } else {
       setPwMsg({ type: 'error', text: result.error ?? 'Não foi possível alterar a senha.' });
     }
@@ -121,7 +134,8 @@ const ProfilePage: React.FC = () => {
     try {
       const dataUrl = await resizeImage(file);
       const result = await updateAvatar(dataUrl);
-      if (!result.ok) setAvatarMsg(result.error ?? 'Não foi possível enviar a foto.');
+      if (result.ok) toast.success('Foto atualizada!');
+      else setAvatarMsg(result.error ?? 'Não foi possível enviar a foto.');
     } catch {
       setAvatarMsg('Não foi possível processar a imagem.');
     } finally {
@@ -132,8 +146,9 @@ const ProfilePage: React.FC = () => {
   const onRemoveAvatar = async () => {
     setAvatarMsg(null);
     setAvatarLoading(true);
-    await updateAvatar(null);
+    const result = await updateAvatar(null);
     setAvatarLoading(false);
+    if (result.ok) toast.success('Foto removida.');
   };
 
   const stats = [
@@ -181,7 +196,15 @@ const ProfilePage: React.FC = () => {
                 <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} className="hidden" />
               </div>
               <div className="sm:pb-1 min-w-0">
-                <h2 className="text-xl font-bold text-text-primary truncate">{user.name || 'Seu nome'}</h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-bold text-text-primary truncate">{user.name || 'Seu nome'}</h2>
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-light text-primary-vibrant text-xs font-bold shrink-0"
+                    title={`${xp.intoLevel}/100 XP para o próximo nível`}
+                  >
+                    <Sparkles size={12} /> Nível {xp.level} · {xp.xp} XP
+                  </span>
+                </div>
                 <p className="text-sm text-text-secondary">{account?.email}</p>
               </div>
               {avatarSrc && (
@@ -251,30 +274,27 @@ const ProfilePage: React.FC = () => {
             {nameLeft > 0 ? (
               <p className="text-sm text-amber-600 inline-flex items-center gap-1.5">
                 <Lock size={14} />
-                Disponível em {nameLeft} dia(s)
+                Disponível em {days(nameLeft)}
                 {account?.nameChangedAt && ` — em ${availableOn(account.nameChangedAt)}`}.
               </p>
             ) : (
-              <p className="text-xs text-text-secondary">
-                Ao salvar, você só poderá alterar o nome novamente daqui a 30 dias.
-              </p>
+              <>
+                <p className="text-xs text-text-secondary">
+                  Ao salvar, você só poderá alterar o nome novamente daqui a 30 dias.
+                </p>
+                <div className="flex items-center gap-4">
+                  <Button
+                    type="submit"
+                    className="rounded-xl"
+                    isLoading={nameLoading}
+                    disabled={!name.trim() || name.trim() === account?.name}
+                  >
+                    Salvar nome
+                  </Button>
+                  {nameMsg && <span className="text-sm text-danger">{nameMsg.text}</span>}
+                </div>
+              </>
             )}
-
-            <div className="flex items-center gap-4">
-              <Button
-                type="submit"
-                className="rounded-xl"
-                isLoading={nameLoading}
-                disabled={nameLeft > 0 || !name.trim() || name.trim() === account?.name}
-              >
-                Salvar nome
-              </Button>
-              {nameMsg && (
-                <span className={`text-sm ${nameMsg.type === 'ok' ? 'text-success' : 'text-danger'}`}>
-                  {nameMsg.text}
-                </span>
-              )}
-            </div>
           </form>
         </Card>
 
@@ -290,14 +310,13 @@ const ProfilePage: React.FC = () => {
           {pwLeft > 0 ? (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 inline-flex items-center gap-2">
               <Lock size={15} />
-              Você já alterou a senha recentemente. Poderá trocar novamente em {pwLeft} dia(s)
+              Você já alterou a senha recentemente. Poderá trocar novamente em {days(pwLeft)}
               {account?.passwordChangedAt && ` (em ${availableOn(account.passwordChangedAt)})`}.
             </div>
           ) : (
             <form onSubmit={handleChangePassword} className="grid sm:grid-cols-2 gap-4">
-              <Input
+              <PasswordInput
                 label="Senha atual"
-                type="password"
                 value={pw.current}
                 onChange={e => {
                   setPw(p => ({ ...p, current: e.target.value }));
@@ -305,9 +324,8 @@ const ProfilePage: React.FC = () => {
                 }}
                 placeholder="••••••••"
               />
-              <Input
+              <PasswordInput
                 label="Nova senha"
-                type="password"
                 value={pw.next}
                 onChange={e => {
                   setPw(p => ({ ...p, next: e.target.value }));
@@ -322,11 +340,7 @@ const ProfilePage: React.FC = () => {
                 <Button type="submit" className="rounded-xl" isLoading={pwLoading}>
                   Alterar senha
                 </Button>
-                {pwMsg && (
-                  <span className={`text-sm ${pwMsg.type === 'ok' ? 'text-success' : 'text-danger'}`}>
-                    {pwMsg.text}
-                  </span>
-                )}
+                {pwMsg && <span className="text-sm text-danger">{pwMsg.text}</span>}
               </div>
             </form>
           )}
