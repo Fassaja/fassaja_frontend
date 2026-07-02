@@ -39,22 +39,29 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Sem backdrop-blur (caro em tela cheia); fade barato no wrapper e
+              scale só no painel pequeno — evita queda de FPS ao abrir. */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-primary-dark/60 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-primary-dark/70 z-[60]"
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[70] flex items-center justify-center p-4"
             onClick={onClose}
           >
-            <div
+            <motion.div
+              initial={{ scale: 0.95, y: 8 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
+              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
               className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6 text-center"
               onClick={e => e.stopPropagation()}
             >
@@ -97,7 +104,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                   {confirmLabel}
                 </Button>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </>
       )}

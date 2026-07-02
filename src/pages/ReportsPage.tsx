@@ -20,7 +20,7 @@ import { PageTour } from '@/components/onboarding/PageTour';
 import { Card } from '@/components/common/Card';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
-import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { ReportsSkeleton } from '@/components/common/Skeletons';
 import { EapView } from '@/components/reports/EapView';
 import { XpView } from '@/components/reports/XpView';
 import { PlanningPokerView } from '@/components/reports/PlanningPokerView';
@@ -180,7 +180,7 @@ const ReportsPage: React.FC = () => {
   return (
     <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
       <PageTour id="reports" />
-      {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
+      {loading ? (showSkeleton ? <ReportsSkeleton /> : null) : <>
       {/* Resumo com mascote + estatísticas — só na Visão geral */}
       {view === 'overview' && (
       <>
@@ -243,11 +243,12 @@ const ReportsPage: React.FC = () => {
 
       {view === 'overview' && (
       stats.total === 0 ? (
-        <Card className="flex flex-col items-center text-center py-12">
-          <Mascot state="confused" size="md" animate />
-          <p className="text-text-primary font-semibold mt-3">Sem dados ainda</p>
-          <p className="text-text-secondary text-sm max-w-sm">
-            Assim que você criar e concluir tarefas, seus gráficos de produtividade aparecem aqui.
+        <Card className="flex flex-col items-center text-center py-12 bg-gradient-to-b from-white to-primary-light/30">
+          <Mascot state="investigate" size="md" animate />
+          <p className="text-text-primary font-bold text-xl mt-4">Seus gráficos nascem aqui</p>
+          <p className="text-text-secondary text-sm max-w-sm mt-1">
+            Conclua sua primeira tarefa e o Bob começa a desenhar suas estatísticas de
+            produtividade.
           </p>
         </Card>
       ) : (

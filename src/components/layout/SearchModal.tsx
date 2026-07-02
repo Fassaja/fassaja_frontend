@@ -60,21 +60,28 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Sem backdrop-blur (caro em tela cheia); o deslize fica só no painel. */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-primary-dark/60 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-primary-dark/70 z-[60]"
           />
           <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-x-0 top-20 z-[70] flex justify-center px-4"
             onClick={onClose}
           >
-            <div
+            <motion.div
+              initial={{ y: -16 }}
+              animate={{ y: 0 }}
+              exit={{ y: -16, transition: { duration: 0.15, ease: 'easeIn' } }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="w-full max-w-xl bg-white rounded-2xl shadow-xl ring-1 ring-primary-vibrant/20 border-2 border-border overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
@@ -152,7 +159,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </>
       )}

@@ -7,7 +7,7 @@ import { EditProjectModal } from '@/components/projects/EditProjectModal';
 import { Card } from '@/components/common/Card';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { ProjectsSkeleton } from '@/components/common/Skeletons';
 import { useProjects } from '@/hooks/useProjects';
 import { useTasks } from '@/hooks/useTasks';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -117,7 +117,7 @@ const ProjectsPage: React.FC = () => {
       >
         <PageTour id="projects" />
         {loading ? (
-          showSkeleton ? <LoadingScreen /> : null
+          showSkeleton ? <ProjectsSkeleton /> : null
         ) : projects.length > 0 ? (
           <>
             {/* Resumo geral dos projetos */}

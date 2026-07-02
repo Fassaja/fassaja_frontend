@@ -37,7 +37,7 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
             initial={{ opacity: 0, y: -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.18, ease: [0.25, 1, 0.5, 1] }}
             className="fixed left-2 right-2 top-[5.25rem] w-auto sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 bg-white rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-50 overflow-hidden"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">

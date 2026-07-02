@@ -41,23 +41,33 @@ export const Modal: React.FC<ModalProps> = ({
       {isOpen && (
         <>
           {/* Backdrop */}
+          {/* Sem backdrop-blur: desfocar a viewport inteira a cada frame do fade
+              derruba FPS em GPU integrada. O véu escuro sozinho dá o mesmo foco. */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-primary-dark/70 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-primary-dark/75 z-[60]"
           />
 
-          {/* Modal */}
+          {/* O wrapper de tela cheia só faz fade (barato); o scale/subida fica
+              no painel pequeno — transformar uma camada do tamanho da viewport
+              a cada frame era a causa do travamento ao abrir. */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 0.15 } }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[70] flex items-center justify-center p-4"
             onClick={onClose}
           >
-            <div
+            <motion.div
+              initial={{ scale: 0.96, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.97, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
+              transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
               className={`bg-white rounded-2xl shadow-lg ${sizeClasses[size]} w-full`}
               onClick={e => e.stopPropagation()}
             >
@@ -78,7 +88,7 @@ export const Modal: React.FC<ModalProps> = ({
               <div className="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
                 {children}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </>
       )}

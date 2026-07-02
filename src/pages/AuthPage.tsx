@@ -120,6 +120,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
       {/* Form panel */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md">
+          {/* No mobile o painel da marca não existe: o Bob recebe aqui. */}
+          <div className="lg:hidden flex justify-center">
+            <Mascot state={isLogin ? 'happy' : 'strong'} size="sm" animate />
+          </div>
           <div className="mb-8 flex justify-center">
             <div className="h-12 flex items-center justify-center overflow-hidden">
               <img

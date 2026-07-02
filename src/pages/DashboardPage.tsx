@@ -9,8 +9,7 @@ import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
 import { XpCard } from '@/components/dashboard/XpCard';
 import { StreakContent } from '@/components/dashboard/StreakCard';
 import { EmptyState } from '@/components/common/EmptyState';
-import { Card } from '@/components/common/Card';
-import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { DashboardSkeleton } from '@/components/common/Skeletons';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { useTasks } from '@/hooks/useTasks';
@@ -78,6 +77,17 @@ const DashboardPage: React.FC = () => {
     return 'Boa noite! 🌙';
   })();
 
+  // Frase do dia da semana: mantém o banner vivo a cada visita.
+  const weekdayPhrase = [
+    'Domingo é de recarregar. Planeje a semana no seu ritmo. 🧘',
+    'Segunda! Semana nova, página em branco. Bora?',
+    'Terça é dia de pegar ritmo. Uma tarefa de cada vez.',
+    'Quarta! Metade do caminho. Você está indo bem.',
+    'Quinta: reta final à vista. Segue firme!',
+    'Sextou! Bora fechar a semana bem? 🎉',
+    'Sábado também conta. No seu ritmo, sem pressa.',
+  ][new Date().getDay()];
+
   // Cena de fundo do banner conforme o horário: dia das 5h às 17h, noite das 17h às 5h.
   const bannerIsDay = (() => {
     const h = new Date().getHours();
@@ -111,7 +121,7 @@ const DashboardPage: React.FC = () => {
         subtitle="Que bom te ver por aqui. Vamos ser produtivos hoje?"
       >
         <PageTour id="dashboard" />
-        {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
+        {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : <>
         {/* Bob greeting banner — cena de fundo muda com o horário (dia/noite) */}
         <div
           className={`mb-6 flex items-center gap-4 rounded-2xl text-white p-5 sm:p-6 relative overflow-hidden bg-gradient-to-br ${
@@ -134,7 +144,7 @@ const DashboardPage: React.FC = () => {
             <p className="text-white/85 text-sm mt-0.5">
               {stats.total === 0
                 ? 'Crie sua primeira tarefa e bora começar.'
-                : 'Pronto para mais um dia produtivo?'}
+                : weekdayPhrase}
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-white text-xs font-bold backdrop-blur-sm">
@@ -212,14 +222,12 @@ const DashboardPage: React.FC = () => {
             {upcomingTasks.length > 0 ? (
               <UpcomingTasks tasks={upcomingTasks} projects={projects} onComplete={completeTask} />
             ) : (
-              <Card className="h-full flex items-center">
-                <EmptyState
-                  mascotState="happy"
-                  title="Tudo em dia!"
-                  description="Você não tem tarefas pendentes. Que tal criar uma nova?"
-                  action={{ label: 'Nova Tarefa', onClick: openNewTask }}
-                />
-              </Card>
+              <EmptyState
+                mascotState="happy"
+                title="Tudo em dia!"
+                description="Você não tem tarefas pendentes. Que tal criar uma nova?"
+                action={{ label: 'Nova Tarefa', onClick: openNewTask }}
+              />
             )}
           </div>
           <div className="lg:col-span-1">

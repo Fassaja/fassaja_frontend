@@ -10,7 +10,7 @@ import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { TaskListSkeleton } from '@/components/common/Skeletons';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
@@ -244,7 +244,7 @@ const TasksPage: React.FC = () => {
         subtitle="Gerencie todas as suas tarefas em um só lugar."
       >
         <PageTour id="tasks" />
-        {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
+        {loading ? (showSkeleton ? <TaskListSkeleton /> : null) : <>
         {/* Barra de seleção em massa OU alternador de visão */}
         {selectionMode ? (
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4 rounded-xl border border-primary-vibrant/30 bg-primary-light px-3 py-2.5">

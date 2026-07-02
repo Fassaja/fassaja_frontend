@@ -11,6 +11,12 @@ body {
   @apply bg-bg-main text-text-primary;
 }
 
+/* Seleção de texto com a cor da marca (em vez do azul padrão do sistema). */
+::selection {
+  background: #cfe1ff;
+  color: #061b49;
+}
+
 /* Foco-visível baseline: controles sem anel próprio ainda mostram foco
    no teclado (acessibilidade). Componentes com anel (Button, Input,
    Textarea) já definem o próprio focus(-visible):outline-none e o ring. */
@@ -42,4 +48,14 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .route-progress { animation: none; opacity: 0; }
+
+  /* Baseline: qualquer animação/transição CSS vira instantânea.
+     As animações via framer-motion já respeitam isso pelo MotionConfig. */
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

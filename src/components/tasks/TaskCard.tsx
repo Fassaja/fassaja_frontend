@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Task, TaskStatus } from '@/types/task';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
+import { CompleteCheck } from '@/components/common/CompleteCheck';
 import { formatDate } from '@/utils/date';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
@@ -116,8 +117,11 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
             className="fixed inset-0 z-[60]"
             onClick={e => { e.stopPropagation(); setOpen(false); }}
           />
-          <div
+          <motion.div
             role="menu"
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.16, ease: [0.25, 1, 0.5, 1] }}
             style={{ position: 'fixed', top: pos.top, left: pos.left, width: MENU_W }}
             className="z-[61] rounded-xl border border-border bg-white shadow-lg overflow-hidden py-1"
             onClick={e => e.stopPropagation()}
@@ -139,7 +143,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
                 </button>
               );
             })}
-          </div>
+          </motion.div>
         </>,
         document.body,
       )}
@@ -219,21 +223,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             {selected && <Check size={13} strokeWidth={3} />}
           </span>
         ) : (
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-              onComplete?.(task.id);
-            }}
-            aria-label={isCompleted ? 'Tarefa concluída' : 'Marcar como concluída'}
-            className={`w-5 h-5 mt-0.5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-              isCompleted
-                ? 'bg-success text-white'
-                : 'border-2 border-border hover:border-primary-vibrant'
-            }`}
-          >
-            {isCompleted && <Check size={13} strokeWidth={3} />}
-          </button>
+          <CompleteCheck
+            completed={isCompleted}
+            onToggle={() => onComplete?.(task.id)}
+            className="mt-0.5"
+          />
         )}
 
         {/* Conteúdo */}

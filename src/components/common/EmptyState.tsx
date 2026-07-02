@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { Card } from './Card';
+import { Button } from './Button';
 
 interface EmptyStateProps {
   mascotState?: MascotState;
@@ -19,7 +20,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }) => {
   return (
-    <Card className="flex flex-col items-center justify-center py-12">
+    <Card className="flex flex-col items-center justify-center py-12 bg-gradient-to-b from-white to-primary-light/30">
       <Mascot state={mascotState} size="lg" animate={true} />
 
       <div className="text-center mt-6 max-w-md">
@@ -34,12 +35,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         )}
 
         {action && (
-          <button
-            onClick={action.onClick}
-            className="inline-flex items-center justify-center px-6 py-2 bg-primary-vibrant text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
-          >
+          <Button onClick={action.onClick} className="px-6">
             {action.label}
-          </button>
+          </Button>
         )}
       </div>
     </Card>

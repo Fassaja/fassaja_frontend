@@ -47,15 +47,13 @@ export const WalkthroughModal: React.FC<WalkthroughModalProps> = ({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
             className="flex flex-col items-center gap-4"
           >
-            <motion.img
+            <img
               src={current.image}
               alt=""
-              className="w-32 h-32 object-contain drop-shadow-lg"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-32 h-32 object-contain drop-shadow-lg animate-bob"
             />
             <h3 className="text-lg font-bold text-text-primary">{current.title}</h3>
             <p className="text-sm text-text-secondary max-w-sm">{current.text}</p>

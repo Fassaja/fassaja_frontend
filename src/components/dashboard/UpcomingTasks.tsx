@@ -1,6 +1,6 @@
 import React from 'react';
-import { Check } from 'lucide-react';
 import { Card } from '@/components/common/Card';
+import { CompleteCheck } from '@/components/common/CompleteCheck';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
 import { formatDate, isToday, isTomorrow } from '@/utils/date';
@@ -38,17 +38,7 @@ export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = 
 
           return (
             <li key={task.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-              <button
-                onClick={() => onComplete?.(task.id)}
-                aria-label={completed ? 'Tarefa concluída' : 'Marcar como concluída'}
-                className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                  completed
-                    ? 'bg-success text-white'
-                    : 'border-2 border-border hover:border-primary-vibrant'
-                }`}
-              >
-                {completed && <Check size={13} strokeWidth={3} />}
-              </button>
+              <CompleteCheck completed={completed} onToggle={() => onComplete?.(task.id)} />
 
               {project && (
                 <span

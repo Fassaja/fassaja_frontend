@@ -10,9 +10,10 @@ import { Task } from '@/types/task';
 import { tasksService } from '@/services/tasksService';
 import { guestTasksStore } from '@/services/guestTasksStore';
 import { useCelebration } from './CelebrationContext';
-import { useUser } from './UserContext';
+import { useUser, computeStreak } from './UserContext';
 import { useAuth } from './AuthContext';
-import { isToday, isOverdue } from '@/utils/date';
+import { isToday, isOverdue, todayISO, toISODate } from '@/utils/date';
+import { detectMilestone } from '@/utils/milestones';
 
 // Deriva "atrasada" no fuso LOCAL do usuário (o backend devolve o status real).
 // Fonte única da verdade: toda tarefa exposta pelo contexto passa por aqui.
@@ -118,7 +119,21 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const goal = user.dailyGoal;
           const justHitGoal =
             goal > 0 && doneTodayBefore < goal && doneTodayBefore + 1 >= goal;
-          if (justHitGoal) {
+
+          // Marcos raros (projeto 100%, 7 dias de sequência, 10 na semana)
+          // têm prioridade sobre a meta diária; senão, comemoração padrão.
+          const nextTasks = tasks.map(t => (t.id === id ? updated : t));
+          const days = new Set<string>(user.productiveDays);
+          nextTasks.forEach(t => {
+            if (t.status === 'completed' && t.completedAt) days.add(toISODate(new Date(t.completedAt)));
+          });
+          days.add(todayISO()); // a conclusão de agora torna hoje produtivo
+          const streak = computeStreak(Array.from(days));
+
+          const milestone = detectMilestone({ tasks: nextTasks, completedTask: updated, streak });
+          if (milestone) {
+            celebrate(milestone, 'goal');
+          } else if (justHitGoal) {
             celebrate('Meta diária batida! 🎯', 'goal');
           } else {
             celebrate();

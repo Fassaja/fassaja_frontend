@@ -4,7 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { Card } from '@/components/common/Card';
 import { Mascot } from '@/components/mascot/Mascot';
-import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { CalendarSkeleton } from '@/components/common/Skeletons';
 import { AgendaMonth } from '@/components/agenda/AgendaMonth';
 import { EventModal } from '@/components/agenda/EventModal';
 import { EventDetailModal } from '@/components/agenda/EventDetailModal';
@@ -79,7 +79,7 @@ const AgendaPage: React.FC = () => {
     >
       <PageTour id="agenda" />
       {loading ? (
-        showSkeleton ? <LoadingScreen /> : null
+        showSkeleton ? <CalendarSkeleton /> : null
       ) : (
         <>
         <AgendaNotificationBanner />

@@ -82,7 +82,7 @@ export const Sidebar: React.FC = () => {
       <aside
         className={`
           fixed left-0 top-0 h-screen w-64 bg-white border-r border-border
-          transform transition-transform duration-300 z-40
+          transform transition-transform duration-300 ease-out-expo z-40
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
         `}
@@ -352,7 +352,7 @@ export const Sidebar: React.FC = () => {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden animate-fade-in"
           onClick={() => setIsOpen(false)}
         />
       )}
