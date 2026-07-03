@@ -12,17 +12,9 @@ import { guestTasksStore } from '@/services/guestTasksStore';
 import { useCelebration } from './CelebrationContext';
 import { useUser, computeStreak } from './UserContext';
 import { useAuth } from './AuthContext';
-import { isToday, isOverdue, todayISO, toISODate } from '@/utils/date';
+import { isToday, todayISO, toISODate } from '@/utils/date';
 import { detectMilestone } from '@/utils/milestones';
-
-// Deriva "atrasada" no fuso LOCAL do usuário (o backend devolve o status real).
-// Fonte única da verdade: toda tarefa exposta pelo contexto passa por aqui.
-function deriveStatus(task: Task): Task {
-  if (task.status !== 'completed' && task.dueDate && isOverdue(task.dueDate)) {
-    return { ...task, status: 'overdue' };
-  }
-  return task;
-}
+import { deriveTaskStatus } from '@/utils/taskStatus';
 
 interface TasksContextValue {
   tasks: Task[];
@@ -45,7 +37,7 @@ export const useTasks = () => useContext(TasksContext);
 export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [rawTasks, setRawTasks] = useState<Task[]>([]);
   // Status "overdue" é calculado aqui (fuso local), não vem pronto do servidor.
-  const tasks = useMemo(() => rawTasks.map(deriveStatus), [rawTasks]);
+  const tasks = useMemo(() => rawTasks.map(deriveTaskStatus), [rawTasks]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { celebrate } = useCelebration();
