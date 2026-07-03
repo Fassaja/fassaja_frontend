@@ -40,7 +40,7 @@ const DashboardPage: React.FC = () => {
         days.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
       }
     });
-    return computeStreak(Array.from(days));
+    return computeStreak(Array.from(days), user.streakDays);
   })();
 
   const openNewTask = () => {

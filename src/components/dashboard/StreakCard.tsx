@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Flame } from 'lucide-react';
+import { Flame, Moon } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { useUser, computeStreak } from '@/contexts/UserContext';
 import { useTasks } from '@/hooks/useTasks';
@@ -21,7 +21,8 @@ export const StreakContent: React.FC = () => {
       activeDays.add(isoOf(new Date(t.completedAt)));
     }
   });
-  const streak = computeStreak(Array.from(activeDays));
+  const streak = computeStreak(Array.from(activeDays), user.streakDays);
+  const streakDays = user.streakDays?.length ? user.streakDays : [0, 1, 2, 3, 4, 5, 6];
   const weekStrip = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -29,6 +30,7 @@ export const StreakContent: React.FC = () => {
       iso: isoOf(d),
       letter: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][d.getDay()],
       active: activeDays.has(isoOf(d)),
+      rest: !streakDays.includes(d.getDay()), // dia de folga: não quebra a sequência
       isToday: i === 6,
     };
   });
@@ -68,13 +70,20 @@ export const StreakContent: React.FC = () => {
             transition={{ duration: 0.35, delay: reduce ? 0 : 0.25 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
           >
             <div
+              title={day.rest && !day.active ? 'Dia de folga — não quebra a sequência' : undefined}
               className={`w-full aspect-square max-w-[44px] rounded-xl flex items-center justify-center transition-colors ${
-                day.active ? 'bg-amber-400 text-white' : 'bg-bg-secondary text-text-soft'
+                day.active
+                  ? 'bg-amber-400 text-white'
+                  : day.rest
+                  ? 'bg-bg-secondary/60 text-text-soft border border-dashed border-border'
+                  : 'bg-bg-secondary text-text-soft'
               } ${day.isToday ? 'ring-2 ring-primary-vibrant ring-offset-2' : ''}`}
             >
-              {day.active ? <Flame size={16} /> : ''}
+              {day.active ? <Flame size={16} /> : day.rest ? <Moon size={14} className="opacity-50" /> : ''}
             </div>
-            <span className="text-[11px] text-text-secondary">{day.letter}</span>
+            <span className={`text-[11px] ${day.rest && !day.active ? 'text-text-soft' : 'text-text-secondary'}`}>
+              {day.letter}
+            </span>
           </motion.div>
         ))}
       </div>

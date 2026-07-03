@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { mockUser } from '@/data/mockUser';
+import { todayISO } from '@/utils/streak';
 
 export interface NotificationPrefs {
   pending: boolean;
@@ -17,6 +18,9 @@ export interface UserProfile {
   weeklyGoal: number;
   notifications: NotificationPrefs;
   productiveDays: string[]; // ISO 'YYYY-MM-DD' com pelo menos uma conclusão
+  // Dias da semana que contam para a sequência (0=domingo … 6=sábado).
+  // Dias fora da lista são "folga": não quebram a sequência se ficarem vazios.
+  streakDays: number[];
 }
 
 interface UserContextValue {
@@ -44,6 +48,7 @@ const defaultUser: UserProfile = {
   weeklyGoal: mockUser.weeklyGoal,
   notifications: { pending: true, deadline: true, daily: true, events: true },
   productiveDays: [],
+  streakDays: [0, 1, 2, 3, 4, 5, 6],
 };
 
 function loadUser(scope: string): UserProfile {
@@ -65,25 +70,9 @@ const UserContext = createContext<UserContextValue>({
 
 export const useUser = () => useContext(UserContext);
 
-function todayISO(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-/** Maior sequência de dias consecutivos terminando hoje (ou ontem, se hoje ainda não teve conclusão). */
-export function computeStreak(days: string[]): number {
-  const set = new Set(days);
-  const cursor = new Date();
-  if (!set.has(todayISO())) cursor.setDate(cursor.getDate() - 1);
-  let streak = 0;
-  while (true) {
-    const iso = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}-${String(cursor.getDate()).padStart(2, '0')}`;
-    if (!set.has(iso)) break;
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
-}
+// Lógica pura da sequência (extraída para src/utils/streak.ts para ser
+// testável em Node); reexportada aqui para manter os imports existentes.
+export { computeStreak } from '@/utils/streak';
 
 /** Iniciais do nome para o avatar fallback. */
 export function initialsOf(name: string): string {

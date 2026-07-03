@@ -22,10 +22,10 @@ export const XpView: React.FC<XpViewProps> = ({ tasks }) => {
     tasks.forEach(t => {
       if (t.status === 'completed' && t.completedAt) activeDays.add(isoOf(new Date(t.completedAt)));
     });
-    const streak = computeStreak(Array.from(activeDays));
+    const streak = computeStreak(Array.from(activeDays), user.streakDays);
     const overdue = tasks.filter(t => t.status === 'overdue').length;
     return { ...base, streak, overdue };
-  }, [tasks, user.productiveDays]);
+  }, [tasks, user.productiveDays, user.streakDays]);
 
   const achievements = [
     {

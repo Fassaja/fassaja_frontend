@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, Plus, RefreshCw } from 'lucide-react';
+import { Search, Bell, Plus, RefreshCw, Flame } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { SearchModal } from './SearchModal';
 import { NotificationsMenu } from './NotificationsMenu';
+import { StreakDaysModal } from './StreakDaysModal';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +26,7 @@ export const Topbar: React.FC<TopbarProps> = ({
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showStreakDays, setShowStreakDays] = useState(false);
   const { items: notifications, unreadCount, markRead, markAllRead, refresh: refreshNotifications } =
     useNotifications();
   const navigate = useNavigate();
@@ -53,9 +55,18 @@ export const Topbar: React.FC<TopbarProps> = ({
     navigate('/profile');
   };
 
+  const openStreakDays = () => {
+    if (isGuest) {
+      requireAuth('Os dias da sequência ficam disponíveis depois que você entra.');
+      return;
+    }
+    setShowStreakDays(true);
+  };
+
   return (
     <div className="fixed top-0 left-0 right-0 min-h-20 bg-white/90 backdrop-blur-sm border-b border-border z-30 lg:left-64">
       <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
+      <StreakDaysModal isOpen={showStreakDays} onClose={() => setShowStreakDays(false)} />
 
       <div className="h-full px-4 lg:px-8 py-4 flex items-center justify-between gap-4">
         {/* Greeting */}
@@ -127,6 +138,16 @@ export const Topbar: React.FC<TopbarProps> = ({
               {actionLabel}
             </Button>
           )}
+
+          <button
+            type="button"
+            aria-label="Editar dias da sequência"
+            title="Editar dias da sequência (folgas não quebram a streak)"
+            onClick={openStreakDays}
+            className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-white text-amber-500 hover:border-amber-300 hover:bg-amber-50 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-100"
+          >
+            <Flame size={20} />
+          </button>
 
           <button
             type="button"

@@ -128,7 +128,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             if (t.status === 'completed' && t.completedAt) days.add(toISODate(new Date(t.completedAt)));
           });
           days.add(todayISO()); // a conclusão de agora torna hoje produtivo
-          const streak = computeStreak(Array.from(days));
+          const streak = computeStreak(Array.from(days), user.streakDays);
 
           const milestone = detectMilestone({ tasks: nextTasks, completedTask: updated, streak });
           if (milestone) {
