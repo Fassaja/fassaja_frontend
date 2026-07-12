@@ -87,7 +87,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             title="Atualizar"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60 disabled:opacity-60"
+            className="hidden sm:flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60 disabled:opacity-60"
           >
             <RefreshCw size={19} className={refreshing ? 'animate-spin' : ''} />
           </button>
