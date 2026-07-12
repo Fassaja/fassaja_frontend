@@ -169,6 +169,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 }) => {
   const { account } = useAuth();
   const { respondAssignment } = useTasks();
+  const toast = useToast();
   const isCompleted = task.status === 'completed';
   const priorityInfo = priorityConfig[task.priority];
   const statusInfo = statusConfig[task.status];
@@ -185,9 +186,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         : { label: `Proposta: ${task.assigneeName}`, className: 'bg-amber-50 text-amber-700', icon: <Send size={11} /> }
       : null;
 
-  const respond = (e: React.MouseEvent, action: 'accept' | 'reject') => {
+  const respond = async (e: React.MouseEvent, action: 'accept' | 'reject') => {
     e.stopPropagation();
-    if (account) respondAssignment(task.id, action);
+    if (!account) return;
+    try {
+      await respondAssignment(task.id, action);
+      toast.success(action === 'accept' ? 'Tarefa aceita.' : 'Tarefa recusada.');
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível responder à proposta.');
+    }
   };
 
   const handleClick = () => {

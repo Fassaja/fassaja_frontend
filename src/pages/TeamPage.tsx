@@ -34,6 +34,7 @@ import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { TeamSettingsModal } from '@/components/team/TeamSettingsModal';
 import { AVATAR_COLORS } from '@/components/team/teamConstants';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
@@ -102,6 +103,7 @@ const TeamStat: React.FC<{
 
 const TeamPage: React.FC = () => {
   const { account } = useAuth();
+  const toast = useToast();
   const userId = account?.id;
   const navigate = useNavigate();
 
@@ -222,6 +224,8 @@ const TeamPage: React.FC = () => {
     try {
       const { token } = await invitesService.createInvite(selectedId);
       setInviteToken(token);
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível gerar o link de convite.');
     } finally {
       setInviteLoading(false);
     }
@@ -237,6 +241,8 @@ const TeamPage: React.FC = () => {
       await invitesService.revokeInvites(selectedId);
       const { token } = await invitesService.createInvite(selectedId);
       setInviteToken(token);
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível gerar um novo link.');
     } finally {
       setInviteLoading(false);
     }
@@ -254,10 +260,15 @@ const TeamPage: React.FC = () => {
 
   const decide = async (id: string, action: 'approve' | 'reject') => {
     if (!userId) return;
-    await invitesService.decide(id, action);
-    await loadRequests();
-    if (selectedId) setMembers(await teamsService.getMembers(selectedId));
-    loadTeams();
+    try {
+      await invitesService.decide(id, action);
+      toast.success(action === 'approve' ? 'Pedido aprovado.' : 'Pedido recusado.');
+      await loadRequests();
+      if (selectedId) setMembers(await teamsService.getMembers(selectedId).catch(() => []));
+      loadTeams();
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível responder ao pedido.');
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {

@@ -180,13 +180,26 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
   const handleDragEnd = async (e: DragEndEvent) => {
     const id = String(e.active.id);
     setActiveId(null);
-    const overId = e.over ? (String(e.over.id) as ColumnKey) : null;
-    if (!overId) return;
 
     const task = filtered.find(t => t.id === id);
     if (!task) return;
+
+    const overId = e.over ? (String(e.over.id) as ColumnKey) : null;
     const from = columnOf(task.status);
-    if (from === overId) return; // soltou na mesma coluna
+
+    // Tarefa atrasada não muda de status arrastando (já está atrasada). Avisa
+    // só quando a pessoa realmente tenta soltá-la em outra coluna; editar segue
+    // liberado normalmente.
+    if (task.status === 'overdue') {
+      if (overId && overId !== from) {
+        toast.info(
+          'Tarefa atrasada não pode ser movida arrastando. Abra a tarefa e edite o status.',
+        );
+      }
+      return;
+    }
+
+    if (!overId || from === overId) return; // fora de uma coluna ou na mesma
 
     const label = COLUMNS.find(c => c.key === overId)?.label ?? '';
     try {
