@@ -14,29 +14,15 @@ import {
   LabelList,
   ResponsiveContainer,
 } from 'recharts';
-import { BarChart3, GitBranch, Sparkles, Spade } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { Card } from '@/components/common/Card';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { ReportsSkeleton } from '@/components/common/Skeletons';
-import { EapView } from '@/components/reports/EapView';
-import { XpView } from '@/components/reports/XpView';
-import { PlanningPokerView } from '@/components/reports/PlanningPokerView';
 import { useTasks } from '@/hooks/useTasks';
-import { useProjects } from '@/hooks/useProjects';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
-
-type ReportView = 'overview' | 'eap' | 'xp' | 'poker';
-
-const VIEWS: { value: ReportView; label: string; icon: React.ReactNode }[] = [
-  { value: 'overview', label: 'Visão geral', icon: <BarChart3 size={16} /> },
-  { value: 'eap', label: 'EAP', icon: <GitBranch size={16} /> },
-  { value: 'xp', label: 'XP', icon: <Sparkles size={16} /> },
-  { value: 'poker', label: 'Planning Poker', icon: <Spade size={16} /> },
-];
 
 // Estilo compartilhado dos gráficos (eixos limpos + tooltip da marca).
 const AXIS_PROPS = { tickLine: false, axisLine: false, tick: { fontSize: 12, fill: '#64748B' } } as const;
@@ -61,11 +47,9 @@ function sameDay(a: Date, b: Date): boolean {
 
 const ReportsPage: React.FC = () => {
   const { tasks, loading } = useTasks();
-  const { projects } = useProjects();
   const showSkeleton = useDeferredLoading(loading);
   const stats = useDashboardStats(tasks);
   const [period, setPeriod] = useState('week');
-  const [view, setView] = useState<ReportView>('overview');
 
   // Resumo com o bob conforme o desempenho geral.
   const getSummary = (): { state: MascotState; title: string; message: string } => {
@@ -181,9 +165,7 @@ const ReportsPage: React.FC = () => {
     <AppLayout title="Relatórios" subtitle="Acompanhe suas estatísticas de produtividade.">
       <PageTour id="reports" />
       {loading ? (showSkeleton ? <ReportsSkeleton /> : null) : <>
-      {/* Resumo com mascote + estatísticas — só na Visão geral */}
-      {view === 'overview' && (
-      <>
+      {/* Resumo com mascote + estatísticas */}
       <Card className="flex flex-col sm:flex-row items-center gap-6 mb-8">
         <Mascot state={summary.state} size="md" animate={true} />
         <div className="text-center sm:text-left">
@@ -212,37 +194,8 @@ const ReportsPage: React.FC = () => {
           <p className="text-sm text-text-secondary">Em Andamento</p>
         </Card>
       </div>
-      </>
-      )}
 
-      {/* Seletor de visões */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1 -mx-1 px-1">
-        {VIEWS.map(v => {
-          const active = view === v.value;
-          return (
-            <button
-              key={v.value}
-              onClick={() => setView(v.value)}
-              aria-pressed={active}
-              className={`shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97] ${
-                active
-                  ? 'border-transparent bg-primary-vibrant text-white shadow-sm'
-                  : 'bg-white border-border text-text-secondary hover:bg-bg-secondary'
-              }`}
-            >
-              {v.icon}
-              {v.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {view === 'eap' && <EapView tasks={tasks} projects={projects} />}
-      {view === 'xp' && <XpView tasks={tasks} />}
-      {view === 'poker' && <PlanningPokerView tasks={tasks} />}
-
-      {view === 'overview' && (
-      stats.total === 0 ? (
+      {stats.total === 0 ? (
         <Card className="flex flex-col items-center text-center py-12 bg-gradient-to-b from-white to-primary-light/30">
           <Mascot state="investigate" size="md" animate />
           <p className="text-text-primary font-bold text-xl mt-4">Seus gráficos nascem aqui</p>
@@ -420,7 +373,6 @@ const ReportsPage: React.FC = () => {
         </div>
       </Card>
       </>
-      )
       )}
       </>}
     </AppLayout>

@@ -34,14 +34,14 @@ import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/', free: true },
+  { icon: Sparkles, label: 'Assistente IA', path: '/ai', free: false },
   { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks', free: true },
   { icon: FolderOpen, label: 'Projetos', path: '/projects', free: false },
   { icon: Calendar, label: 'Calendário', path: '/calendar', free: false },
   { icon: CalendarClock, label: 'Agenda', path: '/agenda', free: false },
   { icon: Flag, label: 'Prioridades', path: '/priorities', free: false },
-  { icon: BarChart3, label: 'Relatórios', path: '/reports', free: false },
   { icon: Users, label: 'Equipe', path: '/team', free: false },
-  { icon: Sparkles, label: 'Assistente IA', path: '/ai', free: false },
+  { icon: BarChart3, label: 'Relatórios', path: '/reports', free: false },
 ];
 
 export const Sidebar: React.FC = () => {

@@ -17,6 +17,7 @@ import { Input } from '@/components/common/Input';
 import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
 import { StreakCard } from '@/components/dashboard/StreakCard';
+import { XpView } from '@/components/reports/XpView';
 import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -246,6 +247,14 @@ const ProfilePage: React.FC = () => {
 
         {/* Sequência produtiva (foguinhos) */}
         <StreakCard />
+
+        {/* Experiência (XP), níveis e conquistas */}
+        <section>
+          <h3 className="text-lg font-bold text-text-primary mb-3 flex items-center gap-2">
+            <Sparkles size={18} className="text-primary-vibrant" /> Experiência e conquistas
+          </h3>
+          <XpView tasks={tasks} />
+        </section>
 
         {/* Editar perfil */}
         <Card>
