@@ -3,7 +3,9 @@ import { Flame, Moon } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { updateStreakDays } from '@/services/authService';
 
 const WEEKDAYS = [
   { value: 0, short: 'Dom', label: 'Domingo' },
@@ -24,8 +26,10 @@ interface StreakDaysModalProps {
 // são "folga": ficar sem concluir tarefas neles não quebra a sequência.
 export const StreakDaysModal: React.FC<StreakDaysModalProps> = ({ isOpen, onClose }) => {
   const { user, updateUser } = useUser();
+  const { isGuest } = useAuth();
   const toast = useToast();
   const [selected, setSelected] = useState<number[]>(user.streakDays ?? [0, 1, 2, 3, 4, 5, 6]);
+  const [saving, setSaving] = useState(false);
 
   // Recarrega a seleção atual sempre que o modal abre.
   useEffect(() => {
@@ -37,14 +41,34 @@ export const StreakDaysModal: React.FC<StreakDaysModalProps> = ({ isOpen, onClos
       prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day].sort((a, b) => a - b),
     );
 
-  const save = () => {
+  const save = async () => {
     if (selected.length === 0) {
       toast.error('Escolha pelo menos um dia para a sequência.');
       return;
     }
+
+    // Visitante não tem sessão: mantém a preferência só no navegador.
+    if (isGuest) {
+      updateUser({ streakDays: selected });
+      toast.success('Dias da sequência atualizados.');
+      onClose();
+      return;
+    }
+
+    // Autenticado: atualização otimista + persistência no servidor.
+    const previous = user.streakDays;
     updateUser({ streakDays: selected });
-    toast.success('Dias da sequência atualizados.');
-    onClose();
+    setSaving(true);
+    try {
+      await updateStreakDays(selected);
+      toast.success('Dias da sequência atualizados.');
+      onClose();
+    } catch (err) {
+      updateUser({ streakDays: previous }); // reverte a UI se o servidor recusar
+      toast.error((err as Error).message || 'Não foi possível salvar. Tente novamente.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -84,10 +108,12 @@ export const StreakDaysModal: React.FC<StreakDaysModalProps> = ({ isOpen, onClos
         </p>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} disabled={saving}>
             Cancelar
           </Button>
-          <Button onClick={save}>Salvar</Button>
+          <Button onClick={save} disabled={saving}>
+            {saving ? 'Salvando…' : 'Salvar'}
+          </Button>
         </div>
       </div>
     </Modal>

@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { mockUser } from '@/data/mockUser';
 import { todayISO } from '@/utils/streak';
+import { recordProductiveDay as apiRecordProductiveDay } from '@/services/authService';
 
 export interface NotificationPrefs {
   pending: boolean;
@@ -104,12 +105,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUser = (patch: Partial<UserProfile>) =>
     setUser(prev => ({ ...prev, ...patch }));
 
-  const recordProductiveDay = () =>
+  // Marca hoje como produtivo (otimista) e persiste no servidor. Guest fica só
+  // local; autenticado grava via API — a rota é idempotente (upsert userId+date),
+  // então repetir no mesmo dia é inofensivo. Falha de rede não trava a UI.
+  const recordProductiveDay = () => {
+    const today = todayISO();
     setUser(prev =>
-      prev.productiveDays.includes(todayISO())
+      prev.productiveDays.includes(today)
         ? prev
-        : { ...prev, productiveDays: [...prev.productiveDays, todayISO()] },
+        : { ...prev, productiveDays: [...prev.productiveDays, today] },
     );
+    if (scope !== 'guest') {
+      apiRecordProductiveDay(today).catch(() => {
+        // best-effort: o dia já está refletido localmente e será reconciliado
+        // na próxima hidratação (GET /auth/productive-days).
+      });
+    }
+  };
 
   return (
     <UserContext.Provider value={{ user, updateUser, recordProductiveDay, setScope }}>

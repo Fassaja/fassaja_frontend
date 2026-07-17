@@ -4,6 +4,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Lock } from 'lucide-react';
 import { useUser } from './UserContext';
 import { api, setAuthenticated, SESSION_EXPIRED_EVENT } from '@/services/api';
+import { getProductiveDays } from '@/services/authService';
 import { guestTasksStore } from '@/services/guestTasksStore';
 import { clearAccountStorage } from '@/utils/accountStorage';
 
@@ -12,6 +13,9 @@ export interface Account {
   name: string;
   email: string;
   avatar?: string | null;
+  // Dias da sequência (0=domingo … 6=sábado). Fonte de verdade é o servidor;
+  // hidratado no login e no /auth/me, espelhado no UserContext.
+  streakDays?: number[];
   nameChangedAt?: string | null;
   passwordChangedAt?: string | null;
 }
@@ -103,7 +107,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const persistSession = (acc: Account) =>
     localStorage.setItem(SESSION_KEY, JSON.stringify(acc));
 
-  // Persiste a conta e espelha nome/email/avatar para o UserContext.
+  // Persiste a conta e espelha nome/email/avatar/streakDays para o UserContext.
+  // streakDays vem do servidor (fonte de verdade) e só é aplicado quando presente,
+  // para não sobrescrever o valor local com um response que o omita.
   const syncAccount = (acc: Account) => {
     persistSession(acc);
     setAccount(acc);
@@ -112,7 +118,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: acc.email,
       role: 'Membro',
       avatar: acc.avatar ?? undefined,
+      ...(Array.isArray(acc.streakDays) && acc.streakDays.length > 0
+        ? { streakDays: acc.streakDays }
+        : {}),
     });
+  };
+
+  // Busca os dias produtivos no servidor (fonte de verdade, sobrevive à faxina
+  // de tarefas) e injeta no UserContext. Best-effort: em falha, o cache local
+  // do localStorage segue valendo até a próxima hidratação.
+  const hydrateProductiveDays = () => {
+    getProductiveDays()
+      .then(days => updateUser({ productiveDays: days }))
+      .catch(() => undefined);
   };
 
   const adopt = (acc: Account) => {
@@ -121,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     guestTasksStore.clear();
     setScope(acc.id); // carrega metas/preferências/sequência desta conta
     syncAccount(acc);
+    hydrateProductiveDays();
   };
 
   // Ao montar logado, atualiza os dados a partir do banco (avatar, cooldowns).
@@ -132,7 +151,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setScope(account.id); // recarga já logado: carrega os dados desta conta
       api
         .get<Account>('/auth/me')
-        .then(syncAccount)
+        .then(acc => {
+          syncAccount(acc);
+          hydrateProductiveDays();
+        })
         .catch((err: Error & { status?: number }) => {
           if (err.status === 401) window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
         });
