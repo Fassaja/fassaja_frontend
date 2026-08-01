@@ -1,13 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Target, Check, ChevronRight, PlayCircle, RotateCcw, ShieldCheck } from 'lucide-react';
+import {
+  Bell,
+  Target,
+  Check,
+  ChevronRight,
+  PlayCircle,
+  RotateCcw,
+  ShieldCheck,
+  Trash2,
+  AlertTriangle,
+} from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Input } from '@/components/common/Input';
+import { PasswordInput } from '@/components/common/PasswordInput';
+import { Button } from '@/components/common/Button';
+import { Modal } from '@/components/common/Modal';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { OPEN_TOUR_EVENT } from '@/components/layout/PlatformTourModal';
 import { PAGE_TOURS } from '@/components/onboarding/PageTour';
 import { useUser, NotificationPrefs } from '@/contexts/UserContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { deleteAccount } from '@/services/authService';
 
 const SectionHeader: React.FC<{
   icon: React.ReactNode;
@@ -84,6 +100,48 @@ const SettingsPage: React.FC = () => {
   const { user, updateUser } = useUser();
   const toast = useToast();
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  // Exclusão de conta (LGPD) em duas etapas: primeiro o aviso "tem certeza?",
+  // só depois o formulário com senha. Uma ação irreversível não pode acontecer
+  // a um clique de distância.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showDeleteForm, setShowDeleteForm] = useState(false);
+  const [delPassword, setDelPassword] = useState('');
+  const [delConfirm, setDelConfirm] = useState('');
+  const [delLoading, setDelLoading] = useState(false);
+  const [delError, setDelError] = useState('');
+
+  const closeDeleteForm = () => {
+    setShowDeleteForm(false);
+    setDelPassword('');
+    setDelConfirm('');
+    setDelError('');
+  };
+
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (delConfirm.trim().toUpperCase() !== 'EXCLUIR') {
+      setDelError('Digite EXCLUIR para confirmar.');
+      return;
+    }
+    if (!delPassword) {
+      setDelError('Informe sua senha.');
+      return;
+    }
+    setDelError('');
+    setDelLoading(true);
+    try {
+      await deleteAccount(delPassword);
+      // A conta não existe mais: logout() limpa a PII espelhada no navegador e
+      // leva ao /login. A chamada a /auth/logout que ele dispara falha em
+      // silêncio (é best-effort e não derruba nada).
+      logout();
+    } catch (err) {
+      setDelError((err as Error).message || 'Não foi possível excluir a conta.');
+      setDelLoading(false);
+    }
+  };
 
   // Rascunho local das metas: o valor só é salvo ao sair do campo (blur),
   // para "15" não gravar "1" e depois "15" enquanto a pessoa digita.
@@ -241,15 +299,99 @@ const SettingsPage: React.FC = () => {
             title="Conta e segurança"
             subtitle="Nome, foto e senha ficam no seu Perfil."
           />
-          <ActionRow
-            icon={<ShieldCheck size={18} />}
-            iconClass="bg-rose-50 text-danger"
-            title="Ir para o Perfil"
-            description="Alterar nome, foto de perfil e senha"
-            onClick={() => navigate('/profile')}
-          />
+          <div className="flex flex-col gap-3">
+            <ActionRow
+              icon={<ShieldCheck size={18} />}
+              iconClass="bg-rose-50 text-danger"
+              title="Ir para o Perfil"
+              description="Alterar nome, foto de perfil e senha"
+              onClick={() => navigate('/profile')}
+            />
+            <ActionRow
+              icon={<Trash2 size={18} />}
+              iconClass="bg-rose-50 text-danger"
+              title="Excluir minha conta"
+              description="Apaga sua conta e seus dados pessoais definitivamente"
+              onClick={() => setConfirmDelete(true)}
+            />
+          </div>
         </Card>
       </div>
+
+      {/* Etapa 1 — o aviso. Explica o que some, o que fica, e que não tem volta. */}
+      <ConfirmDialog
+        isOpen={confirmDelete}
+        title="Tem certeza?"
+        message="Excluir a conta apaga seus dados pessoais para sempre. Não há como desfazer nem recuperar depois."
+        hint={
+          <>
+            <strong className="block text-text-primary mb-1">O que será apagado</strong>
+            Seu perfil, projetos individuais, tarefas, etiquetas, eventos e sua sequência.
+            <strong className="block text-text-primary mt-3 mb-1">O que continua</strong>
+            O que você criou em equipes fica com a equipe, para não apagar o trabalho de outras
+            pessoas. Equipes das quais você é dono passam para o membro mais antigo — e, se você for
+            o único integrante, a equipe é excluída junto.
+          </>
+        }
+        confirmLabel="Sim, quero excluir"
+        cancelLabel="Cancelar"
+        tone="danger"
+        mascotState="sad"
+        onConfirm={() => setShowDeleteForm(true)}
+        onClose={() => setConfirmDelete(false)}
+      />
+
+      {/* Etapa 2 — a confirmação de verdade: senha + digitar EXCLUIR. */}
+      <Modal isOpen={showDeleteForm} onClose={closeDeleteForm} title="Excluir minha conta" size="md">
+        <form onSubmit={handleDeleteAccount} className="flex flex-col gap-4">
+          <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+            <span>Último passo. Depois disso não há como recuperar a conta.</span>
+          </div>
+
+          <PasswordInput
+            label="Sua senha"
+            placeholder="••••••••"
+            value={delPassword}
+            onChange={e => {
+              setDelPassword(e.target.value);
+              if (delError) setDelError('');
+            }}
+            autoFocus
+          />
+
+          <Input
+            label="Digite EXCLUIR para confirmar"
+            placeholder="EXCLUIR"
+            value={delConfirm}
+            onChange={e => {
+              setDelConfirm(e.target.value);
+              if (delError) setDelError('');
+            }}
+          />
+
+          {delError && <p className="text-sm text-danger">{delError}</p>}
+
+          <div className="flex gap-3 pt-1">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1 rounded-xl"
+              onClick={closeDeleteForm}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="danger"
+              className="flex-1 rounded-xl"
+              isLoading={delLoading}
+            >
+              Excluir para sempre
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </AppLayout>
   );
 };

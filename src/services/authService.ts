@@ -12,6 +12,14 @@ export interface PublicUser {
 }
 
 /**
+ * Exclui a conta e os dados pessoais (LGPD). Irreversível — o servidor exige a
+ * senha de novo, mesmo já havendo sessão. Projetos solo e tarefas pessoais são
+ * apagados; o conteúdo de equipe permanece com a equipe.
+ */
+export const deleteAccount = (password: string) =>
+  api.delete<void>('/auth/account', { password });
+
+/**
  * Passo 1 do "esqueci minha senha": pede o e-mail com o link de redefinição.
  * A resposta é sempre a mesma, exista ou não a conta (não vaza cadastros).
  */
