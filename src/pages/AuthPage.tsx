@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, MailCheck, CheckSquare, CalendarDays, BarChart3, Sparkles } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { isInternalPath } from '@/utils/url';
@@ -214,9 +215,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               onChange={e => set('email', e.target.value)}
               autoFocus={isLogin}
             />
-            <Input
+            <PasswordInput
               label="Senha"
-              type="password"
               placeholder="••••••••"
               value={form.password}
               onChange={e => set('password', e.target.value)}
@@ -225,6 +225,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               <p className="text-xs text-text-secondary -mt-2">
                 Use ao menos 8 caracteres, com letra e número.
               </p>
+            )}
+
+            {isLogin && (
+              <div className="-mt-2 text-right">
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-sm font-semibold text-primary-vibrant hover:text-primary-hover"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
             )}
 
             {error && <p className="text-sm text-danger">{error}</p>}

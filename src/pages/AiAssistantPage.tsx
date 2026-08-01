@@ -53,6 +53,7 @@ interface ProjectDraft {
   color: string;
   cards: DraftCard[];
   generatedBy: 'ai' | 'demo';
+  demoReason?: 'no-key' | 'ai-error';
   teamId: string; // '' = projeto individual (sem equipe) — só p/ projeto novo
   targetProjectId: string; // '' = criar novo; senão, adicionar a este projeto
 }
@@ -249,6 +250,7 @@ const AiAssistantPage: React.FC = () => {
         description: result.description,
         color: result.color,
         generatedBy: result.generatedBy,
+        demoReason: result.demoReason,
         teamId: '',
         targetProjectId: '',
         // No modo melhoria, os cards começam vazios — a pessoa adiciona as sugestões.
@@ -608,6 +610,19 @@ const AiAssistantPage: React.FC = () => {
               >
                 {/* Cabeçalho do projeto proposto */}
                 <Card className="flex flex-col gap-3">
+                  {/* A IA falhou: o rascunho é genérico, MAS o uso não foi
+                      cobrado — deixamos isso explícito para a pessoa não achar
+                      que gastou uma das 5 gerações da semana à toa. */}
+                  {draft.generatedBy === 'demo' && draft.demoReason === 'ai-error' && (
+                    <div className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+                      <Info size={16} className="mt-0.5 shrink-0" />
+                      <span>
+                        <strong>A IA não respondeu desta vez.</strong> Montamos um rascunho
+                        genérico para você não perder o trabalho. Este uso <strong>não</strong> foi
+                        descontado — pode clicar em "Gerar de novo".
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     {draft.generatedBy === 'ai' ? (
                       <Badge variant="purple">✨ Feito com IA</Badge>

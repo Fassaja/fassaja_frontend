@@ -1,0 +1,48 @@
+name: CI
+
+# Integração contínua do front-end: checagem de tipos, build e testes de unidade.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Menor privilégio: o job só lê o repositório.
+permissions:
+  contents: read
+
+# Cancela execuções antigas do mesmo ref quando um novo push chega.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `npm run build` já roda o tsc, mas separar dá um erro mais direto
+      # quando o problema é de tipos e não de bundling.
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      # Suítes puras (datas, recorrência, streak, permissões de equipe…),
+      # rodadas pelo próprio Node via --experimental-strip-types.
+      - name: Unit tests
+        run: npm test

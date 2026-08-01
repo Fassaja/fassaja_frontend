@@ -17,6 +17,12 @@ export interface DraftResponse {
   cards: DraftCardPayload[];
   /** 'ai' = veio do Claude; 'demo' = rascunho fake. */
   generatedBy: 'ai' | 'demo';
+  /**
+   * Por que caiu no rascunho fake (só quando generatedBy === 'demo').
+   * 'no-key'   = a IA não está configurada neste ambiente;
+   * 'ai-error' = a chamada falhou — o uso não foi cobrado, dá pra tentar de novo.
+   */
+  demoReason?: 'no-key' | 'ai-error';
 }
 
 /** Um card no momento de criar (pode ter data e responsável). */

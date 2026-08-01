@@ -23,7 +23,8 @@ export const SESSION_EXPIRED_EVENT = 'fassaja:session-expired';
 // Endpoints de "entrada" de auth: um 401 aqui é credencial inválida ou ausência
 // de sessão — não expiração. As demais rotas /auth/* (password/profile/avatar)
 // são autenticadas, então um 401 nelas DEVE encerrar a sessão.
-const AUTH_ENTRY_RE = /^\/auth\/(login|register|resend-verification|verify|logout|me)\b/;
+const AUTH_ENTRY_RE =
+  /^\/auth\/(login|register|resend-verification|verify|logout|me|forgot-password|reset-password)\b/;
 
 interface RequestOptions {
   method?: string;

@@ -12,6 +12,20 @@ export interface PublicUser {
 }
 
 /**
+ * Passo 1 do "esqueci minha senha": pede o e-mail com o link de redefinição.
+ * A resposta é sempre a mesma, exista ou não a conta (não vaza cadastros).
+ */
+export const forgotPassword = (email: string) =>
+  api.post<{ message: string }>('/auth/forgot-password', { email });
+
+/**
+ * Passo 2: troca a senha usando o token do e-mail. Não faz login — o servidor
+ * encerra todas as sessões, então o usuário entra de novo com a senha nova.
+ */
+export const resetPassword = (token: string, password: string) =>
+  api.post<{ message: string }>('/auth/reset-password', { token, password });
+
+/**
  * Persiste os dias da sequência (0=domingo … 6=sábado) no servidor.
  * O backend ordena o array antes de salvar e devolve o PublicUser atualizado.
  */

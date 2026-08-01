@@ -13,6 +13,7 @@ import SettingsPage from '@/pages/SettingsPage';
 import AiAssistantPage from '@/pages/AiAssistantPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import AuthPage from '@/pages/AuthPage';
+import PasswordResetPage from '@/pages/PasswordResetPage';
 import JoinPage from '@/pages/JoinPage';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -27,6 +28,8 @@ export const AppRoutes: React.FC = () => {
       {/* Públicas (visitante) */}
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
+      <Route path="/forgot-password" element={<PasswordResetPage mode="request" />} />
+      <Route path="/reset-password" element={<PasswordResetPage mode="reset" />} />
       <Route path="/join/:token" element={<JoinPage />} />
       <Route path="/" element={<DashboardPage />} />
       <Route path="/tasks" element={<TasksPage />} />

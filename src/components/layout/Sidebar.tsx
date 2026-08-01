@@ -311,20 +311,6 @@ export const Sidebar: React.FC = () => {
                   <span className="block text-xs text-text-secondary">fassajasuporte@gmail.com</span>
                 </span>
               </a>
-              <a
-                href="https://wa.me/5500000000000"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-bg-secondary transition-colors"
-              >
-                <span className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <MessageCircle size={18} />
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-text-primary">Chat de suporte</span>
-                  <span className="block text-xs text-text-secondary">Resposta em até 1 dia útil</span>
-                </span>
-              </a>
             </div>
           </Modal>
 
