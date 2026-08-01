@@ -16,6 +16,7 @@ import { REMINDER_OPTIONS, reminderTriggerDate } from '@/utils/eventReminders';
 import {
   WEEKDAY_OPTIONS,
   REPEAT_OPTIONS,
+  DEFAULT_REPEAT_VALUE,
   expandWeekdayDates,
 } from '@/utils/eventRecurrence';
 import { pushService, pushSupported } from '@/services/pushService';
@@ -67,7 +68,7 @@ export const EventModal: React.FC<EventModalProps> = ({
   // Recorrência semanal (apenas na criação): dias da semana escolhidos e por
   // quanto tempo repetir. Vazio => evento único na data escolhida.
   const [weekdays, setWeekdays] = useState<number[]>([]);
-  const [repeatWeeks, setRepeatWeeks] = useState(REPEAT_OPTIONS[2].value); // 3 meses
+  const [repeatWeeks, setRepeatWeeks] = useState(DEFAULT_REPEAT_VALUE);
 
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -100,7 +101,7 @@ export const EventModal: React.FC<EventModalProps> = ({
       );
       // Edição mexe num único evento; a recorrência só aparece na criação.
       setWeekdays([]);
-      setRepeatWeeks(REPEAT_OPTIONS[2].value);
+      setRepeatWeeks(DEFAULT_REPEAT_VALUE);
     } else {
       setTitle('');
       setDate(defaultDate ?? '');
@@ -114,7 +115,7 @@ export const EventModal: React.FC<EventModalProps> = ({
       setTaskId('');
       setReminder('');
       setWeekdays([]);
-      setRepeatWeeks(REPEAT_OPTIONS[2].value);
+      setRepeatWeeks(DEFAULT_REPEAT_VALUE);
     }
   }, [isOpen, event, defaultDate]);
 

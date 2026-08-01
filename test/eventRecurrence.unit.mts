@@ -2,7 +2,12 @@
  * Testes unitários da recorrência semanal da Agenda (sem navegador).
  * Usa o type-stripping nativo do Node (>= 22). Rodar: npm run test
  */
-import { expandWeekdayDates, MAX_RECURRENCE_DATES } from '../src/utils/eventRecurrence.ts';
+import {
+  expandWeekdayDates,
+  MAX_RECURRENCE_DATES,
+  REPEAT_OPTIONS,
+  DEFAULT_REPEAT_VALUE,
+} from '../src/utils/eventRecurrence.ts';
 
 let passed = 0;
 let failed = 0;
@@ -52,6 +57,17 @@ check(
   'data inválida => apenas a entrada',
   JSON.stringify(expandWeekdayDates('', [1, 3], 4)) === JSON.stringify(['']),
 );
+
+// Opções de duração: das mais curtas (semanas) até 1 ano, e o padrão é a menor.
+check(
+  'opções de repetição na ordem esperada',
+  JSON.stringify(REPEAT_OPTIONS.map(o => o.weeks)) === JSON.stringify([1, 2, 3, 4, 12, 26, 52]),
+);
+check(
+  'value bate com weeks em toda opção',
+  REPEAT_OPTIONS.every(o => o.value === String(o.weeks)),
+);
+check('padrão é o horizonte mais curto', DEFAULT_REPEAT_VALUE === '1');
 
 console.log(`\n${passed} passou, ${failed} falhou.`);
 if (failed > 0) process.exitCode = 1;

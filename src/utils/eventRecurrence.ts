@@ -34,12 +34,18 @@ export interface RepeatOption {
 }
 
 export const REPEAT_OPTIONS: RepeatOption[] = [
+  { value: '1', label: 'Por 1 semana', weeks: 1 },
+  { value: '2', label: 'Por 2 semanas', weeks: 2 },
+  { value: '3', label: 'Por 3 semanas', weeks: 3 },
   { value: '4', label: 'Por 1 mês', weeks: 4 },
-  { value: '8', label: 'Por 2 meses', weeks: 8 },
   { value: '12', label: 'Por 3 meses', weeks: 12 },
   { value: '26', label: 'Por 6 meses', weeks: 26 },
   { value: '52', label: 'Por 1 ano', weeks: 52 },
 ];
+
+// Padrão do seletor: horizonte curto, para ninguém sair repetindo por meses sem
+// perceber. Quem quiser mais tempo escolhe na lista.
+export const DEFAULT_REPEAT_VALUE = REPEAT_OPTIONS[0].value; // 1 semana
 
 // Trava de segurança: nunca gerar uma enxurrada de eventos numa única ação.
 export const MAX_RECURRENCE_DATES = 366;
