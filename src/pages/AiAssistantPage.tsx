@@ -389,9 +389,12 @@ const AiAssistantPage: React.FC = () => {
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <Sparkles size={18} className="text-primary-vibrant" />
-              <h2 className="text-lg font-bold text-text-primary">
+            {/* items-start + mt: no mobile o título quebra em duas linhas e, com
+                items-center, o ícone ficava flutuando no meio do bloco em vez de
+                acompanhar a primeira linha. shrink-0 impede que o flex o achate. */}
+            <div className="flex items-start gap-2">
+              <Sparkles size={18} className="mt-0.5 shrink-0 text-primary-vibrant" />
+              <h2 className="text-base sm:text-lg font-bold text-text-primary">
                 Transforme documentos em projetos
               </h2>
             </div>
@@ -404,6 +407,11 @@ const AiAssistantPage: React.FC = () => {
             size="sm"
             icon={<HelpCircle size={16} />}
             onClick={() => setShowHowTo(true)}
+            // No mobile só sobra o ícone: sem estes atributos o botão não tem
+            // nome acessível (leitor de tela anuncia apenas "botão") e ninguém
+            // adivinha o que um "?" solto faz.
+            aria-label="Como usar o Assistente de IA"
+            title="Como usar · ~1 min"
             className="shrink-0"
           >
             <span className="hidden sm:inline">Como usar</span>
@@ -463,9 +471,11 @@ const AiAssistantPage: React.FC = () => {
           </p>
 
           <div className="flex items-center justify-between gap-2 text-text-primary">
-            <div className="flex items-center gap-2">
-              <FileText size={20} className="text-primary-vibrant" />
-              <h2 className="font-semibold">Documento de referência</h2>
+            {/* min-w-0 + truncate: sem isso o título empurra o botão "Importar
+                arquivo" para fora da tela em celulares estreitos. */}
+            <div className="flex min-w-0 items-center gap-2">
+              <FileText size={20} className="shrink-0 text-primary-vibrant" />
+              <h2 className="truncate font-semibold">Documento de referência</h2>
             </div>
             <Button
               variant="secondary"
@@ -474,6 +484,7 @@ const AiAssistantPage: React.FC = () => {
               onClick={handlePickFile}
               isLoading={extracting}
               disabled={extracting}
+              className="shrink-0 whitespace-nowrap"
             >
               {extracting ? 'Lendo arquivo...' : 'Importar arquivo'}
             </Button>
@@ -509,6 +520,11 @@ const AiAssistantPage: React.FC = () => {
             label="Documento (PDF, Word .docx, .txt ou .md)"
             placeholder="Cole, importe ou arraste seu documento aqui."
             rows={10}
+            // No celular 10 linhas comem metade da tela. A altura é calculada
+            // para caber 6 linhas EXATAS: 6 × line-height (leading-6 = 1.5rem)
+            // + 22px de padding e borda. Número redondo de linhas é o que evita
+            // a última aparecer cortada ao meio. Em sm+ volta a valer o rows.
+            className="h-[calc(6*1.5rem_+_22px)] sm:h-auto"
             value={documentText}
             onChange={(e) => setDocumentText(e.target.value)}
             error={importError ?? undefined}
@@ -631,7 +647,9 @@ const AiAssistantPage: React.FC = () => {
                       </span>
                     </div>
                   )}
-                  <div className="flex items-center justify-between">
+                  {/* flex-wrap: em tela estreita "Demonstração (genérico)" +
+                      "Gerar de novo" + "Descartar" não cabem numa linha só. */}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     {draft.generatedBy === 'ai' ? (
                       <Badge variant="purple">✨ Feito com IA</Badge>
                     ) : (
@@ -680,13 +698,15 @@ const AiAssistantPage: React.FC = () => {
                         onChange={(e) => setDraft({ ...draft, description: e.target.value })}
                       />
 
-                      <div className="flex items-center gap-2">
+                      {/* flex-wrap + shrink-0: sem isso, em tela estreita o flex
+                          achata os círculos e eles viram elipses. */}
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium text-text-primary">Cor:</span>
                         {PALETTE.map((c) => (
                           <button
                             key={c}
                             onClick={() => setDraft({ ...draft, color: c })}
-                            className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                            className={`w-6 h-6 shrink-0 rounded-full border-2 transition-transform ${
                               draft.color === c ? 'border-text-primary scale-110' : 'border-transparent'
                             }`}
                             style={{ backgroundColor: c }}
