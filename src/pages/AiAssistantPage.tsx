@@ -442,9 +442,13 @@ const AiAssistantPage: React.FC = () => {
             </div>
           )}
 
-          {/* Entrada em 2 colunas (em telas largas): documento | comando */}
+          {/* Entrada em 2 colunas (em telas largas): documento | comando.
+              min-w-0 nas colunas é obrigatório: item de grid tem min-width:auto
+              e NÃO encolhe abaixo da largura mínima do conteúdo. Sem isso, um
+              botão ou título que não quebra empurra a coluna para além do card
+              e o layout inteiro vaza para fora da tela no celular. */}
           <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <div className="flex flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
           {/* Modo: estruturar projeto x analisar melhorias */}
           <div className="grid grid-cols-2 gap-2">
             {([
@@ -470,9 +474,10 @@ const AiAssistantPage: React.FC = () => {
               : 'A IA analisa o documento e sugere tarefas de melhoria.'}
           </p>
 
-          <div className="flex items-center justify-between gap-2 text-text-primary">
-            {/* min-w-0 + truncate: sem isso o título empurra o botão "Importar
-                arquivo" para fora da tela em celulares estreitos. */}
+          {/* flex-wrap: no celular "Documento de referência" + "Importar
+              arquivo" não cabem em 280px. Em vez de forçar tudo numa linha (e
+              vazar do card), o botão desce para a linha de baixo. */}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-text-primary">
             <div className="flex min-w-0 items-center gap-2">
               <FileText size={20} className="shrink-0 text-primary-vibrant" />
               <h2 className="truncate font-semibold">Documento de referência</h2>
@@ -538,7 +543,7 @@ const AiAssistantPage: React.FC = () => {
           </div>
 
           {/* Célula direita: comando + ação */}
-          <div className="flex flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
           <Textarea
             label="O que você quer? (comando)"
             placeholder='Ex.: "Crie um projeto para este cliente com os cards de cada etapa."'
