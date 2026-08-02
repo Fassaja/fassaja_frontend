@@ -21,6 +21,7 @@ import {
   Calendar,
   ListChecks,
   ArrowRight,
+  LogOut,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -30,11 +31,14 @@ import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { TeamSettingsModal } from '@/components/team/TeamSettingsModal';
 import { AVATAR_COLORS } from '@/components/team/teamConstants';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useTasks } from '@/hooks/useTasks';
+import { useProjects } from '@/hooks/useProjects';
 import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
@@ -104,6 +108,8 @@ const TeamStat: React.FC<{
 const TeamPage: React.FC = () => {
   const { account } = useAuth();
   const toast = useToast();
+  const { refresh: refreshTasks } = useTasks();
+  const { refresh: refreshProjects } = useProjects();
   const userId = account?.id;
   const navigate = useNavigate();
 
@@ -118,6 +124,8 @@ const TeamPage: React.FC = () => {
   const [createError, setCreateError] = useState('');
 
   const [showSettings, setShowSettings] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const [requests, setRequests] = useState<PendingRequest[]>([]);
   const [showInvite, setShowInvite] = useState(false);
@@ -191,8 +199,32 @@ const TeamPage: React.FC = () => {
 
   const handleTeamDeleted = useCallback(async () => {
     setShowSettings(false);
-    await loadTeams();
-  }, [loadTeams]);
+    // Excluir a equipe apaga também os projetos e as tarefas dela. Sem estes
+    // refreshes, "Projetos" e "Minhas Tarefas" continuariam exibindo itens que
+    // não existem mais no servidor.
+    await Promise.all([loadTeams(), refreshTasks(), refreshProjects()]);
+  }, [loadTeams, refreshTasks, refreshProjects]);
+
+  const handleLeaveTeam = useCallback(async () => {
+    if (!selectedId || leaving) return;
+    setLeaving(true);
+    try {
+      await teamsService.leaveTeam(selectedId);
+      toast.success('Você saiu da equipe.');
+      // Zera a seleção: a equipe não está mais na lista, e loadTeams escolhe
+      // a primeira que sobrou (ou mostra o estado vazio).
+      setSelectedId(null);
+      // "Minhas Tarefas" inclui as tarefas das equipes do usuário (findAll no
+      // back). Sem este refresh, as tarefas da equipe que ele acabou de deixar
+      // continuariam na lista até a próxima atualização — e dariam erro ao
+      // serem abertas, porque o acesso já foi revogado.
+      await Promise.all([loadTeams(), refreshTasks()]);
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível sair da equipe.');
+    } finally {
+      setLeaving(false);
+    }
+  }, [selectedId, leaving, loadTeams, refreshTasks, toast]);
 
   const loadRequests = useCallback(async () => {
     if (!selectedId || !isOwner || !userId) {
@@ -466,6 +498,21 @@ const TeamPage: React.FC = () => {
                       className="flex-1 rounded-xl sm:flex-none"
                     >
                       Gerenciar
+                    </Button>
+                  </div>
+                )}
+                {/* Quem não é dono precisa de uma saída: antes, só o dono podia
+                    remover alguém — quem entrava ficava preso na equipe. */}
+                {!isOwner && (
+                  <div className="shrink-0">
+                    <Button
+                      onClick={() => setConfirmLeave(true)}
+                      variant="secondary"
+                      size="sm"
+                      icon={<LogOut size={16} />}
+                      className="w-full rounded-xl sm:w-auto"
+                    >
+                      Sair da equipe
                     </Button>
                   </div>
                 )}
@@ -815,6 +862,27 @@ const TeamPage: React.FC = () => {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmLeave}
+        title="Sair da equipe?"
+        message={`Você deixará de fazer parte de "${selectedTeam?.name ?? ''}" e perderá acesso aos projetos e tarefas dela.`}
+        hint={
+          <>
+            O que você criou na equipe continua lá, para não apagar o trabalho do time. Tarefas
+            atribuídas a você ficam sem responsável.
+            <span className="block mt-2">
+              Para voltar, será preciso um novo convite do dono da equipe.
+            </span>
+          </>
+        }
+        confirmLabel="Sair da equipe"
+        cancelLabel="Cancelar"
+        tone="danger"
+        icon={<LogOut size={22} />}
+        onConfirm={handleLeaveTeam}
+        onClose={() => setConfirmLeave(false)}
+      />
     </AppLayout>
   );
 };

@@ -70,6 +70,10 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
   // --- Membros ---
   const [busyMember, setBusyMember] = useState<string | null>(null);
   const [removing, setRemoving] = useState<TeamMember | null>(null);
+  const [transferring, setTransferring] = useState<TeamMember | null>(null);
+
+  // Quanto trabalho a exclusão levaria junto — o aviso precisa ser concreto.
+  const totalTasks = projects.reduce((sum, p) => sum + p.taskCount, 0);
 
   // --- Tarefas ---
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -166,6 +170,25 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
       onChanged();
     } catch (err) {
       toast.error((err as Error).message || 'Não foi possível atualizar a permissão.');
+    } finally {
+      setBusyMember(null);
+    }
+  };
+
+  const confirmTransfer = async () => {
+    if (!transferring) return;
+    const target = transferring;
+    setTransferring(null);
+    setBusyMember(target.userId);
+    try {
+      await teamsService.transferOwnership(team.id, target.userId);
+      toast.success(`${target.name} agora é dono da equipe.`);
+      // Quem chamou deixa de ser dono: recarrega para a tela refletir isso
+      // (o modal de configurações é do dono) e fecha.
+      onChanged();
+      onClose();
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível transferir a posse.');
     } finally {
       setBusyMember(null);
     }
@@ -288,8 +311,9 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
               <AlertTriangle size={16} className="text-danger" /> Zona de perigo
             </p>
             <p className="text-xs text-text-secondary mt-1 mb-3">
-              Excluir a equipe remove os membros, o histórico do chat e os convites. Os projetos
-              ficam sem equipe, mas não são apagados. Esta ação não pode ser desfeita.
+              Excluir a equipe apaga também <strong>os projetos e as tarefas dela</strong>, para
+              todo mundo. Se você só quer deixar a equipe, transfira a posse na aba Membros e depois
+              saia — assim o trabalho continua com o time. Esta ação não pode ser desfeita.
             </p>
             <Button
               variant="danger"
@@ -379,15 +403,26 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                   )}
                 </div>
                 {!isOwner && (
-                  <button
-                    onClick={() => setRemoving(m)}
-                    disabled={busy}
-                    aria-label="Remover membro"
-                    title="Remover da equipe"
-                    className="p-2 rounded-lg text-danger hover:bg-rose-50 transition-colors disabled:opacity-50 shrink-0"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => setTransferring(m)}
+                      disabled={busy}
+                      aria-label={`Tornar ${m.name} dono da equipe`}
+                      title="Tornar dono da equipe"
+                      className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                    >
+                      <Crown size={16} />
+                    </button>
+                    <button
+                      onClick={() => setRemoving(m)}
+                      disabled={busy}
+                      aria-label="Remover membro"
+                      title="Remover da equipe"
+                      className="p-2 rounded-lg text-danger hover:bg-rose-50 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 )}
               </div>
             );
@@ -461,9 +496,34 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
       )}
 
       <ConfirmDialog
+        isOpen={!!transferring}
+        title="Tornar dono da equipe?"
+        message={`${transferring?.name ?? ''} passa a ser o dono de "${team.name}".`}
+        hint={
+          <>
+            Você vira membro comum e perde a administração da equipe — não poderá mais convidar,
+            remover pessoas nem excluir a equipe. Continua como gerente de tarefas.
+            <span className="block mt-2">Só o novo dono poderá devolver a posse.</span>
+          </>
+        }
+        confirmLabel="Transferir posse"
+        cancelLabel="Cancelar"
+        tone="danger"
+        icon={<Crown size={22} />}
+        onConfirm={confirmTransfer}
+        onClose={() => setTransferring(null)}
+      />
+
+      <ConfirmDialog
         isOpen={!!removing}
         title="Remover membro?"
-        message={`${removing?.name ?? ''} deixará de fazer parte de "${team.name}".`}
+        message={`${removing?.name ?? ''} deixará de fazer parte de "${team.name}" e perderá acesso aos projetos da equipe.`}
+        hint={
+          <>
+            O que essa pessoa criou na equipe continua aqui e passa a ser seu. Tarefas atribuídas a
+            ela ficam sem responsável.
+          </>
+        }
         confirmLabel="Remover"
         cancelLabel="Cancelar"
         tone="danger"
@@ -475,7 +535,22 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
       <ConfirmDialog
         isOpen={confirmDelete}
         title="Excluir equipe?"
-        message={`A equipe "${team.name}" e todo o histórico do chat serão apagados. Os projetos ficarão sem equipe. Esta ação não pode ser desfeita.`}
+        message={`A equipe "${team.name}" será apagada para todos os membros. Esta ação não pode ser desfeita.`}
+        hint={
+          <>
+            <strong className="block text-text-primary mb-1">Também serão apagados</strong>
+            {projects.length > 0 ? (
+              <>
+                {projects.length} projeto{projects.length > 1 ? 's' : ''} da equipe e{' '}
+                {totalTasks} tarefa{totalTasks === 1 ? '' : 's'}. Ninguém vai conseguir recuperar.
+              </>
+            ) : (
+              <>A equipe ainda não tem projetos — nada de trabalho será perdido.</>
+            )}
+            <strong className="block text-text-primary mt-3 mb-1">Só quer sair?</strong>
+            Transfira a posse na aba Membros e depois saia da equipe. O time continua com tudo.
+          </>
+        }
         confirmLabel="Excluir equipe"
         cancelLabel="Cancelar"
         tone="danger"

@@ -49,4 +49,22 @@ export const teamsService = {
   async removeMember(teamId: string, userId: string): Promise<void> {
     await api.delete<void>(`/teams/${teamId}/members/${userId}`);
   },
+
+  /**
+   * Dono passa a posse para outro membro e vira membro comum (mantendo a
+   * permissão de gerenciar tarefas). É o caminho não-destrutivo para quem quer
+   * deixar a equipe sem acabar com ela.
+   */
+  async transferOwnership(teamId: string, userId: string): Promise<void> {
+    await api.patch<void>(`/teams/${teamId}/owner`, { userId });
+  },
+
+  /**
+   * Sair da equipe. O que a pessoa criou lá continua com a equipe (a posse vai
+   * para o dono); tarefas atribuídas a ela ficam sem responsável.
+   * O dono precisa transferir a posse antes de poder sair.
+   */
+  async leaveTeam(teamId: string): Promise<void> {
+    await api.post<void>(`/teams/${teamId}/leave`, {});
+  },
 };

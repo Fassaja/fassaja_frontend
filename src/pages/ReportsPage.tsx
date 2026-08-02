@@ -20,6 +20,7 @@ import { Card } from '@/components/common/Card';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { ReportsSkeleton } from '@/components/common/Skeletons';
+import { TeamReportView } from '@/components/reports/TeamReportView';
 import { useTasks } from '@/hooks/useTasks';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -374,6 +375,9 @@ const ReportsPage: React.FC = () => {
       </Card>
       </>
       )}
+
+      {/* Equipe: só aparece para quem faz parte de alguma. */}
+      <TeamReportView />
       </>}
     </AppLayout>
   );
