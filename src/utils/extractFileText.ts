@@ -8,9 +8,14 @@
  *
  * Não suporta .doc antigo (Word 97-2003, binário) — só o .docx moderno.
  */
+// Antes de qualquer coisa: o PDF.js v6 usa Promise.withResolvers, que só existe
+// no Safari 17.4+. Sem isto a importação de PDF falha com "undefined is not a
+// function" — no Safari sim, no Chrome/Opera não.
+import './jsPolyfills';
 import * as pdfjsLib from 'pdfjs-dist';
-// O Vite resolve este import para uma URL do worker do PDF.js.
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+// Worker próprio (pdfWorkerEntry) em vez do arquivo do pacote: ele aplica os
+// polyfills dentro do escopo do worker, que não enxerga os da página.
+import pdfWorkerUrl from './pdfWorkerEntry?worker&url';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
