@@ -25,6 +25,51 @@ if (typeof (Promise as { withResolvers?: unknown }).withResolvers !== 'function'
   };
 }
 
+/**
+ * ReadableStream assíncrono-iterável — a que de fato quebrava a leitura de PDF.
+ *
+ * O PDF.js faz `for await (const n of stream)` em getTextContent. Iterar um
+ * ReadableStream com for-await exige Symbol.asyncIterator no protótipo, uma das
+ * APIs mais recentes da plataforma (Chrome 124+). Sem ela o Safari lança
+ * "undefined is not a function (near '...n of e...')" — o `n of e` do erro é
+ * literalmente esse for-await.
+ *
+ * Diagnosticado pelo stack trace real (extractFileText:46:109573), não por
+ * tentativa e erro.
+ */
+if (
+  typeof ReadableStream !== 'undefined' &&
+  typeof (ReadableStream.prototype as { [Symbol.asyncIterator]?: unknown })[
+    Symbol.asyncIterator
+  ] !== 'function'
+) {
+  const asyncIterator = function (this: ReadableStream) {
+    const reader = this.getReader();
+    return {
+      next() {
+        return reader.read();
+      },
+      async return(value?: unknown) {
+        // Libera o lock ao sair do laço (break/return), senão o stream fica
+        // preso e uma segunda leitura falharia.
+        reader.releaseLock();
+        return { done: true as const, value };
+      },
+      async throw(err?: unknown) {
+        reader.releaseLock();
+        throw err;
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+    };
+  };
+  const proto = ReadableStream.prototype as unknown as Record<PropertyKey, unknown>;
+  proto[Symbol.asyncIterator] = asyncIterator;
+  // A spec também expõe .values(); alguns códigos usam essa forma.
+  if (typeof proto.values !== 'function') proto.values = asyncIterator;
+}
+
 // Object.hasOwn — Safari 15.4+. São 20 usos dentro do worker; se o Safari for
 // antigo o bastante para não ter withResolvers, pode não ter esta também.
 if (typeof (Object as { hasOwn?: unknown }).hasOwn !== 'function') {
