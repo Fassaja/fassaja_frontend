@@ -63,16 +63,21 @@ export const Modal: React.FC<ModalProps> = ({
             className="fixed inset-0 z-[70] flex items-center justify-center p-4"
             onClick={onClose}
           >
+            {/* max-h no PAINEL + corpo rolável, em vez de altura fixa calculada
+                no corpo: some o número mágico (o antigo -200px chutava a altura
+                do cabeçalho) e o modal nunca ultrapassa a tela. dvh em vez de
+                vh porque no celular a 100vh inclui a área da barra de
+                endereço. */}
             <motion.div
               initial={{ scale: 0.96, y: 12 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.97, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
               transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-              className={`bg-white rounded-2xl shadow-lg ${sizeClasses[size]} w-full`}
+              className={`bg-white rounded-2xl shadow-lg ${sizeClasses[size]} w-full max-h-[90dvh] flex flex-col`}
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-border">
+              <div className="flex shrink-0 items-center justify-between p-6 border-b border-border">
                 <h2 className="text-xl font-bold text-text-primary">
                   {title}
                 </h2>
@@ -84,8 +89,8 @@ export const Modal: React.FC<ModalProps> = ({
                 </button>
               </div>
 
-              {/* Content */}
-              <div className="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+              {/* Content — ocupa o que sobrar do painel e rola sozinho. */}
+              <div className="min-h-0 flex-1 overflow-y-auto p-6">
                 {children}
               </div>
             </motion.div>
