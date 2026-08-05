@@ -249,7 +249,8 @@ const AiAssistantPage: React.FC = () => {
         title: c.title,
         description: c.description ?? '',
         priority: c.priority,
-        dueDate: '',
+        // Prazo sugerido pela IA ('YYYY-MM-DD'); vazio quando ela não sugeriu.
+        dueDate: c.dueDate ?? '',
         assigneeId: '',
       }));
       const improve = mode === 'improve';

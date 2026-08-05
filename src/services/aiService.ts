@@ -7,6 +7,8 @@ export interface DraftCardPayload {
   title: string;
   description?: string;
   priority: DraftPriority;
+  /** 'YYYY-MM-DD' — prazo sugerido pela IA (pode não vir). */
+  dueDate?: string;
 }
 
 /** Rascunho devolvido por /ai/draft (sem ids — são editáveis no front). */
@@ -66,7 +68,10 @@ export const aiService = {
 
   /** Pede à IA um rascunho de projeto + cards a partir do documento. */
   async draft(documentText: string, command?: string, mode?: DraftMode): Promise<DraftResponse> {
-    return api.post<DraftResponse>('/ai/draft', { documentText, command, mode });
+    // 'en-CA' devolve YYYY-MM-DD no fuso do navegador — a IA usa como referência
+    // para calcular os prazos ("até sexta", "em 2 semanas"...).
+    const today = new Date().toLocaleDateString('en-CA');
+    return api.post<DraftResponse>('/ai/draft', { documentText, command, mode, today });
   },
 
   /** Cria de verdade o projeto e os cards aprovados. */
