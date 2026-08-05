@@ -2,6 +2,7 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { PlatformTourModal } from './PlatformTourModal';
+import { BobAssistant } from '@/components/ai/BobAssistant';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -31,6 +32,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         </main>
       </div>
       <PlatformTourModal />
+      {/* Assistente flutuante — em portal, então não afeta o fluxo do layout. */}
+      <BobAssistant />
     </div>
   );
 };

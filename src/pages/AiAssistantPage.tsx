@@ -16,7 +16,7 @@ import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
 import { AiHowToModal } from '@/components/ai/AiHowToModal';
 import { useCelebration } from '@/contexts/CelebrationContext';
-import { aiService, AiStatus, DraftMode } from '@/services/aiService';
+import { aiService, AiStatus, DraftMode, DraftTag } from '@/services/aiService';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary, TeamMember } from '@/types/team';
 import { useProjects } from '@/contexts/ProjectsContext';
@@ -45,6 +45,9 @@ interface DraftCard {
   priority: DraftPriority;
   dueDate: string; // 'YYYY-MM-DD' ou ''
   assigneeId: string; // id do membro responsável, ou ''
+  // Tags existentes do usuário que a IA marcou como pertinentes. Editáveis
+  // (dá para remover uma no card) — só entram no apply as que sobrarem.
+  tags: DraftTag[];
 }
 
 interface ProjectDraft {
@@ -252,6 +255,7 @@ const AiAssistantPage: React.FC = () => {
         // Prazo sugerido pela IA ('YYYY-MM-DD'); vazio quando ela não sugeriu.
         dueDate: c.dueDate ?? '',
         assigneeId: '',
+        tags: c.tags ?? [],
       }));
       const improve = mode === 'improve';
       setDraft({
@@ -318,7 +322,7 @@ const AiAssistantPage: React.FC = () => {
             ...d,
             cards: [
               ...d.cards,
-              { id: uid(), title: '', description: '', priority: 'medium', dueDate: '', assigneeId: '' },
+              { id: uid(), title: '', description: '', priority: 'medium', dueDate: '', assigneeId: '', tags: [] },
             ],
           }
         : d,
@@ -336,6 +340,7 @@ const AiAssistantPage: React.FC = () => {
         priority: c.priority,
         dueDate: c.dueDate || undefined,
         assigneeId: c.assigneeId || undefined,
+        tagIds: c.tags.length ? c.tags.map((t) => t.id) : undefined,
       }));
       const result = await aiService.apply(
         draft.targetProjectId
@@ -883,6 +888,29 @@ const AiAssistantPage: React.FC = () => {
                         placeholder="Descrição..."
                         onChange={(e) => updateCard(card.id, { description: e.target.value })}
                       />
+
+                      {/* Tags que a IA reconheceu entre as SUAS tags (ela não
+                          cria rótulo novo). Clicar remove a tag do card. */}
+                      {card.tags.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {card.tags.map((tag) => (
+                            <button
+                              key={tag.id}
+                              onClick={() =>
+                                updateCard(card.id, {
+                                  tags: card.tags.filter((t) => t.id !== tag.id),
+                                })
+                              }
+                              title="Remover esta tag do card"
+                              className="group flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-70"
+                              style={{ backgroundColor: `${tag.color}22`, color: tag.color }}
+                            >
+                              {tag.name}
+                              <X size={10} className="opacity-0 group-hover:opacity-100" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                       <div className="flex items-center gap-2">
                         {(['low', 'medium', 'high'] as DraftPriority[]).map((p) => (
