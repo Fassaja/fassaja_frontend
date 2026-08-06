@@ -64,7 +64,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 min-h-20 bg-white/90 backdrop-blur-sm border-b border-border z-30 lg:left-64">
+    <div className="fixed top-0 left-0 right-0 min-h-20 bg-surface/90 backdrop-blur-sm border-b border-border z-30 lg:left-64">
       <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
       <StreakDaysModal isOpen={showStreakDays} onClose={() => setShowStreakDays(false)} />
 
@@ -87,7 +87,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             title="Atualizar"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="hidden sm:flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60 disabled:opacity-60"
+            className="hidden sm:flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60 disabled:opacity-60"
           >
             <RefreshCw size={19} className={refreshing ? 'animate-spin' : ''} />
           </button>
@@ -96,7 +96,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             type="button"
             aria-label="Buscar"
             onClick={() => setShowSearch(true)}
-            className="hidden sm:flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+            className="hidden sm:flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
           >
             <Search size={20} />
           </button>
@@ -110,7 +110,7 @@ export const Topbar: React.FC<TopbarProps> = ({
                 setShowNotifications(v => !v);
                 refreshNotifications();
               }}
-              className="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-white text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+              className="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
             >
               <Bell size={20} />
               {unreadCount > 0 && (
@@ -144,7 +144,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             aria-label="Editar dias da sequência"
             title="Editar dias da sequência (folgas não quebram a streak)"
             onClick={openStreakDays}
-            className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-white text-amber-500 hover:border-amber-300 hover:bg-amber-50 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-100"
+            className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-surface text-amber-500 dark:text-amber-400 hover:border-amber-300 hover:bg-amber-50 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-100"
           >
             <Flame size={20} />
           </button>
@@ -158,7 +158,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             {user.avatar ? (
               <img src={user.avatar} alt={user.name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover" />
             ) : (
-              <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary-vibrant to-primary-dark flex items-center justify-center text-white text-sm font-bold">
+              <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary-vibrant to-brand-deep flex items-center justify-center text-white text-sm font-bold">
                 {initialsOf(user.name)}
               </span>
             )}

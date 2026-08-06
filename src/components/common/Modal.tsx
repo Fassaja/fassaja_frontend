@@ -49,7 +49,7 @@ export const Modal: React.FC<ModalProps> = ({
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-primary-dark/75 z-[60]"
+            className="fixed inset-0 bg-scrim/75 z-[60]"
           />
 
           {/* O wrapper de tela cheia só faz fade (barato); o scale/subida fica
@@ -73,7 +73,7 @@ export const Modal: React.FC<ModalProps> = ({
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.97, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
               transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-              className={`bg-white rounded-2xl shadow-lg ${sizeClasses[size]} w-full max-h-[90dvh] flex flex-col`}
+              className={`bg-surface rounded-2xl shadow-lg ${sizeClasses[size]} w-full max-h-[90dvh] flex flex-col`}
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
@@ -83,7 +83,7 @@ export const Modal: React.FC<ModalProps> = ({
                 </h2>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-bg-secondary rounded-lg transition-colors"
                 >
                   <X size={20} className="text-text-secondary" />
                 </button>

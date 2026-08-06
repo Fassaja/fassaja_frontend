@@ -4,6 +4,7 @@ import { Edit, Trash2, FolderOpen, ArrowRight, Users, User } from 'lucide-react'
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
 import { useAuth } from '@/contexts/AuthContext';
+import { tint, chipText } from '@/utils/color';
 
 interface ProjectCardProps {
   project: Project;
@@ -30,12 +31,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     <Card
       hoverable
       className="group flex flex-col"
-      style={{ backgroundColor: project.color + '12', borderColor: project.color + '40' }}
+      style={{ backgroundColor: tint(project.color), borderColor: tint(project.color, 'strong') }}
     >
       <div className="flex items-start gap-3 mb-4">
         <div
           className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: project.color + '26', color: project.color }}
+          style={{ backgroundColor: tint(project.color, 'medium'), color: chipText(project.color) }}
         >
           <FolderOpen size={20} />
         </div>
@@ -45,7 +46,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             {project.type === 'team' ? (
               <span
                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: project.color + '26', color: project.color }}
+                style={{ backgroundColor: tint(project.color, 'medium'), color: chipText(project.color) }}
               >
                 <Users size={11} /> {project.teamName ?? 'Equipe'}
               </span>
@@ -90,7 +91,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
         <div
           className="w-full h-2 rounded-full overflow-hidden"
-          style={{ backgroundColor: project.color + '26' }}
+          style={{ backgroundColor: tint(project.color, 'medium') }}
         >
           <div
             className="h-full rounded-full transition-all duration-500"
@@ -106,7 +107,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
       <button
         onClick={() => navigate(`/tasks?project=${project.id}`)}
-        className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border bg-white/70 text-sm font-semibold text-text-primary hover:bg-white transition-colors"
+        className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border bg-surface/70 text-sm font-semibold text-text-primary hover:bg-surface transition-colors"
       >
         Ver tarefas
         <ArrowRight size={16} />

@@ -15,7 +15,7 @@ export const Notice: React.FC<{ tone?: 'info' | 'warn'; children: React.ReactNod
   <div
     className={`flex gap-2 rounded-xl border p-3 text-xs leading-relaxed ${
       tone === 'warn'
-        ? 'border-amber-200 bg-amber-50 text-amber-900'
+        ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300'
         : 'border-primary-light bg-primary-light/50 text-primary-dark'
     }`}
   >
@@ -44,7 +44,7 @@ export const CommandField: React.FC<{
       rows={2}
       maxLength={500}
       disabled={disabled}
-      className="w-full resize-none rounded-xl border border-border bg-white px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/70 focus:border-primary-vibrant focus:outline-none focus:ring-4 focus:ring-primary-light/60 disabled:opacity-50"
+      className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-secondary/70 focus:border-primary-vibrant focus:outline-none focus:ring-4 focus:ring-primary-light/60 disabled:opacity-50"
     />
   </label>
 );
@@ -72,12 +72,12 @@ export const SuggestionRow: React.FC<{
       className={`flex w-full gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-vibrant ${
         checked
           ? 'border-primary-vibrant/40 bg-primary-light/40'
-          : 'border-border bg-white hover:bg-bg-secondary'
+          : 'border-border bg-surface hover:bg-bg-secondary'
       }`}
     >
       <span
         className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
-          checked ? 'border-primary-vibrant bg-primary-vibrant text-white' : 'border-border bg-white'
+          checked ? 'border-primary-vibrant bg-primary-vibrant text-white' : 'border-border bg-surface'
         }`}
       >
         {checked && <Check size={13} strokeWidth={3} />}
@@ -111,7 +111,7 @@ export const ThinkingState: React.FC<{ label: string; rows?: number }> = ({
       {Array.from({ length: rows }).map((_, i) => (
         <li
           key={i}
-          className="flex gap-3 rounded-xl border border-border bg-white p-3"
+          className="flex gap-3 rounded-xl border border-border bg-surface p-3"
           // Escalona a pulsação para não piscar tudo em uníssono.
           style={{ animationDelay: `${i * 140}ms` }}
         >
@@ -171,7 +171,7 @@ export const DoneState: React.FC<{
   onHome: () => void;
 }> = ({ message, onRestart, onHome }) => (
   <div className="flex flex-col items-center gap-3 py-6 text-center">
-    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300">
       <Check size={24} strokeWidth={3} />
     </span>
     <p className="text-sm font-semibold text-text-primary">{message}</p>

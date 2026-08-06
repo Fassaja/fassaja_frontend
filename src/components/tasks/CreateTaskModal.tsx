@@ -191,7 +191,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         />
 
         {blockedByPermission && (
-          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+          <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl px-3 py-2">
             Você não pode criar tarefas neste projeto de equipe. Peça ao dono para te tornar
             <span className="font-semibold"> gerente de tarefas</span>.
           </p>

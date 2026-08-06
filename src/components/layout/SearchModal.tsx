@@ -8,6 +8,7 @@ import { Project } from '@/types/project';
 import { tasksService } from '@/services/tasksService';
 import { projectsService } from '@/services/projectsService';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { tint, chipText } from '@/utils/color';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -67,7 +68,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-primary-dark/70 z-[60]"
+            className="fixed inset-0 bg-scrim/70 z-[60]"
           />
           <motion.div
             initial={{ opacity: 0 }}
@@ -82,7 +83,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               animate={{ y: 0 }}
               exit={{ y: -16, transition: { duration: 0.15, ease: 'easeIn' } }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-xl bg-white rounded-2xl shadow-xl ring-1 ring-primary-vibrant/20 border-2 border-border overflow-hidden"
+              className="w-full max-w-xl bg-surface rounded-2xl shadow-xl ring-1 ring-primary-vibrant/20 border-2 border-border overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
@@ -143,7 +144,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                       >
                         <span
                           className="w-[18px] h-[18px] rounded-md flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: project.color + '22', color: project.color }}
+                          style={{ backgroundColor: tint(project.color, 'medium'), color: chipText(project.color) }}
                         >
                           <FolderOpen size={13} />
                         </span>

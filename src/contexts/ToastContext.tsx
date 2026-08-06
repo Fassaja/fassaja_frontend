@@ -33,8 +33,8 @@ export const useToast = () => useContext(ToastContext);
 const DURATION = 4000;
 
 const config: Record<ToastType, { icon: React.ReactNode; accent: string; ring: string }> = {
-  success: { icon: <CheckCircle2 size={20} />, accent: 'text-emerald-600', ring: 'border-emerald-200' },
-  error: { icon: <AlertCircle size={20} />, accent: 'text-danger', ring: 'border-rose-200' },
+  success: { icon: <CheckCircle2 size={20} />, accent: 'text-emerald-600 dark:text-emerald-300', ring: 'border-emerald-200 dark:border-emerald-500/30' },
+  error: { icon: <AlertCircle size={20} />, accent: 'text-danger', ring: 'border-rose-200 dark:border-rose-500/30' },
   info: { icon: <Info size={20} />, accent: 'text-primary-vibrant', ring: 'border-primary-light' },
 };
 
@@ -80,7 +80,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, x: 40, scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  className={`pointer-events-auto flex items-start gap-3 rounded-2xl border ${c.ring} bg-white shadow-lg px-4 py-3`}
+                  className={`pointer-events-auto flex items-start gap-3 rounded-2xl border ${c.ring} bg-surface shadow-lg px-4 py-3`}
                 >
                   <span className={`shrink-0 mt-0.5 ${c.accent}`}>{c.icon}</span>
                   <p className="flex-1 text-sm font-medium text-text-primary leading-snug">

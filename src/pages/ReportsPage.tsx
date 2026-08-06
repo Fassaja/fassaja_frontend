@@ -24,16 +24,28 @@ import { TeamReportView } from '@/components/reports/TeamReportView';
 import { useTasks } from '@/hooks/useTasks';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
+import { useChartTheme, type ChartTheme } from '@/utils/chartTheme';
 
-// Estilo compartilhado dos gráficos (eixos limpos + tooltip da marca).
-const AXIS_PROPS = { tickLine: false, axisLine: false, tick: { fontSize: 12, fill: '#64748B' } } as const;
-const GRID_COLOR = '#E3EAF3';
-const TOOLTIP_STYLE = {
-  borderRadius: 12,
-  border: '1px solid #E3EAF3',
-  boxShadow: '0 4px 12px -2px rgba(6,27,73,0.12)',
-  fontSize: 13,
-} as const;
+/**
+ * Estilo compartilhado dos gráficos (eixos limpos + tooltip da marca).
+ * Deixou de ser constante de módulo porque depende do tema — o cromo precisa
+ * ser recalculado quando a pessoa troca de claro para escuro.
+ */
+function chartStyles(chart: ChartTheme) {
+  return {
+    axis: { tickLine: false, axisLine: false, tick: { fontSize: 12, fill: chart.tick } } as const,
+    grid: chart.grid,
+    tooltip: {
+      borderRadius: 12,
+      backgroundColor: chart.tooltipBg,
+      border: `1px solid ${chart.tooltipBorder}`,
+      boxShadow: '0 4px 12px -2px rgba(6,27,73,0.12)',
+      fontSize: 13,
+    },
+  };
+}
+
+// Cores de SÉRIE: significado, não cromo — iguais nos dois temas.
 const PRIORITY_COLORS = ['#22C55E', '#FBBF24', '#8B5CF6'];
 
 const WEEK_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -48,6 +60,8 @@ function sameDay(a: Date, b: Date): boolean {
 
 const ReportsPage: React.FC = () => {
   const { tasks, loading } = useTasks();
+  const chart = useChartTheme();
+  const { axis: AXIS_PROPS, grid: GRID_COLOR, tooltip: TOOLTIP_STYLE } = chartStyles(chart);
   const showSkeleton = useDeferredLoading(loading);
   const stats = useDashboardStats(tasks);
   const [period, setPeriod] = useState('week');
@@ -183,7 +197,7 @@ const ReportsPage: React.FC = () => {
           <p className="text-sm text-text-secondary">Total de Tarefas</p>
         </Card>
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-green-500">{stats.completed}</p>
+          <p className="text-3xl font-bold text-green-500 dark:text-green-400">{stats.completed}</p>
           <p className="text-sm text-text-secondary">Concluídas</p>
         </Card>
         <Card className="text-center py-4">
@@ -191,13 +205,13 @@ const ReportsPage: React.FC = () => {
           <p className="text-sm text-text-secondary">Taxa de Conclusão</p>
         </Card>
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-yellow-500">{stats.inProgress}</p>
+          <p className="text-3xl font-bold text-yellow-500 dark:text-yellow-400">{stats.inProgress}</p>
           <p className="text-sm text-text-secondary">Em Andamento</p>
         </Card>
       </div>
 
       {stats.total === 0 ? (
-        <Card className="flex flex-col items-center text-center py-12 bg-gradient-to-b from-white to-primary-light/30">
+        <Card className="flex flex-col items-center text-center py-12 bg-gradient-to-b from-surface to-primary-light/30">
           <Mascot state="investigate" size="md" animate />
           <p className="text-text-primary font-bold text-xl mt-4">Seus gráficos nascem aqui</p>
           <p className="text-text-secondary text-sm max-w-sm mt-1">
@@ -227,7 +241,7 @@ const ReportsPage: React.FC = () => {
                 <LabelList
                   dataKey="value"
                   position="top"
-                  style={{ fill: '#0F172A', fontSize: 13, fontWeight: 700 }}
+                  style={{ fill: chart.tooltipLabel, fontSize: 13, fontWeight: 700 }}
                 />
                 {statusData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -303,7 +317,7 @@ const ReportsPage: React.FC = () => {
               <LabelList
                 dataKey="value"
                 position="right"
-                style={{ fill: '#0F172A', fontSize: 13, fontWeight: 700 }}
+                style={{ fill: chart.tooltipLabel, fontSize: 13, fontWeight: 700 }}
               />
               {tagData.map((entry, index) => (
                 <Cell key={`tag-${index}`} fill={entry.color} />

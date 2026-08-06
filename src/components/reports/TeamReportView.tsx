@@ -126,7 +126,7 @@ export const TeamReportView: React.FC = () => {
               <p className="text-sm text-text-secondary">Tarefas da equipe</p>
             </Card>
             <Card className="py-4 text-center">
-              <p className="text-3xl font-bold text-green-500">{report.completionRate}%</p>
+              <p className="text-3xl font-bold text-green-500 dark:text-green-400">{report.completionRate}%</p>
               <p className="text-sm text-text-secondary">
                 Concluídas ({report.completed}/{report.total})
               </p>
@@ -144,7 +144,7 @@ export const TeamReportView: React.FC = () => {
             <Card className="py-4 text-center">
               <p
                 className={`text-3xl font-bold ${
-                  report.unassigned > 0 ? 'text-yellow-500' : 'text-text-primary'
+                  report.unassigned > 0 ? 'text-yellow-500 dark:text-yellow-400' : 'text-text-primary'
                 }`}
               >
                 {report.unassigned}
@@ -170,7 +170,7 @@ export const TeamReportView: React.FC = () => {
                         className="h-9 w-9 shrink-0 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-vibrant to-primary-dark text-xs font-bold text-white">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-vibrant to-brand-deep text-xs font-bold text-white">
                         {initialsOf(m.name)}
                       </span>
                     )}
@@ -209,7 +209,7 @@ export const TeamReportView: React.FC = () => {
                   </div>
                 ))}
                 {report.unassigned > 0 && (
-                  <div className="flex items-center gap-2 rounded-xl border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                  <div className="flex items-center gap-2 rounded-xl border border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 px-3 py-2 text-xs text-yellow-800 dark:text-yellow-300">
                     <UserX size={15} className="shrink-0" />
                     <span>
                       <strong>{report.unassigned}</strong> tarefa

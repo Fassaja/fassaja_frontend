@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Card } from '@/components/common/Card';
 import { CountUp } from '@/components/common/CountUp';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
+import { tint } from '@/utils/color';
 
 interface GoalProgress {
   done: number;
@@ -33,7 +34,7 @@ const GoalBar: React.FC<{ label: string; done: number; goal: number; color: stri
           {done}/{goal}
         </span>
       </div>
-      <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: color + '1A' }}>
+      <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: tint(color) }}>
         <motion.div
           className="h-full rounded-full"
           style={{ backgroundColor: color }}

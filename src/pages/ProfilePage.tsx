@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useTasks } from '@/hooks/useTasks';
 import { computeXp } from '@/utils/xp';
+import { tint, chipText } from '@/utils/color';
 
 const COOLDOWN_DAYS = 30;
 
@@ -165,7 +166,7 @@ const ProfilePage: React.FC = () => {
       <div className="max-w-3xl space-y-6">
         {/* Header card */}
         <Card padding="none" className="overflow-hidden">
-          <div className="h-24 bg-gradient-to-r from-primary-vibrant to-primary-dark" />
+          <div className="h-24 bg-gradient-to-r from-primary-vibrant to-brand-deep" />
           <div className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12">
               <div className="relative shrink-0">
@@ -173,10 +174,10 @@ const ProfilePage: React.FC = () => {
                   <img
                     src={avatarSrc}
                     alt={user.name}
-                    className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-sm"
+                    className="w-24 h-24 rounded-2xl object-cover border-4 border-surface shadow-sm"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary-vibrant to-primary-dark flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-sm">
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary-vibrant to-brand-deep flex items-center justify-center text-white text-3xl font-bold border-4 border-surface shadow-sm">
                     {initialsOf(user.name)}
                   </div>
                 )}
@@ -190,7 +191,7 @@ const ProfilePage: React.FC = () => {
                   onClick={() => fileRef.current?.click()}
                   disabled={avatarLoading}
                   aria-label="Enviar foto"
-                  className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-primary-vibrant text-white flex items-center justify-center border-2 border-white hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-60"
+                  className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-primary-vibrant text-white flex items-center justify-center border-2 border-surface hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-60"
                 >
                   <Camera size={16} />
                 </button>
@@ -233,7 +234,7 @@ const ProfilePage: React.FC = () => {
             >
               <span
                 className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ backgroundColor: s.color + '1A', color: s.color }}
+                style={{ backgroundColor: tint(s.color), color: chipText(s.color) }}
               >
                 {s.icon}
               </span>
@@ -281,7 +282,7 @@ const ProfilePage: React.FC = () => {
             </div>
 
             {nameLeft > 0 ? (
-              <p className="text-sm text-amber-600 inline-flex items-center gap-1.5">
+              <p className="text-sm text-amber-600 dark:text-amber-300 inline-flex items-center gap-1.5">
                 <Lock size={14} />
                 Disponível em {days(nameLeft)}
                 {account?.nameChangedAt && ` — em ${availableOn(account.nameChangedAt)}`}.
@@ -317,7 +318,7 @@ const ProfilePage: React.FC = () => {
           </p>
 
           {pwLeft > 0 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 inline-flex items-center gap-2">
+            <div className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300 inline-flex items-center gap-2">
               <Lock size={15} />
               Você já alterou a senha recentemente. Poderá trocar novamente em {days(pwLeft)}
               {account?.passwordChangedAt && ` (em ${availableOn(account.passwordChangedAt)})`}.

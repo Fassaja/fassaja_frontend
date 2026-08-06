@@ -47,7 +47,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-primary-dark/70 z-[60]"
+            className="fixed inset-0 bg-scrim/70 z-[60]"
           />
           <motion.div
             initial={{ opacity: 0 }}
@@ -69,7 +69,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
                 transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-                className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6 text-center"
+                className="bg-surface rounded-2xl shadow-lg max-w-sm w-full p-6 text-center"
                 onClick={e => e.stopPropagation()}
               >
                 {mascotState ? (
@@ -79,7 +79,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 ) : icon ? (
                   <div
                     className={`w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center ${
-                      tone === 'danger' ? 'bg-rose-100 text-danger' : 'bg-primary-light text-primary-vibrant'
+                      tone === 'danger' ? 'bg-rose-100 dark:bg-rose-500/15 text-danger' : 'bg-primary-light text-primary-vibrant'
                     }`}
                   >
                     {icon}

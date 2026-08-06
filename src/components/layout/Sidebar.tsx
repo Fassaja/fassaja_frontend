@@ -72,7 +72,7 @@ export const Sidebar: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-white p-2 rounded-xl border border-border shadow-sm"
+        className="fixed top-4 left-4 z-50 lg:hidden bg-surface p-2 rounded-xl border border-border shadow-sm"
       >
         {isOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
@@ -80,7 +80,7 @@ export const Sidebar: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed left-0 top-0 h-screen w-64 bg-white border-r border-border
+          fixed left-0 top-0 h-screen w-64 bg-surface border-r border-border
           transform transition-transform duration-300 ease-out-expo z-40
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
@@ -92,6 +92,7 @@ export const Sidebar: React.FC = () => {
             <div className="w-full h-20 flex items-center justify-center overflow-hidden">
               <img
                 src="/logofassaja.png"
+                data-logo
                 alt="Fassaja"
                 className="max-w-none w-72 h-auto object-contain select-none"
                 draggable={false}
@@ -194,7 +195,7 @@ export const Sidebar: React.FC = () => {
                     className="fixed inset-0 z-30"
                     onClick={() => setShowMenu(false)}
                   />
-                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-40 overflow-hidden">
+                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-surface rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-40 overflow-hidden">
                     <button
                       onClick={() => {
                         if (isGuest) {

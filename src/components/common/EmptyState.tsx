@@ -20,7 +20,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }) => {
   return (
-    <Card className="flex flex-col items-center justify-center py-12 bg-gradient-to-b from-white to-primary-light/30">
+    <Card className="flex flex-col items-center justify-center py-12 bg-gradient-to-b from-surface to-primary-light/30">
       <Mascot state={mascotState} size="lg" animate={true} />
 
       <div className="text-center mt-6 max-w-md">

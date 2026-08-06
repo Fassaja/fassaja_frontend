@@ -11,6 +11,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary } from '@/types/team';
 import { Project } from '@/types/project';
+import { tint, chipText } from '@/utils/color';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -98,7 +99,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style={{ backgroundColor: formData.color + '1A', color: formData.color }}
+            style={{ backgroundColor: tint(formData.color), color: chipText(formData.color) }}
           >
             <FolderOpen size={20} />
           </div>

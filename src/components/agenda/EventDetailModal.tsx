@@ -4,6 +4,7 @@ import { Modal } from '@/components/common/Modal';
 import { CalendarEvent } from '@/types/event';
 import { formatDate, formatDateWithDay } from '@/utils/date';
 import { reminderLabel } from '@/utils/eventReminders';
+import { tint, chipText } from '@/utils/color';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -55,14 +56,14 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             onClick={() => onEdit(event)}
             aria-label="Editar evento"
             title="Editar evento"
-            className="absolute top-4 right-4 p-2 rounded-xl bg-white border border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant transition-colors active:scale-95"
+            className="absolute top-4 right-4 p-2 rounded-xl bg-surface border border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant transition-colors active:scale-95"
           >
             <Pencil size={16} />
           </button>
 
           <span
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
-            style={{ backgroundColor: event.color + '1A', color: event.color }}
+            style={{ backgroundColor: tint(event.color), color: chipText(event.color) }}
           >
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: event.color }} />
             {timeLabel(event)}

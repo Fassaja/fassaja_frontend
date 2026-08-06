@@ -17,6 +17,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', showImage = false }) =>
     return (
       <img
         src="/logofassaja.png"
+                data-logo
         alt="Fassaja"
         className={`${sizeClasses[size]} object-contain`}
       />

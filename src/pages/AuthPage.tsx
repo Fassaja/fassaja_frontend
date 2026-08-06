@@ -82,7 +82,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   return (
     <div className="min-h-screen bg-bg-main flex">
       {/* Brand panel */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary-vibrant to-primary-dark text-white flex-col items-center justify-center text-center p-12 relative overflow-hidden">
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-brand-hero to-brand-deep text-white flex-col items-center justify-center text-center p-12 relative overflow-hidden">
         <div className="relative z-10 flex flex-col items-center">
           <Mascot state={isLogin ? 'happy' : 'strong'} size="xl" animate />
           <h1 className="text-3xl font-extrabold mt-6 leading-tight max-w-md">
@@ -129,6 +129,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             <div className="h-12 flex items-center justify-center overflow-hidden">
               <img
                 src="/logofassaja.png"
+                data-logo
                 alt="Fassaja"
                 className="max-w-none w-56 h-auto object-contain select-none"
                 draggable={false}
@@ -147,7 +148,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               <strong className="text-text-primary">{registeredEmail}</strong>. Clique nele para
               ativar sua conta.
             </p>
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+            <div className="mt-4 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
               ⚠️ Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico — e
               marque como "não é spam" para receber os próximos.
             </div>
@@ -181,18 +182,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           </p>
 
           {sessionExpired && isLogin && (
-            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+            <div className="mb-6 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
               Sua sessão expirou. Entre novamente para continuar.
             </div>
           )}
 
           {verifiedParam === '1' && isLogin && (
-            <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+            <div className="mb-6 rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
               E-mail confirmado! Faça login para entrar.
             </div>
           )}
           {verifiedParam === '0' && isLogin && (
-            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            <div className="mb-6 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
               Link inválido ou expirado. Faça login para reenviar a confirmação.
             </div>
           )}

@@ -143,7 +143,7 @@ const JoinPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-bg-main flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-8 text-center">
+      <div className="w-full max-w-md bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-8 text-center">
         {loading ? (
           <div className="py-10 text-text-secondary">Carregando convite...</div>
         ) : (

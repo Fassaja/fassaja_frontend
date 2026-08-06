@@ -11,6 +11,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary } from '@/types/team';
 import { Project } from '@/types/project';
+import { tint, chipText } from '@/utils/color';
 
 interface EditProjectModalProps {
   isOpen: boolean;
@@ -122,7 +123,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title="Editar Projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
         {!canEdit && (
-          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
             <Lock size={18} className="shrink-0 mt-0.5" />
             <span>
               Apenas o dono do projeto pode alterar estas informações. Você pode visualizá-las, mas
@@ -134,7 +135,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
         <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style={{ backgroundColor: formData.color + '1A', color: formData.color }}
+            style={{ backgroundColor: tint(formData.color), color: chipText(formData.color) }}
           >
             <FolderOpen size={20} />
           </div>

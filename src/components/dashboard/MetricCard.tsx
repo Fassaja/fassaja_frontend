@@ -2,6 +2,7 @@ import React from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { CountUp } from '@/components/common/CountUp';
+import { tint, chipText } from '@/utils/color';
 
 interface MetricCardProps {
   title: string;
@@ -27,7 +28,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       <div className="flex items-center gap-2 sm:gap-3">
         <div
           className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: color + '1A', color }}
+          style={{ backgroundColor: tint(color), color: chipText(color) }}
         >
           {icon}
         </div>

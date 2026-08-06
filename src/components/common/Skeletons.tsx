@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from './Card';
 
 export const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`animate-pulse bg-slate-200/70 rounded-lg ${className}`} />
+  <div className={`animate-pulse bg-border/70 rounded-lg ${className}`} />
 );
 
 const MetricCardSkeleton = () => (

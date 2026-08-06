@@ -125,7 +125,7 @@ const DashboardPage: React.FC = () => {
         {/* Bob greeting banner — cena de fundo muda com o horário (dia/noite) */}
         <div
           className={`mb-6 flex items-center gap-4 rounded-2xl text-white p-5 sm:p-6 relative overflow-hidden bg-gradient-to-br ${
-            bannerIsDay ? 'from-primary-vibrant to-primary-dark' : 'from-[#243089] to-[#0a1640]'
+            bannerIsDay ? 'from-primary-vibrant to-brand-deep' : 'from-[#243089] to-[#0a1640]'
           }`}
         >
           {/* Cena decorativa (dia/noite): só no desktop. No mobile fica só o gradiente azul. */}

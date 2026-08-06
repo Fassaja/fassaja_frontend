@@ -17,6 +17,28 @@
       rel="stylesheet"
     />
     <title>Fassaja - Gerenciador de Tarefas</title>
+    <!--
+      Anti-flash: aplica o tema ANTES do primeiro paint. Sem isto o app pinta
+      claro, o React monta e só então troca para escuro — um flash branco na
+      cara de quem usa tema escuro, justamente no ambiente em que ele incomoda
+      mais. Script síncrono e inline de propósito: precisa rodar antes do CSS
+      pintar, então não pode ser um módulo (defer). A regra é a mesma do
+      ThemeContext; mudar uma exige mudar a outra.
+    -->
+    <script>
+      (function () {
+        try {
+          var pref = localStorage.getItem('fassaja_theme');
+          var dark =
+            pref === 'dark' ||
+            ((pref === 'system' || !pref) &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {
+          /* localStorage bloqueado: segue no tema claro */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

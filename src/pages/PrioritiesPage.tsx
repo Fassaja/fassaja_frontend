@@ -30,7 +30,7 @@ const PrioritiesPage: React.FC = () => {
       {highTasks.length > 0 ? (
         <>
           <div className="flex items-center gap-2 mb-4">
-            <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-purple-50 text-priority-high">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-priority-high">
               <Flag size={18} />
             </span>
             <div>

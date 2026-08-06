@@ -181,7 +181,7 @@ export const BobAssistant: React.FC = () => {
             tabIndex={-1}
             // bottom-6 (e não bottom-24): como o lançador some ao abrir, o
             // painel encosta onde ele estava em vez de deixar um vão vazio.
-            className="fixed inset-x-4 bottom-6 z-50 flex max-h-[75dvh] flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-xl sm:left-auto sm:right-6 sm:w-[380px]"
+            className="fixed inset-x-4 bottom-6 z-50 flex max-h-[75dvh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl sm:left-auto sm:right-6 sm:w-[380px]"
           >
             {/* Cabeçalho */}
             <div className="flex shrink-0 items-center gap-2 border-b border-border bg-bg-secondary/60 px-4 py-3">
@@ -190,7 +190,7 @@ export const BobAssistant: React.FC = () => {
                   type="button"
                   onClick={() => !busy && setView('home')}
                   aria-label="Voltar"
-                  className="-ml-1 rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-white disabled:opacity-40"
+                  className="-ml-1 rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-surface disabled:opacity-40"
                   disabled={busy}
                 >
                   <ArrowLeft size={18} />
@@ -214,7 +214,7 @@ export const BobAssistant: React.FC = () => {
                 type="button"
                 onClick={close}
                 aria-label="Fechar"
-                className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-white disabled:opacity-40"
+                className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-surface disabled:opacity-40"
                 disabled={busy}
               >
                 <X size={18} />
@@ -243,7 +243,7 @@ export const BobAssistant: React.FC = () => {
                           type="button"
                           onClick={() => setView(action.view)}
                           disabled={outOfQuota}
-                          className="flex w-full items-center gap-3 rounded-xl border border-border bg-white p-3 text-left transition-colors hover:border-primary-vibrant/30 hover:bg-primary-light/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-white"
+                          className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-3 text-left transition-colors hover:border-primary-vibrant/30 hover:bg-primary-light/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-surface"
                         >
                           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-light text-primary-vibrant">
                             {action.icon}

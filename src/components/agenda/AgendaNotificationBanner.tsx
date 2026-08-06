@@ -50,7 +50,7 @@ export const AgendaNotificationBanner: React.FC = () => {
 
   return (
     <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary-vibrant/30 bg-primary-light px-4 py-3">
-      <span className="w-9 h-9 rounded-xl bg-white text-primary-vibrant flex items-center justify-center shrink-0">
+      <span className="w-9 h-9 rounded-xl bg-surface text-primary-vibrant flex items-center justify-center shrink-0">
         <Bell size={18} />
       </span>
       <div className="min-w-0 flex-1">
@@ -85,7 +85,7 @@ export const AgendaNotificationBanner: React.FC = () => {
         type="button"
         onClick={() => setDismissed(true)}
         aria-label="Dispensar"
-        className="p-1.5 rounded-lg text-text-secondary hover:bg-white/60 transition-colors shrink-0"
+        className="p-1.5 rounded-lg text-text-secondary hover:bg-surface/60 transition-colors shrink-0"
       >
         <X size={16} />
       </button>

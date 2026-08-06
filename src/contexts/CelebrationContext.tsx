@@ -80,9 +80,9 @@ export const CelebrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.8, y: 20, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 360, damping: 20 }}
-              className={`relative flex items-center gap-3 bg-white rounded-2xl shadow-xl pl-3 pr-5 py-3 ${
+              className={`relative flex items-center gap-3 bg-surface rounded-2xl shadow-xl pl-3 pr-5 py-3 ${
                 isGoal
-                  ? 'border-2 border-amber-300 ring-2 ring-amber-200/60'
+                  ? 'border-2 border-amber-300 dark:border-amber-500/40 ring-2 ring-amber-200/60'
                   : 'border border-border'
               }`}
             >

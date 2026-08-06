@@ -1,4 +1,5 @@
 import React from 'react';
+import { tint } from '@/utils/color';
 
 export interface SelectableOption {
   value: string;
@@ -68,7 +69,7 @@ export const OptionSelector: React.FC<OptionSelectorProps> = ({
               `}
               style={
                 selected
-                  ? { borderColor: accent, color: accent, backgroundColor: accent + '14' }
+                  ? { borderColor: accent, color: accent, backgroundColor: tint(accent) }
                   : undefined
               }
             >

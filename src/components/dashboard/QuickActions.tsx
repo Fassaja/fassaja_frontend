@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FolderPlus, BarChart3, Calendar } from 'lucide-react';
 import { Card } from '@/components/common/Card';
+import { tint, chipText } from '@/utils/color';
 
 interface QuickActionsProps {
   onNewTask?: () => void;
@@ -32,7 +33,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onNewTask }) => {
             >
               <span
                 className="w-11 h-11 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: action.color + '1A', color: action.color }}
+                style={{ backgroundColor: tint(action.color), color: chipText(action.color) }}
               >
                 <Icon size={20} />
               </span>

@@ -49,6 +49,7 @@ import { Badge } from '@/components/common/Badge';
 import { Task } from '@/types/task';
 import { sortTeamTasks } from '@/utils/teamTasks';
 import { isToday, isTomorrow, formatDate } from '@/utils/date';
+import { tint, chipText } from '@/utils/color';
 
 const PRIORITY_LABEL: Record<Task['priority'], string> = {
   low: 'Baixa',
@@ -66,7 +67,7 @@ function dueLabel(t: Task): { text: string; cls: string } {
   if (t.status === 'completed') return { text: 'Concluída', cls: 'text-success' };
   if (!t.dueDate) return { text: 'Sem prazo', cls: 'text-text-soft' };
   if (isToday(t.dueDate)) return { text: 'Hoje', cls: 'text-danger' };
-  if (isTomorrow(t.dueDate)) return { text: 'Amanhã', cls: 'text-amber-600' };
+  if (isTomorrow(t.dueDate)) return { text: 'Amanhã', cls: 'text-amber-600 dark:text-amber-300' };
   return { text: formatDate(t.dueDate), cls: 'text-text-secondary' };
 }
 
@@ -84,12 +85,12 @@ const TeamStat: React.FC<{
   suffix?: string;
   label: string;
   sub: string;
-  tint: string;
-}> = ({ icon, value, suffix, label, sub, tint }) => (
-  <div className="flex items-center gap-3 rounded-2xl border border-border bg-white p-4">
+  accent: string;
+}> = ({ icon, value, suffix, label, sub, accent }) => (
+  <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
     <span
       className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-      style={{ backgroundColor: tint + '1A', color: tint }}
+      style={{ backgroundColor: tint(accent), color: chipText(accent) }}
     >
       {icon}
     </span>
@@ -434,7 +435,7 @@ const TeamPage: React.FC = () => {
                   className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97] ${
                     active
                       ? 'border-transparent text-white shadow-sm'
-                      : 'bg-white border-border text-text-secondary hover:bg-bg-secondary'
+                      : 'bg-surface border-border text-text-secondary hover:bg-bg-secondary'
                   }`}
                 >
                   <Users size={16} />
@@ -525,14 +526,14 @@ const TeamPage: React.FC = () => {
                   value={selectedTeam.memberCount}
                   label="Membros"
                   sub="Total na equipe"
-                  tint="#2477FF"
+                  accent="#2477FF"
                 />
                 <TeamStat
                   icon={<FolderOpen size={20} />}
                   value={activeProjects}
                   label={activeProjects === 1 ? 'Projeto ativo' : 'Projetos ativos'}
                   sub="Em andamento"
-                  tint="#8B5CF6"
+                  accent="#8B5CF6"
                 />
                 <TeamStat
                   icon={<TrendingUp size={20} />}
@@ -540,29 +541,29 @@ const TeamPage: React.FC = () => {
                   suffix="%"
                   label="Conclusão média"
                   sub="Dos projetos"
-                  tint="#2DD4BF"
+                  accent="#2DD4BF"
                 />
                 <TeamStat
                   icon={<Mail size={20} />}
                   value={requests.length}
                   label="Pedidos pendentes"
                   sub="Aguardando aprovação"
-                  tint="#FBBF24"
+                  accent="#FBBF24"
                 />
               </div>
 
               {isOwner && requests.length > 0 && (
-                <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                <div className="mb-5 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-4">
                   <p className="text-sm font-bold text-text-primary mb-3 flex items-center gap-2">
-                    <Clock size={16} className="text-amber-500" /> Pedidos pendentes ({requests.length})
+                    <Clock size={16} className="text-amber-500 dark:text-amber-400" /> Pedidos pendentes ({requests.length})
                   </p>
                   <div className="space-y-2">
                     {requests.map(r => (
                       <div
                         key={r.id}
-                        className="flex items-center gap-3 bg-white rounded-lg border border-border p-2.5"
+                        className="flex items-center gap-3 bg-surface rounded-lg border border-border p-2.5"
                       >
-                        <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-text-secondary font-bold text-sm shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-border flex items-center justify-center text-text-secondary font-bold text-sm shrink-0">
                           {initialsOf(r.name)}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -596,11 +597,11 @@ const TeamPage: React.FC = () => {
                       className={`relative flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-colors ${
                         isOwnerCard
                           ? 'border-primary-vibrant/40 bg-primary-light/25 ring-1 ring-primary-vibrant/15'
-                          : 'border-border bg-white hover:border-primary-vibrant/40'
+                          : 'border-border bg-surface hover:border-primary-vibrant/40'
                       }`}
                     >
                       {isOwnerCard ? (
-                        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300">
                           <Crown size={12} /> Dono
                         </span>
                       ) : (
@@ -631,7 +632,7 @@ const TeamPage: React.FC = () => {
                       <div className="w-full min-w-0">
                         <p className="flex items-center justify-center gap-1.5 truncate font-bold text-text-primary">
                           {m.name}
-                          {isOwnerCard && <Crown size={14} className="shrink-0 text-amber-500" />}
+                          {isOwnerCard && <Crown size={14} className="shrink-0 text-amber-500 dark:text-amber-400" />}
                         </p>
                         <p className="truncate text-xs text-text-secondary">{m.email}</p>
                       </div>
