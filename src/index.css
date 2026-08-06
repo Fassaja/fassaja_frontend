@@ -59,3 +59,18 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/**
+ * Pista de rolagem: um degradê branco→transparente preso no topo e na base do
+ * container, mais uma "capa" branca que rola junto com o conteúdo e esconde o
+ * degradê quando já se está na ponta. Resultado: a sombra só aparece do lado em
+ * que ainda há conteúdo fora de vista, sem nenhum listener de scroll em JS.
+ */
+.scroll-shadow {
+  background:
+    linear-gradient(#fff 30%, rgba(255, 255, 255, 0)) top / 100% 24px no-repeat,
+    linear-gradient(rgba(255, 255, 255, 0), #fff 70%) bottom / 100% 24px no-repeat,
+    radial-gradient(farthest-side at 50% 0, rgba(6, 27, 73, 0.22), transparent) top / 100% 14px no-repeat,
+    radial-gradient(farthest-side at 50% 100%, rgba(6, 27, 73, 0.22), transparent) bottom / 100% 14px no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}

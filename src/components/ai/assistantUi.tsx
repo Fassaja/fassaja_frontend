@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, Check, Info } from 'lucide-react';
+import { AlertCircle, Check, Info, Loader2 } from 'lucide-react';
 
 /**
  * Peças visuais compartilhadas pelos painéis do assistente (Bob). Ficam juntas
@@ -62,11 +62,14 @@ export const SuggestionRow: React.FC<{
   children?: React.ReactNode;
 }> = ({ checked, onToggle, title, detail, reason, children }) => (
   <li>
+    {/* role="checkbox" e não aria-pressed: a linha marca um item de uma lista
+        múltipla, não liga/desliga um botão. É o que o leitor de tela anuncia. */}
     <button
       type="button"
       onClick={onToggle}
-      aria-pressed={checked}
-      className={`flex w-full gap-3 rounded-xl border p-3 text-left transition-colors ${
+      role="checkbox"
+      aria-checked={checked}
+      className={`flex w-full gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-vibrant ${
         checked
           ? 'border-primary-vibrant/40 bg-primary-light/40'
           : 'border-border bg-white hover:bg-bg-secondary'
@@ -80,7 +83,9 @@ export const SuggestionRow: React.FC<{
         {checked && <Check size={13} strokeWidth={3} />}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-text-primary">{title}</span>
+        {/* line-clamp-2, não truncate: é a hora de decidir, e um título cortado
+            em "Revisar a proposta do cliente Foc…" não dá para aprovar. */}
+        <span className="line-clamp-2 text-sm font-semibold text-text-primary">{title}</span>
         <span className="mt-0.5 block text-xs text-text-secondary">{detail}</span>
         {reason && <span className="mt-1 block text-xs italic text-text-soft">“{reason}”</span>}
         {children}
@@ -88,6 +93,53 @@ export const SuggestionRow: React.FC<{
     </button>
   </li>
 );
+
+/**
+ * Espera da chamada à IA (3 a 8 segundos). Um spinner dentro do botão deixa o
+ * painel parado nesse tempo todo; o esqueleto mostra o formato do que vem.
+ */
+export const ThinkingState: React.FC<{ label: string; rows?: number }> = ({
+  label,
+  rows = 3,
+}) => (
+  <div className="space-y-3" role="status" aria-live="polite">
+    <p className="flex items-center gap-2 text-sm text-text-secondary">
+      <Loader2 size={15} className="animate-spin text-primary-vibrant" />
+      {label}
+    </p>
+    <ul className="space-y-2" aria-hidden>
+      {Array.from({ length: rows }).map((_, i) => (
+        <li
+          key={i}
+          className="flex gap-3 rounded-xl border border-border bg-white p-3"
+          // Escalona a pulsação para não piscar tudo em uníssono.
+          style={{ animationDelay: `${i * 140}ms` }}
+        >
+          <span className="h-5 w-5 shrink-0 animate-pulse rounded-md bg-bg-secondary" />
+          <span className="min-w-0 flex-1 space-y-2">
+            <span className="block h-3.5 w-3/4 animate-pulse rounded bg-bg-secondary" />
+            <span className="block h-3 w-1/2 animate-pulse rounded bg-bg-secondary" />
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+/**
+ * Aviso de recorte: a análise olhou só as N primeiras de M tarefas.
+ * Sem isso o usuário recebe um resultado parcial achando que foi completo.
+ */
+export const CoverageNotice: React.FC<{
+  coverage: { considered: number; total: number };
+  noun: string;
+}> = ({ coverage, noun }) =>
+  coverage.total > coverage.considered ? (
+    <Notice>
+      Olhei as <strong>{coverage.considered} mais urgentes</strong> de {coverage.total} {noun}. As
+      demais ficaram de fora desta rodada.
+    </Notice>
+  ) : null;
 
 /** Cabeçalho de uma lista de sugestões, com atalho de marcar/desmarcar tudo. */
 export const SelectionHeader: React.FC<{

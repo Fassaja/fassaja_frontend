@@ -2,7 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { Split } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Select } from '@/components/common/Select';
-import { CommandField, DoneState, Notice, SelectionHeader, SuggestionRow } from './assistantUi';
+import {
+  CommandField,
+  DoneState,
+  Notice,
+  SelectionHeader,
+  SuggestionRow,
+  ThinkingState,
+} from './assistantUi';
 import { aiService, BreakdownResult } from '@/services/aiService';
 import { useTasks } from '@/contexts/TasksContext';
 import {
@@ -90,6 +97,8 @@ export const BreakdownPanel: React.FC<{
   };
 
   if (done) return <DoneState message={done} onRestart={restart} onHome={onHome} />;
+
+  if (loading) return <ThinkingState label="Quebrando a tarefa em passos…" rows={4} />;
 
   if (result) {
     const notice = demoNotice(result);

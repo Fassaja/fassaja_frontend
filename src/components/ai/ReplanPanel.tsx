@@ -1,8 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowRight, CalendarClock } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Select } from '@/components/common/Select';
-import { CommandField, DoneState, Notice, SelectionHeader, SuggestionRow } from './assistantUi';
+import {
+  CommandField,
+  CoverageNotice,
+  DoneState,
+  Notice,
+  SelectionHeader,
+  SuggestionRow,
+  ThinkingState,
+} from './assistantUi';
 import { aiService, ReplanResult } from '@/services/aiService';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { useTasks } from '@/contexts/TasksContext';
@@ -91,12 +99,15 @@ export const ReplanPanel: React.FC<{
 
   if (done) return <DoneState message={done} onRestart={restart} onHome={onHome} />;
 
+  if (loading) return <ThinkingState label="Olhando suas tarefas e sua agenda…" />;
+
   if (result) {
     const notice = demoNotice(result);
     return (
       <div className="space-y-3">
         <p className="text-sm text-text-primary">{result.summary}</p>
         {notice && <Notice tone="warn">{notice}</Notice>}
+        <CoverageNotice coverage={result.coverage} noun="tarefas abertas" />
 
         {result.changes.length === 0 ? (
           <Notice>
@@ -126,7 +137,15 @@ export const ReplanPanel: React.FC<{
                     title={change.title}
                     reason={change.reason}
                     detail={
-                      <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-flex flex-wrap items-center gap-1.5">
+                        {/* Cor sozinha não comunica: quem não distingue vermelho
+                            perde o "atrasada". Daí o ícone + a palavra. */}
+                        {wasLate && (
+                          <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 font-semibold text-danger">
+                            <AlertTriangle size={11} />
+                            atrasada
+                          </span>
+                        )}
                         <span className={wasLate ? 'font-semibold text-danger' : ''}>{from}</span>
                         <ArrowRight size={12} className="text-text-secondary" />
                         <span className="font-semibold text-primary-vibrant">{to}</span>

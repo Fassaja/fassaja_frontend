@@ -74,12 +74,34 @@ export const BobAssistant: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const launcherRef = useRef<HTMLButtonElement>(null);
+
   const goHome = useCallback(() => setView('home'), []);
 
   const close = useCallback(() => {
     if (busy) return;
     setOpen(false);
   }, [busy]);
+
+  /**
+   * Foco entra no painel ao abrir e volta ao lançador ao fechar. Sem isso o
+   * painel é um diálogo só no nome: quem usa teclado o abre e continua
+   * tabulando pela página atrás dele, sem nunca alcançar as sugestões.
+   *
+   * O destino do retorno é o lançador via ref, e não o elemento que estava
+   * focado antes: o AnimatePresence desmonta e remonta esse botão, então uma
+   * referência guardada na abertura aponta para um nó órfão e focá-la não faz
+   * nada — o foco cairia no <body>.
+   */
+  useEffect(() => {
+    // Espera o framer-motion montar (entrada ~180ms, saída ~120ms) antes de
+    // mover o foco; focar um nó ainda não montado é um no-op silencioso.
+    const id = window.setTimeout(
+      () => (open ? panelRef.current : launcherRef.current)?.focus(),
+      open ? 60 : 200,
+    );
+    return () => window.clearTimeout(id);
+  }, [open]);
 
   // Status da cota a cada abertura: o número muda a cada uso, inclusive em
   // outra aba, então cachear entre aberturas mostraria um saldo errado.
@@ -129,6 +151,7 @@ export const BobAssistant: React.FC = () => {
       <AnimatePresence>
         {!open && (
           <motion.button
+            ref={launcherRef}
             type="button"
             onClick={() => setOpen(true)}
             aria-label="Abrir o assistente"
@@ -153,7 +176,9 @@ export const BobAssistant: React.FC = () => {
             exit={{ opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.15 } }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             role="dialog"
+            aria-modal="true"
             aria-label="Assistente Bob"
+            tabIndex={-1}
             // bottom-6 (e não bottom-24): como o lançador some ao abrir, o
             // painel encosta onde ele estava em vez de deixar um vão vazio.
             className="fixed inset-x-4 bottom-6 z-50 flex max-h-[75dvh] flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-xl sm:left-auto sm:right-6 sm:w-[380px]"
@@ -196,8 +221,10 @@ export const BobAssistant: React.FC = () => {
               </button>
             </div>
 
-            {/* Corpo */}
-            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+            {/* Corpo. `scroll-shadow` pinta um degradê nas bordas apenas
+                quando há conteúdo fora de vista — sem isso, uma lista longa
+                parecia terminar no corte do painel. */}
+            <div className="scroll-shadow min-h-0 flex-1 overflow-y-auto p-4">
               {view === 'home' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-text-primary">{bobGreeting(aiStatus)}</p>

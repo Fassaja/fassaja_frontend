@@ -77,6 +77,15 @@ export interface AiOrigin {
   demoReason?: 'no-key' | 'ai-error';
 }
 
+/**
+ * Quantas tarefas entraram na análise e quantas existiam ao todo. Quando
+ * `total > considered` o back-end recortou a lista e a tela precisa avisar.
+ */
+export interface Coverage {
+  considered: number;
+  total: number;
+}
+
 // --- Replanejar a semana -----------------------------------------------------
 
 export interface ReplanChange {
@@ -92,6 +101,7 @@ export interface ReplanChange {
 export interface ReplanResult extends AiOrigin {
   summary: string;
   changes: ReplanChange[];
+  coverage: Coverage;
 }
 
 // --- Distribuir entre a equipe ----------------------------------------------
@@ -107,6 +117,7 @@ export interface DistributeAssignment {
 export interface DistributeResult extends AiOrigin {
   summary: string;
   assignments: DistributeAssignment[];
+  coverage: Coverage;
 }
 
 // --- Quebrar uma tarefa ------------------------------------------------------

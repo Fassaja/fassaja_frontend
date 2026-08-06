@@ -2,7 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { UserPlus, Users } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Select } from '@/components/common/Select';
-import { CommandField, DoneState, Notice, SelectionHeader, SuggestionRow } from './assistantUi';
+import {
+  CommandField,
+  CoverageNotice,
+  DoneState,
+  Notice,
+  SelectionHeader,
+  SuggestionRow,
+  ThinkingState,
+} from './assistantUi';
 import { aiService, DistributeResult } from '@/services/aiService';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { useTasks } from '@/contexts/TasksContext';
@@ -86,12 +94,15 @@ export const DistributePanel: React.FC<{
 
   if (done) return <DoneState message={done} onRestart={restart} onHome={onHome} />;
 
+  if (loading) return <ThinkingState label="Pesando a carga de cada pessoa da equipe…" />;
+
   if (result) {
     const notice = demoNotice(result);
     return (
       <div className="space-y-3">
         <p className="text-sm text-text-primary">{result.summary}</p>
         {notice && <Notice tone="warn">{notice}</Notice>}
+        <CoverageNotice coverage={result.coverage} noun="tarefas sem responsável" />
 
         <SelectionHeader
           selected={selected.length}
