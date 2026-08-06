@@ -83,6 +83,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
           <div className="h-12 flex items-center justify-center overflow-hidden">
             <img
               src="/logofassaja.png"
+                data-logo
               alt="Fassaja"
               className="max-w-none w-56 h-auto object-contain select-none"
               draggable={false}
@@ -101,7 +102,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
               Se <strong className="text-text-primary">{email.trim()}</strong> estiver cadastrado,
               enviamos um link para criar uma nova senha. Ele vale por 1 hora.
             </p>
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+            <div className="mt-4 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
               ⚠️ Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico.
             </div>
           </div>
@@ -110,8 +111,8 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
         {/* Sucesso: senha redefinida */}
         {done && mode === 'reset' && (
           <div className="text-center">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center">
-              <CheckCircle2 size={28} className="text-emerald-600" />
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+              <CheckCircle2 size={28} className="text-emerald-600 dark:text-emerald-300" />
             </div>
             <h2 className="text-2xl font-bold text-text-primary">Senha redefinida!</h2>
             <p className="text-text-secondary mt-2">
@@ -160,7 +161,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
             </p>
 
             {missingToken ? (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              <div className="rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
                 Link inválido ou incompleto. Peça um novo e-mail de redefinição.
               </div>
             ) : (

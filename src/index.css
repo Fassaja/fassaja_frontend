@@ -2,6 +2,127 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Paletas dos dois temas. Os valores são trios "R G B" sem função de cor
+ * porque o tailwind.config os envelopa em `rgb(... / <alpha-value>)` — é isso
+ * que preserva os modificadores de opacidade (`bg-surface/60`).
+ *
+ * Trocar de tema é trocar estes valores: nenhum componente conhece o tema.
+ */
+:root {
+  --c-primary-dark: 6 27 73;
+  --c-primary-vibrant: 36 119 255;
+  --c-primary-hover: 29 100 216;
+  --c-primary-light: 234 242 255;
+
+  --c-bg-main: 247 250 255;
+  --c-bg-secondary: 242 246 252;
+  --c-surface: 255 255 255;
+
+  --c-text-primary: 15 23 42;
+  --c-text-secondary: 100 116 139;
+  --c-text-soft: 95 110 133; /* AA (~5.2:1) sobre superfície clara */
+
+  --c-border: 227 234 243;
+  --c-success: 34 197 94;
+  --c-warning: 251 191 36;
+  --c-danger: 244 63 94;
+  --c-coral: 251 113 133;
+  --c-turquoise: 45 212 191;
+  --c-priority-high: 139 92 246;
+  --c-priority-medium: 251 191 36;
+  --c-priority-low: 34 197 94;
+
+  --c-shadow: 6 27 73;
+  --shadow-sm-alpha: 0.06;
+  --shadow-md-alpha: 0.1;
+  --shadow-lg-alpha: 0.12;
+  --shadow-xl-alpha: 0.18;
+
+  /* Véu do fundo dos modais. */
+  --c-scrim: 6 27 73;
+  /* Fundo profundo da marca — mesmo valor nos dois temas (ver tailwind.config). */
+  --c-brand-deep: 6 27 73;
+  /* Início do degradê dos painéis GRANDES da marca (o herói do login). Num
+     bloco que ocupa meia tela, o azul vibrante emite luz demais no tema
+     escuro — aqui ele escurece; nos elementos pequenos (avatar, medalha de
+     XP) o vibrante continua, porque área pequena não ofusca. */
+  --c-brand-hero: 36 119 255;
+
+  /* Intensidade com que cores VINDAS DOS DADOS (projeto, tag, evento) tingem
+     o fundo. Ver src/utils/color.ts. */
+  --tint-subtle: 10%;
+  --tint-medium: 15%;
+  --tint-strong: 25%;
+  /* No tema claro a cor do dado já serve de texto: 100% dela, sem mistura. */
+  --chip-text-strength: 100%;
+  --chip-text-target: white;
+
+  color-scheme: light;
+}
+
+/**
+ * Tema escuro. Não é a paleta clara invertida: o fundo puxa para o
+ * azul-marinho da marca (e não para o cinza neutro), a superfície é mais
+ * CLARA que o fundo — é assim que a elevação se lê no escuro — e o azul
+ * primário sobe de tom, porque #2477FF sobre fundo escuro fica pesado e
+ * perde contraste no texto de link.
+ */
+.dark {
+  /* primary-dark é usado como texto forte e como véu; no escuro o papel
+     "cor mais contrastante" inverte e ele vira quase branco. */
+  --c-primary-dark: 232 238 249;
+  --c-primary-vibrant: 59 130 246;
+  --c-primary-hover: 96 165 250;
+  /* O "azul clarinho" de realce vira um azul escuro dessaturado — mesmo
+     papel (tingir uma área), tom oposto. */
+  --c-primary-light: 26 45 78;
+
+  --c-bg-main: 10 16 28;
+  --c-bg-secondary: 17 25 41;
+  --c-surface: 22 32 51;
+
+  --c-text-primary: 232 238 249;
+  --c-text-secondary: 154 168 190;
+  --c-text-soft: 176 189 209; /* AA sobre a superfície escura */
+
+  --c-border: 39 52 76;
+  --c-success: 74 222 128;
+  --c-warning: 250 204 21;
+  --c-danger: 251 113 133;
+  --c-coral: 251 146 160;
+  --c-turquoise: 94 234 212;
+  --c-priority-high: 167 139 250;
+  --c-priority-medium: 250 204 21;
+  --c-priority-low: 74 222 128;
+
+  /* Sombra azul a 6% some sobre fundo quase preto: preta e mais densa. */
+  --c-shadow: 0 0 0;
+  --shadow-sm-alpha: 0.3;
+  --shadow-md-alpha: 0.4;
+  --shadow-lg-alpha: 0.5;
+  --shadow-xl-alpha: 0.6;
+
+  --c-scrim: 0 0 0;
+  --c-brand-deep: 6 27 73;
+  /* Meio-termo deliberado: #1E3A8A ficava tão escuro que o painel se fundia
+     com o formulário e a divisão da tela sumia; #3B82F6 ofuscava. Este tom
+     tem ~1/2 da luminância do vibrante e ainda lê como azul da marca. */
+  --c-brand-hero: 29 78 216;
+
+  /* 10% de uma cor saturada sobre fundo escuro é quase invisível — os chips
+     precisam de bem mais tinta para se destacar da superfície. */
+  --tint-subtle: 22%;
+  --tint-medium: 28%;
+  --tint-strong: 45%;
+  /* E a cor crua não alcança contraste de leitura sobre fundo escuro: mistura
+     com branco para clarear o rótulo sem perder a identidade da cor. */
+  --chip-text-strength: 62%;
+  --chip-text-target: white;
+
+  color-scheme: dark;
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -13,8 +134,8 @@ body {
 
 /* Seleção de texto com a cor da marca (em vez do azul padrão do sistema). */
 ::selection {
-  background: #cfe1ff;
-  color: #061b49;
+  background: rgb(var(--c-primary-vibrant) / 0.3);
+  color: rgb(var(--c-text-primary));
 }
 
 /* Foco-visível baseline: controles sem anel próprio ainda mostram foco
@@ -61,16 +182,34 @@ body {
 }
 
 /**
- * Pista de rolagem: um degradê branco→transparente preso no topo e na base do
- * container, mais uma "capa" branca que rola junto com o conteúdo e esconde o
- * degradê quando já se está na ponta. Resultado: a sombra só aparece do lado em
- * que ainda há conteúdo fora de vista, sem nenhum listener de scroll em JS.
+ * O logo é um PNG com o texto em azul-marinho — sobre fundo escuro ele
+ * praticamente some. Não temos uma arte clara da marca, então invertemos a
+ * luminosidade e devolvemos a matiz com hue-rotate: o traço escuro clareia e
+ * os acentos coloridos continuam coloridos. Um `invert` puro deixaria a marca
+ * legível, mas sem cor nenhuma.
+ *
+ * Quando existir um SVG ou uma versão clara do logo, trocar por ela é melhor
+ * do que manter o filtro.
+ */
+.dark [data-logo] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/**
+ * Pista de rolagem: um degradê da cor da superfície → transparente preso no
+ * topo e na base do container, mais uma "capa" da mesma cor que rola junto com
+ * o conteúdo e esconde o degradê quando já se está na ponta. Resultado: a
+ * sombra só aparece do lado em que ainda há conteúdo fora de vista, sem nenhum
+ * listener de scroll em JS.
+ *
+ * As duas primeiras camadas usam a cor da SUPERFÍCIE (não branco fixo), senão
+ * no tema escuro apareceria uma faixa branca no topo do painel.
  */
 .scroll-shadow {
   background:
-    linear-gradient(#fff 30%, rgba(255, 255, 255, 0)) top / 100% 24px no-repeat,
-    linear-gradient(rgba(255, 255, 255, 0), #fff 70%) bottom / 100% 24px no-repeat,
-    radial-gradient(farthest-side at 50% 0, rgba(6, 27, 73, 0.22), transparent) top / 100% 14px no-repeat,
-    radial-gradient(farthest-side at 50% 100%, rgba(6, 27, 73, 0.22), transparent) bottom / 100% 14px no-repeat;
+    linear-gradient(rgb(var(--c-surface)) 30%, rgb(var(--c-surface) / 0)) top / 100% 24px no-repeat,
+    linear-gradient(rgb(var(--c-surface) / 0), rgb(var(--c-surface)) 70%) bottom / 100% 24px no-repeat,
+    radial-gradient(farthest-side at 50% 0, rgb(var(--c-shadow) / 0.22), transparent) top / 100% 14px no-repeat,
+    radial-gradient(farthest-side at 50% 100%, rgb(var(--c-shadow) / 0.22), transparent) bottom / 100% 14px no-repeat;
   background-attachment: local, local, scroll, scroll;
 }

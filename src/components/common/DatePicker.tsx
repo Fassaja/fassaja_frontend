@@ -98,7 +98,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           disabled={disabled}
           onClick={() => setOpen(v => !v)}
           className={`
-            w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border bg-white text-left
+            w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border bg-surface text-left
             transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60
             disabled:bg-bg-secondary disabled:cursor-not-allowed
             ${open ? 'border-primary-vibrant ring-4 ring-primary-light/60' : 'border-border hover:border-primary-vibrant/50'}
@@ -131,7 +131,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
               transition={{ duration: 0.14 }}
-              className={`absolute z-50 left-0 w-72 bg-white rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-4 ${
+              className={`absolute z-50 left-0 w-72 bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-4 ${
                 openUp ? 'bottom-full mb-2' : 'top-full mt-2'
               }`}
             >

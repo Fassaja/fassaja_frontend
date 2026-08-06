@@ -68,7 +68,7 @@ export const WalkthroughModal: React.FC<WalkthroughModalProps> = ({
               onClick={() => setStep(i)}
               aria-label={`Passo ${i + 1}`}
               className={`h-2 rounded-full transition-all ${
-                i === step ? 'w-6 bg-primary-vibrant' : 'w-2 bg-border hover:bg-gray-300'
+                i === step ? 'w-6 bg-primary-vibrant' : 'w-2 bg-border hover:bg-bg-secondary'
               }`}
             />
           ))}

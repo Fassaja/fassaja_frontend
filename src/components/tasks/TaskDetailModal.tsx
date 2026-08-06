@@ -14,6 +14,7 @@ import { Modal } from '@/components/common/Modal';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
 import { formatDate, formatDateWithDay } from '@/utils/date';
+import { tint, chipText } from '@/utils/color';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -24,10 +25,10 @@ interface TaskDetailModalProps {
 }
 
 const statusConfig: Record<Task['status'], { label: string; className: string; dot: string }> = {
-  pending: { label: 'Pendente', className: 'bg-slate-100 text-slate-600', dot: '#64748B' },
+  pending: { label: 'Pendente', className: 'bg-bg-secondary text-text-secondary', dot: '#64748B' },
   in_progress: { label: 'Em andamento', className: 'bg-primary-light text-primary-vibrant', dot: '#2477FF' },
-  completed: { label: 'Concluída', className: 'bg-emerald-100 text-emerald-700', dot: '#22C55E' },
-  overdue: { label: 'Atrasada', className: 'bg-rose-100 text-rose-600', dot: '#F43F5E' },
+  completed: { label: 'Concluída', className: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', dot: '#22C55E' },
+  overdue: { label: 'Atrasada', className: 'bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300', dot: '#F43F5E' },
 };
 
 const priorityConfig: Record<Task['priority'], { label: string; color: string }> = {
@@ -82,7 +83,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             onClick={() => onEdit(task)}
             aria-label="Editar tarefa"
             title="Editar tarefa"
-            className="absolute top-4 right-4 p-2 rounded-xl bg-white border border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant transition-colors active:scale-95"
+            className="absolute top-4 right-4 p-2 rounded-xl bg-surface border border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant transition-colors active:scale-95"
           >
             <Pencil size={16} />
           </button>
@@ -161,7 +162,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   <span
                     key={tag.id}
                     className="inline-flex items-center gap-1 text-[12px] font-semibold px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: tag.color + '1A', color: tag.color }}
+                    style={{ backgroundColor: tint(tag.color), color: chipText(tag.color) }}
                   >
                     <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tag.color }} />
                     {tag.name}

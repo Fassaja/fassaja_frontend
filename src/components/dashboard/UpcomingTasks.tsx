@@ -12,15 +12,15 @@ interface UpcomingTasksProps {
 }
 
 const priorityBadge: Record<Task['priority'], { label: string; className: string }> = {
-  high: { label: 'Alta', className: 'bg-purple-100 text-purple-700' },
-  medium: { label: 'Média', className: 'bg-amber-100 text-amber-700' },
-  low: { label: 'Baixa', className: 'bg-emerald-100 text-emerald-700' },
+  high: { label: 'Alta', className: 'bg-purple-100 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300' },
+  medium: { label: 'Média', className: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300' },
+  low: { label: 'Baixa', className: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' },
 };
 
 function dueBadge(task: Task) {
   if (!task.dueDate) return null;
   if (isToday(task.dueDate)) return { label: 'Hoje', className: 'bg-primary-light text-primary-vibrant' };
-  if (isTomorrow(task.dueDate)) return { label: 'Amanhã', className: 'bg-emerald-50 text-emerald-600' };
+  if (isTomorrow(task.dueDate)) return { label: 'Amanhã', className: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300' };
   return { label: formatDate(task.dueDate), className: 'bg-bg-secondary text-text-secondary' };
 }
 
@@ -64,7 +64,7 @@ export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = 
 
               <span
                 className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                  completed ? 'bg-emerald-100 text-emerald-700' : priority.className
+                  completed ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : priority.className
                 }`}
               >
                 {completed ? 'Concluída' : priority.label}

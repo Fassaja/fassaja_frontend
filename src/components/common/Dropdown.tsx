@@ -121,7 +121,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
           aria-expanded={open}
           className={`
             ${fullWidth ? 'w-full' : ''} ${triggerPad}
-            inline-flex items-center justify-between gap-2 rounded-xl border bg-white font-medium text-text-primary
+            inline-flex items-center justify-between gap-2 rounded-xl border bg-surface font-medium text-text-primary
             transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60
             disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border
             ${open ? 'border-primary-vibrant ring-4 ring-primary-light/60' : 'border-border hover:border-primary-vibrant/50'}
@@ -147,7 +147,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -6, scale: 0.98 }}
                 transition={{ duration: 0.16, ease: [0.25, 1, 0.5, 1] }}
-                className="w-max max-w-[16rem] overflow-y-auto bg-white rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-1.5"
+                className="w-max max-w-[16rem] overflow-y-auto bg-surface rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-1.5"
               >
                 {options.map(option => {
                   const isSelected = option.value === value;

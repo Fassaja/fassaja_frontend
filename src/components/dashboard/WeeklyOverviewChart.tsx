@@ -11,6 +11,7 @@ import {
 import { Card } from '@/components/common/Card';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Task } from '@/types/task';
+import { useChartTheme } from '@/utils/chartTheme';
 
 interface WeeklyOverviewChartProps {
   tasks: Task[];
@@ -27,6 +28,7 @@ function sameDay(a: Date, b: Date): boolean {
 }
 
 export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks }) => {
+  const chart = useChartTheme();
   const [period, setPeriod] = useState('week');
 
   const data = useMemo(() => {
@@ -98,30 +100,31 @@ export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks 
               <stop offset="100%" stopColor="#2477FF" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid vertical={false} stroke="#EDF2F7" />
+          <CartesianGrid vertical={false} stroke={chart.grid} />
           <XAxis
             dataKey="day"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#94A3B8', fontSize: 12 }}
+            tick={{ fill: chart.tick, fontSize: 12 }}
             dy={8}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#94A3B8', fontSize: 12 }}
+            tick={{ fill: chart.tick, fontSize: 12 }}
             allowDecimals={false}
             width={36}
           />
           <Tooltip
-            cursor={{ stroke: '#E5EAF2' }}
+            cursor={{ stroke: chart.cursor }}
             contentStyle={{
               borderRadius: 12,
-              border: '1px solid #E5EAF2',
+              backgroundColor: chart.tooltipBg,
+              border: `1px solid ${chart.tooltipBorder}`,
               boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
               fontSize: 13,
             }}
-            labelStyle={{ fontWeight: 700, color: '#0F172A' }}
+            labelStyle={{ fontWeight: 700, color: chart.tooltipLabel }}
             formatter={(value: number, name: string) => [
               value,
               name === 'concluidas' ? 'Concluídas' : 'Criadas',
@@ -130,11 +133,11 @@ export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks 
           <Area
             type="monotone"
             dataKey="criadas"
-            stroke="#CBD5E1"
+            stroke={chart.muted}
             strokeWidth={2.5}
             fill="transparent"
             dot={false}
-            activeDot={{ r: 5, fill: '#CBD5E1', strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: chart.muted, strokeWidth: 0 }}
           />
           <Area
             type="monotone"
@@ -143,7 +146,7 @@ export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks 
             strokeWidth={3}
             fill="url(#fillConcluidas)"
             dot={false}
-            activeDot={{ r: 6, fill: '#2477FF', stroke: '#fff', strokeWidth: 2 }}
+            activeDot={{ r: 6, fill: '#2477FF', stroke: chart.dotStroke, strokeWidth: 2 }}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -153,7 +156,7 @@ export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks 
           <span className="w-2.5 h-2.5 rounded-full bg-primary-vibrant" /> Concluídas
         </span>
         <span className="flex items-center gap-2 text-sm text-text-secondary">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-300" /> Criadas
+          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: chart.muted }} /> Criadas
         </span>
       </div>
     </Card>

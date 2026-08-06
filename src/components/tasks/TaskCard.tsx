@@ -10,6 +10,7 @@ import { formatDate } from '@/utils/date';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
+import { tint, chipText } from '@/utils/color';
 
 interface TaskCardProps {
   task: Task;
@@ -24,10 +25,10 @@ interface TaskCardProps {
 }
 
 const statusConfig: Record<Task['status'], { label: string; className: string; dot: string }> = {
-  pending: { label: 'Pendente', className: 'bg-slate-100 text-slate-600', dot: '#64748B' },
+  pending: { label: 'Pendente', className: 'bg-bg-secondary text-text-secondary', dot: '#64748B' },
   in_progress: { label: 'Em andamento', className: 'bg-primary-light text-primary-vibrant', dot: '#2477FF' },
-  completed: { label: 'Concluída', className: 'bg-emerald-100 text-emerald-700', dot: '#22C55E' },
-  overdue: { label: 'Atrasada', className: 'bg-rose-100 text-rose-600', dot: '#F43F5E' },
+  completed: { label: 'Concluída', className: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', dot: '#22C55E' },
+  overdue: { label: 'Atrasada', className: 'bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300', dot: '#F43F5E' },
 };
 
 // Status que o usuário pode escolher direto no card (overdue é calculado pelo servidor).
@@ -123,7 +124,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.16, ease: [0.25, 1, 0.5, 1] }}
             style={{ position: 'fixed', top: pos.top, left: pos.left, width: MENU_W }}
-            className="z-[61] rounded-xl border border-border bg-white shadow-lg overflow-hidden py-1"
+            className="z-[61] rounded-xl border border-border bg-surface shadow-lg overflow-hidden py-1"
             onClick={e => e.stopPropagation()}
           >
             {STATUS_CHOICES.map(value => {
@@ -152,9 +153,9 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
 };
 
 const priorityConfig: Record<Task['priority'], { label: string; color: string; className: string }> = {
-  low: { label: 'Baixa', color: '#22C55E', className: 'bg-emerald-50 text-emerald-700' },
-  medium: { label: 'Média', color: '#FBBF24', className: 'bg-amber-50 text-amber-700' },
-  high: { label: 'Alta', color: '#8B5CF6', className: 'bg-purple-50 text-purple-700' },
+  low: { label: 'Baixa', color: '#22C55E', className: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' },
+  medium: { label: 'Média', color: '#FBBF24', className: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300' },
+  high: { label: 'Alta', color: '#8B5CF6', className: 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300' },
 };
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -180,10 +181,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const assignment =
     task.assigneeId && task.assigneeName
       ? task.assignmentStatus === 'accepted'
-        ? { label: task.assigneeName, className: 'bg-emerald-50 text-emerald-700', icon: <UserCheck size={12} /> }
+        ? { label: task.assigneeName, className: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300', icon: <UserCheck size={12} /> }
         : task.assignmentStatus === 'rejected'
-        ? { label: `${task.assigneeName} recusou`, className: 'bg-rose-50 text-rose-600', icon: <UserX size={12} /> }
-        : { label: `Proposta: ${task.assigneeName}`, className: 'bg-amber-50 text-amber-700', icon: <Send size={11} /> }
+        ? { label: `${task.assigneeName} recusou`, className: 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300', icon: <UserX size={12} /> }
+        : { label: `Proposta: ${task.assigneeName}`, className: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300', icon: <Send size={11} /> }
       : null;
 
   const respond = async (e: React.MouseEvent, action: 'accept' | 'reject') => {
@@ -273,7 +274,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             {project && (
               <span
                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full text-text-primary"
-                style={{ backgroundColor: project.color + '1A' }}
+                style={{ backgroundColor: tint(project.color) }}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: project.color }} />
                 {project.name}
@@ -283,7 +284,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <span
                 key={tag.id}
                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: tag.color + '1A', color: tag.color }}
+                style={{ backgroundColor: tint(tag.color), color: chipText(tag.color) }}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tag.color }} />
                 {tag.name}
@@ -307,8 +308,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
           {/* Proposta de tarefa para o usuário atual */}
           {isMyProposal && !selectionMode && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2">
-              <span className="text-xs font-semibold text-amber-700 flex-1 min-w-0">
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-500/10 px-3 py-2">
+              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex-1 min-w-0">
                 Esta tarefa foi proposta a você.
               </span>
               <button

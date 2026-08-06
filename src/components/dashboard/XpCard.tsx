@@ -25,7 +25,7 @@ export const XpCard: React.FC<XpCardProps> = ({ tasks, children }) => {
 
       <div className="flex items-center gap-4">
         <div className="relative shrink-0">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-vibrant to-primary-dark flex flex-col items-center justify-center text-white shadow-md">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-vibrant to-brand-deep flex flex-col items-center justify-center text-white shadow-md">
             <span className="text-[9px] font-semibold uppercase tracking-wide text-white/80 leading-none">
               Nível
             </span>

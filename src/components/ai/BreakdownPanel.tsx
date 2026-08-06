@@ -19,6 +19,7 @@ import {
   priorityLabel,
   toggleSelection,
 } from '@/utils/aiAssistant';
+import { tint, chipText } from '@/utils/color';
 
 /**
  * Quebrar uma tarefa: a IA propõe de 3 a 6 subtarefas executáveis. Elas nascem
@@ -141,7 +142,7 @@ export const BreakdownPanel: React.FC<{
                     <span
                       key={tag.id}
                       className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold"
-                      style={{ backgroundColor: `${tag.color}22`, color: tag.color }}
+                      style={{ backgroundColor: tint(tag.color, 'medium'), color: chipText(tag.color) }}
                     >
                       {tag.name}
                     </span>

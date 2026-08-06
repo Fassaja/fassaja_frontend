@@ -255,7 +255,7 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
             onClick={() => setTab(t.id)}
             className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
               tab === t.id
-                ? 'bg-white text-primary-vibrant shadow-sm'
+                ? 'bg-surface text-primary-vibrant shadow-sm'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
           >
@@ -306,7 +306,7 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
           </div>
 
           {/* Zona de perigo */}
-          <div className="mt-2 rounded-xl border border-rose-200 bg-rose-50/60 p-4">
+          <div className="mt-2 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50/60 dark:bg-rose-500/10 p-4">
             <p className="text-sm font-bold text-text-primary flex items-center gap-2">
               <AlertTriangle size={16} className="text-danger" /> Zona de perigo
             </p>
@@ -352,7 +352,7 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-text-primary truncate flex items-center gap-1.5">
                     {m.name}
-                    {isOwner && <Crown size={14} className="text-amber-500 shrink-0" />}
+                    {isOwner && <Crown size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />}
                     {!isOwner && m.canManageTasks && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary-light text-primary-vibrant">
                         <ShieldCheck size={11} /> Gerente de tarefas
@@ -390,7 +390,7 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                           }`}
                         >
                           <span
-                            className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                            className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-surface shadow transition-transform ${
                               m.canManageTasks ? 'translate-x-4' : ''
                             }`}
                           />
@@ -409,7 +409,7 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                       disabled={busy}
                       aria-label={`Tornar ${m.name} dono da equipe`}
                       title="Tornar dono da equipe"
-                      className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                      className="p-2 rounded-lg text-amber-600 dark:text-amber-300 hover:bg-amber-50 transition-colors disabled:opacity-50"
                     >
                       <Crown size={16} />
                     </button>

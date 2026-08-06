@@ -59,7 +59,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
     <Modal isOpen={isOpen} onClose={onClose} title="Central de feedbacks" size="md">
       <div className="space-y-4">
         <div className="flex items-start gap-3 p-3 rounded-xl bg-primary-light/60">
-          <span className="w-10 h-10 shrink-0 rounded-xl bg-white text-primary-vibrant flex items-center justify-center">
+          <span className="w-10 h-10 shrink-0 rounded-xl bg-surface text-primary-vibrant flex items-center justify-center">
             <MessageSquareHeart size={18} />
           </span>
           <p className="text-sm text-primary-dark/80">

@@ -92,7 +92,7 @@ const CalendarPage: React.FC = () => {
                     <li
                       key={task.id}
                       className={`p-3 rounded-xl border flex items-start gap-3 ${
-                        overdue ? 'border-rose-200 bg-rose-50' : 'border-border bg-bg-secondary'
+                        overdue ? 'border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10' : 'border-border bg-bg-secondary'
                       }`}
                     >
                       <button
@@ -116,7 +116,7 @@ const CalendarPage: React.FC = () => {
                         <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary mt-1">
                           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: priority.color }} />
                           {priority.label}
-                          {overdue && <span className="text-rose-600 font-semibold">· Atrasada</span>}
+                          {overdue && <span className="text-rose-600 dark:text-rose-300 font-semibold">· Atrasada</span>}
                         </span>
                       </div>
                     </li>

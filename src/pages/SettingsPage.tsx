@@ -10,6 +10,11 @@ import {
   ShieldCheck,
   Trash2,
   AlertTriangle,
+  Palette,
+  Monitor,
+  Sun,
+  Moon,
+  type LucideIcon,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
@@ -23,7 +28,19 @@ import { PAGE_TOURS } from '@/components/onboarding/PageTour';
 import { useUser, NotificationPrefs } from '@/contexts/UserContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme, ThemePreference } from '@/contexts/ThemeContext';
 import { deleteAccount } from '@/services/authService';
+import { tint, chipText } from '@/utils/color';
+
+const THEME_OPTIONS: {
+  value: ThemePreference;
+  label: string;
+  icon: LucideIcon;
+}[] = [
+  { value: 'system', label: 'Sistema', icon: Monitor },
+  { value: 'light', label: 'Claro', icon: Sun },
+  { value: 'dark', label: 'Escuro', icon: Moon },
+];
 
 const SectionHeader: React.FC<{
   icon: React.ReactNode;
@@ -35,7 +52,7 @@ const SectionHeader: React.FC<{
     <h3 className="text-lg font-bold text-text-primary flex items-center gap-3">
       <span
         className="w-9 h-9 rounded-xl flex items-center justify-center"
-        style={{ backgroundColor: color + '1A', color }}
+        style={{ backgroundColor: tint(color), color: chipText(color) }}
       >
         {icon}
       </span>
@@ -56,7 +73,7 @@ const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked,
     }`}
   >
     <span
-      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+      className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow transition-transform ${
         checked ? 'translate-x-6' : 'translate-x-1'
       }`}
     />
@@ -98,6 +115,7 @@ const GOAL_MAX = 999;
 
 const SettingsPage: React.FC = () => {
   const { user, updateUser } = useUser();
+  const { preference, resolved, setPreference } = useTheme();
   const toast = useToast();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -195,6 +213,42 @@ const SettingsPage: React.FC = () => {
   return (
     <AppLayout title="Configurações" subtitle="Personalize sua experiência no Fassaja.">
       <div className="space-y-6 max-w-3xl">
+        {/* Aparência */}
+        <Card>
+          <SectionHeader
+            icon={<Palette size={18} />}
+            color="#8B5CF6"
+            title="Aparência"
+            subtitle="Vale para este navegador."
+          />
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTIONS.map(option => {
+              const active = preference === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setPreference(option.value)}
+                  aria-pressed={active}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${
+                    active
+                      ? 'border-primary-vibrant bg-primary-light text-primary-vibrant'
+                      : 'border-border bg-surface text-text-secondary hover:bg-bg-secondary'
+                  }`}
+                >
+                  <option.icon size={18} />
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs text-text-secondary">
+            {preference === 'system'
+              ? `Acompanhando o sistema — agora está no tema ${resolved === 'dark' ? 'escuro' : 'claro'}.`
+              : 'Sua escolha vence a preferência do sistema.'}
+          </p>
+        </Card>
+
         {/* Goals */}
         <Card>
           <SectionHeader
@@ -234,7 +288,7 @@ const SettingsPage: React.FC = () => {
               <p className="text-xs text-text-secondary">Salvamos ao sair do campo.</p>
             )}
             {weeklyBelowDaily && (
-              <span className="text-xs font-medium text-amber-600">
+              <span className="text-xs font-medium text-amber-600 dark:text-amber-300">
                 Sua meta semanal é menor que a diária — confira se é isso mesmo.
               </span>
             )}
@@ -283,7 +337,7 @@ const SettingsPage: React.FC = () => {
             />
             <ActionRow
               icon={<RotateCcw size={18} />}
-              iconClass="bg-emerald-50 text-emerald-600"
+              iconClass="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
               title="Reexibir dicas das áreas"
               description="As boas-vindas de cada tela voltam a aparecer uma vez"
               onClick={resetAreaTours}
@@ -302,14 +356,14 @@ const SettingsPage: React.FC = () => {
           <div className="flex flex-col gap-3">
             <ActionRow
               icon={<ShieldCheck size={18} />}
-              iconClass="bg-rose-50 text-danger"
+              iconClass="bg-rose-50 dark:bg-rose-500/10 text-danger"
               title="Ir para o Perfil"
               description="Alterar nome, foto de perfil e senha"
               onClick={() => navigate('/profile')}
             />
             <ActionRow
               icon={<Trash2 size={18} />}
-              iconClass="bg-rose-50 text-danger"
+              iconClass="bg-rose-50 dark:bg-rose-500/10 text-danger"
               title="Excluir minha conta"
               description="Apaga sua conta e seus dados pessoais definitivamente"
               onClick={() => setConfirmDelete(true)}
@@ -344,7 +398,7 @@ const SettingsPage: React.FC = () => {
       {/* Etapa 2 — a confirmação de verdade: senha + digitar EXCLUIR. */}
       <Modal isOpen={showDeleteForm} onClose={closeDeleteForm} title="Excluir minha conta" size="md">
         <form onSubmit={handleDeleteAccount} className="flex flex-col gap-4">
-          <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          <div className="flex items-start gap-2 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
             <AlertTriangle size={16} className="mt-0.5 shrink-0" />
             <span>Último passo. Depois disso não há como recuperar a conta.</span>
           </div>

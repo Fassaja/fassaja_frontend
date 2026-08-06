@@ -287,7 +287,7 @@ const TasksPage: React.FC = () => {
               <button
                 type="button"
                 onClick={exitSelection}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-white border border-border text-text-secondary hover:text-text-primary active:scale-95 transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-surface border border-border text-text-secondary hover:text-text-primary active:scale-95 transition-all"
               >
                 <X size={15} /> Concluído
               </button>
@@ -300,7 +300,7 @@ const TasksPage: React.FC = () => {
                 onClick={() => setView('board')}
                 aria-pressed={view === 'board'}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  view === 'board' ? 'bg-white text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
+                  view === 'board' ? 'bg-surface text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <LayoutGrid size={16} /> Quadro
@@ -309,7 +309,7 @@ const TasksPage: React.FC = () => {
                 onClick={() => setView('list')}
                 aria-pressed={view === 'list'}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  view === 'list' ? 'bg-white text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
+                  view === 'list' ? 'bg-surface text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <List size={16} /> Lista
@@ -319,7 +319,7 @@ const TasksPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectionMode(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-white border border-border text-text-secondary hover:text-text-primary hover:border-primary-vibrant/40 active:scale-95 transition-all"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-surface border border-border text-text-secondary hover:text-text-primary hover:border-primary-vibrant/40 active:scale-95 transition-all"
               >
                 <ListChecks size={16} />
                 <span className="hidden sm:inline">Selecionar</span>
@@ -340,7 +340,7 @@ const TasksPage: React.FC = () => {
                 className={`shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97] ${
                   active
                     ? 'border-transparent text-white shadow-sm'
-                    : 'bg-white border-border text-text-secondary hover:bg-bg-secondary'
+                    : 'bg-surface border-border text-text-secondary hover:bg-bg-secondary'
                 }`}
                 style={active ? { backgroundColor: tab.color } : undefined}
               >

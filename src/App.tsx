@@ -1,5 +1,6 @@
 import { MotionConfig } from 'framer-motion';
 import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { CelebrationProvider } from '@/contexts/CelebrationContext';
@@ -15,6 +16,9 @@ import { TopProgressBar } from '@/components/layout/TopProgressBar';
 function App() {
   return (
     <MotionConfig reducedMotion="user">
+    {/* Mais externo: o tema não depende de sessão nem de dados, e a tela de
+        login também precisa dele. */}
+    <ThemeProvider>
     <ToastProvider>
       <UserProvider>
         <CelebrationProvider>
@@ -37,6 +41,7 @@ function App() {
         </CelebrationProvider>
       </UserProvider>
       </ToastProvider>
+    </ThemeProvider>
     </MotionConfig>
   );
 }

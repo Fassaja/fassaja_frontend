@@ -6,6 +6,7 @@ import { Card } from '@/components/common/Card';
 import { TaskPriority } from '@/types/task';
 import { Project } from '@/types/project';
 import { Tag } from '@/types/tag';
+import { tint } from '@/utils/color';
 
 interface TaskFiltersProps {
   searchTerm: string;
@@ -106,7 +107,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                 style={
                   active
                     ? { backgroundColor: tag.color }
-                    : { backgroundColor: tag.color + '12' }
+                    : { backgroundColor: tint(tag.color) }
                 }
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: active ? '#fff' : tag.color }} />

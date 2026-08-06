@@ -50,7 +50,7 @@ const COLUMNS: {
     label: 'Pendente',
     hint: 'Ainda não começou',
     color: '#64748B',
-    tint: 'bg-slate-50',
+    tint: 'bg-bg-secondary',
     statuses: ['pending', 'overdue'],
   },
   {
@@ -66,7 +66,7 @@ const COLUMNS: {
     label: 'Concluída',
     hint: 'Já finalizou 🎉',
     color: '#22C55E',
-    tint: 'bg-emerald-50',
+    tint: 'bg-emerald-50 dark:bg-emerald-500/10',
     statuses: ['completed'],
   },
 ];
@@ -92,7 +92,7 @@ const BoardColumn: React.FC<{
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-text-primary">{col.label}</h3>
-            <span className="text-xs font-bold text-text-secondary bg-white rounded-full px-2 py-0.5 border border-border">
+            <span className="text-xs font-bold text-text-secondary bg-surface rounded-full px-2 py-0.5 border border-border">
               {count}
             </span>
           </div>

@@ -141,7 +141,7 @@ export const ReplanPanel: React.FC<{
                         {/* Cor sozinha não comunica: quem não distingue vermelho
                             perde o "atrasada". Daí o ícone + a palavra. */}
                         {wasLate && (
-                          <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-1.5 py-0.5 font-semibold text-danger">
+                          <span className="inline-flex items-center gap-1 rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 font-semibold text-danger">
                             <AlertTriangle size={11} />
                             atrasada
                           </span>

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Plus, Tag as TagIcon, X } from 'lucide-react';
 import { useTags } from '@/contexts/TagsContext';
 import { useToast } from '@/contexts/ToastContext';
+import { tint, chipText } from '@/utils/color';
 
 interface TagSelectorProps {
   /** IDs das tags selecionadas. */
@@ -91,7 +92,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
 
       {/* Campo com chips selecionados + input */}
       <div
-        className={`flex flex-wrap items-center gap-1.5 min-h-[44px] w-full rounded-xl border border-border bg-white px-2.5 py-1.5 transition-colors focus-within:border-text-soft ${
+        className={`flex flex-wrap items-center gap-1.5 min-h-[44px] w-full rounded-xl border border-border bg-surface px-2.5 py-1.5 transition-colors focus-within:border-text-soft ${
           disabled ? 'opacity-60 pointer-events-none' : ''
         }`}
         onClick={() => setOpen(true)}
@@ -100,7 +101,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
           <span
             key={tag.id}
             className="inline-flex items-center gap-1 text-[12px] font-semibold pl-2 pr-1 py-0.5 rounded-full"
-            style={{ backgroundColor: tag.color + '1A', color: tag.color }}
+            style={{ backgroundColor: tint(tag.color), color: chipText(tag.color) }}
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tag.color }} />
             {tag.name}
@@ -130,7 +131,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
 
       {/* Lista de sugestões */}
       {open && (matches.length > 0 || canCreate) && (
-        <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-border bg-white shadow-xl max-h-56 overflow-y-auto py-1">
+        <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-border bg-surface shadow-xl max-h-56 overflow-y-auto py-1">
           {matches.map(tag => (
             <button
               key={tag.id}
@@ -158,7 +159,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
 
       {/* Dica quando ainda não há nenhuma tag */}
       {open && tags.length === 0 && !q && (
-        <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-border bg-white shadow-xl px-3 py-2.5 flex items-center gap-2 text-sm text-text-secondary">
+        <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-border bg-surface shadow-xl px-3 py-2.5 flex items-center gap-2 text-sm text-text-secondary">
           <TagIcon size={15} className="text-text-soft shrink-0" />
           Digite um nome para criar sua primeira tag.
         </div>

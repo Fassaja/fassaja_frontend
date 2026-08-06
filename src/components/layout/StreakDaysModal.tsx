@@ -91,7 +91,7 @@ export const StreakDaysModal: React.FC<StreakDaysModalProps> = ({ isOpen, onClos
                 title={day.label}
                 className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
                   active
-                    ? 'bg-amber-50 border-amber-300 text-amber-600'
+                    ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/40 text-amber-600 dark:text-amber-300'
                     : 'bg-bg-secondary/60 border-dashed border-border text-text-soft'
                 }`}
               >
@@ -103,7 +103,7 @@ export const StreakDaysModal: React.FC<StreakDaysModalProps> = ({ isOpen, onClos
         </div>
 
         <p className="text-xs text-text-soft">
-          <Flame size={12} className="inline -mt-0.5 text-amber-500" /> dia que conta para a
+          <Flame size={12} className="inline -mt-0.5 text-amber-500 dark:text-amber-400" /> dia que conta para a
           sequência · <Moon size={12} className="inline -mt-0.5" /> folga
         </p>
 

@@ -21,6 +21,7 @@ import { teamsService } from '@/services/teamsService';
 import { TeamSummary, TeamMember } from '@/types/team';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { useTasks } from '@/contexts/TasksContext';
+import { tint, chipText } from '@/utils/color';
 
 /**
  * Tela do Assistente de IA.
@@ -385,7 +386,7 @@ const AiAssistantPage: React.FC = () => {
       subtitle="Cole um documento, descreva o que quer, e a IA monta o projeto e os cards para você revisar."
     >
       {/* HERO */}
-      <div className="mb-6 overflow-hidden rounded-2xl border border-primary-vibrant/30 bg-gradient-to-r from-primary-light via-primary-light/60 to-white shadow-sm">
+      <div className="mb-6 overflow-hidden rounded-2xl border border-primary-vibrant/30 bg-gradient-to-r from-primary-light via-primary-light/60 to-surface shadow-sm">
         <div className="flex items-center gap-4 p-5 sm:p-6">
           <motion.img
             src="/bobapontando.png"
@@ -440,7 +441,7 @@ const AiAssistantPage: React.FC = () => {
           onDrop={handleDrop}
         >
           {aiEnabled === false && (
-            <div className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+            <div className="flex items-start gap-2 rounded-lg border border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-300">
               <Info size={16} className="mt-0.5 shrink-0" />
               <span>
                 <strong>Modo demonstração:</strong> a IA real está desativada.
@@ -467,7 +468,7 @@ const AiAssistantPage: React.FC = () => {
                 className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                   mode === m.id
                     ? 'border-primary-vibrant bg-primary-light text-primary-dark'
-                    : 'border-border bg-white text-text-secondary hover:bg-bg-secondary'
+                    : 'border-border bg-surface text-text-secondary hover:bg-bg-secondary'
                 }`}
               >
                 {m.label}
@@ -649,7 +650,7 @@ const AiAssistantPage: React.FC = () => {
                       cobrado — deixamos isso explícito para a pessoa não achar
                       que gastou uma das 5 gerações da semana à toa. */}
                   {draft.generatedBy === 'demo' && draft.demoReason === 'ai-error' && (
-                    <div className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-800">
+                    <div className="flex items-start gap-2 rounded-lg border border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-300">
                       <Info size={16} className="mt-0.5 shrink-0" />
                       <span>
                         <strong>A IA não respondeu desta vez.</strong> Montamos um rascunho
@@ -758,10 +759,10 @@ const AiAssistantPage: React.FC = () => {
                 <div className={`grid items-start gap-4 ${suggestions.length > 0 ? '2xl:grid-cols-5' : 'grid-cols-1'}`}>
                 {/* Sugestões de melhoria (balões) — modo "Analisar melhorias" */}
                 {suggestions.length > 0 && (
-                  <Card className="flex flex-col gap-3 border-purple-200 bg-purple-50/40 2xl:col-span-2">
+                  <Card className="flex flex-col gap-3 border-purple-200 dark:border-purple-500/30 bg-purple-50/40 dark:bg-purple-500/10 2xl:col-span-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Lightbulb size={18} className="text-purple-500" />
+                        <Lightbulb size={18} className="text-purple-500 dark:text-purple-400" />
                         <h3 className="font-semibold text-text-primary">Sugestões de melhoria</h3>
                       </div>
                       <button
@@ -789,12 +790,12 @@ const AiAssistantPage: React.FC = () => {
                               exit={{ opacity: 0, x: 60, scale: 0.85 }}
                               transition={{ duration: 0.2 }}
                               className={`relative flex items-start gap-2 rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-colors ${
-                                added ? 'border-green-200 bg-green-50/60' : 'border-purple-200 bg-white'
+                                added ? 'border-green-200 dark:border-green-500/30 bg-green-50/60 dark:bg-green-500/10' : 'border-purple-200 dark:border-purple-500/30 bg-surface'
                               }`}
                             >
                               <span
                                 className={`absolute -bottom-1 left-4 h-3 w-3 rotate-45 border-b border-r ${
-                                  added ? 'border-green-200 bg-green-50' : 'border-purple-200 bg-white'
+                                  added ? 'border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10' : 'border-purple-200 dark:border-purple-500/30 bg-surface'
                                 }`}
                               />
                               <div className="flex-1 min-w-0">
@@ -807,7 +808,7 @@ const AiAssistantPage: React.FC = () => {
                                     {priorityLabel[s.priority]}
                                   </Badge>
                                   {added && (
-                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
+                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-300">
                                       <Check size={12} /> Adicionado
                                     </span>
                                   )}
@@ -817,7 +818,7 @@ const AiAssistantPage: React.FC = () => {
                                 {added ? (
                                   <span
                                     title="Já adicionado"
-                                    className="rounded-md bg-green-100 p-1 text-green-600"
+                                    className="rounded-md bg-green-100 dark:bg-green-500/15 p-1 text-green-600 dark:text-green-300"
                                   >
                                     <Check size={14} />
                                   </span>
@@ -903,7 +904,7 @@ const AiAssistantPage: React.FC = () => {
                               }
                               title="Remover esta tag do card"
                               className="group flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-70"
-                              style={{ backgroundColor: `${tag.color}22`, color: tag.color }}
+                              style={{ backgroundColor: tint(tag.color, 'medium'), color: chipText(tag.color) }}
                             >
                               {tag.name}
                               <X size={10} className="opacity-0 group-hover:opacity-100" />

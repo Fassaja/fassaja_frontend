@@ -72,7 +72,7 @@ export const XpView: React.FC<XpViewProps> = ({ tasks }) => {
       {/* Nível + XP */}
       <Card className="flex flex-col sm:flex-row items-center gap-6">
         <div className="relative shrink-0">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-vibrant to-primary-dark flex flex-col items-center justify-center text-white shadow-md">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-vibrant to-brand-deep flex flex-col items-center justify-center text-white shadow-md">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-white/80">Nível</span>
             <span className="text-3xl font-extrabold leading-none">{data.level}</span>
           </div>
@@ -106,13 +106,13 @@ export const XpView: React.FC<XpViewProps> = ({ tasks }) => {
           <p className="text-xs text-text-secondary">Tarefas concluídas</p>
         </Card>
         <Card className="text-center py-4">
-          <p className="text-2xl font-bold text-amber-500 inline-flex items-center gap-1 justify-center">
+          <p className="text-2xl font-bold text-amber-500 dark:text-amber-400 inline-flex items-center gap-1 justify-center">
             <Flame size={20} /> {data.streak}
           </p>
           <p className="text-xs text-text-secondary">Dias em sequência</p>
         </Card>
         <Card className="text-center py-4">
-          <p className="text-2xl font-bold text-emerald-500">{unlockedCount}/{achievements.length}</p>
+          <p className="text-2xl font-bold text-emerald-500 dark:text-emerald-400">{unlockedCount}/{achievements.length}</p>
           <p className="text-xs text-text-secondary">Conquistas</p>
         </Card>
         <Card className="text-center py-4">
@@ -139,7 +139,7 @@ export const XpView: React.FC<XpViewProps> = ({ tasks }) => {
             >
               <span
                 className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                  a.unlocked ? 'bg-amber-50 text-amber-500' : 'bg-bg-secondary text-text-soft'
+                  a.unlocked ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400' : 'bg-bg-secondary text-text-soft'
                 }`}
               >
                 {a.unlocked ? a.icon : <Lock size={18} />}
