@@ -18,7 +18,15 @@
  * exige mudar a outra, senão a página pisca ao trocar de tema no primeiro paint.
  */
 (function () {
+  // Telas que ficam sempre claras. Cópia obrigatória de
+  // src/utils/lightOnlyRoutes.ts: este arquivo roda antes do bundle e não tem
+  // como importar de lá. test/lightOnlyTheme.unit.mts lê ESTE arquivo e falha
+  // se as duas listas divergirem.
+  var LIGHT_ONLY = ['/login', '/register', '/forgot-password', '/reset-password'];
+
   try {
+    if (LIGHT_ONLY.indexOf(location.pathname) !== -1) return;
+
     var pref = localStorage.getItem('fassaja_theme');
     var dark =
       pref === 'dark' ||
