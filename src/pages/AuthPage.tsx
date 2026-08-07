@@ -9,7 +9,7 @@ import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLightOnlyScreen } from '@/contexts/ThemeContext';
 import { isInternalPath } from '@/utils/url';
-import { guardarDestinoPosLogin } from '@/utils/postLoginRedirect';
+import { marcarIdaAoGoogle } from '@/utils/postLoginRedirect';
 
 interface AuthPageProps {
   mode: 'login' | 'register';
@@ -33,11 +33,34 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const { login, register, resendVerification } = useAuth();
   const isLogin = mode === 'login';
 
-  // O login com Google leva a pessoa para fora do app e ela volta numa
-  // navegação nova, sem nada do React em memória. Guardar o destino agora é o
-  // que impede quem veio de /login?redirect=/reports de cair no Dashboard.
+  /**
+   * Marca a ida ao Google quando esta tela SAI DE VISTA.
+   *
+   * O login com Google leva a pessoa para fora do app, e ela volta numa
+   * navegação nova, sem nada do React em memória. A marca carrega o destino
+   * (para quem veio de /login?redirect=/reports não cair no Dashboard) e o
+   * próprio fato de haver login em andamento — é isso que autoriza o app a
+   * conferir a sessão ao voltar para o primeiro plano.
+   *
+   * Marcar na MONTAGEM seria mais simples e estava errado: bastaria visitar a
+   * tela de login para o app passar os 10 minutos seguintes consultando a
+   * sessão a cada vez que a janela ganhasse foco, sempre para ouvir 401.
+   *
+   * `hidden`, e não `pagehide`: com o app instalado, a ida ao Google não
+   * navega esta página — o sistema abre o navegador ao lado e o app apenas vai
+   * para segundo plano. `pagehide` não dispararia, e justamente o caso que
+   * motivou tudo isto ficaria de fora.
+   */
   useEffect(() => {
-    guardarDestinoPosLogin(redirectTo);
+    const aoOcultar = () => {
+      if (document.visibilityState === 'hidden') marcarIdaAoGoogle(redirectTo);
+    };
+    document.addEventListener('visibilitychange', aoOcultar);
+    window.addEventListener('pagehide', aoOcultar);
+    return () => {
+      document.removeEventListener('visibilitychange', aoOcultar);
+      window.removeEventListener('pagehide', aoOcultar);
+    };
   }, [redirectTo]);
 
   const [form, setForm] = useState({ name: '', email: '', password: '' });
