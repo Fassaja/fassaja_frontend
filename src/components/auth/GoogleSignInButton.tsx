@@ -1,5 +1,4 @@
 import React from 'react';
-import { AlertCircle, Loader2 } from 'lucide-react';
 import { useGoogleSignIn, googleEnabled } from '@/hooks/useGoogleSignIn';
 
 /**
@@ -9,15 +8,19 @@ import { useGoogleSignIn, googleEnabled } from '@/hooks/useGoogleSignIn';
  * marca do Google não permitem recriá-lo à mão, e um botão próprio quebraria
  * a expectativa visual de quem já reconhece esse controle.
  *
+ * Clicar aqui LEVA A PESSOA EMBORA da página: o fluxo é o modo redirect (ver
+ * useGoogleSignIn), então quem termina o login é a API, e o app só descobre o
+ * resultado quando o navegador volta. Por isso este componente não tem estado
+ * de "entrando" nem mostra erro: não existe um "depois" dentro desta montagem.
+ * Quem informa o que deu errado é a tela de login ao ser reaberta, lendo o
+ * ?google= que a API devolve.
+ *
  * Some sozinho quando o login com Google não está configurado ou quando o
  * script não carrega (CSP, bloqueador). A tela segue funcionando com e-mail e
  * senha; nada nela depende deste componente.
  */
-export const GoogleSignInButton: React.FC<{
-  /** Faz o login na API. Devolve mensagem de erro, ou null se deu certo. */
-  onToken: (idToken: string) => Promise<string | null>;
-}> = ({ onToken }) => {
-  const { ref, disponivel, erro, entrando } = useGoogleSignIn({ onToken });
+export const GoogleSignInButton: React.FC = () => {
+  const { ref, disponivel } = useGoogleSignIn();
 
   // Sem Client ID neste build não há nem o que tentar renderizar.
   if (!googleEnabled) return null;
@@ -26,30 +29,13 @@ export const GoogleSignInButton: React.FC<{
     <div className="space-y-2">
       {/* O container fica montado desde o início: o GIS precisa de um nó real
           para desenhar dentro. Enquanto não carrega, ocupa altura zero. */}
-      <div className="flex justify-center" aria-busy={entrando}>
+      <div className="flex justify-center">
         <div ref={ref} />
       </div>
 
-      {entrando && (
-        <p className="flex items-center justify-center gap-2 text-xs text-text-secondary">
-          <Loader2 size={13} className="animate-spin" />
-          Entrando com o Google…
-        </p>
-      )}
-
-      {erro && (
-        <p
-          role="alert"
-          className="flex items-start gap-1.5 text-xs text-danger"
-        >
-          <AlertCircle size={13} className="mt-0.5 shrink-0" />
-          {erro}
-        </p>
-      )}
-
       {/* Script bloqueado (CSP ou extensão): avisa em vez de deixar um vazio
           inexplicável onde a pessoa esperava o botão. */}
-      {!disponivel && !entrando && (
+      {!disponivel && (
         <p className="text-center text-xs text-text-soft">
           O login com Google não está disponível neste navegador.
         </p>

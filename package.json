@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node --experimental-strip-types test/date.unit.mts && node --experimental-strip-types test/eventReminders.unit.mts && node --experimental-strip-types test/eventRecurrence.unit.mts && node --experimental-strip-types test/urlSafety.unit.mts && node --experimental-strip-types test/sessionTeardown.unit.mts && node --experimental-strip-types test/teamTasks.unit.mts && node --experimental-strip-types test/streak.unit.mts && node --experimental-strip-types test/taskStatus.unit.mts && node --experimental-strip-types test/teamReport.unit.mts && node --experimental-strip-types test/aiAssistant.unit.mts && node --experimental-strip-types test/lightOnlyTheme.unit.mts",
+    "test": "node --experimental-strip-types test/date.unit.mts && node --experimental-strip-types test/eventReminders.unit.mts && node --experimental-strip-types test/eventRecurrence.unit.mts && node --experimental-strip-types test/urlSafety.unit.mts && node --experimental-strip-types test/sessionTeardown.unit.mts && node --experimental-strip-types test/teamTasks.unit.mts && node --experimental-strip-types test/streak.unit.mts && node --experimental-strip-types test/taskStatus.unit.mts && node --experimental-strip-types test/teamReport.unit.mts && node --experimental-strip-types test/aiAssistant.unit.mts && node --experimental-strip-types test/lightOnlyTheme.unit.mts && node --experimental-strip-types test/postLoginRedirect.unit.mts",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {

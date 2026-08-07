@@ -9,6 +9,7 @@ import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLightOnlyScreen } from '@/contexts/ThemeContext';
 import { isInternalPath } from '@/utils/url';
+import { guardarDestinoPosLogin } from '@/utils/postLoginRedirect';
 
 interface AuthPageProps {
   mode: 'login' | 'register';
@@ -26,8 +27,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const redirectTo = isInternalPath(rawRedirect) ? rawRedirect : '/';
   const sessionExpired = searchParams.get('expired') === '1';
   const verifiedParam = searchParams.get('verified'); // '1' ok | '0' inválido
-  const { login, loginWithGoogle, register, resendVerification } = useAuth();
+  // Volta do login com Google quando algo deu errado. 'csrf' é separado porque
+  // aponta para configuração/cookie, não para a conta de quem tentou entrar.
+  const googleParam = searchParams.get('google'); // 'erro' | 'csrf'
+  const { login, register, resendVerification } = useAuth();
   const isLogin = mode === 'login';
+
+  // O login com Google leva a pessoa para fora do app e ela volta numa
+  // navegação nova, sem nada do React em memória. Guardar o destino agora é o
+  // que impede quem veio de /login?redirect=/reports de cair no Dashboard.
+  useEffect(() => {
+    guardarDestinoPosLogin(redirectTo);
+  }, [redirectTo]);
 
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
@@ -46,23 +57,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const set = (key: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
     if (error) setError('');
-  };
-
-  /**
-   * Recebe o ID token do Google e troca por sessão na nossa API.
-   *
-   * Devolve a mensagem de erro em vez de exibi-la aqui: quem mostra é o
-   * próprio botão, junto do controle que a pessoa acabou de usar — jogar o
-   * erro no `setError` do formulário o colocaria longe, embaixo dos campos de
-   * senha que ela nem tocou.
-   */
-  const handleGoogle = async (idToken: string): Promise<string | null> => {
-    const result = await loginWithGoogle(idToken);
-    if (result.ok) {
-      navigate(redirectTo);
-      return null;
-    }
-    return result.error ?? 'Não foi possível entrar com o Google.';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -220,6 +214,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             </div>
           )}
 
+          {googleParam && (
+            <div className="mb-6 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+              {googleParam === 'csrf'
+                ? 'A verificação de segurança do login com Google falhou. Tente de novo; se persistir, entre com e-mail e senha.'
+                : 'Não foi possível entrar com o Google. Tente de novo ou use e-mail e senha.'}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <Input
@@ -286,7 +288,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           </p>
 
           <div className="mt-6">
-            <GoogleSignInButton onToken={handleGoogle} />
+            <GoogleSignInButton />
           </div>
 
           <div className="flex items-center gap-3 my-6">
