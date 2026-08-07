@@ -7,6 +7,7 @@ import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLightOnlyScreen } from '@/contexts/ThemeContext';
 import { isInternalPath } from '@/utils/url';
 
 interface AuthPageProps {
@@ -14,6 +15,9 @@ interface AuthPageProps {
 }
 
 const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
+  // Login e cadastro ficam sempre no tema claro. Ver src/utils/lightOnlyRoutes.ts.
+  useLightOnlyScreen();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   // Só aceita caminho interno: blinda contra open redirect (mesmo que um dia

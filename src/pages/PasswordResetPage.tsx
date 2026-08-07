@@ -6,6 +6,7 @@ import { Input } from '@/components/common/Input';
 import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
 import { forgotPassword, resetPassword } from '@/services/authService';
+import { useLightOnlyScreen } from '@/contexts/ThemeContext';
 
 interface PasswordResetPageProps {
   /** 'request' = pede o e-mail; 'reset' = define a nova senha (via link). */
@@ -17,6 +18,9 @@ interface PasswordResetPageProps {
 const PASSWORD_RULE = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
 const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
+  // Mesma família da tela de login: sempre clara. Ver src/utils/lightOnlyRoutes.ts.
+  useLightOnlyScreen();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') ?? '';

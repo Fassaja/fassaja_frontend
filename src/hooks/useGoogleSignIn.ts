@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
 
 /**
  * Integração com o Google Identity Services (GIS).
@@ -81,10 +80,6 @@ interface Estado {
 
 export function useGoogleSignIn({ onToken, oneTap = false }: Options): Estado {
   const ref = useRef<HTMLDivElement>(null);
-  // O botão é desenhado pelo Google, então ele não herda nosso CSS: o tema
-  // precisa ser informado. Sem isto, o tema escuro ganha um retângulo branco
-  // no meio da tela — que é justamente o que o modo escuro existe para evitar.
-  const { resolved } = useTheme();
   const [disponivel, setDisponivel] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [entrando, setEntrando] = useState(false);
@@ -121,11 +116,16 @@ export function useGoogleSignIn({ onToken, oneTap = false }: Options): Estado {
           cancel_on_tap_outside: true,
         });
 
-        // O GIS ANEXA um botão; sem limpar, trocar de tema deixaria dois.
+        // O GIS ANEXA um botão; sem limpar, uma remontagem deixaria dois.
         ref.current.innerHTML = '';
         id.renderButton(ref.current, {
           type: 'standard',
-          theme: resolved === 'dark' ? 'filled_black' : 'outline',
+          // Fixo em 'outline' porque este botão só existe na tela de login, e
+          // ela é sempre clara (src/utils/lightOnlyRoutes.ts). Foi o tema
+          // escuro aqui que motivou a mudança: o botão é desenhado pelo Google
+          // e não herda nosso CSS, então ficava com uma borda branca dura sobre
+          // o fundo escuro — sem como corrigir de fora.
+          theme: 'outline',
           size: 'large',
           text: 'continue_with',
           shape: 'pill',
@@ -147,8 +147,7 @@ export function useGoogleSignIn({ onToken, oneTap = false }: Options): Estado {
       // aparece flutuando sobre uma página que não tem nada a ver com login.
       window.google?.accounts?.id?.cancel();
     };
-    // `resolved` entra aqui para o botão ser redesenhado ao trocar de tema.
-  }, [oneTap, resolved]);
+  }, [oneTap]);
 
   return { ref, disponivel, erro, entrando };
 }
