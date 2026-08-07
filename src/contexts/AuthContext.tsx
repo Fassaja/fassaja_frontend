@@ -42,6 +42,7 @@ interface AuthContextValue {
   isGuest: boolean;
   account: Account | null;
   login: (email: string, password: string) => Promise<AuthResult>;
+  loginWithGoogle: (idToken: string) => Promise<AuthResult>;
   register: (name: string, email: string, password: string) => Promise<RegisterResult>;
   resendVerification: (email: string) => Promise<AuthResult>;
   changePassword: (current: string, next: string) => Promise<AuthResult>;
@@ -185,6 +186,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+
+  /**
+   * Entra com uma conta do Google. Recebe o ID token que o cliente do Google
+   * devolveu; quem valida é a API — o front nunca decide quem é a pessoa.
+   *
+   * Cai no MESMO `adopt` do login por senha: a sessão é o mesmo cookie, com as
+   * mesmas regras. Do ponto de vista do resto do app, não há dois tipos de
+   * usuário logado.
+   */
+  const loginWithGoogle = async (idToken: string): Promise<AuthResult> => {
+    try {
+      const res = await api.post<AuthResponse>('/auth/google', { idToken });
+      adopt(res.user);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message };
+    }
+  };
+
   const register = async (
     name: string,
     email: string,
@@ -306,6 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isGuest: status === 'guest',
         account,
         login,
+        loginWithGoogle,
         register,
         resendVerification,
         changePassword,

@@ -5,6 +5,7 @@ import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
 import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { isInternalPath } from '@/utils/url';
 
@@ -21,7 +22,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const redirectTo = isInternalPath(rawRedirect) ? rawRedirect : '/';
   const sessionExpired = searchParams.get('expired') === '1';
   const verifiedParam = searchParams.get('verified'); // '1' ok | '0' inválido
-  const { login, register, resendVerification } = useAuth();
+  const { login, loginWithGoogle, register, resendVerification } = useAuth();
   const isLogin = mode === 'login';
 
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -41,6 +42,23 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const set = (key: keyof typeof form, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
     if (error) setError('');
+  };
+
+  /**
+   * Recebe o ID token do Google e troca por sessão na nossa API.
+   *
+   * Devolve a mensagem de erro em vez de exibi-la aqui: quem mostra é o
+   * próprio botão, junto do controle que a pessoa acabou de usar — jogar o
+   * erro no `setError` do formulário o colocaria longe, embaixo dos campos de
+   * senha que ela nem tocou.
+   */
+  const handleGoogle = async (idToken: string): Promise<string | null> => {
+    const result = await loginWithGoogle(idToken);
+    if (result.ok) {
+      navigate(redirectTo);
+      return null;
+    }
+    return result.error ?? 'Não foi possível entrar com o Google.';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -262,6 +280,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               {isLogin ? 'Criar conta' : 'Entrar'}
             </button>
           </p>
+
+          {/* One Tap só no login: quem está criando conta já decidiu o
+              caminho, e um prompt por cima do formulário atrapalharia. */}
+          <div className="mt-6">
+            <GoogleSignInButton onToken={handleGoogle} oneTap={isLogin} />
+          </div>
 
           <div className="flex items-center gap-3 my-6">
             <span className="flex-1 h-px bg-border" />
