@@ -4,20 +4,26 @@
 import { isInternalPath } from './url.ts';
 
 /**
- * Guarda para onde levar a pessoa depois de ela voltar do login com o Google.
+ * A ida ao Google: o que precisa sobreviver enquanto o app perde o controle.
  *
  * No modo redirect a aba sai do app, vai para o Google e volta numa navegação
- * nova. Todo o estado em memória do React morre no caminho, então o destino
- * precisa sobreviver fora dele. É por isso que existe este arquivo: sem ele,
- * quem clicou num link protegido (`/login?redirect=/reports`) e entrou com o
- * Google cairia no Dashboard, não no relatório que pediu.
+ * nova. Todo o estado em memória do React morre no caminho, então duas coisas
+ * precisam ficar guardadas fora dele:
  *
- * localStorage, e não sessionStorage: quando o app está instalado como PWA, a
- * ida ao Google pode acontecer num contexto de navegação separado, e não dá
- * para contar que o sessionStorage da janela original seja o mesmo na volta.
+ * 1. QUE existe um login em andamento. É isso que permite ao app, ao voltar
+ *    para o primeiro plano, desconfiar que já há sessão e ir conferir. Sem essa
+ *    marca ele teria de perguntar "e agora, estou logado?" a cada vez que a
+ *    aba ganha foco — barulho inútil para quem só está navegando como visitante.
+ * 2. PARA ONDE levar depois. Sem isso, quem clicou num link protegido
+ *    (`/login?redirect=/reports`) e entrou com o Google cairia no Dashboard.
  *
- * Duas travas, porque isto é um destino de navegação lido de um armazenamento
- * que qualquer script da própria origem pode escrever:
+ * localStorage, e não sessionStorage: com o app instalado como PWA, a ida ao
+ * Google acontece num contexto de navegação separado — o sistema abre o
+ * navegador —, e não dá para contar que o sessionStorage da janela original
+ * seja o mesmo na volta.
+ *
+ * Duas travas, porque o destino é lido de um armazenamento que qualquer script
+ * da própria origem pode escrever e vira uma NAVEGAÇÃO:
  *
  * - só caminho interno (`isInternalPath`), para não virar um open redirect;
  * - prazo de validade, para um destino esquecido de semanas atrás não
@@ -25,41 +31,74 @@ import { isInternalPath } from './url.ts';
  */
 const KEY = 'fassaja_pos_login';
 
-/** Um destino guardado só vale para a ida e a volta que estão acontecendo agora. */
+/** Uma ida ao Google só vale para a viagem que está acontecendo agora. */
 const VALIDADE_MS = 10 * 60 * 1000;
 
-export function guardarDestinoPosLogin(path: string): void {
+interface Registro {
+  path: string;
+  ts: number;
+}
+
+function ler(): Registro | null {
   try {
-    // '/' é o padrão: guardar não acrescenta nada e só deixa lixo para trás.
-    if (path === '/' || !isInternalPath(path)) return;
-    localStorage.setItem(KEY, JSON.stringify({ path, ts: Date.now() }));
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return null;
+    const dados = JSON.parse(raw) as { path?: unknown; ts?: unknown };
+    const ts = typeof dados.ts === 'number' ? dados.ts : 0;
+    if (Date.now() - ts > VALIDADE_MS) return null;
+    return { path: typeof dados.path === 'string' ? dados.path : '/', ts };
+  } catch {
+    // JSON corrompido por uma versão antiga ou por outra aba: trata como
+    // inexistente. O login segue; no máximo perde o destino.
+    return null;
+  }
+}
+
+/**
+ * Registra que a pessoa está saindo para o Google, e para onde levá-la na volta.
+ *
+ * Guarda mesmo quando o destino é '/': o valor aqui não é só o destino, é a
+ * própria marca de "tem login em andamento".
+ */
+export function marcarIdaAoGoogle(path: string): void {
+  try {
+    const destino = isInternalPath(path) ? path : '/';
+    localStorage.setItem(KEY, JSON.stringify({ path: destino, ts: Date.now() }));
   } catch {
     /* localStorage indisponível: cai no destino padrão, sem quebrar o login */
   }
 }
 
 /**
+ * Existe um login com Google em andamento (recente e ainda não consumido)?
+ *
+ * Só isto autoriza o app a ir conferir a sessão quando volta ao primeiro plano.
+ */
+export function idaAoGoogleEmAndamento(): boolean {
+  return ler() !== null;
+}
+
+/** Encerra a ida sem navegar — para quando a conferência diz que não há sessão. */
+export function limparIdaAoGoogle(): void {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    /* nada a fazer */
+  }
+}
+
+/**
  * Lê e APAGA o destino guardado. Devolve '/' quando não há nada válido.
  *
- * Apaga sempre, inclusive quando o valor é inválido ou venceu: um destino que
- * não foi consumido agora não deve ressurgir no próximo login.
+ * Apaga sempre, inclusive quando o valor é inválido ou venceu: uma ida que não
+ * foi consumida agora não deve ressurgir no próximo login.
  */
 export function consumirDestinoPosLogin(): string {
-  try {
-    const raw = localStorage.getItem(KEY);
-    localStorage.removeItem(KEY);
-    if (!raw) return '/';
-
-    const dados = JSON.parse(raw) as { path?: unknown; ts?: unknown };
-    const path = typeof dados.path === 'string' ? dados.path : '';
-    const ts = typeof dados.ts === 'number' ? dados.ts : 0;
-
-    if (!path || !isInternalPath(path)) return '/';
-    if (Date.now() - ts > VALIDADE_MS) return '/';
-    return path;
-  } catch {
-    // JSON corrompido por uma versão antiga ou por outra aba: o login continua,
-    // só perde o destino.
-    return '/';
-  }
+  const registro = ler();
+  limparIdaAoGoogle();
+  if (!registro) return '/';
+  // Revalida na LEITURA, não só na escrita: o cenário real de abuso é alguém
+  // escrever direto no localStorage, sem passar pela nossa função.
+  if (!isInternalPath(registro.path)) return '/';
+  return registro.path;
 }

@@ -1,13 +1,19 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Lock } from 'lucide-react';
 import { useUser } from './UserContext';
+import { useToast } from './ToastContext';
 import { api, setAuthenticated, SESSION_EXPIRED_EVENT } from '@/services/api';
 import { getProductiveDays } from '@/services/authService';
 import { guestTasksStore } from '@/services/guestTasksStore';
 import { clearAccountStorage } from '@/utils/accountStorage';
-import { consumirDestinoPosLogin } from '@/utils/postLoginRedirect';
+import { deveSugerirVoltarAoApp } from '@/utils/modoApp';
+import {
+  consumirDestinoPosLogin,
+  idaAoGoogleEmAndamento,
+  limparIdaAoGoogle,
+} from '@/utils/postLoginRedirect';
 
 export interface Account {
   id: string;
@@ -79,10 +85,16 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const { updateUser, setScope } = useUser();
+  const toast = useToast();
 
   const [account, setAccount] = useState<Account | null>(() =>
     readJSON<Account | null>(SESSION_KEY, null),
   );
+
+  // Espelho de `account` para os ouvintes de evento, que são registrados uma
+  // vez só e congelariam o valor do primeiro render se lessem o state direto.
+  const accountRef = useRef(account);
+  accountRef.current = account;
 
   const [guest, setGuest] = useState<{ date: string; count: number }>(() => {
     const g = readJSON<{ date: string; count: number }>(GUEST_KEY, { date: todayISO(), count: 0 });
@@ -163,11 +175,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Destino guardado antes de sair para o Google (ex.: veio de um link
           // protegido). Sem nada guardado, cai no Dashboard.
           navigate(consumirDestinoPosLogin(), { replace: true });
+          // Quem usa o app instalado terminou o login AQUI, no navegador, e o
+          // app ficou para trás. Sem este aviso, a pessoa vê o Dashboard na
+          // aba e não tem como saber que basta voltar para o app.
+          if (deveSugerirVoltarAoApp()) {
+            toast.success('Pronto! Já pode voltar para o app Fassaja.');
+          }
         })
         .catch(() => {
           // O cookie não chegou. Não dá para ficar no app como visitante depois
           // de a pessoa ter autorizado no Google — isso pareceria que o login
           // simplesmente não fez nada.
+          //
+          // Encerra a ida: aqui a resposta é definitiva (a API respondeu que
+          // não há sessão), então deixar a marca de pé faria o app tentar de
+          // novo a cada foco, sem chance de dar certo.
+          limparIdaAoGoogle();
           navigate('/login?google=erro', { replace: true });
         });
       return;
@@ -198,6 +221,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           navigate('/login?verified=1', { replace: true });
         });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * Assume a sessão quando o app volta ao primeiro plano.
+   *
+   * O caso é o app INSTALADO na tela de início. O login com Google sai do
+   * escopo do app (accounts.google.com), então o sistema abre o navegador — e
+   * é lá que a volta acontece, porque nenhuma API permite a uma página trazer
+   * o navegador de volta para o app instalado. No iOS isso é limitação do
+   * WebKit; não há contorno.
+   *
+   * O que dá para consertar é o que de fato incomodava: a janela do app ficava
+   * para trás achando que ainda era visitante, e só descobria a sessão se fosse
+   * FECHADA E REABERTA. O cookie já estava lá o tempo todo — faltava alguém
+   * perguntar. Agora, ao voltar para o app pelo alternador, ele confere e entra.
+   *
+   * Só age quando há uma ida ao Google marcada. Sem essa condição, todo retorno
+   * de foco viraria uma chamada de rede para quem está só navegando como
+   * visitante.
+   */
+  useEffect(() => {
+    const retomar = () => {
+      if (document.visibilityState !== 'visible') return;
+      // A ref, e não `account`: este efeito roda uma vez só, e a variável
+      // capturada aqui congelaria no valor do primeiro render.
+      if (accountRef.current) return;
+      if (!idaAoGoogleEmAndamento()) return;
+
+      api
+        .get<Account>('/auth/me')
+        .then(acc => {
+          adopt(acc);
+          navigate(consumirDestinoPosLogin(), { replace: true });
+        })
+        .catch((err: Error & { status?: number }) => {
+          // 401 é resposta, não falha: o servidor afirmou que não há sessão.
+          // Encerrar a espera aqui evita repetir a consulta a cada foco pelos
+          // 10 minutos seguintes, sempre para ouvir a mesma coisa.
+          //
+          // Erro de rede é diferente — não sabemos nada. Aí a marca fica de pé
+          // e a próxima volta ao app tenta de novo; o prazo de validade encerra
+          // a espera sozinho.
+          if (err.status === 401) limparIdaAoGoogle();
+        });
+    };
+
+    // Três eventos porque nenhum cobre todos os casos: visibilitychange é o
+    // alternador de apps, focus é a troca de janela no desktop, e pageshow é o
+    // retorno pelo cache de retrocesso (bfcache), em que a página é restaurada
+    // sem recarregar e nenhum dos outros dois dispara.
+    document.addEventListener('visibilitychange', retomar);
+    window.addEventListener('focus', retomar);
+    window.addEventListener('pageshow', retomar);
+    return () => {
+      document.removeEventListener('visibilitychange', retomar);
+      window.removeEventListener('focus', retomar);
+      window.removeEventListener('pageshow', retomar);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
