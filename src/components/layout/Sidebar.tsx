@@ -72,7 +72,7 @@ export const Sidebar: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-surface p-2 rounded-xl border border-border shadow-sm"
+        className="fixed top-4 left-2 z-50 lg:hidden bg-surface p-2 rounded-xl border border-border shadow-sm"
       >
         {isOpen ? <X size={22} /> : <Menu size={22} />}
       </button>
@@ -80,7 +80,7 @@ export const Sidebar: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed left-0 top-0 h-screen w-64 bg-surface border-r border-border
+          fixed left-0 top-0 h-tela w-64 bg-surface border-r border-border
           transform transition-transform duration-300 ease-out-expo z-40
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
@@ -270,8 +270,9 @@ export const Sidebar: React.FC = () => {
             </div>
           </div>
 
-          {/* Respiro entre o menu e a borda inferior */}
-          <div className="pb-4" />
+          {/* Respiro entre o menu e a borda inferior. env(safe-area-inset-bottom)
+              cobre a barra de gestos do celular, que o dvh não desconta. */}
+          <div className="pb-4" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }} />
 
           <Modal isOpen={showHelp} onClose={() => setShowHelp(false)} title="Fale conosco" size="md">
             <div className="space-y-4">

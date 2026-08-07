@@ -213,3 +213,23 @@ body {
     radial-gradient(farthest-side at 50% 100%, rgb(var(--c-shadow) / 0.22), transparent) bottom / 100% 14px no-repeat;
   background-attachment: local, local, scroll, scroll;
 }
+
+/*
+ * Altura de tela cheia que respeita a barra do navegador no celular.
+ *
+ * `100vh` é a altura da janela IGNORANDO a barra de endereço e a barra de
+ * navegação do navegador móvel — elas ficam POR CIMA. O resultado é que o fim
+ * de um painel de tela cheia (o menu lateral) some atrás delas, e no Fassaja
+ * era justamente o último item que sumia.
+ *
+ * `100dvh` é a altura realmente visível, e acompanha as barras aparecendo e
+ * desaparecendo durante a rolagem.
+ *
+ * As duas declarações são propositais: quem não entende `dvh` usa a primeira,
+ * quem entende sobrescreve com a segunda. Uma linha só com `dvh` deixaria os
+ * navegadores antigos sem altura nenhuma.
+ */
+.h-tela {
+  height: 100vh;
+  height: 100dvh;
+}
