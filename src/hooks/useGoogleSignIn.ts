@@ -1,10 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
+import { API_URL } from '@/services/api';
 
 /**
  * Integração com o Google Identity Services (GIS).
  *
- * O GIS entrega um ID token assinado direto no navegador; quem valida é a
- * nossa API. O front nunca decide quem é a pessoa — só transporta o token.
+ * O GIS entrega um ID token assinado; quem valida é a nossa API. O front nunca
+ * decide quem é a pessoa — só encaminha.
+ *
+ * MODO REDIRECT, não popup. O padrão do GIS é abrir um popup e devolver o token
+ * para a janela que o abriu, via postMessage. Isso só funciona onde existe
+ * janela filha: no desktop. No celular o clique abre uma aba nova — ou, com o
+ * app instalado como PWA, o navegador do sistema — e o vínculo com a página
+ * original se perde. O Google autenticava, tentava responder para uma janela
+ * que não existia mais, e a pessoa ficava olhando para uma tela branca sem
+ * volta. No modo redirect não há janela para reencontrar: o Google faz um POST
+ * de navegação para /auth/google/callback e a nossa API devolve a sessão.
+ *
+ * A consequência é que este hook não recebe mais token nenhum. Ele só desenha o
+ * botão; quem conclui o login é o backend, e o app descobre isso ao voltar.
  *
  * O script é carregado sob demanda, e só na tela de login: são ~60KB de
  * terceiro que não fazem falta em nenhuma outra rota, e carregá-lo em todo
@@ -20,17 +33,28 @@ import { useEffect, useRef, useState } from 'react';
 const SRC = 'https://accounts.google.com/gsi/client';
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 
+/**
+ * Para onde o Google faz o POST com o token.
+ *
+ * Precisa ser absoluta e bater EXATAMENTE com um "URI de redirecionamento
+ * autorizado" cadastrado no Google Cloud, senão o Google recusa antes de
+ * mostrar qualquer tela. `new URL` resolve os dois formatos que a base da API
+ * assume: '/api' (produção, atrás do proxy da Vercel) e
+ * 'http://localhost:3333/api' (desenvolvimento).
+ */
+export const googleLoginUri = new URL(
+  `${API_URL.replace(/\/$/, '')}/auth/google/callback`,
+  window.location.origin,
+).toString();
+
 /** O login com Google está configurado neste build? */
 export const googleEnabled = !!CLIENT_ID;
-
-interface CredentialResponse {
-  credential?: string;
-}
 
 interface GoogleAccountsId {
   initialize(config: {
     client_id: string;
-    callback: (res: CredentialResponse) => void;
+    ux_mode: 'popup' | 'redirect';
+    login_uri: string;
   }): void;
   renderButton(parent: HTMLElement, options: Record<string, unknown>): void;
 }
@@ -62,32 +86,16 @@ function carregarScript(): Promise<void> {
   return carregando;
 }
 
-interface Options {
-  /** Recebe o ID token. Deve devolver erro em texto, ou null se deu certo. */
-  onToken: (idToken: string) => Promise<string | null>;
-}
-
 interface Estado {
   /** Onde o botão do Google deve ser renderizado. */
   ref: React.RefObject<HTMLDivElement>;
   /** Falso quando falta o Client ID ou o script não carregou. */
   disponivel: boolean;
-  /** Erro vindo da nossa API depois de o Google devolver o token. */
-  erro: string | null;
-  /** Verdadeiro entre receber o token e a API responder. */
-  entrando: boolean;
 }
 
-export function useGoogleSignIn({ onToken }: Options): Estado {
+export function useGoogleSignIn(): Estado {
   const ref = useRef<HTMLDivElement>(null);
   const [disponivel, setDisponivel] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  const [entrando, setEntrando] = useState(false);
-
-  // `onToken` costuma ser recriada a cada render; guardá-la numa ref evita
-  // reinicializar o GIS (e piscar o botão) a cada digitação no formulário.
-  const onTokenRef = useRef(onToken);
-  onTokenRef.current = onToken;
 
   useEffect(() => {
     if (!CLIENT_ID) return;
@@ -100,17 +108,8 @@ export function useGoogleSignIn({ onToken }: Options): Estado {
 
         id.initialize({
           client_id: CLIENT_ID,
-          callback: async (res: CredentialResponse) => {
-            if (!res.credential) return;
-            setErro(null);
-            setEntrando(true);
-            try {
-              const msg = await onTokenRef.current(res.credential);
-              if (vivo && msg) setErro(msg);
-            } finally {
-              if (vivo) setEntrando(false);
-            }
-          },
+          ux_mode: 'redirect',
+          login_uri: googleLoginUri,
         });
 
         // O GIS ANEXA um botão; sem limpar, uma remontagem deixaria dois.
@@ -142,5 +141,5 @@ export function useGoogleSignIn({ onToken }: Options): Estado {
     };
   }, []);
 
-  return { ref, disponivel, erro, entrando };
+  return { ref, disponivel };
 }

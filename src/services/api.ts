@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333/api';
+// Exportada porque o login com Google precisa montar uma URL ABSOLUTA da API
+// para entregar ao Google (o `login_uri`), e ela tem de ser exatamente a mesma
+// base que o resto do app usa.
+export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333/api';
 const SESSION_KEY = 'fassaja_session';
 
 // O token de sessão fica num cookie httpOnly (inacessível ao JavaScript), enviado

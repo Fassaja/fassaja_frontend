@@ -7,6 +7,7 @@ import { api, setAuthenticated, SESSION_EXPIRED_EVENT } from '@/services/api';
 import { getProductiveDays } from '@/services/authService';
 import { guestTasksStore } from '@/services/guestTasksStore';
 import { clearAccountStorage } from '@/utils/accountStorage';
+import { consumirDestinoPosLogin } from '@/utils/postLoginRedirect';
 
 export interface Account {
   id: string;
@@ -42,7 +43,6 @@ interface AuthContextValue {
   isGuest: boolean;
   account: Account | null;
   login: (email: string, password: string) => Promise<AuthResult>;
-  loginWithGoogle: (idToken: string) => Promise<AuthResult>;
   register: (name: string, email: string, password: string) => Promise<RegisterResult>;
   resendVerification: (email: string) => Promise<AuthResult>;
   changePassword: (current: string, next: string) => Promise<AuthResult>;
@@ -145,9 +145,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Ao montar logado, atualiza os dados a partir do banco (avatar, cooldowns).
   // Se o servidor disser que a sessão é inválida (401), encerra o estado local.
-  // Logo após confirmar o e-mail (?verified=1), assume a sessão do cookie e entra no app.
+  // Logo após confirmar o e-mail (?verified=1) ou voltar do login com Google
+  // (?google=1), assume a sessão do cookie e entra no app.
   useEffect(() => {
-    const justVerified = new URLSearchParams(window.location.search).get('verified') === '1';
+    const params = new URLSearchParams(window.location.search);
+    // Os dois casos são o mesmo problema: a API já criou a sessão e mandou o
+    // cookie, mas este código ainda acha que é visitante. A diferença é só para
+    // onde levar depois e para onde voltar se o cookie não tiver chegado.
+    const justVerified = params.get('verified') === '1';
+    const fromGoogle = params.get('google') === '1';
+
+    if (!account && fromGoogle) {
+      api
+        .get<Account>('/auth/me')
+        .then(acc => {
+          adopt(acc);
+          // Destino guardado antes de sair para o Google (ex.: veio de um link
+          // protegido). Sem nada guardado, cai no Dashboard.
+          navigate(consumirDestinoPosLogin(), { replace: true });
+        })
+        .catch(() => {
+          // O cookie não chegou. Não dá para ficar no app como visitante depois
+          // de a pessoa ter autorizado no Google — isso pareceria que o login
+          // simplesmente não fez nada.
+          navigate('/login?google=erro', { replace: true });
+        });
+      return;
+    }
+
     if (account) {
       setScope(account.id); // recarga já logado: carrega os dados desta conta
       api
@@ -186,24 +211,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-
-  /**
-   * Entra com uma conta do Google. Recebe o ID token que o cliente do Google
-   * devolveu; quem valida é a API — o front nunca decide quem é a pessoa.
-   *
-   * Cai no MESMO `adopt` do login por senha: a sessão é o mesmo cookie, com as
-   * mesmas regras. Do ponto de vista do resto do app, não há dois tipos de
-   * usuário logado.
-   */
-  const loginWithGoogle = async (idToken: string): Promise<AuthResult> => {
-    try {
-      const res = await api.post<AuthResponse>('/auth/google', { idToken });
-      adopt(res.user);
-      return { ok: true };
-    } catch (err) {
-      return { ok: false, error: (err as Error).message };
-    }
-  };
 
   const register = async (
     name: string,
@@ -326,7 +333,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isGuest: status === 'guest',
         account,
         login,
-        loginWithGoogle,
         register,
         resendVerification,
         changePassword,
