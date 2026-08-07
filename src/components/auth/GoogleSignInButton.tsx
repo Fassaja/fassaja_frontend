@@ -16,10 +16,8 @@ import { useGoogleSignIn, googleEnabled } from '@/hooks/useGoogleSignIn';
 export const GoogleSignInButton: React.FC<{
   /** Faz o login na API. Devolve mensagem de erro, ou null se deu certo. */
   onToken: (idToken: string) => Promise<string | null>;
-  /** Mostrar o One Tap de quem já tem sessão no Google. Só na tela de login. */
-  oneTap?: boolean;
-}> = ({ onToken, oneTap }) => {
-  const { ref, disponivel, erro, entrando } = useGoogleSignIn({ onToken, oneTap });
+}> = ({ onToken }) => {
+  const { ref, disponivel, erro, entrando } = useGoogleSignIn({ onToken });
 
   // Sem Client ID neste build não há nem o que tentar renderizar.
   if (!googleEnabled) return null;

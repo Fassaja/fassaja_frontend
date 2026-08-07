@@ -9,6 +9,12 @@ import { useEffect, useRef, useState } from 'react';
  * O script é carregado sob demanda, e só na tela de login: são ~60KB de
  * terceiro que não fazem falta em nenhuma outra rota, e carregá-lo em todo
  * lugar entregaria ao Google um sinal de navegação que ele não precisa ter.
+ *
+ * Aqui existe SÓ o botão. O One Tap (aquele card que o Google abre sozinho no
+ * canto superior direito) foi removido: ele aparecia sobrepondo a tela e
+ * oferecendo exatamente a mesma ação do botão que já está logo abaixo, sem
+ * escolha de quem chegou. Um prompt de terceiro que se impõe na primeira tela
+ * do app custa mais em confiança do que economiza em cliques.
  */
 
 const SRC = 'https://accounts.google.com/gsi/client';
@@ -25,12 +31,8 @@ interface GoogleAccountsId {
   initialize(config: {
     client_id: string;
     callback: (res: CredentialResponse) => void;
-    cancel_on_tap_outside?: boolean;
-    auto_select?: boolean;
   }): void;
   renderButton(parent: HTMLElement, options: Record<string, unknown>): void;
-  prompt(): void;
-  cancel(): void;
 }
 
 declare global {
@@ -63,8 +65,6 @@ function carregarScript(): Promise<void> {
 interface Options {
   /** Recebe o ID token. Deve devolver erro em texto, ou null se deu certo. */
   onToken: (idToken: string) => Promise<string | null>;
-  /** Mostrar o One Tap (o prompt automático de quem já está logado no Google). */
-  oneTap?: boolean;
 }
 
 interface Estado {
@@ -78,7 +78,7 @@ interface Estado {
   entrando: boolean;
 }
 
-export function useGoogleSignIn({ onToken, oneTap = false }: Options): Estado {
+export function useGoogleSignIn({ onToken }: Options): Estado {
   const ref = useRef<HTMLDivElement>(null);
   const [disponivel, setDisponivel] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -111,9 +111,6 @@ export function useGoogleSignIn({ onToken, oneTap = false }: Options): Estado {
               if (vivo) setEntrando(false);
             }
           },
-          // Clicar fora fecha o One Tap. Sem isto ele insiste, e um prompt de
-          // terceiro que não fecha é o tipo de coisa que faz a pessoa sair.
-          cancel_on_tap_outside: true,
         });
 
         // O GIS ANEXA um botão; sem limpar, uma remontagem deixaria dois.
@@ -133,7 +130,6 @@ export function useGoogleSignIn({ onToken, oneTap = false }: Options): Estado {
           width: ref.current.clientWidth || 320,
         });
 
-        if (oneTap) id.prompt();
         setDisponivel(true);
       })
       .catch(() => {
@@ -143,11 +139,8 @@ export function useGoogleSignIn({ onToken, oneTap = false }: Options): Estado {
 
     return () => {
       vivo = false;
-      // Fecha o One Tap ao sair da tela; senão ele sobrevive à navegação e
-      // aparece flutuando sobre uma página que não tem nada a ver com login.
-      window.google?.accounts?.id?.cancel();
     };
-  }, [oneTap]);
+  }, []);
 
   return { ref, disponivel, erro, entrando };
 }

@@ -285,10 +285,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             </button>
           </p>
 
-          {/* One Tap só no login: quem está criando conta já decidiu o
-              caminho, e um prompt por cima do formulário atrapalharia. */}
           <div className="mt-6">
-            <GoogleSignInButton onToken={handleGoogle} oneTap={isLogin} />
+            <GoogleSignInButton onToken={handleGoogle} />
           </div>
 
           <div className="flex items-center gap-3 my-6">
