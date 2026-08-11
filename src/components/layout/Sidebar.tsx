@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Sparkles,
   PlayCircle,
+  HeartHandshake,
 } from 'lucide-react';
 import { OPEN_TOUR_EVENT } from './PlatformTourModal';
 import { NotificationsHelp } from './NotificationsHelp';
@@ -235,6 +236,15 @@ export const Sidebar: React.FC = () => {
                     >
                       <MessageSquareHeart size={18} className="text-text-secondary" />
                       Central de feedbacks
+                    </button>
+                    {/* Sem trava de visitante, ao contrário dos itens acima: quem
+                        ainda não tem conta é justamente parte da medição. */}
+                    <button
+                      onClick={() => goTo('/apoiar')}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+                    >
+                      <HeartHandshake size={18} className="text-text-secondary" />
+                      Apoiar o Fassaja
                     </button>
                     {!isGuest && (
                       <button

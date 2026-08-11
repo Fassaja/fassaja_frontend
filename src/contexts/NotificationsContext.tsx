@@ -6,13 +6,27 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { AlertCircle, Bell, CalendarClock, CheckCircle2, Send, UserPlus } from 'lucide-react';
+import {
+  AlertCircle,
+  Bell,
+  CalendarClock,
+  CheckCircle2,
+  HeartHandshake,
+  Send,
+  UserPlus,
+} from 'lucide-react';
 import { useTasks } from './TasksContext';
 import { useEvents } from './EventsContext';
 import { useAuth } from './AuthContext';
 import { useUser } from './UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
+import { proService } from '@/services/proService';
+import {
+  hasRespondedLocally,
+  hasUsedEnoughToAsk,
+  reminderWindowIndex,
+} from '@/utils/proReminder';
 import { formatDate, isToday } from '@/utils/date';
 import { CalendarEvent } from '@/types/event';
 import { reminderTriggerDate, eventEndDate } from '@/utils/eventReminders';
@@ -77,6 +91,12 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const [readIds, setReadIds] = useState<Set<string>>(() => loadReadIds(userId));
   const [joinRequests, setJoinRequests] = useState<JoinRequestInfo[]>([]);
+  // Pesquisa do Pro. `null` = ainda não sabemos: sem isso o lembrete pisca no
+  // sino por um instante para quem já respondeu, até a resposta do servidor
+  // chegar. Só `false` (confirmado que não respondeu) gera o item.
+  const [proResponded, setProResponded] = useState<boolean | null>(() =>
+    hasRespondedLocally() ? true : null,
+  );
   // "Relógio" que avança de minuto em minuto para reavaliar lembretes por tempo.
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -87,6 +107,34 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   // Recarrega o estado de "lido" ao trocar de usuário.
   useEffect(() => {
     setReadIds(loadReadIds(userId));
+  }, [userId]);
+
+  // Quem já respondeu a pesquisa do Pro não recebe o lembrete. O visitante só
+  // pode ser checado localmente (o servidor não sabe quem ele é); para quem tem
+  // conta, o servidor decide — inclusive reconhecendo quem respondeu como
+  // visitante e depois criou conta com o mesmo e-mail.
+  //
+  // Depende só de `userId` de propósito: reagir também a `proResponded`
+  // reentraria no efeito a cada resposta e refaria a chamada em loop.
+  useEffect(() => {
+    if (hasRespondedLocally()) {
+      setProResponded(true);
+      return;
+    }
+    if (!userId) {
+      setProResponded(false);
+      return;
+    }
+    let cancelado = false;
+    proService
+      .status()
+      .then(s => !cancelado && setProResponded(s.responded))
+      // API fora do ar não deve esconder o lembrete para sempre; na dúvida,
+      // mostra — é dispensável em um clique.
+      .catch(() => !cancelado && setProResponded(false));
+    return () => {
+      cancelado = true;
+    };
   }, [userId]);
 
   // Pedidos de entrada pendentes nas equipes que o usuário é dono.
@@ -227,10 +275,30 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         );
     }
 
+    // Lembrete da pesquisa do Pro — por último de propósito: é o único item que
+    // pede algo em vez de informar, e não deve competir com prazo atrasado.
+    //
+    // O índice da janela entra no ID, e é isso que faz o lembrete voltar a cada
+    // 7 dias: dispensar marca como lida a janela ATUAL; na janela seguinte o ID
+    // é outro e o item reaparece não-lido. Some de vez quando a pessoa responde.
+    // `hasUsedEnoughToAsk` também é quem inicia a contagem de tempo de casa,
+    // então precisa ser chamado sempre — inclusive quando ainda barra.
+    if (hasUsedEnoughToAsk(tasks.length) && proResponded === false) {
+      raw.push({
+        id: `pro-${reminderWindowIndex()}`,
+        icon: <HeartHandshake size={18} />,
+        title: 'Ajude a definir o Fassaja Pro',
+        detail: 'Conte em 30 segundos quanto você pagaria',
+        tone: '#8B5CF6',
+        link: '/apoiar',
+      });
+    }
+
     return raw.map(item => ({ ...item, read: readIds.has(item.id) }));
-    // `tick` força a reavaliação periódica dos lembretes baseados em horário.
+    // `tick` força a reavaliação periódica dos lembretes baseados em horário —
+    // é ele também que faz a janela de 7 dias virar sem precisar recarregar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasks, events, account, joinRequests, readIds, prefs, tick]);
+  }, [tasks, events, account, joinRequests, readIds, prefs, tick, proResponded]);
 
   const unreadCount = useMemo(() => items.filter(i => !i.read).length, [items]);
 

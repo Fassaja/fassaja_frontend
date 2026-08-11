@@ -15,6 +15,7 @@ import NotFoundPage from '@/pages/NotFoundPage';
 import AuthPage from '@/pages/AuthPage';
 import PasswordResetPage from '@/pages/PasswordResetPage';
 import JoinPage from '@/pages/JoinPage';
+import ProPage from '@/pages/ProPage';
 import { useAuth } from '@/contexts/AuthContext';
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -33,6 +34,9 @@ export const AppRoutes: React.FC = () => {
       <Route path="/join/:token" element={<JoinPage />} />
       <Route path="/" element={<DashboardPage />} />
       <Route path="/tasks" element={<TasksPage />} />
+      {/* Lista de espera do Pro. Pública de propósito: quem chega de fora
+          (LinkedIn, indicação) é justamente o público que precisamos medir. */}
+      <Route path="/apoiar" element={<ProPage />} />
 
       {/* Exigem conta */}
       <Route path="/projects" element={<RequireAuth><ProjectsPage /></RequireAuth>} />
