@@ -18,6 +18,7 @@ import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
 import { StreakCard } from '@/components/dashboard/StreakCard';
 import { XpView } from '@/components/reports/XpView';
+import { forgotPassword } from '@/services/authService';
 import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -93,6 +94,8 @@ const ProfilePage: React.FC = () => {
   // Senha
   const [pw, setPw] = useState({ current: '', next: '' });
   const [pwLoading, setPwLoading] = useState(false);
+  // Envio do link para definir a PRIMEIRA senha (contas do Google).
+  const [definingPw, setDefiningPw] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ type: 'ok' | 'error'; text: string } | null>(null);
 
   const nameLeft = cooldownLeft(account?.nameChangedAt);
@@ -110,6 +113,30 @@ const ProfilePage: React.FC = () => {
       toast.success('Nome atualizado.');
     } else {
       setNameMsg({ type: 'error', text: result.error ?? 'Não foi possível alterar o nome.' });
+    }
+  };
+
+  /**
+   * Primeira senha de uma conta do Google.
+   *
+   * Reusa o "esqueci minha senha" de propósito: definir uma senha sem ter uma
+   * anterior para comparar precisa de outra prova de identidade, e o link por
+   * e-mail é exatamente essa prova. Um botão que definisse a senha direto na
+   * tela aceitaria qualquer sessão sequestrada.
+   */
+  const handleDefinePassword = async () => {
+    if (!account?.email || definingPw) return;
+    setDefiningPw(true);
+    try {
+      await forgotPassword(account.email);
+      setPwMsg({
+        type: 'ok',
+        text: `Link enviado para ${account.email}. Confira sua caixa de entrada.`,
+      });
+    } catch {
+      setPwMsg({ type: 'error', text: 'Não foi possível enviar o link. Tente de novo.' });
+    } finally {
+      setDefiningPw(false);
     }
   };
 
@@ -330,7 +357,39 @@ const ProfilePage: React.FC = () => {
             {account ? `Conectado como ${account.email}` : 'Gerencie suas credenciais de acesso.'}
           </p>
 
-          {pwLeft > 0 ? (
+          {/* Conta do Google ainda sem senha: pedir a "senha atual" seria pedir
+              algo que não existe. Definir a primeira senha passa pelo mesmo
+              fluxo do "esqueci minha senha", que prova o controle do e-mail —
+              é o que o servidor exige, e aqui a tela deixa isso explícito em
+              vez de deixar a pessoa travada num campo impossível. */}
+          {account?.hasPassword === false ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-border bg-bg-secondary/60 px-4 py-3 text-sm text-text-secondary inline-flex items-start gap-2">
+                <Lock size={15} className="mt-0.5 shrink-0" />
+                <span>
+                  Você entra com o Google, então esta conta ainda não tem senha. Dá para definir
+                  uma e passar a entrar das duas formas.
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  className="rounded-xl"
+                  isLoading={definingPw}
+                  onClick={handleDefinePassword}
+                >
+                  Definir senha
+                </Button>
+                {pwMsg && (
+                  <span
+                    className={`text-sm ${pwMsg.type === 'error' ? 'text-danger' : 'text-success'}`}
+                  >
+                    {pwMsg.text}
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : pwLeft > 0 ? (
             <div className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300 inline-flex items-center gap-2">
               <Lock size={15} />
               Você já alterou a senha recentemente. Poderá trocar novamente em {days(pwLeft)}

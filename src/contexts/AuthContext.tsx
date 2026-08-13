@@ -25,6 +25,15 @@ export interface Account {
   streakDays?: number[];
   nameChangedAt?: string | null;
   passwordChangedAt?: string | null;
+  /**
+   * A conta tem senha? Quem entrou pelo Google começa sem nenhuma, e para essa
+   * pessoa não faz sentido pedir a "senha atual".
+   *
+   * Opcional porque sessões salvas ANTES deste campo existir não o têm. Quem
+   * lê deve tratar `undefined` como "tem senha" — é o caso da maioria, e
+   * assumir o contrário esconderia o formulário de quem pode usá-lo.
+   */
+  hasPassword?: boolean;
 }
 
 type AuthStatus = 'guest' | 'authed';
