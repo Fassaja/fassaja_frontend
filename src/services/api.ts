@@ -1,6 +1,8 @@
 // Exportada porque o login com Google precisa montar uma URL ABSOLUTA da API
 // para entregar ao Google (o `login_uri`), e ela tem de ser exatamente a mesma
 // base que o resto do app usa.
+import { isSessionExpiry } from '@/utils/authPaths';
+
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333/api';
 const SESSION_KEY = 'fassaja_session';
 
@@ -23,11 +25,8 @@ export function setAuthenticated(value: boolean): void {
 // O AuthContext escuta para encerrar a sessão e levar ao /login.
 export const SESSION_EXPIRED_EVENT = 'fassaja:session-expired';
 
-// Endpoints de "entrada" de auth: um 401 aqui é credencial inválida ou ausência
-// de sessão — não expiração. As demais rotas /auth/* (password/profile/avatar)
-// são autenticadas, então um 401 nelas DEVE encerrar a sessão.
-const AUTH_ENTRY_RE =
-  /^\/auth\/(login|register|resend-verification|verify|logout|me|forgot-password|reset-password)\b/;
+// A regra de quais rotas podem expirar sessão vive em utils/authPaths, que é
+// testável fora do Vite (este módulo lê import.meta.env).
 
 interface RequestOptions {
   method?: string;
@@ -50,7 +49,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   // Sessão expirada/inválida num request autenticado (fora dos endpoints de
   // entrada de auth): encerra a sessão localmente e avisa a aplicação.
-  if (response.status === 401 && authed && !AUTH_ENTRY_RE.test(path)) {
+  if (response.status === 401 && authed && isSessionExpiry(path)) {
     authed = false;
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
