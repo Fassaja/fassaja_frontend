@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { Project } from '@/types/project';
 import { TaskCard } from './TaskCard';
+import { AnimatedList } from '@/components/common/AnimatedList';
 import { EmptyState } from '@/components/common/EmptyState';
 import { isToday, isTomorrow } from '@/utils/date';
 
@@ -99,38 +101,51 @@ export const TaskList: React.FC<TaskListProps> = ({
 
   return (
     <div className="space-y-7">
-      {GROUPS.map(group => {
-        const items = grouped[group.key];
-        if (items.length === 0) return null;
+      {/* A seção também anima: ao concluir a última tarefa de um grupo, o
+          cabeçalho sumia de golpe enquanto o card ainda saía animando. */}
+      <AnimatePresence mode="popLayout" initial={false}>
+        {GROUPS.map(group => {
+          const items = grouped[group.key];
+          if (items.length === 0) return null;
 
-        return (
-          <section key={group.key} className="space-y-3">
-            <div className="flex items-center gap-2 px-1">
-              <span className={`w-2.5 h-2.5 rounded-full ${group.dot}`} />
-              <h3 className="text-sm font-bold text-text-primary">{group.label}</h3>
-              <span className="text-xs font-semibold text-text-secondary bg-bg-secondary rounded-full px-2 py-0.5">
-                {items.length}
-              </span>
-            </div>
+          return (
+            <motion.section
+              key={group.key}
+              layout="position"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center gap-2 px-1">
+                <span className={`w-2.5 h-2.5 rounded-full ${group.dot}`} />
+                <h3 className="text-sm font-bold text-text-primary">{group.label}</h3>
+                <span className="text-xs font-semibold text-text-secondary bg-bg-secondary rounded-full px-2 py-0.5">
+                  {items.length}
+                </span>
+              </div>
 
-            <div className="space-y-3">
-              {items.map(task => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  project={projects.find(p => p.id === task.projectId)}
-                  onComplete={onComplete}
-                  onDelete={onDelete}
-                  onClick={onEdit}
-                  selectionMode={selectionMode}
-                  selected={selectedIds?.has(task.id)}
-                  onToggleSelect={onToggleSelect}
-                />
-              ))}
-            </div>
-          </section>
-        );
-      })}
+              <AnimatedList
+                items={items}
+                className="space-y-3"
+                renderItem={task => (
+                  <TaskCard
+                    task={task}
+                    project={projects.find(p => p.id === task.projectId)}
+                    onComplete={onComplete}
+                    onDelete={onDelete}
+                    onClick={onEdit}
+                    selectionMode={selectionMode}
+                    selected={selectedIds?.has(task.id)}
+                    onToggleSelect={onToggleSelect}
+                  />
+                )}
+              />
+            </motion.section>
+          );
+        })}
+      </AnimatePresence>
     </div>
   );
 };

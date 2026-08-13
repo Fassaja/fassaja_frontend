@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Plus, RefreshCw, Flame } from 'lucide-react';
 import { Button } from '@/components/common/Button';
+import { Tooltip } from '@/components/common/Tooltip';
 import { SearchModal } from './SearchModal';
 import { NotificationsMenu } from './NotificationsMenu';
 import { StreakDaysModal } from './StreakDaysModal';
@@ -85,16 +86,30 @@ export const Topbar: React.FC<TopbarProps> = ({
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
-          <button
-            type="button"
-            aria-label="Atualizar"
-            title="Atualizar"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="hidden sm:flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60 disabled:opacity-60"
+          {/* Enquanto atualiza o botão fica desabilitado — e botão desabilitado
+              não dispara evento de ponteiro. A dica funciona mesmo assim
+              porque quem escuta é o <span> em volta, não o botão.
+
+              Esconder no mobile é responsabilidade do invólucro, que é a caixa
+              que ocupa espaço na barra; repetir `hidden` no botão deixaria um
+              span vazio somando o gap da linha. */}
+          <Tooltip
+            content={refreshing ? 'Atualizando…' : 'Atualizar'}
+            description={
+              refreshing ? 'Buscando tarefas e projetos.' : 'Recarrega tarefas e projetos do servidor.'
+            }
+            className="hidden sm:inline-flex"
           >
-            <RefreshCw size={19} className={refreshing ? 'animate-spin' : ''} />
-          </button>
+            <button
+              type="button"
+              aria-label="Atualizar"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60 disabled:opacity-60"
+            >
+              <RefreshCw size={19} className={refreshing ? 'animate-spin' : ''} />
+            </button>
+          </Tooltip>
 
           <button
             type="button"
@@ -143,15 +158,21 @@ export const Topbar: React.FC<TopbarProps> = ({
             </Button>
           )}
 
-          <button
-            type="button"
-            aria-label="Editar dias da sequência"
-            title="Editar dias da sequência (folgas não quebram a streak)"
-            onClick={openStreakDays}
-            className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-surface text-amber-500 dark:text-amber-400 hover:border-amber-300 hover:bg-amber-50 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-100"
+          {/* A regra "folgas não quebram a streak" estava dentro de um title=
+              nativo: não aparece no foco por teclado e ignora o tema. */}
+          <Tooltip
+            content="Dias da sequência"
+            description="Marque suas folgas: elas não quebram a sequência."
           >
-            <Flame size={20} />
-          </button>
+            <button
+              type="button"
+              aria-label="Editar dias da sequência"
+              onClick={openStreakDays}
+              className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-surface text-amber-500 dark:text-amber-400 hover:border-amber-300 hover:bg-amber-50 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-100"
+            >
+              <Flame size={20} />
+            </button>
+          </Tooltip>
 
           <button
             type="button"

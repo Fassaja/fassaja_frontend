@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
+import { Tooltip } from '@/components/common/Tooltip';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Dropdown } from '@/components/common/Dropdown';
@@ -404,24 +405,34 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                 </div>
                 {!isOwner && (
                   <div className="flex shrink-0 items-center gap-1">
-                    <button
-                      onClick={() => setTransferring(m)}
-                      disabled={busy}
-                      aria-label={`Tornar ${m.name} dono da equipe`}
-                      title="Tornar dono da equipe"
-                      className="p-2 rounded-lg text-amber-600 dark:text-amber-300 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                    {/* Ambos ficam desabilitados enquanto `busy`; a dica segue
+                        funcionando porque quem escuta é o invólucro. */}
+                    <Tooltip
+                      content="Tornar dono da equipe"
+                      description="Passa a administração para esta pessoa. Você deixa de ser dono."
                     >
-                      <Crown size={16} />
-                    </button>
-                    <button
-                      onClick={() => setRemoving(m)}
-                      disabled={busy}
-                      aria-label="Remover membro"
-                      title="Remover da equipe"
-                      className="p-2 rounded-lg text-danger hover:bg-rose-50 transition-colors disabled:opacity-50"
+                      <button
+                        onClick={() => setTransferring(m)}
+                        disabled={busy}
+                        aria-label={`Tornar ${m.name} dono da equipe`}
+                        className="p-2 rounded-lg text-amber-600 dark:text-amber-300 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                      >
+                        <Crown size={16} />
+                      </button>
+                    </Tooltip>
+                    <Tooltip
+                      content="Remover da equipe"
+                      description="A pessoa perde acesso aos projetos da equipe."
                     >
-                      <Trash2 size={16} />
-                    </button>
+                      <button
+                        onClick={() => setRemoving(m)}
+                        disabled={busy}
+                        aria-label="Remover membro"
+                        className="p-2 rounded-lg text-danger hover:bg-rose-50 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </Tooltip>
                   </div>
                 )}
               </div>

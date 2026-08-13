@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pencil, CalendarDays, Clock, MapPin, Bell, Link2, AlignLeft } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
+import { Tooltip } from '@/components/common/Tooltip';
 import { CalendarEvent } from '@/types/event';
 import { formatDate, formatDateWithDay } from '@/utils/date';
 import { reminderLabel } from '@/utils/eventReminders';
@@ -51,15 +52,18 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
       <div className="space-y-1">
         {/* Cabeçalho com a cor do evento, título e botão de editar */}
         <div className="relative rounded-2xl border border-border bg-bg-secondary/50 p-5 pr-14 mb-4">
-          <button
-            type="button"
-            onClick={() => onEdit(event)}
-            aria-label="Editar evento"
-            title="Editar evento"
-            className="absolute top-4 right-4 p-2 rounded-xl bg-surface border border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant transition-colors active:scale-95"
-          >
-            <Pencil size={16} />
-          </button>
+          {/* Posição no invólucro (ver TaskDetailModal): um <span> em fluxo com
+              filho absoluto viraria uma caixa vazia no início do bloco. */}
+          <Tooltip content="Editar evento" className="absolute top-4 right-4">
+            <button
+              type="button"
+              onClick={() => onEdit(event)}
+              aria-label="Editar evento"
+              className="p-2 rounded-xl bg-surface border border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant transition-colors active:scale-95"
+            >
+              <Pencil size={16} />
+            </button>
+          </Tooltip>
 
           <span
             className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"

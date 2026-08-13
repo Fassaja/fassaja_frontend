@@ -11,6 +11,7 @@ import { EditTaskModal } from '@/components/tasks/EditTaskModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { TaskListSkeleton } from '@/components/common/Skeletons';
+import { SlidingHighlight } from '@/components/common/SlidingHighlight';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
@@ -368,20 +369,26 @@ const TasksPage: React.FC = () => {
               <button
                 onClick={() => setView('board')}
                 aria-pressed={view === 'board'}
-                className={`inline-flex h-8 items-center gap-1.5 px-3 rounded-lg text-sm font-semibold transition-all ${
-                  view === 'board' ? 'bg-surface text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
+                className={`relative inline-flex h-8 items-center gap-1.5 px-3 rounded-lg text-sm font-semibold transition-colors ${
+                  view === 'board' ? 'text-primary-vibrant' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
-                <LayoutGrid size={16} /> Quadro
+                {view === 'board' && <SlidingHighlight groupId="tasks-view" />}
+                <span className="relative z-10 inline-flex items-center gap-1.5">
+                  <LayoutGrid size={16} /> Quadro
+                </span>
               </button>
               <button
                 onClick={() => setView('list')}
                 aria-pressed={view === 'list'}
-                className={`inline-flex h-8 items-center gap-1.5 px-3 rounded-lg text-sm font-semibold transition-all ${
-                  view === 'list' ? 'bg-surface text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
+                className={`relative inline-flex h-8 items-center gap-1.5 px-3 rounded-lg text-sm font-semibold transition-colors ${
+                  view === 'list' ? 'text-primary-vibrant' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
-                <List size={16} /> Lista
+                {view === 'list' && <SlidingHighlight groupId="tasks-view" />}
+                <span className="relative z-10 inline-flex items-center gap-1.5">
+                  <List size={16} /> Lista
+                </span>
               </button>
             </div>
 

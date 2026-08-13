@@ -3,6 +3,7 @@ import { Flag } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { TaskCard } from '@/components/tasks/TaskCard';
+import { AnimatedList } from '@/components/common/AnimatedList';
 import { EmptyState } from '@/components/common/EmptyState';
 import { LoadingScreen } from '@/components/common/LoadingScreen';
 import { useTasks } from '@/hooks/useTasks';
@@ -41,17 +42,21 @@ const PrioritiesPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-3">
-            {highTasks.map(task => (
+          {/* Aqui a saída é definitiva: concluir tira a tarefa da lista (o
+              filtro é "alta E em aberto"), diferente da aba Tarefas, onde ela
+              só muda de grupo. */}
+          <AnimatedList
+            items={highTasks}
+            className="space-y-3"
+            renderItem={task => (
               <TaskCard
-                key={task.id}
                 task={task}
                 project={projects.find(p => p.id === task.projectId)}
                 onComplete={completeTask}
                 onDelete={deleteTask}
               />
-            ))}
-          </div>
+            )}
+          />
         </>
       ) : (
         <EmptyState

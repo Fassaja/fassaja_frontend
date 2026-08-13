@@ -11,6 +11,7 @@ import {
   Tags,
 } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
+import { Tooltip } from '@/components/common/Tooltip';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
 import { formatDate, formatDateWithDay } from '@/utils/date';
@@ -78,15 +79,18 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       <div className="space-y-1">
         {/* Cabeçalho do card com título e botão de editar */}
         <div className="relative rounded-2xl border border-border bg-bg-secondary/50 p-5 pr-14 mb-4">
-          <button
-            type="button"
-            onClick={() => onEdit(task)}
-            aria-label="Editar tarefa"
-            title="Editar tarefa"
-            className="absolute top-4 right-4 p-2 rounded-xl bg-surface border border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant transition-colors active:scale-95"
-          >
-            <Pencil size={16} />
-          </button>
+          {/* A posição fica no invólucro, não no botão: um <span> em fluxo com
+              filho absoluto viraria uma caixa vazia no início do bloco. */}
+          <Tooltip content="Editar tarefa" className="absolute top-4 right-4">
+            <button
+              type="button"
+              onClick={() => onEdit(task)}
+              aria-label="Editar tarefa"
+              className="p-2 rounded-xl bg-surface border border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant transition-colors active:scale-95"
+            >
+              <Pencil size={16} />
+            </button>
+          </Tooltip>
 
           <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.className}`}>
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: statusInfo.dot }} />

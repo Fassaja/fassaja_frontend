@@ -5,6 +5,7 @@ import { PageTour } from '@/components/onboarding/PageTour';
 import { DayPanel } from '@/components/common/DayPanel';
 import { Mascot } from '@/components/mascot/Mascot';
 import { CalendarSkeleton } from '@/components/common/Skeletons';
+import { SlidingHighlight } from '@/components/common/SlidingHighlight';
 import { AgendaMonth } from '@/components/agenda/AgendaMonth';
 import { AgendaTimeline, TimelineView } from '@/components/agenda/AgendaTimeline';
 import { EventModal } from '@/components/agenda/EventModal';
@@ -122,13 +123,14 @@ const AgendaPage: React.FC = () => {
               type="button"
               onClick={() => setView(v.value)}
               aria-pressed={view === v.value}
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`relative px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
                 view === v.value
-                  ? 'bg-surface text-text-primary shadow-sm'
+                  ? 'text-text-primary'
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
-              {v.label}
+              {view === v.value && <SlidingHighlight groupId="agenda-view" />}
+              <span className="relative z-10">{v.label}</span>
             </button>
           ))}
         </div>

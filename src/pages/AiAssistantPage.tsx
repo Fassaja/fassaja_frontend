@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
+import { Tooltip } from '@/components/common/Tooltip';
 import { Textarea } from '@/components/common/Textarea';
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
@@ -409,21 +410,22 @@ const AiAssistantPage: React.FC = () => {
               Envie um texto ou arquivo e deixe a IA montar os cards. Você revisa e aprova.
             </p>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<HelpCircle size={16} />}
-            onClick={() => setShowHowTo(true)}
-            // No mobile só sobra o ícone: sem estes atributos o botão não tem
-            // nome acessível (leitor de tela anuncia apenas "botão") e ninguém
-            // adivinha o que um "?" solto faz.
-            aria-label="Como usar o Assistente de IA"
-            title="Como usar · ~1 min"
-            className="shrink-0"
-          >
-            <span className="hidden sm:inline">Como usar</span>
-            <span className="hidden sm:inline font-normal text-text-soft">· ~1 min</span>
-          </Button>
+          {/* O `aria-label` continua sendo o nome acessível: no mobile só sobra
+              o ícone, e lá a dica não existe (não há hover). Ela acrescenta a
+              duração no desktop, onde o rótulo já aparece. */}
+          <Tooltip content="Como usar o Assistente" description="Tour rápido, cerca de 1 minuto.">
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<HelpCircle size={16} />}
+              onClick={() => setShowHowTo(true)}
+              aria-label="Como usar o Assistente de IA"
+              className="shrink-0"
+            >
+              <span className="hidden sm:inline">Como usar</span>
+              <span className="hidden sm:inline font-normal text-text-soft">· ~1 min</span>
+            </Button>
+          </Tooltip>
         </div>
       </div>
 
@@ -670,14 +672,24 @@ const AiAssistantPage: React.FC = () => {
                       <Badge variant="warning">Demonstração (genérico)</Badge>
                     )}
                     <div className="flex items-center gap-3">
-                      <button
-                        onClick={handleGenerate}
-                        disabled={!canGenerate}
-                        className="flex items-center gap-1 text-xs text-text-secondary hover:text-primary-vibrant transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        title="Gera um novo rascunho com o mesmo documento (consome 1 uso)."
+                      {/* Quando `canGenerate` é falso o botão desabilita e
+                          antes não dizia por quê — a dica agora responde. */}
+                      <Tooltip
+                        content={canGenerate ? 'Gerar de novo' : 'Sem usos disponíveis'}
+                        description={
+                          canGenerate
+                            ? 'Refaz o rascunho com o mesmo documento. Consome 1 uso.'
+                            : 'Você já usou todas as gerações do período.'
+                        }
                       >
-                        <RefreshCw size={14} /> Gerar de novo
-                      </button>
+                        <button
+                          onClick={handleGenerate}
+                          disabled={!canGenerate}
+                          className="flex items-center gap-1 text-xs text-text-secondary hover:text-primary-vibrant transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <RefreshCw size={14} /> Gerar de novo
+                        </button>
+                      </Tooltip>
                       <button
                         onClick={reset}
                         className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary transition-colors"
@@ -818,28 +830,43 @@ const AiAssistantPage: React.FC = () => {
                               </div>
                               <div className="flex flex-col gap-1 shrink-0">
                                 {added ? (
-                                  <span
-                                    title="Já adicionado"
-                                    className="rounded-md bg-green-100 dark:bg-green-500/15 p-1 text-green-600 dark:text-green-300"
+                                  <Tooltip
+                                    content="Já adicionado"
+                                    description="Esta sugestão já virou um card abaixo."
                                   >
-                                    <Check size={14} />
-                                  </span>
+                                    <span
+                                      aria-label="Já adicionado"
+                                      className="rounded-md bg-green-100 dark:bg-green-500/15 p-1 text-green-600 dark:text-green-300"
+                                    >
+                                      <Check size={14} />
+                                    </span>
+                                  </Tooltip>
                                 ) : (
-                                  <button
-                                    onClick={() => addSuggestion(s.id)}
-                                    title="Adicionar aos cards"
-                                    className="rounded-md bg-primary-vibrant p-1 text-white transition-colors hover:bg-primary-hover"
+                                  <Tooltip
+                                    content="Adicionar aos cards"
+                                    description="Move esta sugestão para a lista de cards do projeto."
                                   >
-                                    <Plus size={14} />
-                                  </button>
+                                    <button
+                                      onClick={() => addSuggestion(s.id)}
+                                      aria-label="Adicionar aos cards"
+                                      className="rounded-md bg-primary-vibrant p-1 text-white transition-colors hover:bg-primary-hover"
+                                    >
+                                      <Plus size={14} />
+                                    </button>
+                                  </Tooltip>
                                 )}
-                                <button
-                                  onClick={() => dismissSuggestion(s.id)}
-                                  title="Descartar sugestão"
-                                  className="rounded-md p-1 text-text-soft transition-colors hover:text-danger"
+                                <Tooltip
+                                  content="Descartar sugestão"
+                                  description="Remove da lista. Não consome uso da IA."
                                 >
-                                  <X size={14} />
-                                </button>
+                                  <button
+                                    onClick={() => dismissSuggestion(s.id)}
+                                    aria-label="Descartar sugestão"
+                                    className="rounded-md p-1 text-text-soft transition-colors hover:text-danger"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </Tooltip>
                               </div>
                             </motion.div>
                           );
@@ -897,20 +924,22 @@ const AiAssistantPage: React.FC = () => {
                       {card.tags.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1.5">
                           {card.tags.map((tag) => (
-                            <button
-                              key={tag.id}
-                              onClick={() =>
-                                updateCard(card.id, {
-                                  tags: card.tags.filter((t) => t.id !== tag.id),
-                                })
-                              }
-                              title="Remover esta tag do card"
-                              className="group flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-70"
-                              style={{ backgroundColor: tint(tag.color, 'medium'), color: chipText(tag.color) }}
-                            >
-                              {tag.name}
-                              <X size={10} className="opacity-0 group-hover:opacity-100" />
-                            </button>
+                            // Só `content`: a ação é uma linha, sem regra a explicar.
+                            <Tooltip key={tag.id} content="Remover esta tag do card">
+                              <button
+                                onClick={() =>
+                                  updateCard(card.id, {
+                                    tags: card.tags.filter((t) => t.id !== tag.id),
+                                  })
+                                }
+                                aria-label={`Remover a tag ${tag.name} do card`}
+                                className="group flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold transition-opacity hover:opacity-70"
+                                style={{ backgroundColor: tint(tag.color, 'medium'), color: chipText(tag.color) }}
+                              >
+                                {tag.name}
+                                <X size={10} className="opacity-0 group-hover:opacity-100" />
+                              </button>
+                            </Tooltip>
                           ))}
                         </div>
                       )}

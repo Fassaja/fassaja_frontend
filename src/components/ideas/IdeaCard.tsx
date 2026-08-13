@@ -10,6 +10,7 @@ import {
   FolderOpen,
 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
+import { Tooltip } from '@/components/common/Tooltip';
 import { Idea } from '@/types/idea';
 import {
   PRIORITY_LABEL,
@@ -132,13 +133,17 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
         onClick={e => e.stopPropagation()}
       >
         {!convertida && (
-          <button
-            onClick={() => onConvert(idea)}
-            className="inline-flex items-center gap-1.5 px-2.5 h-8 rounded-lg text-xs font-bold bg-surface/80 text-primary-vibrant hover:bg-surface transition-colors"
-            title="Transformar em projeto"
+          <Tooltip
+            content="Transformar em projeto"
+            description="Cria um projeto a partir desta ideia, com as tarefas que você escolher."
           >
-            <Rocket size={14} /> Virar projeto
-          </button>
+            <button
+              onClick={() => onConvert(idea)}
+              className="inline-flex items-center gap-1.5 px-2.5 h-8 rounded-lg text-xs font-bold bg-surface/80 text-primary-vibrant hover:bg-surface transition-colors"
+            >
+              <Rocket size={14} /> Virar projeto
+            </button>
+          </Tooltip>
         )}
         <div className="flex gap-1 ml-auto opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           {!convertida && (

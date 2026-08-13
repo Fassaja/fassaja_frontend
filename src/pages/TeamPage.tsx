@@ -27,6 +27,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { Card } from '@/components/common/Card';
+import { Tooltip } from '@/components/common/Tooltip';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -606,15 +607,18 @@ const TeamPage: React.FC = () => {
                         </span>
                       ) : (
                         isOwner && (
-                          <button
-                            type="button"
-                            onClick={() => setShowSettings(true)}
-                            aria-label={`Gerenciar ${m.name}`}
-                            title="Gerenciar membro"
-                            className="absolute right-2.5 top-2.5 rounded-lg p-1.5 text-text-soft transition-colors hover:bg-bg-secondary hover:text-primary-vibrant"
-                          >
-                            <MoreVertical size={16} />
-                          </button>
+                          // Posição no invólucro: com o botão absoluto, o span
+                          // ficaria como caixa vazia no fluxo do card.
+                          <Tooltip content="Gerenciar membro" className="absolute right-2.5 top-2.5">
+                            <button
+                              type="button"
+                              onClick={() => setShowSettings(true)}
+                              aria-label={`Gerenciar ${m.name}`}
+                              className="rounded-lg p-1.5 text-text-soft transition-colors hover:bg-bg-secondary hover:text-primary-vibrant"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                          </Tooltip>
                         )
                       )}
 
