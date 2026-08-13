@@ -24,6 +24,7 @@ import {
   Sparkles,
   PlayCircle,
   HeartHandshake,
+  Lightbulb,
 } from 'lucide-react';
 import { OPEN_TOUR_EVENT } from './PlatformTourModal';
 import { NotificationsHelp } from './NotificationsHelp';
@@ -36,6 +37,7 @@ import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/', free: true },
   { icon: Sparkles, label: 'Assistente IA', path: '/ai', free: false },
+  { icon: Lightbulb, label: 'Ideias', path: '/ideas', free: false },
   { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks', free: true },
   { icon: FolderOpen, label: 'Projetos', path: '/projects', free: false },
   { icon: Calendar, label: 'Calendário', path: '/calendar', free: false },

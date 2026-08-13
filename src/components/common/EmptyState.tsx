@@ -34,8 +34,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           </p>
         )}
 
+        {/* mx-auto é obrigatório aqui: o Button é `display:flex`, mas <button>
+            é elemento de formulário e continua com largura do conteúdo em vez
+            de esticar. Sendo estreito e block-level, ele encosta à esquerda — e
+            o `text-center` do pai não o centraliza, porque alinha só conteúdo
+            inline. Sem isto, o botão fica torto em TODO estado vazio do app. */}
         {action && (
-          <Button onClick={action.onClick} className="px-6">
+          <Button onClick={action.onClick} className="px-6 mx-auto">
             {action.label}
           </Button>
         )}

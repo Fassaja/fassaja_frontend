@@ -9,13 +9,16 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const sizeClasses = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-xl',
+  // Para conteúdo em duas colunas (comando de um lado, rascunho do outro).
+  // Abaixo de lg: o layout já empilha sozinho, então isto só amplia no desktop.
+  xl: 'max-w-4xl',
 };
 
 export const Modal: React.FC<ModalProps> = ({

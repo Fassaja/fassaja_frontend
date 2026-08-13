@@ -16,6 +16,7 @@ import AuthPage from '@/pages/AuthPage';
 import PasswordResetPage from '@/pages/PasswordResetPage';
 import JoinPage from '@/pages/JoinPage';
 import ProPage from '@/pages/ProPage';
+import IdeasPage from '@/pages/IdeasPage';
 import { useAuth } from '@/contexts/AuthContext';
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -39,6 +40,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/apoiar" element={<ProPage />} />
 
       {/* Exigem conta */}
+      <Route path="/ideas" element={<RequireAuth><IdeasPage /></RequireAuth>} />
       <Route path="/projects" element={<RequireAuth><ProjectsPage /></RequireAuth>} />
       <Route path="/calendar" element={<RequireAuth><CalendarPage /></RequireAuth>} />
       <Route path="/agenda" element={<RequireAuth><AgendaPage /></RequireAuth>} />

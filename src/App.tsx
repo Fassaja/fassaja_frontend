@@ -9,6 +9,7 @@ import { ProjectsProvider } from '@/contexts/ProjectsContext';
 import { TagsProvider } from '@/contexts/TagsContext';
 import { TasksProvider } from '@/contexts/TasksContext';
 import { EventsProvider } from '@/contexts/EventsContext';
+import { IdeasProvider } from '@/contexts/IdeasContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { AppRoutes } from '@/routes/AppRoutes';
 import { TopProgressBar } from '@/components/layout/TopProgressBar';
@@ -28,10 +29,14 @@ function App() {
                 <TagsProvider>
                   <TasksProvider>
                     <EventsProvider>
-                      <NotificationsProvider>
-                        <TopProgressBar />
-                        <AppRoutes />
-                      </NotificationsProvider>
+                      {/* Dentro de Projects: o lembrete de ideia precisa saber
+                          se o projeto do qual ela depende já terminou. */}
+                      <IdeasProvider>
+                        <NotificationsProvider>
+                          <TopProgressBar />
+                          <AppRoutes />
+                        </NotificationsProvider>
+                      </IdeasProvider>
                     </EventsProvider>
                   </TasksProvider>
                 </TagsProvider>

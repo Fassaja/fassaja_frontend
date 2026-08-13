@@ -12,6 +12,8 @@ import {
   CalendarClock,
   CheckCircle2,
   HeartHandshake,
+  Lightbulb,
+  Rocket,
   Send,
   UserPlus,
 } from 'lucide-react';
@@ -21,6 +23,8 @@ import { useAuth } from './AuthContext';
 import { useUser } from './UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
+import { useIdeas } from './IdeasContext';
+import { isReviewDue, isUnblocked } from '@/utils/ideaStatus';
 import { proService } from '@/services/proService';
 import {
   hasRespondedLocally,
@@ -84,6 +88,7 @@ function loadReadIds(userId: string | undefined): Set<string> {
 export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { tasks } = useTasks();
   const { events } = useEvents();
+  const { ideas } = useIdeas();
   const { account } = useAuth();
   const { user } = useUser();
   const prefs = user.notifications;
@@ -275,6 +280,37 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         );
     }
 
+    // Ideias que pedem decisão. São dois gatilhos distintos e o texto precisa
+    // dizer qual é: "revise isto" e "a condição que você esperava aconteceu"
+    // levam a ações diferentes.
+    //
+    // Convertidas e arquivadas ficam de fora — não há o que decidir nelas.
+    ideas
+      .filter(i => i.status !== 'convertida' && i.status !== 'arquivada')
+      .forEach(idea => {
+        if (isUnblocked(idea)) {
+          raw.push({
+            id: `iu-${idea.id}`,
+            icon: <Rocket size={18} />,
+            title: idea.title,
+            detail: `"${idea.dependsOnProjectName}" terminou — pode começar`,
+            tone: '#22C55E',
+            link: '/ideas',
+          });
+        } else if (isReviewDue(idea)) {
+          // `else if`: uma ideia liberada E com revisão vencida vira um item só.
+          // Dois avisos do mesmo card no sino soam como duas pendências.
+          raw.push({
+            id: `ir-${idea.id}`,
+            icon: <Lightbulb size={18} />,
+            title: idea.title,
+            detail: 'Hora de revisar esta ideia',
+            tone: '#8B5CF6',
+            link: '/ideas',
+          });
+        }
+      });
+
     // Lembrete da pesquisa do Pro — por último de propósito: é o único item que
     // pede algo em vez de informar, e não deve competir com prazo atrasado.
     //
@@ -298,7 +334,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     // `tick` força a reavaliação periódica dos lembretes baseados em horário —
     // é ele também que faz a janela de 7 dias virar sem precisar recarregar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasks, events, account, joinRequests, readIds, prefs, tick, proResponded]);
+  }, [tasks, events, ideas, account, joinRequests, readIds, prefs, tick, proResponded]);
 
   const unreadCount = useMemo(() => items.filter(i => !i.read).length, [items]);
 
