@@ -16,7 +16,61 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <title>Fassaja - Gerenciador de Tarefas</title>
+    <title>Fassaja - Gerenciador de Tarefas, Projetos e Agenda</title>
+    <!--
+      Metadados descritivos. Além do SEO, existem por um motivo prático: filtros
+      de conteúdo corporativos (proxies de empresas e órgãos públicos) baixam o
+      HTML sem executar JavaScript. Como somos uma SPA, o que eles enxergavam
+      era só a <div id="root"> vazia, e o site caía na categoria
+      "insufficient-content" — bloqueado por falta de texto classificável.
+      Estas tags, o bloco <noscript> no body e o JSON-LD abaixo dão a esses
+      filtros conteúdo suficiente para classificar o site corretamente.
+    -->
+    <meta
+      name="description"
+      content="Fassaja é um gerenciador de tarefas, projetos e agenda em português. Organize as tarefas do dia, defina prioridades, acompanhe projetos em equipe, use o calendário e gere relatórios de produtividade em um só lugar."
+    />
+    <meta name="author" content="Fassaja" />
+    <meta name="robots" content="index, follow" />
+    <meta name="rating" content="general" />
+    <link rel="canonical" href="https://www.fassaja.com/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Fassaja" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:url" content="https://www.fassaja.com/" />
+    <meta property="og:title" content="Fassaja - Gerenciador de Tarefas, Projetos e Agenda" />
+    <meta
+      property="og:description"
+      content="Organize tarefas, prioridades, projetos em equipe, calendário e relatórios de produtividade em um só lugar."
+    />
+    <meta property="og:image" content="https://www.fassaja.com/logofassaja.png" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Fassaja - Gerenciador de Tarefas, Projetos e Agenda" />
+    <meta
+      name="twitter:description"
+      content="Organize tarefas, prioridades, projetos em equipe, calendário e relatórios de produtividade em um só lugar."
+    />
+    <meta name="twitter:image" content="https://www.fassaja.com/logofassaja.png" />
+
+    <!--
+      JSON-LD não é script executável: a CSP com script-src 'self' não o
+      bloqueia, porque o browser nem chega a tratar o tipo application/ld+json
+      como JavaScript.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Fassaja",
+        "url": "https://www.fassaja.com/",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "pt-BR",
+        "description": "Gerenciador de tarefas, projetos e agenda. Organize as tarefas do dia, defina prioridades, acompanhe projetos em equipe, use o calendário e gere relatórios de produtividade."
+      }
+    </script>
     <!--
       Anti-flash do tema. Bloqueante de propósito (sem defer/async): precisa
       rodar antes do primeiro paint. Arquivo externo e não inline porque a CSP
@@ -27,6 +81,35 @@
   </head>
   <body>
     <div id="root"></div>
+    <!--
+      Conteúdo textual de fallback. Fica fora da #root de propósito: o React
+      substitui o conteúdo da #root no primeiro render, então texto ali dentro
+      apareceria e sumiria (flash) para quem tem JavaScript. Dentro de
+      <noscript> ele nunca é exibido no uso normal, mas continua presente no
+      HTML que proxies e crawlers leem. Ver o comentário no <head>.
+    -->
+    <noscript>
+      <h1>Fassaja - Gerenciador de Tarefas, Projetos e Agenda</h1>
+      <p>
+        O Fassaja é um aplicativo web, em português, para organizar o trabalho do dia a dia.
+        Ele reúne tarefas, prioridades, projetos, ideias, calendário e relatórios de
+        produtividade em um único lugar, para uso pessoal ou em equipe.
+      </p>
+      <h2>O que dá para fazer</h2>
+      <ul>
+        <li>Criar e acompanhar tarefas do dia, com prazos e status.</li>
+        <li>Definir prioridades e visualizar o que precisa de atenção primeiro.</li>
+        <li>Organizar projetos, dividi-los em tarefas e concluí-los.</li>
+        <li>Registrar ideias e convertê-las em projetos quando amadurecerem.</li>
+        <li>Consultar a agenda e o calendário de compromissos e lembretes.</li>
+        <li>Trabalhar em equipe, convidando pessoas e distribuindo tarefas.</li>
+        <li>Gerar relatórios de produtividade e acompanhar a sequência de dias ativos.</li>
+      </ul>
+      <p>
+        O Fassaja precisa de JavaScript para funcionar. Ative o JavaScript no navegador
+        e recarregue a página para entrar na sua conta.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

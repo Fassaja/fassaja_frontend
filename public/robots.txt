@@ -1,0 +1,25 @@
+# Fassaja - https://www.fassaja.com
+# As rotas do app exigem login e não têm conteúdo público para indexar;
+# só a home e a página de apoio ficam abertas aos buscadores.
+
+User-agent: *
+Allow: /$
+Allow: /apoiar
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /join/
+Disallow: /tasks
+Disallow: /ideas
+Disallow: /projects
+Disallow: /calendar
+Disallow: /agenda
+Disallow: /priorities
+Disallow: /reports
+Disallow: /team
+Disallow: /ai
+Disallow: /profile
+Disallow: /settings
+
+Sitemap: https://www.fassaja.com/sitemap.xml
