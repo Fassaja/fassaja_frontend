@@ -28,11 +28,15 @@ function makeConfetti(count: number, spread: number) {
 const TASK_CONFETTI = makeConfetti(14, 220);
 const GOAL_CONFETTI = makeConfetti(26, 320);
 
+/**
+ * Frases da comemoração ao concluir uma tarefa. Aqui o emoji e a exclamação
+ * ficam de propósito: é um overlay de meio segundo, um MOMENTO — diferente do
+ * texto fixo da interface, onde o mesmo tom vira ruído a cada visita.
+ */
 const TASK_MESSAGES = [
-  'Mandou bem! 🎉',
-  'Tarefa concluída! 💪',
-  'Você está voando! 🚀',
+  'Tarefa concluída! 🎉',
   'Mais uma feita! ✨',
+  'Feito! 💪',
 ];
 
 interface ActiveCelebration {
@@ -50,7 +54,7 @@ export const CelebrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const isGoal = variant === 'goal';
     setActive({
       message: custom ?? TASK_MESSAGES[Math.floor(Math.random() * TASK_MESSAGES.length)],
-      subtitle: isGoal ? 'Meta do dia concluída. Você arrasou!' : 'Continue assim!',
+      subtitle: isGoal ? 'Você bateu a meta do dia.' : '',
       variant,
       mascot: isGoal ? 'strong' : 'celebrate',
     });
@@ -109,7 +113,9 @@ export const CelebrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
               </motion.div>
               <div>
                 <p className="font-bold text-text-primary leading-tight">{active.message}</p>
-                <p className="text-xs text-text-secondary">{active.subtitle}</p>
+                {active.subtitle && (
+                  <p className="text-xs text-text-secondary">{active.subtitle}</p>
+                )}
               </div>
             </motion.div>
           </motion.div>

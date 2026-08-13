@@ -13,6 +13,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
 import { CalendarEvent } from '@/types/event';
 import { REMINDER_OPTIONS, reminderTriggerDate } from '@/utils/eventReminders';
+import { plusOneHour } from '@/utils/agendaTimeline';
 import {
   WEEKDAY_OPTIONS,
   REPEAT_OPTIONS,
@@ -31,6 +32,8 @@ interface EventModalProps {
   event?: CalendarEvent | null;
   /** Data pré-selecionada na criação ('YYYY-MM-DD'). */
   defaultDate?: string;
+  /** Horário pré-selecionado na criação ('HH:MM'), vindo do clique na timeline. */
+  defaultStartTime?: string;
 }
 
 const EVENT_COLORS = [
@@ -49,6 +52,7 @@ export const EventModal: React.FC<EventModalProps> = ({
   onClose,
   event,
   defaultDate,
+  defaultStartTime,
 }) => {
   const { createEvent, updateEvent, deleteEvent } = useEvents();
   const { tasks } = useTasks();
@@ -106,8 +110,10 @@ export const EventModal: React.FC<EventModalProps> = ({
       setTitle('');
       setDate(defaultDate ?? '');
       setAllDay(false);
-      setStartTime('09:00');
-      setEndTime('10:00');
+      // Clicar numa faixa da timeline já traz o horário; sem isso, 09:00.
+      const start = defaultStartTime ?? '09:00';
+      setStartTime(start);
+      setEndTime(plusOneHour(start));
       setColor(EVENT_COLORS[0]);
       setLocation('');
       setLink('');
@@ -117,7 +123,7 @@ export const EventModal: React.FC<EventModalProps> = ({
       setWeekdays([]);
       setRepeatWeeks(DEFAULT_REPEAT_VALUE);
     }
-  }, [isOpen, event, defaultDate]);
+  }, [isOpen, event, defaultDate, defaultStartTime]);
 
   // Alterna um dia da semana no seletor de recorrência.
   const toggleWeekday = (value: number) => {

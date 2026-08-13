@@ -66,33 +66,33 @@ const ReportsPage: React.FC = () => {
   const stats = useDashboardStats(tasks);
   const [period, setPeriod] = useState('week');
 
-  // Resumo com o bob conforme o desempenho geral.
+  /**
+   * Resumo do topo. O Bob continua reagindo ao desempenho, mas o TEXTO passa a
+   * ser a leitura dos números — antes dizia "Você está voando! 💪" e
+   * "Produtividade nota dez!", que é elogio, não relatório. Numa tela chamada
+   * Relatórios, o título tem de ser o dado.
+   */
   const getSummary = (): { state: MascotState; title: string; message: string } => {
     if (stats.total === 0) {
       return {
         state: 'confused',
         title: 'Ainda não há dados',
-        message: 'Crie e conclua tarefas para ver seus relatórios ganharem vida.',
+        message: 'Crie e conclua tarefas para que os relatórios tenham o que mostrar.',
       };
     }
     if (stats.overdue >= 3 || stats.overdue > stats.completed) {
       return {
         state: 'sad',
-        title: 'Atenção às atrasadas',
-        message: `Você tem ${stats.overdue} tarefa(s) atrasada(s). Que tal priorizá-las hoje?`,
-      };
-    }
-    if (stats.completionRate >= 75) {
-      return {
-        state: 'strong',
-        title: 'Você está voando! 💪',
-        message: `${stats.completionRate}% de conclusão. Produtividade nota dez!`,
+        title: `${stats.overdue} ${stats.overdue === 1 ? 'tarefa atrasada' : 'tarefas atrasadas'}`,
+        message: `De ${stats.total} no total. É o que mais pesa nos números abaixo.`,
       };
     }
     return {
-      state: 'happy',
-      title: 'No caminho certo',
-      message: `${stats.completed} de ${stats.total} tarefas concluídas. Continue assim!`,
+      state: stats.completionRate >= 75 ? 'strong' : 'happy',
+      title: `${stats.completionRate}% de conclusão`,
+      message: `${stats.completed} de ${stats.total} ${
+        stats.total === 1 ? 'tarefa concluída' : 'tarefas concluídas'
+      }.`,
     };
   };
 

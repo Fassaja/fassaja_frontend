@@ -22,15 +22,17 @@ interface TaskListProps {
 
 type GroupKey = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later' | 'nodate' | 'completed';
 
-// Seções na ordem de exibição, com rótulo e cor do marcador.
-const GROUPS: { key: GroupKey; label: string; color: string }[] = [
-  { key: 'overdue', label: 'Atrasadas', color: '#F43F5E' },
-  { key: 'today', label: 'Hoje', color: '#2477FF' },
-  { key: 'tomorrow', label: 'Amanhã', color: '#22C55E' },
-  { key: 'week', label: 'Próximos 7 dias', color: '#FBBF24' },
-  { key: 'later', label: 'Mais tarde', color: '#8B5CF6' },
-  { key: 'nodate', label: 'Sem data', color: '#94A3B8' },
-  { key: 'completed', label: 'Concluídas', color: '#22C55E' },
+// Seções na ordem de exibição, com rótulo e marcador. A cor vem por CLASSE do
+// tema: os hex que estavam aqui eram os tons do tema claro e não acompanhavam
+// a troca para o escuro.
+const GROUPS: { key: GroupKey; label: string; dot: string }[] = [
+  { key: 'overdue', label: 'Atrasadas', dot: 'bg-danger' },
+  { key: 'today', label: 'Hoje', dot: 'bg-primary-vibrant' },
+  { key: 'tomorrow', label: 'Amanhã', dot: 'bg-success' },
+  { key: 'week', label: 'Próximos 7 dias', dot: 'bg-warning' },
+  { key: 'later', label: 'Mais tarde', dot: 'bg-priority-high' },
+  { key: 'nodate', label: 'Sem data', dot: 'bg-text-soft' },
+  { key: 'completed', label: 'Concluídas', dot: 'bg-success' },
 ];
 
 function bucketOf(task: Task): GroupKey {
@@ -104,7 +106,7 @@ export const TaskList: React.FC<TaskListProps> = ({
         return (
           <section key={group.key} className="space-y-3">
             <div className="flex items-center gap-2 px-1">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: group.color }} />
+              <span className={`w-2.5 h-2.5 rounded-full ${group.dot}`} />
               <h3 className="text-sm font-bold text-text-primary">{group.label}</h3>
               <span className="text-xs font-semibold text-text-secondary bg-bg-secondary rounded-full px-2 py-0.5">
                 {items.length}

@@ -13,6 +13,8 @@ interface CalendarMonthProps {
   activeProject?: string;
   onProjectFilter?: (value: string) => void;
   onSelectDate: (date: Date) => void;
+  /** Dia aberto no painel lateral — precisa se ver na grade. */
+  selectedDate?: Date;
 }
 
 export const CalendarMonth: React.FC<CalendarMonthProps> = ({
@@ -23,11 +25,14 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
   activeProject = 'all',
   onProjectFilter,
   onSelectDate,
+  selectedDate,
 }) => {
   const projectColor = (projectId?: string) =>
     projects.find(p => p.id === projectId)?.color ?? '#94A3B8';
   const year = date.getFullYear();
   const month = date.getMonth();
+  const todayISO = toISODate(new Date());
+  const selectedISO = selectedDate ? toISODate(selectedDate) : null;
 
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -104,23 +109,30 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
       <div className="grid grid-cols-7 gap-1.5">
         {days.map((day, index) => {
           const dayTasks = day ? getTasksForDate(day) : [];
-          const isToday =
-            day &&
-            new Date().getDate() === day &&
-            new Date().getMonth() === month &&
-            new Date().getFullYear() === year;
+          const isToday = day !== null && toISODate(new Date(year, month, day)) === todayISO;
+          const isSelected =
+            day !== null && selectedISO !== null && toISODate(new Date(year, month, day)) === selectedISO;
+          // Esta tela é sobre PRAZOS: um dia com tarefa atrasada precisa gritar
+          // mais alto que a cor do projeto.
+          const hasOverdue = dayTasks.some(t => t.status === 'overdue');
 
           return (
             <button
               key={index}
               onClick={() => day && handleDayClick(day)}
               disabled={!day}
-              className={`h-12 sm:h-14 p-1 rounded-xl transition-all flex flex-col items-center justify-center gap-1 ${
+              aria-current={isToday ? 'date' : undefined}
+              aria-pressed={day ? isSelected : undefined}
+              className={`h-12 sm:h-14 p-1 rounded-xl transition-all flex flex-col items-center justify-center gap-1 border ${
                 !day
-                  ? 'cursor-default'
+                  ? 'cursor-default border-transparent'
                   : isToday
-                  ? 'bg-primary-vibrant text-white font-bold shadow-sm shadow-primary-vibrant/30'
-                  : 'hover:bg-bg-secondary border border-transparent hover:border-border'
+                  ? 'bg-primary-vibrant text-white font-bold border-transparent shadow-sm shadow-primary-vibrant/30'
+                  : isSelected
+                  ? 'bg-primary-light text-primary-vibrant font-bold border-primary-vibrant'
+                  : hasOverdue
+                  ? 'border-danger/40 bg-danger/5 hover:bg-danger/10'
+                  : 'border-transparent hover:bg-bg-secondary hover:border-border'
               }`}
             >
               <span className="text-sm font-medium">{day}</span>
@@ -129,12 +141,16 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
                   {dayTasks.slice(0, 3).map((t, i) => (
                     <span
                       key={i}
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{
-                        backgroundColor: isToday
-                          ? 'rgba(255,255,255,0.9)'
-                          : projectColor(t.projectId),
-                      }}
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        !isToday && t.status === 'overdue' ? 'bg-danger' : ''
+                      }`}
+                      style={
+                        isToday
+                          ? { backgroundColor: 'rgba(255,255,255,0.9)' }
+                          : t.status === 'overdue'
+                          ? undefined
+                          : { backgroundColor: projectColor(t.projectId) }
+                      }
                     />
                   ))}
                 </span>

@@ -30,11 +30,11 @@ interface PageTourDef {
 
 export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
   dashboard: {
-    title: 'Bem-vindo ao Dashboard',
+    title: 'Conhecendo o painel',
     steps: [
       {
         image: '/bobOla.png',
-        title: 'Este é o seu Dashboard 👋',
+        title: 'Este é o seu painel',
         text: 'Uma visão geral do seu dia: métricas, progresso e o que precisa de atenção.',
       },
       {
@@ -50,11 +50,11 @@ export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
     ],
   },
   tasks: {
-    title: 'Bem-vindo às Minhas Tarefas',
+    title: 'Conhecendo as tarefas',
     steps: [
       {
         image: '/bobOla.png',
-        title: 'Minhas Tarefas ✅',
+        title: 'Minhas tarefas',
         text: 'Aqui ficam todas as suas tarefas, reunidas em um só lugar.',
       },
       {
@@ -65,16 +65,16 @@ export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
       {
         image: '/bobheroi.png',
         title: 'Conclua e avance',
-        text: 'Marque como concluída e acompanhe seu progresso. Bora produzir!',
+        text: 'Marque como concluída para acompanhar seu progresso.',
       },
     ],
   },
   projects: {
-    title: 'Bem-vindo aos Projetos',
+    title: 'Conhecendo os projetos',
     steps: [
       {
         image: '/bobjoia.png',
-        title: 'Projetos 📁',
+        title: 'Projetos',
         text: 'Agrupe tarefas por projeto e acompanhe o progresso de cada um.',
       },
       {
@@ -90,11 +90,11 @@ export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
     ],
   },
   calendar: {
-    title: 'Bem-vindo ao Calendário',
+    title: 'Conhecendo o calendário',
     steps: [
       {
         image: '/bobOla.png',
-        title: 'Calendário 📅',
+        title: 'Calendário',
         text: 'Suas tarefas distribuídas por data, numa visão de mês.',
       },
       {
@@ -110,11 +110,11 @@ export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
     ],
   },
   agenda: {
-    title: 'Bem-vindo à Agenda',
+    title: 'Conhecendo a agenda',
     steps: [
       {
         image: '/bobOla.png',
-        title: 'Agenda ⏰',
+        title: 'Agenda',
         text: 'Seus compromissos com data e horário — separados das tarefas.',
       },
       {
@@ -130,11 +130,11 @@ export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
     ],
   },
   priorities: {
-    title: 'Bem-vindo às Prioridades',
+    title: 'Conhecendo as prioridades',
     steps: [
       {
         image: '/bobinvestigador.png',
-        title: 'Prioridades 🚩',
+        title: 'Prioridades',
         text: 'Tudo que é prioridade alta e ainda está em aberto, reunido aqui.',
       },
       {
@@ -150,11 +150,11 @@ export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
     ],
   },
   reports: {
-    title: 'Bem-vindo aos Relatórios',
+    title: 'Conhecendo os relatórios',
     steps: [
       {
         image: '/bobinvestigador.png',
-        title: 'Relatórios 📊',
+        title: 'Relatórios',
         text: 'Suas estatísticas de produtividade reunidas em gráficos.',
       },
       {
@@ -170,11 +170,11 @@ export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
     ],
   },
   team: {
-    title: 'Bem-vindo à Equipe',
+    title: 'Conhecendo a equipe',
     steps: [
       {
         image: '/bobjoia.png',
-        title: 'Equipe 👥',
+        title: 'Equipe',
         text: 'As pessoas que tocam os projetos com você.',
       },
       {

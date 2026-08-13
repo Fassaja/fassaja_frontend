@@ -83,7 +83,7 @@ const ProjectsPage: React.FC = () => {
     const concluindo = !project.completedAt;
     try {
       await setProjectCompleted(project.id, concluindo);
-      toast.success(concluindo ? 'Projeto concluído! 🎉' : 'Projeto reaberto.');
+      toast.success(concluindo ? 'Projeto concluído.' : 'Projeto reaberto.');
     } catch (err) {
       toast.error(
         (err as { status?: number }).status === 403

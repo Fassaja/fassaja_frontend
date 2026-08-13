@@ -107,7 +107,7 @@ const ProfilePage: React.FC = () => {
     setNameLoading(false);
     if (result.ok) {
       setNameMsg(null);
-      toast.success('Nome atualizado. 👋');
+      toast.success('Nome atualizado.');
     } else {
       setNameMsg({ type: 'error', text: result.error ?? 'Não foi possível alterar o nome.' });
     }
@@ -121,7 +121,7 @@ const ProfilePage: React.FC = () => {
     if (result.ok) {
       setPwMsg(null);
       setPw({ current: '', next: '' });
-      toast.success('Senha atualizada com sucesso. 🔒');
+      toast.success('Senha atualizada com sucesso.');
     } else {
       setPwMsg({ type: 'error', text: result.error ?? 'Não foi possível alterar a senha.' });
     }

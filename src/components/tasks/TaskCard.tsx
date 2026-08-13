@@ -152,10 +152,16 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
   );
 };
 
-const priorityConfig: Record<Task['priority'], { label: string; color: string; className: string }> = {
-  low: { label: 'Baixa', color: '#22C55E', className: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' },
-  medium: { label: 'Média', color: '#FBBF24', className: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300' },
-  high: { label: 'Alta', color: '#8B5CF6', className: 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300' },
+/**
+ * `dot` é classe, não hex: os valores fixos que estavam aqui (#22C55E,
+ * #FBBF24, #8B5CF6) são os tons do tema CLARO, então o marcador de prioridade
+ * não acompanhava a troca para o escuro. Os tokens `priority.*` já trazem o
+ * par certo para cada tema.
+ */
+const priorityConfig: Record<Task['priority'], { label: string; dot: string; className: string }> = {
+  low: { label: 'Baixa', dot: 'bg-priority-low', className: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' },
+  medium: { label: 'Média', dot: 'bg-priority-medium', className: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300' },
+  high: { label: 'Alta', dot: 'bg-priority-high', className: 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300' },
 };
 
 export const TaskCard: React.FC<TaskCardProps> = ({
@@ -268,7 +274,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <span
               className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${priorityInfo.className}`}
             >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: priorityInfo.color }} />
+              <span className={`w-1.5 h-1.5 rounded-full ${priorityInfo.dot}`} />
               {priorityInfo.label}
             </span>
             {project && (

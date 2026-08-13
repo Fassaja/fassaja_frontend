@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, MailCheck, CheckSquare, CalendarDays, BarChart3, Sparkles } from 'lucide-react';
+import { ArrowRight, MailCheck, CheckSquare, CalendarDays, BarChart3, Sparkles, AlertTriangle } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
 import { PasswordInput } from '@/components/common/PasswordInput';
@@ -124,14 +124,15 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-brand-hero to-brand-deep text-white flex-col items-center justify-center text-center p-12 relative overflow-hidden">
         <div className="relative z-10 flex flex-col items-center">
           <Mascot state={isLogin ? 'happy' : 'strong'} size="xl" animate />
+          {/* O painel da marca apresenta o PRODUTO; a saudação fica para depois
+              do login. Antes havia duas na mesma tela: um "Que bom te ver de
+              novo!" aqui e um "Bem-vindo de volta" no formulário ao lado. */}
           <h1 className="text-3xl font-extrabold mt-6 leading-tight max-w-md">
-            {isLogin
-              ? 'Que bom te ver de novo! Bora organizar o dia?'
-              : 'Vem com o Fassaja conquistar suas metas!'}
+            Tudo o que você precisa fazer, em um só lugar
           </h1>
           <p className="text-white/80 mt-3 max-w-md">
-            Tarefas, projetos, calendário e relatórios — tudo num só lugar, com aquele empurrãozinho
-            motivacional do Bob.
+            Tarefas, projetos, agenda e relatórios de produtividade — organizados do jeito que
+            você trabalha.
           </p>
 
           <div className="mt-8 grid grid-cols-2 gap-2.5 w-full max-w-sm">
@@ -187,9 +188,12 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               <strong className="text-text-primary">{registeredEmail}</strong>. Clique nele para
               ativar sua conta.
             </p>
-            <div className="mt-4 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
-              ⚠️ Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico — e
-              marque como "não é spam" para receber os próximos.
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <span>
+                Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico — e
+                marque como "não é spam" para receber os próximos.
+              </span>
             </div>
             <button
               type="button"
@@ -212,7 +216,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           ) : (
           <>
           <h2 className="text-2xl font-bold text-text-primary">
-            {isLogin ? 'Bem-vindo de volta 👋' : 'Crie sua conta'}
+            {isLogin ? 'Entrar' : 'Crie sua conta'}
           </h2>
           <p className="text-text-secondary mt-1 mb-8">
             {isLogin

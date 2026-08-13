@@ -663,7 +663,9 @@ const AiAssistantPage: React.FC = () => {
                       "Gerar de novo" + "Descartar" não cabem numa linha só. */}
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     {draft.generatedBy === 'ai' ? (
-                      <Badge variant="purple">✨ Feito com IA</Badge>
+                      <Badge variant="purple">
+                        <Sparkles size={11} className="inline mr-1 -mt-0.5" /> Feito com IA
+                      </Badge>
                     ) : (
                       <Badge variant="warning">Demonstração (genérico)</Badge>
                     )}
@@ -690,7 +692,7 @@ const AiAssistantPage: React.FC = () => {
                     value={draft.targetProjectId}
                     onChange={handleSelectProject}
                     options={[
-                      { value: '', label: '➕ Criar um projeto novo' },
+                      { value: '', label: 'Criar um projeto novo' },
                       ...projects.map((p) => ({ value: p.id, label: p.name })),
                     ]}
                   />
@@ -773,7 +775,7 @@ const AiAssistantPage: React.FC = () => {
                       </button>
                     </div>
                     <p className="-mt-1 text-xs text-text-secondary">
-                      💭 Ideias da IA. Toque em <Plus size={11} className="inline" /> para virar um card.
+                      Ideias da IA. Toque em <Plus size={11} className="inline" /> para virar um card.
                     </p>
                     <div className="flex flex-col gap-3">
                       <AnimatePresence>
@@ -861,7 +863,7 @@ const AiAssistantPage: React.FC = () => {
                 <div className="flex flex-col gap-3">
                   {draft.cards.length === 0 && (
                     <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-text-secondary">
-                      Nenhum card ainda. Adicione as sugestões acima 💭 ou crie um card manualmente.
+                      Nenhum card ainda. Adicione as sugestões acima ou crie um card manualmente.
                     </p>
                   )}
                   {draft.cards.map((card) => (

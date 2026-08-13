@@ -80,7 +80,7 @@ const ProPage: React.FC = () => {
               <Mascot state="celebrate" size="md" animate />
             </div>
             <h2 className="text-xl font-bold text-text-primary">
-              {wouldPay ? 'Você está na lista 💙' : 'Resposta registrada 💙'}
+              {wouldPay ? 'Você está na lista' : 'Resposta registrada'}
             </h2>
             <p className="mt-2 text-text-secondary">
               {wouldPay ? (

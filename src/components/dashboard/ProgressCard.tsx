@@ -2,8 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/common/Card';
 import { CountUp } from '@/components/common/CountUp';
-import { Mascot, MascotState } from '@/components/mascot/Mascot';
-import { tint } from '@/utils/color';
 
 interface GoalProgress {
   done: number;
@@ -13,17 +11,19 @@ interface GoalProgress {
 interface ProgressCardProps {
   percentage: number;
   label?: string;
-  headline?: string;
-  message?: string;
-  mascotState?: MascotState;
   goals?: { daily: GoalProgress; weekly: GoalProgress };
 }
 
-const GoalBar: React.FC<{ label: string; done: number; goal: number; color: string }> = ({
+/**
+ * Barra de meta. A cor vem por CLASSE do tema (`bg-primary-vibrant`,
+ * `bg-priority-high`) e não por hex: os valores fixos que estavam aqui eram os
+ * do tema claro e não acompanhavam a troca para o escuro.
+ */
+const GoalBar: React.FC<{ label: string; done: number; goal: number; barClass: string }> = ({
   label,
   done,
   goal,
-  color,
+  barClass,
 }) => {
   const pct = goal > 0 ? Math.min(100, Math.round((done / goal) * 100)) : 0;
   return (
@@ -34,10 +34,9 @@ const GoalBar: React.FC<{ label: string; done: number; goal: number; color: stri
           {done}/{goal}
         </span>
       </div>
-      <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: tint(color) }}>
+      <div className="w-full h-2 rounded-full overflow-hidden bg-bg-secondary">
         <motion.div
-          className="h-full rounded-full"
-          style={{ backgroundColor: color }}
+          className={`h-full rounded-full ${barClass}`}
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
@@ -50,9 +49,6 @@ const GoalBar: React.FC<{ label: string; done: number; goal: number; color: stri
 export const ProgressCard: React.FC<ProgressCardProps> = ({
   percentage,
   label = 'Concluído',
-  headline,
-  message,
-  mascotState,
   goals,
 }) => {
   const size = 116;
@@ -61,16 +57,13 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
 
-  const resolvedState: MascotState =
-    mascotState ??
-    (percentage >= 75 ? 'strong' : percentage > 0 ? 'happy' : 'confused');
-
   return (
     <Card className="h-full flex flex-col">
       <h3 className="text-lg font-bold text-text-primary mb-3">Progresso geral</h3>
 
-      <div className="flex-1 flex flex-col sm:flex-row items-center justify-center gap-3">
-        {/* Donut */}
+      <div className="flex-1 flex items-center justify-center">
+        {/* Donut. As cores saem de `currentColor`/classe para seguir o tema:
+            os hex fixos de antes (#EAF2FF, #2477FF) eram do tema claro. */}
         <div className="relative shrink-0" style={{ width: size, height: size }}>
           <svg width={size} height={size} className="-rotate-90">
             <circle
@@ -78,7 +71,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke="#EAF2FF"
+              className="stroke-primary-light"
               strokeWidth={stroke}
             />
             <motion.circle
@@ -86,7 +79,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke="#2477FF"
+              className="stroke-primary-vibrant"
               strokeWidth={stroke}
               strokeDasharray={circumference}
               strokeLinecap="round"
@@ -105,26 +98,22 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
             <span className="text-[11px] text-text-secondary mt-0.5">{label}</span>
           </div>
         </div>
-
-        {/* Mascot */}
-        <Mascot state={resolvedState} size="sm" animate={true} />
       </div>
-
-      {(headline || message) && (
-        <div className="text-center mt-1">
-          {headline && (
-            <p className="text-base font-bold text-primary-vibrant">{headline}</p>
-          )}
-          {message && (
-            <p className="text-sm text-text-secondary mt-0.5">{message}</p>
-          )}
-        </div>
-      )}
 
       {goals && (
         <div className="mt-4 pt-4 border-t border-border space-y-3">
-          <GoalBar label="Meta diária" done={goals.daily.done} goal={goals.daily.goal} color="#2477FF" />
-          <GoalBar label="Meta semanal" done={goals.weekly.done} goal={goals.weekly.goal} color="#8B5CF6" />
+          <GoalBar
+            label="Meta diária"
+            done={goals.daily.done}
+            goal={goals.daily.goal}
+            barClass="bg-primary-vibrant"
+          />
+          <GoalBar
+            label="Meta semanal"
+            done={goals.weekly.done}
+            goal={goals.weekly.goal}
+            barClass="bg-priority-high"
+          />
         </div>
       )}
     </Card>

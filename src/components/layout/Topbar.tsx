@@ -21,8 +21,10 @@ interface TopbarProps {
 export const Topbar: React.FC<TopbarProps> = ({
   onNewTask,
   actionLabel = 'Nova Tarefa',
-  title = 'Bem-vindo de volta 👋',
-  subtitle = 'Vamos organizar o seu dia.',
+  // Rótulo neutro: toda página passa o próprio título, e a saudação genérica
+  // que ficava aqui competia com a que a Home já mostra logo abaixo.
+  title = 'Fassaja',
+  subtitle = '',
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -74,9 +76,11 @@ export const Topbar: React.FC<TopbarProps> = ({
           <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
             {title}
           </h1>
-          <p className="text-sm text-text-secondary truncate hidden sm:block">
-            {subtitle}
-          </p>
+          {subtitle && (
+            <p className="text-sm text-text-secondary truncate hidden sm:block first-letter:uppercase">
+              {subtitle}
+            </p>
+          )}
         </div>
 
         {/* Actions */}

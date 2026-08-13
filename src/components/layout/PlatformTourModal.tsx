@@ -12,7 +12,7 @@ export const OPEN_TOUR_EVENT = 'fassaja:open-tour';
 const STEPS: WalkthroughStep[] = [
   {
     image: '/bobOla.png',
-    title: 'Bem-vindo ao Fassaja! 👋',
+    title: 'Bem-vindo ao Fassaja',
     text: 'Seu painel para organizar tarefas e projetos. Veja os principais espaços em 1 minuto.',
   },
   {
@@ -32,12 +32,12 @@ const STEPS: WalkthroughStep[] = [
   },
   {
     image: '/bobinvestigador.png',
-    title: 'Assistente de IA ✨',
+    title: 'Assistente de IA',
     text: 'Envie um documento e a IA monta projetos e cards prontos para você revisar.',
   },
   {
     image: '/bobheroi.png',
-    title: 'Relatórios & Calendário 🎉',
+    title: 'Relatórios e Calendário',
     text: 'Acompanhe seu desempenho e seus prazos. Pronto, agora é com você!',
   },
 ];

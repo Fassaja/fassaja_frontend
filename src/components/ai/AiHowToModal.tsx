@@ -9,7 +9,7 @@ interface AiHowToModalProps {
 const STEPS: WalkthroughStep[] = [
   {
     image: '/bobOla.png',
-    title: 'Oi! Eu sou o assistente de IA 🤖',
+    title: 'O assistente de IA',
     text: 'Transformo documentos em projetos com tarefas. Veja em 4 passos.',
   },
   {
@@ -29,7 +29,7 @@ const STEPS: WalkthroughStep[] = [
   },
   {
     image: '/bobheroi.png',
-    title: '4. Aprove e pronto! 🎉',
+    title: '4. Aprove e pronto',
     text: 'Aprove e os cards viram tarefas. São 5 usos de IA por semana. Bora!',
   },
 ];

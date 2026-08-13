@@ -161,7 +161,7 @@ export const ConvertIdeaModal: React.FC<ConvertIdeaModalProps> = ({
             projectId,
             cards: cards.map(({ id: _id, ...card }) => card),
           });
-          toast.success(`Projeto criado com ${cards.length} tarefas! 🚀`);
+          toast.success(`Projeto criado com ${cards.length} tarefas.`);
         } catch {
           // O projeto existe; só as tarefas falharam. Dizer isso é melhor do
           // que um erro genérico que faria a pessoa tentar converter de novo
@@ -169,7 +169,7 @@ export const ConvertIdeaModal: React.FC<ConvertIdeaModalProps> = ({
           toast.error('Projeto criado, mas as tarefas não puderam ser adicionadas.');
         }
       } else {
-        toast.success('Ideia virou projeto! 🚀');
+        toast.success('Ideia virou projeto.');
       }
       onClose();
       onConverted(projectId);

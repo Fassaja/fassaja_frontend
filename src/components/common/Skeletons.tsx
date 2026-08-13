@@ -5,22 +5,29 @@ export const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) =
   <div className={`animate-pulse bg-border/70 rounded-lg ${className}`} />
 );
 
-const MetricCardSkeleton = () => (
-  <Card className="flex flex-col gap-3">
-    <div className="flex items-center gap-3">
-      <Skeleton className="w-11 h-11 rounded-xl" />
-      <Skeleton className="h-3 w-24" />
-    </div>
-    <Skeleton className="h-8 w-16" />
-    <Skeleton className="h-3 w-28" />
-  </Card>
-);
-
 export const DashboardSkeleton: React.FC = () => (
   <>
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
-      {Array.from({ length: 4 }).map((_, i) => <MetricCardSkeleton key={i} />)}
-    </div>
+    {/* Bloco de foco do dia */}
+    <Card className="mb-6 h-28 flex items-center gap-4">
+      <Skeleton className="w-16 h-16 rounded-full shrink-0" />
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-5 w-48" />
+        <Skeleton className="h-3 w-32" />
+      </div>
+    </Card>
+
+    {/* Faixa de resumo das tarefas */}
+    <Card
+      padding="none"
+      className="mb-6 grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border"
+    >
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="px-4 py-3.5 sm:px-5 space-y-2">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-6 w-10" />
+        </div>
+      ))}
+    </Card>
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
       <Card className="lg:col-span-2 h-[290px] flex flex-col gap-4">
         <Skeleton className="h-4 w-32" />

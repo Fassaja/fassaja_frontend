@@ -3,13 +3,25 @@ import { Check } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { CalendarMonth } from '@/components/calendar/CalendarMonth';
-import { Card } from '@/components/common/Card';
+import { DayPanel } from '@/components/common/DayPanel';
 import { Mascot } from '@/components/mascot/Mascot';
 import { CalendarSkeleton } from '@/components/common/Skeletons';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { toISODate } from '@/utils/date';
+import { Task } from '@/types/task';
+
+/**
+ * Rótulo e cor de cada prioridade. A cor sai dos tokens `priority.*` (classe
+ * Tailwind), não de um hex fixo: os hex antigos (#8B5CF6, #FBBF24, #22C55E)
+ * eram os valores do tema CLARO e não acompanhavam a troca de tema.
+ */
+const PRIORITY: Record<Task['priority'], { label: string; dot: string }> = {
+  high: { label: 'Alta', dot: 'bg-priority-high' },
+  medium: { label: 'Média', dot: 'bg-priority-medium' },
+  low: { label: 'Baixa', dot: 'bg-priority-low' },
+};
 
 const CalendarPage: React.FC = () => {
   const { tasks, completeTask, loading } = useTasks();
@@ -29,7 +41,7 @@ const CalendarPage: React.FC = () => {
   const tasksForSelectedDate = visibleTasks.filter(t => t.dueDate === selectedDateStr);
 
   return (
-    <AppLayout title="Calendário" subtitle="Visualize suas tarefas por data.">
+    <AppLayout title="Calendário" subtitle="Os prazos das suas tarefas, mês a mês.">
       <PageTour id="calendar" />
       {loading ? (showSkeleton ? <CalendarSkeleton /> : null) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -43,56 +55,42 @@ const CalendarPage: React.FC = () => {
             activeProject={projectFilter}
             onProjectFilter={setProjectFilter}
             onSelectDate={setSelectedDate}
+            selectedDate={selectedDate}
           />
         </div>
 
-        {/* Tasks for selected date */}
+        {/* Tarefas com prazo na data selecionada */}
         <div>
-          <Card>
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <div className="min-w-0">
-                <h3 className="text-lg font-bold text-text-primary capitalize leading-tight">
-                  {selectedDate.toLocaleDateString('pt-BR', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                  })}
-                </h3>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {tasksForSelectedDate.length === 0
-                    ? 'Nenhuma tarefa nesta data'
-                    : `${tasksForSelectedDate.length} tarefa${tasksForSelectedDate.length === 1 ? '' : 's'} nesta data`}
+          <DayPanel
+            date={selectedDate}
+            count={tasksForSelectedDate.length}
+            noun="tarefa"
+            onToday={() => {
+              const now = new Date();
+              setCurrentDate(now);
+              setSelectedDate(now);
+            }}
+            empty={
+              <div className="flex flex-col items-center text-center py-6">
+                <Mascot state="happy" size="sm" animate />
+                <p className="text-text-primary font-semibold mt-3">Sem prazos</p>
+                <p className="text-text-secondary text-sm">
+                  Nenhuma tarefa vence nesta data.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const now = new Date();
-                  setCurrentDate(now);
-                  setSelectedDate(now);
-                }}
-                className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-primary-vibrant bg-primary-light hover:brightness-95 active:scale-95 transition-all"
-              >
-                Hoje
-              </button>
-            </div>
-
-            {tasksForSelectedDate.length > 0 ? (
+            }
+          >
               <ul className="space-y-3">
                 {tasksForSelectedDate.map(task => {
                   const completed = task.status === 'completed';
                   const overdue = task.status === 'overdue';
-                  const priority = {
-                    high: { label: 'Alta', color: '#8B5CF6' },
-                    medium: { label: 'Média', color: '#FBBF24' },
-                    low: { label: 'Baixa', color: '#22C55E' },
-                  }[task.priority];
+                  const priority = PRIORITY[task.priority];
 
                   return (
                     <li
                       key={task.id}
                       className={`p-3 rounded-xl border flex items-start gap-3 ${
-                        overdue ? 'border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10' : 'border-border bg-bg-secondary'
+                        overdue ? 'border-danger/30 bg-danger/10' : 'border-border bg-bg-secondary'
                       }`}
                     >
                       <button
@@ -114,23 +112,16 @@ const CalendarPage: React.FC = () => {
                           {task.title}
                         </p>
                         <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary mt-1">
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: priority.color }} />
+                          <span className={`w-2 h-2 rounded-full ${priority.dot}`} />
                           {priority.label}
-                          {overdue && <span className="text-rose-600 dark:text-rose-300 font-semibold">· Atrasada</span>}
+                          {overdue && <span className="text-danger font-semibold">· Atrasada</span>}
                         </span>
                       </div>
                     </li>
                   );
                 })}
               </ul>
-            ) : (
-              <div className="flex flex-col items-center text-center py-6">
-                <Mascot state="celebrate" size="sm" animate />
-                <p className="text-text-primary font-semibold mt-3">Dia livre!</p>
-                <p className="text-text-secondary text-sm">Nenhuma tarefa para esta data.</p>
-              </div>
-            )}
-          </Card>
+          </DayPanel>
         </div>
       </div>
       )}

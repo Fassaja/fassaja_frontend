@@ -64,7 +64,7 @@ const COLUMNS: {
   {
     key: 'completed',
     label: 'Concluída',
-    hint: 'Já finalizou 🎉',
+    hint: 'Já finalizou',
     color: '#22C55E',
     tint: 'bg-emerald-50 dark:bg-emerald-500/10',
     statuses: ['completed'],

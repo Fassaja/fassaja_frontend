@@ -46,7 +46,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
       const result = await feedbackService.send(text);
       setStatus(result);
       setMessage('');
-      toast.success('Feedback enviado. Obrigado por ajudar o Fassaja a melhorar! 💙');
+      toast.success('Feedback enviado. Obrigado por ajudar o Fassaja a melhorar.');
       onClose();
     } catch (err) {
       toast.error((err as Error).message || 'Não foi possível enviar o feedback.');

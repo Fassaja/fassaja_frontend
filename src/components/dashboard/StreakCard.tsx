@@ -54,10 +54,8 @@ export const StreakContent: React.FC = () => {
 
       <p className="text-sm text-text-secondary mb-4">
         {streak === 0
-          ? 'Conclua uma tarefa hoje para começar uma nova sequência.'
-          : streak < 3
-          ? 'Bom começo! Mantenha o ritmo para crescer a sequência.'
-          : 'Você está mantendo uma ótima constância. Continue assim! 🔥'}
+          ? 'Conclua uma tarefa hoje para começar uma sequência.'
+          : 'Dias seguidos concluindo pelo menos uma tarefa.'}
       </p>
 
       <div className="flex justify-between gap-2">

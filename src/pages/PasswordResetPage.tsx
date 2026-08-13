@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, MailCheck, KeyRound, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, MailCheck, KeyRound, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
 import { PasswordInput } from '@/components/common/PasswordInput';
@@ -106,8 +106,11 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
               Se <strong className="text-text-primary">{email.trim()}</strong> estiver cadastrado,
               enviamos um link para criar uma nova senha. Ele vale por 1 hora.
             </p>
-            <div className="mt-4 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
-              ⚠️ Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico.
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <span>
+                Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico.
+              </span>
             </div>
           </div>
         )}
