@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { TodayFocus } from '@/components/dashboard/TodayFocus';
-import { TaskStats } from '@/components/dashboard/TaskStats';
+import { StatStrip } from '@/components/common/StatStrip';
 import { WeeklyOverviewChart } from '@/components/dashboard/WeeklyOverviewChart';
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
 import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
@@ -83,7 +83,8 @@ const DashboardPage: React.FC = () => {
           onNewTask={openNewTask}
         />
 
-        <TaskStats
+        <StatStrip
+          className="mb-6"
           stats={[
             { label: 'Total', value: stats.total, comparison: stats.comparisons.total },
             { label: 'Concluídas', value: stats.completed, comparison: stats.comparisons.completed },

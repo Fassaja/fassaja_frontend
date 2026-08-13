@@ -14,8 +14,6 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-  TrendingUp,
-  Mail,
   CheckCircle2,
   Circle,
   Calendar,
@@ -33,7 +31,8 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { TeamSkeleton } from '@/components/common/Skeletons';
+import { Skeleton, TeamSkeleton } from '@/components/common/Skeletons';
+import { StatStrip } from '@/components/common/StatStrip';
 import { TeamSettingsModal } from '@/components/team/TeamSettingsModal';
 import { AVATAR_COLORS } from '@/components/team/teamConstants';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,12 +44,10 @@ import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
 import { TeamSummary, TeamMember, PendingRequest, TeamProjectSummary } from '@/types/team';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CountUp } from '@/components/common/CountUp';
 import { Badge } from '@/components/common/Badge';
 import { Task } from '@/types/task';
 import { sortTeamTasks } from '@/utils/teamTasks';
 import { isToday, isTomorrow, formatDate } from '@/utils/date';
-import { tint, chipText } from '@/utils/color';
 
 const PRIORITY_LABEL: Record<Task['priority'], string> = {
   low: 'Baixa',
@@ -78,34 +75,6 @@ function memberColor(id: string): string {
   for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
-
-// Cartão de métrica do "pulso" da equipe (ícone + número + rótulo + subtítulo).
-const TeamStat: React.FC<{
-  icon: React.ReactNode;
-  value: number;
-  suffix?: string;
-  label: string;
-  sub: string;
-  accent: string;
-}> = ({ icon, value, suffix, label, sub, accent }) => (
-  <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
-    <span
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-      style={{ backgroundColor: tint(accent), color: chipText(accent) }}
-    >
-      {icon}
-    </span>
-    <div className="min-w-0">
-      <CountUp
-        value={value}
-        suffix={suffix}
-        className="text-2xl font-extrabold text-text-primary leading-none"
-      />
-      <p className="mt-1 truncate text-sm font-semibold leading-tight text-text-primary">{label}</p>
-      <p className="truncate text-xs leading-tight text-text-secondary">{sub}</p>
-    </div>
-  </div>
-);
 
 const TeamPage: React.FC = () => {
   const { account } = useAuth();
@@ -138,6 +107,10 @@ const TeamPage: React.FC = () => {
   const [teamProjects, setTeamProjects] = useState<TeamProjectSummary[]>([]);
   const [teamTasks, setTeamTasks] = useState<Task[]>([]);
   const [projIndex, setProjIndex] = useState(0);
+  // Carregamento do DETALHE (membros/projetos/tarefas), separado do `loading`,
+  // que cobre só a lista de equipes. Sem ele, trocar de equipe mostrava as
+  // seções vazias como se a equipe não tivesse nada.
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const selectedTeam = teams.find(t => t.id === selectedId) ?? null;
   const isOwner = selectedTeam?.ownerId === userId;
@@ -179,16 +152,54 @@ const TeamPage: React.FC = () => {
     loadTeams();
   }, [loadTeams]);
 
+  /**
+   * Detalhe da equipe selecionada: membros, projetos e tarefas.
+   *
+   * Duas correções em relação à versão anterior, que disparava as três buscas
+   * soltas e ia preenchendo conforme cada uma voltava:
+   *
+   * 1. LIMPA ANTES. Sem isso, ao trocar de equipe os membros da anterior
+   *    continuavam na tela sob o nome da nova até a resposta chegar — dado
+   *    errado exibido como se fosse certo.
+   *
+   * 2. GUARDA DE CORRIDA. Trocando de equipe rápido, a resposta da primeira
+   *    podia chegar DEPOIS da segunda e sobrescrevê-la, deixando a tela com o
+   *    conteúdo da equipe errada de forma permanente. O `cancelado` descarta o
+   *    resultado de uma seleção que já não está mais valendo.
+   *
+   * As três buscas continuam em paralelo; o Promise.all só junta o fim delas
+   * para a tela trocar de uma vez, em vez de piscar em três etapas.
+   */
   useEffect(() => {
     if (!selectedId) {
       setMembers([]);
       setTeamProjects([]);
       setTeamTasks([]);
+      setDetailLoading(false);
       return;
     }
-    teamsService.getMembers(selectedId).then(setMembers).catch(() => setMembers([]));
-    teamsService.getProjects(selectedId).then(setTeamProjects).catch(() => setTeamProjects([]));
-    teamsService.getTasks(selectedId).then(setTeamTasks).catch(() => setTeamTasks([]));
+
+    let cancelado = false;
+    setDetailLoading(true);
+    setMembers([]);
+    setTeamProjects([]);
+    setTeamTasks([]);
+
+    Promise.all([
+      teamsService.getMembers(selectedId).catch(() => []),
+      teamsService.getProjects(selectedId).catch(() => []),
+      teamsService.getTasks(selectedId).catch(() => []),
+    ]).then(([m, p, t]) => {
+      if (cancelado) return;
+      setMembers(m);
+      setTeamProjects(p);
+      setTeamTasks(t);
+      setDetailLoading(false);
+    });
+
+    return () => {
+      cancelado = true;
+    };
   }, [selectedId]);
 
   // Recarrega equipes (nome/cor/contagem) e a lista de membros após edições no modal.
@@ -469,16 +480,11 @@ const TeamPage: React.FC = () => {
                     style={{ backgroundColor: selectedTeam.color }}
                   />
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold text-text-primary truncate">{selectedTeam.name}</h2>
-                      <span className="shrink-0 rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-bold text-primary-vibrant">
-                        Equipe atual
-                      </span>
-                    </div>
-                    <p className="text-sm text-text-secondary">
-                      {selectedTeam.memberCount} {selectedTeam.memberCount === 1 ? 'membro' : 'membros'}
-                      {isOwner && ' · você é o dono'}
-                    </p>
+                    {/* Sem o selo "Equipe atual": a aba correspondente já está
+                        pintada acima, e a contagem de membros sai daqui porque
+                        aparecia três vezes na mesma tela (aba, aqui e faixa). */}
+                    <h2 className="text-lg font-bold text-text-primary truncate">{selectedTeam.name}</h2>
+                    {isOwner && <p className="text-sm text-text-secondary">Você é o dono</p>}
                   </div>
                 </div>
                 {isOwner && (
@@ -520,38 +526,22 @@ const TeamPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Pulso da equipe */}
-              <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <TeamStat
-                  icon={<Users size={20} />}
-                  value={selectedTeam.memberCount}
-                  label="Membros"
-                  sub="Total na equipe"
-                  accent="#2477FF"
-                />
-                <TeamStat
-                  icon={<FolderOpen size={20} />}
-                  value={activeProjects}
-                  label={activeProjects === 1 ? 'Projeto ativo' : 'Projetos ativos'}
-                  sub="Em andamento"
-                  accent="#8B5CF6"
-                />
-                <TeamStat
-                  icon={<TrendingUp size={20} />}
-                  value={avgCompletion}
-                  suffix="%"
-                  label="Conclusão média"
-                  sub="Dos projetos"
-                  accent="#2DD4BF"
-                />
-                <TeamStat
-                  icon={<Mail size={20} />}
-                  value={requests.length}
-                  label="Pedidos pendentes"
-                  sub="Aguardando aprovação"
-                  accent="#FBBF24"
-                />
-              </div>
+              {/* Números da equipe. Os quatro cards com ícone colorido viraram
+                  uma faixa só, a mesma do Dashboard: quatro caixas de peso
+                  igual competiam entre si e com os membros logo abaixo. As
+                  segundas linhas ("Total na equipe", "Em andamento", "Dos
+                  projetos", "Aguardando aprovação") saíram por só repetirem o
+                  rótulo que já estava acima. */}
+              <StatStrip
+                className="mb-5"
+                loading={detailLoading}
+                stats={[
+                  { label: 'Membros', value: selectedTeam.memberCount },
+                  { label: 'Projetos ativos', value: activeProjects },
+                  { label: 'Conclusão média', value: avgCompletion, suffix: '%' },
+                  { label: 'Pedidos pendentes', value: requests.length, alert: true },
+                ]}
+              />
 
               {isOwner && requests.length > 0 && (
                 <div className="mb-5 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/10 p-4">
@@ -590,6 +580,20 @@ const TeamPage: React.FC = () => {
               )}
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {detailLoading &&
+                  // Tantos quantos a equipe declara ter: a contagem já veio na
+                  // lista de equipes, então o espaço reservado é o certo e a
+                  // grade não salta quando os membros chegam.
+                  Array.from({ length: Math.min(selectedTeam.memberCount, 8) }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4"
+                    >
+                      <Skeleton className="h-16 w-16 rounded-full" />
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  ))}
                 {members.map(m => {
                   const isOwnerCard = m.role === 'owner';
                   return (
@@ -773,6 +777,18 @@ const TeamPage: React.FC = () => {
                     </div>
                   )}
                 </>
+              ) : detailLoading ? (
+                // Sem esta guarda a tela afirmava "não há projetos" enquanto a
+                // resposta ainda estava a caminho.
+                <div className="space-y-3">
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-2 w-full rounded-full" />
+                  <div className="grid grid-cols-3 gap-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-14 rounded-xl" />
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <p className="text-sm text-text-secondary">
                   Projetos atribuídos a esta equipe aparecem aqui. Crie um projeto do tipo equipe para
@@ -847,6 +863,16 @@ const TeamPage: React.FC = () => {
                           </div>
                         );
                       })}
+                    </div>
+                  ) : detailLoading ? (
+                    <div className="flex-1 divide-y divide-border">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="flex items-center gap-3 py-2.5">
+                          <Skeleton className="h-[18px] w-[18px] rounded-full shrink-0" />
+                          <Skeleton className="h-3.5 flex-1" />
+                          <Skeleton className="h-3 w-14 shrink-0" />
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="flex flex-1 items-center justify-center py-8 text-center text-sm text-text-secondary">
