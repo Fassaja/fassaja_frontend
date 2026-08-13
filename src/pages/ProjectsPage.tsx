@@ -6,6 +6,8 @@ import { ProjectCard } from '@/components/projects/ProjectCard';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { EditProjectModal } from '@/components/projects/EditProjectModal';
 import { Card } from '@/components/common/Card';
+import { HoverRevealCard } from '@/components/common/HoverRevealCard';
+import { CardSummaryContent } from '@/components/common/CardSummaryContent';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { ProjectsSkeleton } from '@/components/common/Skeletons';
@@ -16,6 +18,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { Project } from '@/types/project';
 import { projectsService } from '@/services/projectsService';
 import { HIDE_COMPLETED_AFTER_DAYS, splitByVisibility } from '@/utils/projectVisibility';
+import { projectSummary } from '@/utils/cardSummary';
 
 const ProjectsPage: React.FC = () => {
   const { projects, createProject, updateProject, setProjectCompleted, deleteProject, loading } =
@@ -93,12 +96,28 @@ const ProjectsPage: React.FC = () => {
     }
   };
 
-  const getProjectStats = (projectId: string) => {
-    const projectTasks = tasks.filter(t => t.projectId === projectId);
-    return {
-      total: projectTasks.length,
-      completed: projectTasks.filter(t => t.status === 'completed').length,
-    };
+  /**
+   * Um projeto na grade. Existe como função porque a grade aparece duas vezes
+   * (ativos e concluídos antigos) — sem isto, o card e sua síntese teriam de
+   * ser mantidos em sincronia em dois lugares.
+   */
+  const renderProject = (project: Project) => {
+    const projectTasks = tasks.filter(t => t.projectId === project.id);
+    return (
+      <HoverRevealCard
+        key={project.id}
+        summary={<CardSummaryContent summary={projectSummary(projectTasks)} />}
+      >
+        <ProjectCard
+          project={project}
+          taskCount={projectTasks.length}
+          completedCount={projectTasks.filter(t => t.status === 'completed').length}
+          onEdit={() => setEditingProject(project)}
+          onDelete={() => setDeletingProject(project)}
+          onToggleCompleted={toggleCompleted}
+        />
+      </HoverRevealCard>
+    );
   };
 
   const overallCompleted = tasks.filter(t => t.status === 'completed').length;
@@ -204,20 +223,7 @@ const ProjectsPage: React.FC = () => {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {visible.map(project => {
-                const stats = getProjectStats(project.id);
-                return (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    taskCount={stats.total}
-                    completedCount={stats.completed}
-                    onEdit={() => setEditingProject(project)}
-                    onDelete={() => setDeletingProject(project)}
-                    onToggleCompleted={toggleCompleted}
-                  />
-                );
-              })}
+              {visible.map(renderProject)}
             </div>
 
             {/* Concluídos há mais de uma semana: saem da grade, mas continuam
@@ -242,20 +248,7 @@ const ProjectsPage: React.FC = () => {
 
                 {showArchived && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                    {hidden.map(project => {
-                      const stats = getProjectStats(project.id);
-                      return (
-                        <ProjectCard
-                          key={project.id}
-                          project={project}
-                          taskCount={stats.total}
-                          completedCount={stats.completed}
-                          onEdit={() => setEditingProject(project)}
-                          onDelete={() => setDeletingProject(project)}
-                          onToggleCompleted={toggleCompleted}
-                        />
-                      );
-                    })}
+                    {hidden.map(renderProject)}
                   </div>
                 )}
               </div>

@@ -7,6 +7,8 @@ import { Input } from '@/components/common/Input';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { ProjectsSkeleton } from '@/components/common/Skeletons';
+import { HoverRevealCard } from '@/components/common/HoverRevealCard';
+import { CardSummaryContent } from '@/components/common/CardSummaryContent';
 import { IdeaCard } from '@/components/ideas/IdeaCard';
 import { QuickIdeaModal } from '@/components/ideas/QuickIdeaModal';
 import { EditIdeaModal } from '@/components/ideas/EditIdeaModal';
@@ -16,6 +18,7 @@ import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useToast } from '@/contexts/ToastContext';
 import { Idea, IdeaStatus } from '@/types/idea';
 import { IDEA_STATUS_META, countIdeas, needsAttention } from '@/utils/ideaStatus';
+import { ideaSummary } from '@/utils/cardSummary';
 
 const IdeasPage: React.FC = () => {
   const { ideas, loading, createIdea, updateIdea, deleteIdea, convertIdea } = useIdeas();
@@ -234,15 +237,19 @@ const IdeasPage: React.FC = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {visiveis.map(idea => (
-                  <IdeaCard
+                  <HoverRevealCard
                     key={idea.id}
-                    idea={idea}
-                    onOpen={i => (i.status === 'convertida' ? undefined : setEditing(i))}
-                    onEdit={setEditing}
-                    onArchive={alternarArquivo}
-                    onDelete={setDeleting}
-                    onConvert={setConverting}
-                  />
+                    summary={<CardSummaryContent summary={ideaSummary(idea)} />}
+                  >
+                    <IdeaCard
+                      idea={idea}
+                      onOpen={i => (i.status === 'convertida' ? undefined : setEditing(i))}
+                      onEdit={setEditing}
+                      onArchive={alternarArquivo}
+                      onDelete={setDeleting}
+                      onConvert={setConverting}
+                    />
+                  </HoverRevealCard>
                 ))}
               </div>
             )}
