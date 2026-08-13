@@ -117,6 +117,61 @@ export const CalendarSkeleton: React.FC = () => (
   </div>
 );
 
+/**
+ * Prioridades: cabeçalho da seção + lista de tarefas.
+ *
+ * Não reusa o TaskListSkeleton porque aquele desenha os chips de filtro e a
+ * barra de busca, que esta tela não tem — um esqueleto com forma diferente do
+ * conteúdo real dá um solavanco na troca.
+ */
+export const PrioritiesSkeleton: React.FC = () => (
+  <>
+    <div className="flex items-center gap-2 mb-4">
+      <Skeleton className="w-9 h-9 rounded-xl" />
+      <div className="space-y-1.5">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-3 w-40" />
+      </div>
+    </div>
+    <div className="space-y-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i} className="flex items-start gap-4">
+          <Skeleton className="w-6 h-6 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-3 w-2/3" />
+            <div className="flex gap-2 pt-1">
+              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </>
+);
+
+/** Equipe: abas das equipes, faixa de números e os cards de membro. */
+export const TeamSkeleton: React.FC = () => (
+  <div className="space-y-6">
+    <div className="flex gap-2">
+      {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-10 w-32 rounded-xl" />)}
+    </div>
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => <Card key={i} className="h-20" />)}
+    </div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Card key={i} className="flex flex-col items-center gap-3 py-6">
+          <Skeleton className="w-14 h-14 rounded-full" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-3 w-16" />
+        </Card>
+      ))}
+    </div>
+  </div>
+);
+
 export const ReportsSkeleton: React.FC = () => (
   <div className="space-y-6">
     <Card className="flex items-center gap-6">

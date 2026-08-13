@@ -17,7 +17,10 @@ export const CardSummaryContent: React.FC<{ summary: CardSummary }> = ({ summary
   const { icon: Icon, className } = TONE[summary.tone];
 
   return (
-    <div className="flex items-start gap-2">
+    // Altura mínima fixa: o card recebe o espaço QUE SOBRA do invólucro, então
+    // uma síntese de três linhas encolheria aquele card e quebraria o
+    // alinhamento da grade. Reservar sempre o mesmo espaço mantém todos iguais.
+    <div className="flex items-start gap-2 min-h-[3.25rem]">
       <Icon size={15} className={`mt-0.5 shrink-0 ${className}`} />
       <div className="min-w-0">
         <p className={`text-sm font-semibold leading-tight ${className}`}>{summary.headline}</p>

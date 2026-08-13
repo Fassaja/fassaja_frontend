@@ -19,8 +19,6 @@ import {
   MessageSquareHeart,
   Lock,
   LogIn,
-  Timer,
-  ExternalLink,
   Sparkles,
   PlayCircle,
   HeartHandshake,
@@ -34,15 +32,21 @@ import { FeedbackModal } from './FeedbackModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
+/**
+ * Ordem do menu, em quatro blocos: o trabalho de hoje (painel, tarefas,
+ * prioridades, projetos), o tempo (agenda e calendário), o que é exploratório
+ * (assistente e ideias) e, por fim, o que é sobre o trabalho (equipe e
+ * relatórios).
+ */
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/', free: true },
+  { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks', free: true },
+  { icon: Flag, label: 'Prioridades', path: '/priorities', free: false },
+  { icon: FolderOpen, label: 'Projetos', path: '/projects', free: false },
+  { icon: CalendarClock, label: 'Agenda', path: '/agenda', free: false },
+  { icon: Calendar, label: 'Calendário', path: '/calendar', free: false },
   { icon: Sparkles, label: 'Assistente IA', path: '/ai', free: false },
   { icon: Lightbulb, label: 'Ideias', path: '/ideas', free: false },
-  { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks', free: true },
-  { icon: FolderOpen, label: 'Projetos', path: '/projects', free: false },
-  { icon: Calendar, label: 'Calendário', path: '/calendar', free: false },
-  { icon: CalendarClock, label: 'Agenda', path: '/agenda', free: false },
-  { icon: Flag, label: 'Prioridades', path: '/priorities', free: false },
   { icon: Users, label: 'Equipe', path: '/team', free: false },
   { icon: BarChart3, label: 'Relatórios', path: '/reports', free: false },
 ];
@@ -152,23 +156,6 @@ export const Sidebar: React.FC = () => {
               );
             })}
 
-            {/* Parceiro — Focuss Pomodoro (somente desktop) */}
-            <a
-              href="https://focuss-pomodoro.onrender.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:flex items-center gap-3 px-4 py-2.5 mt-1 rounded-xl font-medium text-[15px] text-primary-dark/80 hover:bg-primary-light hover:text-primary-dark transition-colors duration-200 border border-dashed border-primary-vibrant/30"
-              title="Parceiro do Fassaja — abre em nova aba"
-            >
-              <Timer size={20} className="text-primary-vibrant shrink-0" />
-              <span className="flex-1 min-w-0">
-                Focuss Pomodoro
-                <span className="block text-[10px] font-semibold text-text-soft leading-none mt-0.5">
-                  Parceiro
-                </span>
-              </span>
-              <ExternalLink size={14} className="text-text-soft shrink-0" />
-            </a>
           </nav>
 
           {/* Guest CTA */}

@@ -46,8 +46,13 @@ export const HoverRevealCard: React.FC<HoverRevealCardProps> = ({
       onFocusCapture={() => setOpen(true)}
       onBlurCapture={() => setOpen(false)}
     >
-      {/* z maior: o painel desliza POR TRÁS do card. */}
-      <div className="relative z-10">{children}</div>
+      {/* z maior: o painel desliza POR TRÁS do card.
+
+          `flex-1` porque quem virou item da grade foi ESTE invólucro, não mais
+          o card. Sem isto o card encolhe até o conteúdo e a altura deixa de
+          ser igual entre as colunas — o `align-items: stretch` do grid passa a
+          esticar o invólucro, e o card dentro dele fica solto. */}
+      <div className="relative z-10 flex-1">{children}</div>
 
       <motion.div
         initial={false}

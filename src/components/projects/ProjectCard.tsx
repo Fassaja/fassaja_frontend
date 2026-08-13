@@ -42,7 +42,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   return (
     <Card
       hoverable
-      className="group flex flex-col"
+      // `h-full`: preenche a altura que o invólucro recebeu da grade. É o que
+      // faz o `mt-auto` do bloco de progresso encostar o rodapé embaixo.
+      className="group flex flex-col h-full"
       style={{ backgroundColor: tint(project.color), borderColor: tint(project.color, 'strong') }}
     >
       <div className="flex items-start gap-3 mb-4">

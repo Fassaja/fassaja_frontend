@@ -5,7 +5,7 @@ import { PageTour } from '@/components/onboarding/PageTour';
 import { TaskCard } from '@/components/tasks/TaskCard';
 import { AnimatedList } from '@/components/common/AnimatedList';
 import { EmptyState } from '@/components/common/EmptyState';
-import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { PrioritiesSkeleton } from '@/components/common/Skeletons';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -27,7 +27,7 @@ const PrioritiesPage: React.FC = () => {
   return (
     <AppLayout title="Prioridades" subtitle="O que é prioridade alta e ainda está em aberto.">
       <PageTour id="priorities" />
-      {loading ? (showSkeleton ? <LoadingScreen /> : null) : <>
+      {loading ? (showSkeleton ? <PrioritiesSkeleton /> : null) : <>
       {highTasks.length > 0 ? (
         <>
           <div className="flex items-center gap-2 mb-4">

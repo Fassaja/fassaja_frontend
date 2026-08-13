@@ -47,7 +47,9 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
   return (
     <Card
       hoverable
-      className="group flex flex-col"
+      // `h-full`: preenche a altura que o invólucro recebeu da grade. É o que
+      // faz o `mt-auto` do rodapé encostar embaixo.
+      className="group flex flex-col h-full"
       style={{ backgroundColor: tint(idea.color), borderColor: tint(idea.color, 'strong') }}
       onClick={() => onOpen(idea)}
     >

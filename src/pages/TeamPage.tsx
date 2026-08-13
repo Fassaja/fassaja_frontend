@@ -33,7 +33,7 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { LoadingScreen } from '@/components/common/LoadingScreen';
+import { TeamSkeleton } from '@/components/common/Skeletons';
 import { TeamSettingsModal } from '@/components/team/TeamSettingsModal';
 import { AVATAR_COLORS } from '@/components/team/teamConstants';
 import { useAuth } from '@/contexts/AuthContext';
@@ -414,7 +414,7 @@ const TeamPage: React.FC = () => {
       </Modal>
 
       {loading ? (
-        <LoadingScreen />
+        <TeamSkeleton />
       ) : teams.length === 0 ? (
         <EmptyState
           mascotState="confused"
