@@ -1,6 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit, Trash2, FolderOpen, ArrowRight, Users, User } from 'lucide-react';
+import {
+  Edit,
+  Trash2,
+  FolderOpen,
+  ArrowRight,
+  Users,
+  User,
+  CheckCircle2,
+  RotateCcw,
+} from 'lucide-react';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +21,7 @@ interface ProjectCardProps {
   completedCount?: number;
   onEdit?: (project: Project) => void;
   onDelete?: (projectId: string) => void;
+  onToggleCompleted?: (project: Project) => void;
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -20,12 +30,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   completedCount = 0,
   onEdit,
   onDelete,
+  onToggleCompleted,
 }) => {
   const navigate = useNavigate();
   const { account } = useAuth();
   const progressPercent = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
   // Em projetos de equipe, membros que não são donos veem o projeto mas não podem excluí-lo.
   const isOwner = !project.ownerId || !account || project.ownerId === account.id;
+  const isCompleted = !!project.completedAt;
 
   return (
     <Card
@@ -55,9 +67,30 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 <User size={11} /> Solo
               </span>
             )}
+            {isCompleted && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-success/15 text-success">
+                <CheckCircle2 size={11} /> Concluído
+              </span>
+            )}
           </div>
         </div>
         <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+          {/* Concluir/reabrir é do dono, igual a editar e excluir — em projeto
+              de equipe, um membro não encerra o trabalho de todo mundo. */}
+          {onToggleCompleted && isOwner && (
+            <button
+              onClick={() => onToggleCompleted(project)}
+              aria-label={isCompleted ? 'Reabrir projeto' : 'Concluir projeto'}
+              title={isCompleted ? 'Reabrir projeto' : 'Concluir projeto'}
+              className={`p-2 rounded-lg transition-colors ${
+                isCompleted
+                  ? 'text-text-secondary hover:bg-bg-secondary'
+                  : 'text-success hover:bg-success/10'
+              }`}
+            >
+              {isCompleted ? <RotateCcw size={15} /> : <CheckCircle2 size={15} />}
+            </button>
+          )}
           {onEdit && (
             <button
               onClick={() => onEdit(project)}

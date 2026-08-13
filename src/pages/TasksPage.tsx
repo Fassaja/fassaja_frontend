@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutGrid, List, ListChecks, Trash2, Check, Minus, X } from 'lucide-react';
+import { LayoutGrid, List, ListChecks, Trash2, Check, Minus, X, User, Users } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { TaskList } from '@/components/tasks/TaskList';
@@ -18,9 +18,16 @@ import { useTags } from '@/contexts/TagsContext';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import {
+  TaskScope,
+  filterByScope,
+  loadScope,
+  saveScope,
+  teamProjectIds,
+} from '@/utils/taskScope';
 
 const TasksPage: React.FC = () => {
-  const { tasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
+  const { tasks: allTasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
   const { projects } = useProjects();
   const { tags } = useTags();
   const showSkeleton = useDeferredLoading(loading);
@@ -64,6 +71,29 @@ const TasksPage: React.FC = () => {
   const [filterProject, setFilterProject] = useState<string | 'all'>(
     () => searchParams.get('project') ?? 'all',
   );
+  // --- Pessoal x Equipe ---
+  // A API devolve as duas coisas juntas; a separação acontece aqui. Tudo abaixo
+  // (abas de status, filtros, seleção em massa, quadro e lista) enxerga apenas
+  // `tasks` — o recorte do lado escolhido —, então nenhuma outra parte da tela
+  // precisa saber que existe essa divisão.
+  const [scope, setScope] = useState<TaskScope>(() => loadScope());
+  const teamIds = useMemo(() => teamProjectIds(projects), [projects]);
+  // O alternador aparece SEMPRE, mesmo sem nenhum projeto de equipe. Escondê-lo
+  // nesse caso deixava a separação invisível justamente para quem ainda não
+  // sabe que ela existe — e quem abre o lado vazio recebe uma explicação, que
+  // é mais útil do que um botão que nunca apareceu.
+  const hasTeamSide = teamIds.size > 0;
+
+  const tasks = useMemo(
+    () => filterByScope(allTasks, teamIds, scope),
+    [allTasks, teamIds, scope],
+  );
+  const soloCount = useMemo(
+    () => filterByScope(allTasks, teamIds, 'solo').length,
+    [allTasks, teamIds],
+  );
+  const teamCount = allTasks.length - soloCount;
+
   // Filtro por tags (OR: mostra tarefas com qualquer das tags marcadas).
   const [filterTags, setFilterTags] = useState<string[]>([]);
   const toggleTagFilter = (id: string) =>
@@ -122,6 +152,20 @@ const TasksPage: React.FC = () => {
   const exitSelection = () => {
     setSelectionMode(false);
     setSelectedIds(new Set());
+  };
+
+  /**
+   * Troca o lado e ZERA a seleção em massa.
+   *
+   * Sem esse reset, itens marcados no lado pessoal continuariam selecionados
+   * (e contariam no "Excluir (n)") depois da troca, apagando tarefas que já não
+   * estão na tela. É o único caminho aqui que destrói dado sem o usuário ver o
+   * que está destruindo.
+   */
+  const changeScope = (next: TaskScope) => {
+    setScope(next);
+    saveScope(next);
+    exitSelection();
   };
 
   const confirmBulkDelete = async () => {
@@ -240,11 +284,32 @@ const TasksPage: React.FC = () => {
 
       <AppLayout
         onNewTask={openNewTask}
-        title="Minhas Tarefas"
-        subtitle="Gerencie todas as suas tarefas em um só lugar."
+        title={scope === 'team' ? 'Tarefas da equipe' : 'Minhas Tarefas'}
+        subtitle={
+          scope === 'team'
+            ? 'Tarefas dos projetos das equipes de que você participa.'
+            : 'Gerencie todas as suas tarefas em um só lugar.'
+        }
       >
         <PageTour id="tasks" />
         {loading ? (showSkeleton ? <TaskListSkeleton /> : null) : <>
+        {/* Lado Equipe sem nenhum projeto de equipe: explica em vez de mostrar
+            um quadro vazio, que parece defeito. */}
+        {scope === 'team' && !hasTeamSide && (
+          <div className="flex items-start gap-3 mb-4 p-4 rounded-xl border border-border bg-bg-secondary/60">
+            <Users size={20} className="text-text-secondary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-text-primary">
+                Você ainda não tem tarefas de equipe
+              </p>
+              <p className="text-sm text-text-secondary mt-0.5">
+                Aqui ficam as tarefas dos projetos criados como <strong>equipe</strong>, separadas
+                das suas. Crie um projeto de equipe em Projetos para começar.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Barra de seleção em massa OU alternador de visão */}
         {selectionMode ? (
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4 rounded-xl border border-primary-vibrant/30 bg-primary-light px-3 py-2.5">
@@ -295,11 +360,15 @@ const TasksPage: React.FC = () => {
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3 mb-4">
-            <div className="inline-flex p-1 rounded-xl bg-bg-secondary border border-border">
+            {/* Os três controles desta linha têm altura fixa (h-10 no invólucro,
+                h-8 nos botões internos). Sem isso cada um se dimensiona pelo
+                próprio conteúdo — o par com badge de contagem cresce e o botão
+                solto, sem o p-1 do invólucro, encolhe. */}
+            <div className="inline-flex h-10 p-1 rounded-xl bg-bg-secondary border border-border">
               <button
                 onClick={() => setView('board')}
                 aria-pressed={view === 'board'}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                className={`inline-flex h-8 items-center gap-1.5 px-3 rounded-lg text-sm font-semibold transition-all ${
                   view === 'board' ? 'bg-surface text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
@@ -308,23 +377,67 @@ const TasksPage: React.FC = () => {
               <button
                 onClick={() => setView('list')}
                 aria-pressed={view === 'list'}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                className={`inline-flex h-8 items-center gap-1.5 px-3 rounded-lg text-sm font-semibold transition-all ${
                   view === 'list' ? 'bg-surface text-primary-vibrant shadow-sm' : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 <List size={16} /> Lista
               </button>
             </div>
+
+            {/* Pessoal x Equipe. Fica à direita, junto de "Selecionar", e não
+                numa linha própria: são todos controles do que a página mostra.
+                Em telas estreitas o rótulo some e ficam ícone + contagem, como
+                já acontece com o "Selecionar". */}
+            <div className="flex items-center gap-2 ml-auto">
+              <div className="inline-flex h-10 p-1 rounded-xl bg-bg-secondary border border-border">
+                {([
+                  { value: 'solo' as const, label: 'Minhas', icon: User, count: soloCount },
+                  { value: 'team' as const, label: 'Equipe', icon: Users, count: teamCount },
+                ]).map(opt => {
+                  const Icon = opt.icon;
+                  const active = scope === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => changeScope(opt.value)}
+                      aria-pressed={active}
+                      title={opt.label}
+                      className={`inline-flex h-8 items-center gap-1.5 px-2.5 sm:px-3 rounded-lg text-sm font-semibold transition-all ${
+                        active
+                          ? 'bg-surface text-primary-vibrant shadow-sm'
+                          : 'text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      <span className="hidden sm:inline">{opt.label}</span>
+                      {/* leading-none: sem isso a altura de linha do badge
+                          empurraria o botão para além do h-8. */}
+                      <span
+                        className={`min-w-[20px] text-center text-xs font-bold leading-none px-1.5 py-1 rounded-full ${
+                          active
+                            ? 'bg-primary-light text-primary-vibrant'
+                            : 'bg-surface text-text-secondary'
+                        }`}
+                      >
+                        {opt.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             {tasks.length > 0 && (
               <button
                 type="button"
                 onClick={() => setSelectionMode(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-surface border border-border text-text-secondary hover:text-text-primary hover:border-primary-vibrant/40 active:scale-95 transition-all"
+                className="inline-flex h-10 items-center gap-1.5 px-3 rounded-xl text-sm font-semibold bg-surface border border-border text-text-secondary hover:text-text-primary hover:border-primary-vibrant/40 active:scale-95 transition-all"
               >
                 <ListChecks size={16} />
                 <span className="hidden sm:inline">Selecionar</span>
               </button>
             )}
+            </div>
           </div>
         )}
 

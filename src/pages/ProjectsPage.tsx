@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Archive, ChevronDown } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { ProjectCard } from '@/components/projects/ProjectCard';
@@ -13,9 +14,12 @@ import { useTasks } from '@/hooks/useTasks';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useToast } from '@/contexts/ToastContext';
 import { Project } from '@/types/project';
+import { projectsService } from '@/services/projectsService';
+import { HIDE_COMPLETED_AFTER_DAYS, splitByVisibility } from '@/utils/projectVisibility';
 
 const ProjectsPage: React.FC = () => {
-  const { projects, createProject, updateProject, deleteProject, loading } = useProjects();
+  const { projects, createProject, updateProject, setProjectCompleted, deleteProject, loading } =
+    useProjects();
   const showSkeleton = useDeferredLoading(loading);
   const { tasks, deleteTask } = useTasks();
   const toast = useToast();
@@ -49,6 +53,43 @@ const ProjectsPage: React.FC = () => {
       );
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  // Projetos concluídos há mais de HIDE_COMPLETED_AFTER_DAYS saem da grade e
+  // ficam atrás de "Concluídos". Continuam existindo — só não ocupam a tela.
+  const { visible, hidden } = useMemo(() => splitByVisibility(projects), [projects]);
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Total vitalício de concluídos: vem do servidor porque os projetos somem da
+  // lista e as tarefas deles são apagadas — não há o que contar aqui.
+  const [completedTotal, setCompletedTotal] = useState<number | null>(null);
+  const concluidosNaLista = projects.filter(p => p.completedAt).length;
+  useEffect(() => {
+    let cancelado = false;
+    projectsService
+      .getStats()
+      .then(s => !cancelado && setCompletedTotal(s.completedProjects))
+      // Sem o total, o resumo simplesmente não mostra o número — melhor do que
+      // exibir um valor errado contando só o que está na tela.
+      .catch(() => !cancelado && setCompletedTotal(null));
+    return () => {
+      cancelado = true;
+    };
+    // Reconsulta quando um projeto é concluído ou reaberto.
+  }, [projects.length, concluidosNaLista]);
+
+  const toggleCompleted = async (project: Project) => {
+    const concluindo = !project.completedAt;
+    try {
+      await setProjectCompleted(project.id, concluindo);
+      toast.success(concluindo ? 'Projeto concluído! 🎉' : 'Projeto reaberto.');
+    } catch (err) {
+      toast.error(
+        (err as { status?: number }).status === 403
+          ? 'Apenas o dono do projeto pode concluí-lo.'
+          : 'Não foi possível atualizar o projeto. Tente novamente.',
+      );
     }
   };
 
@@ -135,6 +176,18 @@ const ProjectsPage: React.FC = () => {
                   <p className="text-2xl font-extrabold text-success leading-none">{overallCompleted}</p>
                   <p className="text-xs text-text-secondary mt-1">Concluídas</p>
                 </div>
+                {/* Contador vitalício do servidor: não encolhe quando o projeto
+                    sai da lista nem quando as tarefas dele são apagadas. */}
+                {completedTotal !== null && completedTotal > 0 && (
+                  <div>
+                    <p className="text-2xl font-extrabold text-primary-vibrant leading-none">
+                      {completedTotal}
+                    </p>
+                    <p className="text-xs text-text-secondary mt-1">
+                      {completedTotal === 1 ? 'Projeto feito' : 'Projetos feitos'}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="flex-1 sm:max-w-xs sm:ml-auto">
                 <div className="flex justify-between text-xs font-semibold text-text-secondary mb-1">
@@ -151,7 +204,7 @@ const ProjectsPage: React.FC = () => {
             </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map(project => {
+              {visible.map(project => {
                 const stats = getProjectStats(project.id);
                 return (
                   <ProjectCard
@@ -161,10 +214,52 @@ const ProjectsPage: React.FC = () => {
                     completedCount={stats.completed}
                     onEdit={() => setEditingProject(project)}
                     onDelete={() => setDeletingProject(project)}
+                    onToggleCompleted={toggleCompleted}
                   />
                 );
               })}
             </div>
+
+            {/* Concluídos há mais de uma semana: saem da grade, mas continuam
+                acessíveis. Sumir de vez faria a pessoa achar que perdeu o
+                projeto — e reabrir é a saída se ainda houver o que fazer. */}
+            {hidden.length > 0 && (
+              <div className="mt-8">
+                <button
+                  type="button"
+                  onClick={() => setShowArchived(v => !v)}
+                  aria-expanded={showArchived}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-surface text-sm font-semibold text-text-secondary hover:text-text-primary hover:border-primary-vibrant/40 transition-all"
+                >
+                  <Archive size={16} />
+                  {hidden.length} {hidden.length === 1 ? 'projeto concluído' : 'projetos concluídos'}{' '}
+                  há mais de {HIDE_COMPLETED_AFTER_DAYS} dias
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform ${showArchived ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {showArchived && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                    {hidden.map(project => {
+                      const stats = getProjectStats(project.id);
+                      return (
+                        <ProjectCard
+                          key={project.id}
+                          project={project}
+                          taskCount={stats.total}
+                          completedCount={stats.completed}
+                          onEdit={() => setEditingProject(project)}
+                          onDelete={() => setDeletingProject(project)}
+                          onToggleCompleted={toggleCompleted}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <EmptyState

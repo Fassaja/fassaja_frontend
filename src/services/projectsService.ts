@@ -18,6 +18,25 @@ export const projectsService = {
     return api.patch<Project>(`/projects/${id}`, updates);
   },
 
+  /**
+   * Conclui ou reabre o projeto. Envia um booleano — a data é decidida pelo
+   * servidor, então `completedAt` nunca sobe do cliente.
+   */
+  async setCompleted(id: string, completed: boolean): Promise<Project | undefined> {
+    return api.patch<Project>(`/projects/${id}`, { completed });
+  },
+
+  /**
+   * Total de projetos já concluídos (contador vitalício no servidor).
+   *
+   * Vem da API porque não dá para contar na tela: projetos concluídos somem da
+   * lista depois de alguns dias, e as tarefas que os compunham são apagadas
+   * antes disso.
+   */
+  async getStats(): Promise<{ completedProjects: number }> {
+    return api.get<{ completedProjects: number }>('/projects/stats');
+  },
+
   async deleteProject(id: string): Promise<boolean> {
     await api.delete<void>(`/projects/${id}`);
     return true;

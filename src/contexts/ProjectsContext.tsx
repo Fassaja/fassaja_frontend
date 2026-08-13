@@ -9,6 +9,7 @@ interface ProjectsContextValue {
   error: Error | null;
   createProject: (project: Omit<Project, 'id' | 'createdAt'>) => Promise<Project>;
   updateProject: (id: string, updates: Partial<Project>) => Promise<Project | undefined>;
+  setProjectCompleted: (id: string, completed: boolean) => Promise<Project | undefined>;
   deleteProject: (id: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -69,6 +70,21 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  // Concluir/reabrir passa por rota própria (envia `completed`, não a data) e
+  // não pelo updateProject, que carrega os campos editáveis do formulário.
+  const setProjectCompleted = useCallback(async (id: string, completed: boolean) => {
+    try {
+      const updated = await projectsService.setCompleted(id, completed);
+      if (updated) {
+        setProjects(prev => prev.map(p => (p.id === id ? updated : p)));
+      }
+      return updated;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  }, []);
+
   const deleteProject = useCallback(async (id: string) => {
     try {
       await projectsService.deleteProject(id);
@@ -81,7 +97,16 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   return (
     <ProjectsContext.Provider
-      value={{ projects, loading, error, createProject, updateProject, deleteProject, refresh }}
+      value={{
+        projects,
+        loading,
+        error,
+        createProject,
+        updateProject,
+        setProjectCompleted,
+        deleteProject,
+        refresh,
+      }}
     >
       {children}
     </ProjectsContext.Provider>
