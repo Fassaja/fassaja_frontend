@@ -269,6 +269,9 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             />
             <PasswordInput
               label="Senha"
+              // No cadastro é senha NOVA: sem isto o navegador oferece a senha
+              // já salva de outra conta no campo de criação.
+              autoComplete={isLogin ? 'current-password' : 'new-password'}
               placeholder="••••••••"
               value={form.password}
               onChange={e => set('password', e.target.value)}

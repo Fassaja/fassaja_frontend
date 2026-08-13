@@ -405,6 +405,7 @@ const SettingsPage: React.FC = () => {
 
           <PasswordInput
             label="Sua senha"
+            autoComplete="current-password"
             placeholder="••••••••"
             value={delPassword}
             onChange={e => {

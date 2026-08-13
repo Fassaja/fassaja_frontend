@@ -115,6 +115,19 @@ const ProfilePage: React.FC = () => {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Valida aqui antes de enviar. Sem isto, um campo vazio só era pego pelo
+    // servidor e voltava como "current must be longer than or equal to 1
+    // characters" — mensagem crua do validador, em inglês, na cara do usuário.
+    if (!pw.current) {
+      setPwMsg({ type: 'error', text: 'Digite sua senha atual.' });
+      return;
+    }
+    if (!pw.next) {
+      setPwMsg({ type: 'error', text: 'Digite a nova senha.' });
+      return;
+    }
+
     setPwLoading(true);
     const result = await changePassword(pw.current, pw.next);
     setPwLoading(false);
@@ -325,8 +338,15 @@ const ProfilePage: React.FC = () => {
             </div>
           ) : (
             <form onSubmit={handleChangePassword} className="grid sm:grid-cols-2 gap-4">
+              {/* `autoComplete` não é enfeite aqui: sem ele o navegador não
+                  sabe qual campo é qual e preenche por conta própria. O campo
+                  ficava com os pontinhos na tela enquanto o estado do React
+                  seguia vazio — e o servidor recebia a senha atual em branco.
+                  `new-password` ainda impede que a senha salva seja injetada
+                  no campo da senha NOVA. */}
               <PasswordInput
                 label="Senha atual"
+                autoComplete="current-password"
                 value={pw.current}
                 onChange={e => {
                   setPw(p => ({ ...p, current: e.target.value }));
@@ -336,6 +356,7 @@ const ProfilePage: React.FC = () => {
               />
               <PasswordInput
                 label="Nova senha"
+                autoComplete="new-password"
                 value={pw.next}
                 onChange={e => {
                   setPw(p => ({ ...p, next: e.target.value }));

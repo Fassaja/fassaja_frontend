@@ -175,6 +175,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
               <form onSubmit={handleReset} className="space-y-4">
                 <PasswordInput
                   label="Nova senha"
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={e => {
@@ -188,6 +189,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
                 </p>
                 <PasswordInput
                   label="Repita a nova senha"
+                  autoComplete="new-password"
                   placeholder="••••••••"
                   value={confirm}
                   onChange={e => {
