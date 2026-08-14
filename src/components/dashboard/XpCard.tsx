@@ -3,16 +3,15 @@ import { motion } from 'framer-motion';
 import { Sparkles, Star } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { CountUp } from '@/components/common/CountUp';
-import { Task } from '@/types/task';
-import { computeXp, XP_PER_LEVEL } from '@/utils/xp';
+import { XP_PER_LEVEL } from '@/utils/xp';
+import { useXp } from '@/hooks/useXp';
 
 interface XpCardProps {
-  tasks: Task[];
   children?: React.ReactNode; // conteúdo extra no mesmo card (ex.: sequência)
 }
 
-export const XpCard: React.FC<XpCardProps> = ({ tasks, children }) => {
-  const xp = computeXp(tasks);
+export const XpCard: React.FC<XpCardProps> = ({ children }) => {
+  const xp = useXp();
 
   return (
     <Card className="h-full">

@@ -3,7 +3,8 @@ import { Star, Flame, Trophy, Zap, CheckCircle2, ShieldCheck, Lock } from 'lucid
 import { Task } from '@/types/task';
 import { Card } from '@/components/common/Card';
 import { useUser, computeStreak } from '@/contexts/UserContext';
-import { computeXp, XP_PER_LEVEL } from '@/utils/xp';
+import { XP_PER_LEVEL } from '@/utils/xp';
+import { useXp } from '@/hooks/useXp';
 
 interface XpViewProps {
   tasks: Task[];
@@ -16,8 +17,9 @@ function isoOf(d: Date): string {
 export const XpView: React.FC<XpViewProps> = ({ tasks }) => {
   const { user } = useUser();
 
+  const base = useXp();
+
   const data = useMemo(() => {
-    const base = computeXp(tasks);
     const activeDays = new Set<string>(user.productiveDays);
     tasks.forEach(t => {
       if (t.status === 'completed' && t.completedAt) activeDays.add(isoOf(new Date(t.completedAt)));
@@ -25,7 +27,7 @@ export const XpView: React.FC<XpViewProps> = ({ tasks }) => {
     const streak = computeStreak(Array.from(activeDays), user.streakDays);
     const overdue = tasks.filter(t => t.status === 'overdue').length;
     return { ...base, streak, overdue };
-  }, [tasks, user.productiveDays, user.streakDays]);
+  }, [base, tasks, user.productiveDays, user.streakDays]);
 
   const achievements = [
     {

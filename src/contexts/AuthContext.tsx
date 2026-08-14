@@ -34,6 +34,12 @@ export interface Account {
    * assumir o contrário esconderia o formulário de quem pode usá-lo.
    */
   hasPassword?: boolean;
+  /**
+   * Placar vitalício de XP, vindo do servidor. Opcional porque sessões salvas
+   * ANTES deste campo existir não o têm — quem lê deve cair no cálculo local
+   * nesse caso (ver hooks/useXp).
+   */
+  xp?: number;
 }
 
 type AuthStatus = 'guest' | 'authed';

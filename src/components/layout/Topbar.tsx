@@ -174,11 +174,15 @@ export const Topbar: React.FC<TopbarProps> = ({
             </button>
           </Tooltip>
 
+          {/* Só no celular. No desktop a identidade mora no rodapé da barra
+              lateral, com nome, e-mail e as ações da conta — manter o avatar
+              aqui seria a mesma coisa em dois cantos da tela. No celular a
+              barra é uma gaveta fechada, e este vira o único acesso visível. */}
           <button
             type="button"
             onClick={openProfile}
             aria-label="Meu perfil"
-            className="shrink-0 rounded-full ring-2 ring-transparent hover:ring-primary-light focus:outline-none focus-visible:ring-primary-vibrant transition-all active:scale-95"
+            className="lg:hidden shrink-0 rounded-full ring-2 ring-transparent hover:ring-primary-light focus:outline-none focus-visible:ring-primary-vibrant transition-all active:scale-95"
           >
             {user.avatar ? (
               <img src={user.avatar} alt={user.name} className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover" />

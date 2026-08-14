@@ -5,8 +5,9 @@ import {
   Loader2,
   Sparkles,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Card } from '@/components/common/Card';
+import { Tooltip } from '@/components/common/Tooltip';
 import { StatStrip } from '@/components/common/StatStrip';
 import { StreakCard } from '@/components/dashboard/StreakCard';
 import { XpView } from '@/components/reports/XpView';
@@ -14,7 +15,20 @@ import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useTasks } from '@/hooks/useTasks';
-import { computeXp } from '@/utils/xp';
+import { useXp } from '@/hooks/useXp';
+import { XP_PER_LEVEL } from '@/utils/xp';
+
+// Geometria do anel de nível em volta do avatar.
+// Entrada de cada bloco da página, em cascata.
+const BLOCO = {
+  hidden: { opacity: 0, y: 12 },
+  shown: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+};
+
+const RING = 96;
+const RING_W = 5;
+const RING_R = (RING - RING_W) / 2;
+const RING_C = 2 * Math.PI * RING_R;
 
 // Redimensiona a imagem no navegador (256x256, JPEG) para um data URL leve.
 function resizeImage(file: File, size = 256): Promise<string> {
@@ -47,7 +61,7 @@ const ProfilePage: React.FC = () => {
   const { account, updateAvatar } = useAuth();
   const { tasks } = useTasks();
   const toast = useToast();
-  const xp = computeXp(tasks);
+  const xp = useXp();
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Avatar
@@ -91,85 +105,133 @@ const ProfilePage: React.FC = () => {
   return (
     <AppLayout title="Perfil" subtitle="Suas informações pessoais.">
       {/* Coluna centralizada: alinhada à esquerda, a página ficava colada na
-          borda em telas largas, com muito vazio à direita. */}
-      <div className="mx-auto w-full max-w-2xl space-y-6">
-        {/* Header card */}
-        <Card padding="none" className="overflow-hidden">
-          <div className="h-24 bg-gradient-to-r from-primary-vibrant to-brand-deep" />
-          <div className="px-6 pb-6">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12">
-              <div className="relative shrink-0">
+          borda em telas largas, com muito vazio à direita.
+
+          Os blocos entram em cascata, um logo após o outro. É pouco movimento
+          de propósito — o suficiente para a página se montar em vez de piscar
+          inteira, sem virar espetáculo. Respeita "reduzir movimento" pelo
+          MotionConfig do App. */}
+      <motion.div
+        className="mx-auto w-full max-w-2xl space-y-6"
+        initial="hidden"
+        animate="shown"
+        variants={{ shown: { transition: { staggerChildren: 0.07 } } }}
+      >
+        {/* Cabeçalho.
+            A faixa de gradiente de 96px que ficava aqui era decoração pura —
+            uma tarja colorida sem nada dentro, o clichê de página de perfil.
+            No lugar dela, o avatar ganhou um ANEL que mostra o quanto falta
+            para o próximo nível: mesma regra do ponto de status, movimento e
+            cor só onde carregam informação.
+
+            O chip "Nível X · Y XP" saiu junto: o bloco de Experiência, logo
+            abaixo, já mostra nível, total e barra com muito mais detalhe. */}
+        <motion.div variants={BLOCO} className="flex flex-col sm:flex-row sm:items-center gap-5">
+          <Tooltip
+            content={`Nível ${xp.level}`}
+            description={`${xp.intoLevel} de ${XP_PER_LEVEL} XP para o nível ${xp.level + 1}.`}
+          >
+            <div className="relative shrink-0">
+              <svg width={RING} height={RING} className="-rotate-90" aria-hidden="true">
+                <circle
+                  cx={RING / 2}
+                  cy={RING / 2}
+                  r={RING_R}
+                  fill="none"
+                  className="stroke-primary-light"
+                  strokeWidth={RING_W}
+                />
+                <motion.circle
+                  cx={RING / 2}
+                  cy={RING / 2}
+                  r={RING_R}
+                  fill="none"
+                  className="stroke-primary-vibrant"
+                  strokeWidth={RING_W}
+                  strokeLinecap="round"
+                  strokeDasharray={RING_C}
+                  initial={{ strokeDashoffset: RING_C }}
+                  animate={{ strokeDashoffset: RING_C - (xp.pctToNext / 100) * RING_C }}
+                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                />
+              </svg>
+
+              <div className="absolute inset-0 flex items-center justify-center">
                 {avatarSrc ? (
                   <img
                     src={avatarSrc}
-                    alt={user.name}
-                    className="w-24 h-24 rounded-2xl object-cover border-4 border-surface shadow-sm"
+                    alt=""
+                    className="w-[74px] h-[74px] rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary-vibrant to-brand-deep flex items-center justify-center text-white text-3xl font-bold border-4 border-surface shadow-sm">
+                  <span className="w-[74px] h-[74px] rounded-full bg-gradient-to-br from-primary-vibrant to-brand-deep flex items-center justify-center text-white text-2xl font-bold">
                     {initialsOf(user.name)}
-                  </div>
+                  </span>
                 )}
                 {avatarLoading && (
-                  <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
                     <Loader2 size={22} className="text-white animate-spin" />
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  disabled={avatarLoading}
-                  aria-label="Enviar foto"
-                  className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-primary-vibrant text-white flex items-center justify-center border-2 border-surface hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-60"
-                >
-                  <Camera size={16} />
-                </button>
-                <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} className="hidden" />
               </div>
-              <div className="sm:pb-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-xl font-bold text-text-primary truncate">{user.name || 'Seu nome'}</h2>
-                  <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-light text-primary-vibrant text-xs font-bold shrink-0"
-                    title={`${xp.intoLevel}/100 XP para o próximo nível`}
-                  >
-                    <Sparkles size={12} /> Nível {xp.level} · {xp.xp} XP
-                  </span>
-                </div>
-                <p className="text-sm text-text-secondary">{account?.email}</p>
-              </div>
-              {avatarSrc && (
-                <button
-                  type="button"
-                  onClick={onRemoveAvatar}
-                  disabled={avatarLoading}
-                  className="sm:ml-auto sm:pb-1 inline-flex items-center gap-1.5 text-sm font-medium text-danger hover:text-rose-600 disabled:opacity-60"
-                >
-                  <Trash2 size={15} /> Remover foto
-                </button>
-              )}
+
+              {/* Nível no pé do anel: diz o que o anel está medindo. */}
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-primary-vibrant text-white text-[11px] font-bold shadow-sm">
+                Nv {xp.level}
+              </span>
+
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={avatarLoading}
+                aria-label="Enviar foto"
+                className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-surface border border-border text-text-secondary flex items-center justify-center hover:text-primary-vibrant hover:border-primary-vibrant active:scale-95 transition-all disabled:opacity-60"
+              >
+                <Camera size={15} />
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} className="hidden" />
             </div>
-            {avatarMsg && <p className="text-sm text-danger mt-3">{avatarMsg}</p>}
+          </Tooltip>
+
+          <div className="min-w-0 flex-1">
+            <h2 className="text-2xl font-bold text-text-primary truncate">
+              {user.name || 'Seu nome'}
+            </h2>
+            <p className="text-sm text-text-secondary truncate">{account?.email}</p>
+            {avatarSrc && (
+              <button
+                type="button"
+                onClick={onRemoveAvatar}
+                disabled={avatarLoading}
+                className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-danger disabled:opacity-60 transition-colors"
+              >
+                <Trash2 size={15} /> Remover foto
+              </button>
+            )}
+            {avatarMsg && <p className="text-sm text-danger mt-2">{avatarMsg}</p>}
           </div>
-        </Card>
+        </motion.div>
 
         {/* Três cartões com ícone colorido viraram a mesma faixa usada no
             Dashboard e na Equipe — menos moldura repetida, e os números do
             app passam a ter uma forma só em toda parte. */}
-        <StatStrip stats={stats} />
+        <motion.div variants={BLOCO}>
+          <StatStrip stats={stats} />
+        </motion.div>
 
         {/* Sequência produtiva (foguinhos) */}
-        <StreakCard />
+        <motion.div variants={BLOCO}>
+          <StreakCard />
+        </motion.div>
 
         {/* Experiência (XP), níveis e conquistas */}
-        <section>
+        <motion.section variants={BLOCO}>
           <h3 className="text-lg font-bold text-text-primary mb-3 flex items-center gap-2">
             <Sparkles size={18} className="text-primary-vibrant" /> Experiência e conquistas
           </h3>
           <XpView tasks={tasks} />
-        </section>
-
-      </div>
+        </motion.section>
+      </motion.div>
     </AppLayout>
   );
 };

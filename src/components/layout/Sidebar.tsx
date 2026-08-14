@@ -8,6 +8,7 @@ import {
   BarChart3,
   Settings,
   Menu,
+  User,
   X,
   Home,
   Flag,
@@ -30,6 +31,7 @@ import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { FeedbackModal } from './FeedbackModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 /**
@@ -62,7 +64,8 @@ export const Sidebar: React.FC = () => {
   useBodyScrollLock(isOpen);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isGuest, logout, requireAuth } = useAuth();
+  const { account, isGuest, logout, requireAuth } = useAuth();
+  const { user } = useUser();
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -186,6 +189,17 @@ export const Sidebar: React.FC = () => {
                     onClick={() => setShowMenu(false)}
                   />
                   <div className="absolute bottom-full left-0 right-0 mb-2 bg-surface rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-40 overflow-hidden">
+                    {/* Perfil entra aqui: antes só se chegava pelo avatar do
+                        topo, que some no desktop agora que a identidade é esta. */}
+                    {!isGuest && (
+                      <button
+                        onClick={() => goTo('/profile')}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+                      >
+                        <User size={18} className="text-text-secondary" />
+                        Perfil
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         if (isGuest) {
@@ -250,16 +264,47 @@ export const Sidebar: React.FC = () => {
                   </div>
                 </>
               )}
+              {/* O gatilho é VOCÊ, não um "Menu" genérico.
+                  As ações da conta ficavam atrás de um hambúrguer aqui embaixo,
+                  enquanto o avatar morava no canto oposto da tela e só levava
+                  ao Perfil. Quem queria sair procurava no avatar e não achava.
+                  Juntar identidade e ações num só lugar é o que todo app faz —
+                  e é onde o olho procura.
+
+                  Visitante não tem nome nem e-mail, então para ele o gatilho
+                  segue sendo o "Menu" (o convite para entrar está logo acima). */}
               <button
                 onClick={() => setShowMenu(v => !v)}
                 aria-expanded={showMenu}
+                aria-label={isGuest ? 'Abrir menu' : 'Abrir menu da conta'}
                 className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-bg-secondary transition-colors"
               >
-                <div className="w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center text-text-secondary shrink-0">
-                  <Menu size={18} />
-                </div>
+                {isGuest ? (
+                  <div className="w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center text-text-secondary shrink-0">
+                    <Menu size={18} />
+                  </div>
+                ) : user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt=""
+                    className="w-10 h-10 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <span className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-vibrant to-brand-deep flex items-center justify-center text-white text-sm font-bold shrink-0">
+                    {initialsOf(user.name)}
+                  </span>
+                )}
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-semibold text-text-primary">Menu</p>
+                  {isGuest ? (
+                    <p className="text-sm font-semibold text-text-primary">Menu</p>
+                  ) : (
+                    <>
+                      <p className="text-sm font-semibold text-text-primary truncate">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-text-secondary truncate">{account?.email}</p>
+                    </>
+                  )}
                 </div>
                 <ChevronRight
                   size={18}

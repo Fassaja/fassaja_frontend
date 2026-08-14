@@ -124,7 +124,7 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
           <div className="lg:col-span-1">
-            <XpCard tasks={tasks}>
+            <XpCard>
               <StreakContent />
             </XpCard>
           </div>
