@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Bell, BellRing, Check, Smartphone, Monitor, Share } from 'lucide-react';
+import { Accordion } from '@/components/common/Accordion';
 import { useToast } from '@/contexts/ToastContext';
 import {
   pushService,
@@ -112,41 +113,55 @@ export const NotificationsHelp: React.FC = () => {
         </>
       )}
 
-      {/* Passo a passo por plataforma */}
-      <div className="grid gap-2 pt-1">
-        <div className="rounded-lg bg-bg-secondary/60 p-3">
-          <p className="text-xs font-bold text-text-primary flex items-center gap-1.5 mb-1">
-            <Monitor size={13} /> Android / Computador
-          </p>
-          <p className="text-xs text-text-secondary">
-            Toque em <span className="font-semibold">Ativar notificações</span> e escolha{' '}
-            <span className="font-semibold">Permitir</span> quando o navegador perguntar.
-          </p>
-        </div>
-        <div className="rounded-lg bg-bg-secondary/60 p-3">
-          <p className="text-xs font-bold text-text-primary flex items-center gap-1.5 mb-1">
-            <Smartphone size={13} /> iPhone / iPad
-          </p>
-          <ol className="text-xs text-text-secondary list-decimal pl-4 space-y-0.5">
-            <li>
-              Toque em <Share size={11} className="inline -mt-0.5" />{' '}
-              <span className="font-semibold">Compartilhar</span> no Safari.
-            </li>
-            <li>
-              Escolha <span className="font-semibold">Adicionar à Tela de Início</span>.
-            </li>
-            <li>Abra o Fassaja por esse novo ícone.</li>
-            <li>
-              Toque em <span className="font-semibold">Ativar notificações</span> aqui dentro.
-            </li>
-          </ol>
-          {iosNeedsInstall && (
-            <p className="text-[11px] text-primary-vibrant font-semibold mt-1.5">
-              Detectamos um iPhone/iPad — instale na tela de início para liberar o botão.
-            </p>
-          )}
-        </div>
-      </div>
+      {/* Passo a passo por plataforma.
+          Antes os dois ficavam abertos ao mesmo tempo, e quem estava no Android
+          lia as instruções de iPhone à toa. Como a plataforma já é conhecida
+          (`isIOS`), o item certo abre sozinho e o outro fica a um clique — nada
+          some para quem estiver num aparelho diferente do detectado. */}
+      <Accordion
+        className="pt-1"
+        defaultOpenId={iOS ? 'ios' : 'outros'}
+        items={[
+          {
+            id: 'outros',
+            icon: <Monitor size={14} className="shrink-0 text-text-secondary" />,
+            title: 'Android / Computador',
+            content: (
+              <p className="text-xs text-text-secondary">
+                Toque em <span className="font-semibold">Ativar notificações</span> e escolha{' '}
+                <span className="font-semibold">Permitir</span> quando o navegador perguntar.
+              </p>
+            ),
+          },
+          {
+            id: 'ios',
+            icon: <Smartphone size={14} className="shrink-0 text-text-secondary" />,
+            title: 'iPhone / iPad',
+            content: (
+              <>
+                <ol className="text-xs text-text-secondary list-decimal pl-4 space-y-0.5">
+                  <li>
+                    Toque em <Share size={11} className="inline -mt-0.5" />{' '}
+                    <span className="font-semibold">Compartilhar</span> no Safari.
+                  </li>
+                  <li>
+                    Escolha <span className="font-semibold">Adicionar à Tela de Início</span>.
+                  </li>
+                  <li>Abra o Fassaja por esse novo ícone.</li>
+                  <li>
+                    Toque em <span className="font-semibold">Ativar notificações</span> aqui dentro.
+                  </li>
+                </ol>
+                {iosNeedsInstall && (
+                  <p className="text-[11px] text-primary-vibrant font-semibold mt-1.5">
+                    Detectamos um iPhone/iPad — instale na tela de início para liberar o botão.
+                  </p>
+                )}
+              </>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 };

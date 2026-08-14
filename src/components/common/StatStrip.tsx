@@ -33,11 +33,25 @@ interface StatStripProps {
  * `loading` mostra traços em vez de zeros: um "0 membros" enquanto a resposta
  * não chegou é uma informação FALSA, não um estado de carregamento.
  */
+/**
+ * Colunas por quantidade de itens. Mapa explícito, e não classe montada por
+ * template: o Tailwind varre o código como TEXTO, então `grid-cols-${n}` nunca
+ * chegaria a existir no CSS.
+ */
+const COLUNAS: Record<number, string> = {
+  1: 'grid-cols-1',
+  2: 'grid-cols-2',
+  3: 'grid-cols-3',
+  4: 'grid-cols-2 sm:grid-cols-4',
+};
+
 export const StatStrip: React.FC<StatStripProps> = ({ stats, loading = false, className = '' }) => {
+  const colunas = COLUNAS[stats.length] ?? 'grid-cols-2 sm:grid-cols-4';
+
   return (
     <Card
       padding="none"
-      className={`grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border ${className}`}
+      className={`grid ${colunas} divide-x divide-y sm:divide-y-0 divide-border ${className}`}
     >
       {stats.map(stat => (
         <div key={stat.label} className="px-4 py-3.5 sm:px-5">

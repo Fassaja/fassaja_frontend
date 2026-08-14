@@ -11,13 +11,15 @@ import {
   Trash2,
   AlertTriangle,
   Palette,
+  Pencil,
+  UserCog,
   Monitor,
   Sun,
   Moon,
   type LucideIcon,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Card } from '@/components/common/Card';
+import { Accordion } from '@/components/common/Accordion';
 import { Input } from '@/components/common/Input';
 import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
@@ -25,6 +27,10 @@ import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { OPEN_TOUR_EVENT } from '@/components/layout/PlatformTourModal';
 import { PAGE_TOURS } from '@/components/onboarding/PageTour';
+import {
+  AccountNameSection,
+  AccountPasswordSection,
+} from '@/components/settings/AccountSections';
 import { useUser, NotificationPrefs } from '@/contexts/UserContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,24 +48,25 @@ const THEME_OPTIONS: {
   { value: 'dark', label: 'Escuro', icon: Moon },
 ];
 
-const SectionHeader: React.FC<{
-  icon: React.ReactNode;
-  color: string;
-  title: string;
-  subtitle?: string;
-}> = ({ icon, color, title, subtitle }) => (
-  <div className="mb-5">
-    <h3 className="text-lg font-bold text-text-primary flex items-center gap-3">
-      <span
-        className="w-9 h-9 rounded-xl flex items-center justify-center"
-        style={{ backgroundColor: tint(color), color: chipText(color) }}
-      >
-        {icon}
-      </span>
-      {title}
-    </h3>
-    {subtitle && <p className="text-sm text-text-secondary mt-1.5">{subtitle}</p>}
-  </div>
+/**
+ * Ladrilho colorido da seção, agora dentro do gatilho do acordeão.
+ *
+ * Substitui o antigo `SectionHeader`: com as seções recolhidas o título e o
+ * subtítulo mudaram de lugar — o título virou o rótulo do gatilho, e o
+ * subtítulo desceu para a primeira linha do painel (ver `SectionHint`).
+ */
+const SectionIcon: React.FC<{ icon: React.ReactNode; color: string }> = ({ icon, color }) => (
+  <span
+    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+    style={{ backgroundColor: tint(color), color: chipText(color) }}
+  >
+    {icon}
+  </span>
+);
+
+/** Explicação da seção, na primeira linha do painel aberto. */
+const SectionHint: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p className="text-sm text-text-secondary mb-5">{children}</p>
 );
 
 const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked, onChange }) => (
@@ -118,7 +125,7 @@ const SettingsPage: React.FC = () => {
   const { preference, resolved, setPreference } = useTheme();
   const toast = useToast();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { account, logout } = useAuth();
 
   // Exclusão de conta (LGPD) em duas etapas: primeiro o aviso "tem certeza?",
   // só depois o formulário com senha. Uma ação irreversível não pode acontecer
@@ -212,164 +219,225 @@ const SettingsPage: React.FC = () => {
 
   return (
     <AppLayout title="Configurações" subtitle="Personalize sua experiência no Fassaja.">
-      <div className="space-y-6 max-w-3xl">
-        {/* Aparência */}
-        <Card>
-          <SectionHeader
-            icon={<Palette size={18} />}
-            color="#8B5CF6"
-            title="Aparência"
-            subtitle="Vale para este navegador."
-          />
-          <div className="grid grid-cols-3 gap-2">
-            {THEME_OPTIONS.map(option => {
-              const active = preference === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setPreference(option.value)}
-                  aria-pressed={active}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${
-                    active
-                      ? 'border-primary-vibrant bg-primary-light text-primary-vibrant'
-                      : 'border-border bg-surface text-text-secondary hover:bg-bg-secondary'
-                  }`}
-                >
-                  <option.icon size={18} />
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-xs text-text-secondary">
-            {preference === 'system'
-              ? `Acompanhando o sistema — agora está no tema ${resolved === 'dark' ? 'escuro' : 'claro'}.`
-              : 'Sua escolha vence a preferência do sistema.'}
-          </p>
-        </Card>
+      {/* Coluna centralizada, e cada ajuste num item do acordeão — o mesmo
+          do Fale conosco. Configurações é onde se entra para mexer em UMA
+          coisa; com tudo aberto, era preciso rolar sete blocos para achá-la.
+          Fechado, a página vira um índice do que dá para ajustar. */}
+      <div className="mx-auto w-full max-w-2xl">
+        <Accordion
+          items={[
+            {
+              id: 'aparencia',
+              icon: <SectionIcon icon={<Palette size={18} />} color="#8B5CF6" />,
+              title: 'Aparência',
+              content: (
+                <>
+                  <SectionHint>Vale para este navegador.</SectionHint>
+                  <div className="grid grid-cols-3 gap-2">
+                    {THEME_OPTIONS.map(option => {
+                      const active = preference === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setPreference(option.value)}
+                          aria-pressed={active}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-sm font-semibold transition-colors ${
+                            active
+                              ? 'border-primary-vibrant bg-primary-light text-primary-vibrant'
+                              : 'border-border bg-surface text-text-secondary hover:bg-bg-secondary'
+                          }`}
+                        >
+                          <option.icon size={18} />
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-3 text-xs text-text-secondary">
+                    {preference === 'system'
+                      ? `Acompanhando o sistema — agora está no tema ${resolved === 'dark' ? 'escuro' : 'claro'}.`
+                      : 'Sua escolha vence a preferência do sistema.'}
+                  </p>
+                </>
+              ),
+            },
+            {
+              id: 'metas',
+              icon: <SectionIcon icon={<Target size={18} />} color="#22C55E" />,
+              title: 'Metas',
+              content: (
+                <>
+                  <SectionHint>Elas guiam o progresso do Dashboard e as comemorações.</SectionHint>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Input
+                      label="Meta diária de tarefas"
+                      type="number"
+                      min={0}
+                      max={GOAL_MAX}
+                      value={goals.daily}
+                      onChange={e => setGoals(g => ({ ...g, daily: e.target.value }))}
+                      onBlur={commitGoals}
+                      placeholder="5"
+                    />
+                    <Input
+                      label="Meta semanal de tarefas"
+                      type="number"
+                      min={0}
+                      max={GOAL_MAX}
+                      value={goals.weekly}
+                      onChange={e => setGoals(g => ({ ...g, weekly: e.target.value }))}
+                      onBlur={commitGoals}
+                      placeholder="25"
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 min-h-[1.25rem]">
+                    {goalsSaved ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-success">
+                        <Check size={13} strokeWidth={3} /> Metas salvas
+                      </span>
+                    ) : (
+                      <p className="text-xs text-text-secondary">Salvamos ao sair do campo.</p>
+                    )}
+                    {weeklyBelowDaily && (
+                      <span className="text-xs font-medium text-amber-600 dark:text-amber-300">
+                        Sua meta semanal é menor que a diária — confira se é isso mesmo.
+                      </span>
+                    )}
+                  </div>
+                </>
+              ),
+            },
+            {
+              id: 'notificacoes',
+              icon: <SectionIcon icon={<Bell size={18} />} color="#8B5CF6" />,
+              title: 'Notificações',
+              content: (
+                <>
+                  <SectionHint>Escolha o que aparece no sino do topo.</SectionHint>
+                  <div className="space-y-1">
+                    {notifLabels.map(item => (
+                      <div
+                        key={item.key}
+                        className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-bg-secondary transition-colors"
+                      >
+                        <div>
+                          <p className="text-text-primary font-medium">{item.label}</p>
+                          <p className="text-xs text-text-secondary">{item.hint}</p>
+                        </div>
+                        <Toggle
+                          checked={user.notifications[item.key]}
+                          onChange={() => toggleNotif(item.key)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ),
+            },
+            {
+              // Nome e senha num item só: são a mesma pergunta ("meus dados de
+              // acesso"), e como dois itens obrigavam a abrir um, fechar, abrir
+              // o outro. Dentro, cada um tem seu próprio subtítulo.
+              id: 'usuario',
+              icon: <SectionIcon icon={<UserCog size={18} />} color="#2477FF" />,
+              title: 'Configurações do usuário',
+              content: (
+                <>
+                  <SectionHint>
+                    {account ? `Conectado como ${account.email}` : 'Seus dados de acesso.'}
+                  </SectionHint>
 
-        {/* Goals */}
-        <Card>
-          <SectionHeader
-            icon={<Target size={18} />}
-            color="#22C55E"
-            title="Metas"
-            subtitle="Elas guiam o progresso do Dashboard e as comemorações."
-          />
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Input
-              label="Meta diária de tarefas"
-              type="number"
-              min={0}
-              max={GOAL_MAX}
-              value={goals.daily}
-              onChange={e => setGoals(g => ({ ...g, daily: e.target.value }))}
-              onBlur={commitGoals}
-              placeholder="5"
-            />
-            <Input
-              label="Meta semanal de tarefas"
-              type="number"
-              min={0}
-              max={GOAL_MAX}
-              value={goals.weekly}
-              onChange={e => setGoals(g => ({ ...g, weekly: e.target.value }))}
-              onBlur={commitGoals}
-              placeholder="25"
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 min-h-[1.25rem]">
-            {goalsSaved ? (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-success">
-                <Check size={13} strokeWidth={3} /> Metas salvas
-              </span>
-            ) : (
-              <p className="text-xs text-text-secondary">Salvamos ao sair do campo.</p>
-            )}
-            {weeklyBelowDaily && (
-              <span className="text-xs font-medium text-amber-600 dark:text-amber-300">
-                Sua meta semanal é menor que a diária — confira se é isso mesmo.
-              </span>
-            )}
-          </div>
-        </Card>
-
-        {/* Notifications */}
-        <Card>
-          <SectionHeader
-            icon={<Bell size={18} />}
-            color="#8B5CF6"
-            title="Notificações"
-            subtitle="Escolha o que aparece no sino do topo."
-          />
-          <div className="space-y-1">
-            {notifLabels.map(item => (
-              <div
-                key={item.key}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-bg-secondary transition-colors"
-              >
-                <div>
-                  <p className="text-text-primary font-medium">{item.label}</p>
-                  <p className="text-xs text-text-secondary">{item.hint}</p>
-                </div>
-                <Toggle checked={user.notifications[item.key]} onChange={() => toggleNotif(item.key)} />
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Tutoriais */}
-        <Card>
-          <SectionHeader
-            icon={<PlayCircle size={18} />}
-            color="#2477FF"
-            title="Tutoriais"
-            subtitle="Reveja o tour da plataforma ou as dicas de cada área."
-          />
-          <div className="space-y-3">
-            <ActionRow
-              icon={<PlayCircle size={18} />}
-              iconClass="bg-primary-light text-primary-vibrant"
-              title="Ver tour do Fassaja"
-              description="O passeio pelos principais espaços, com o Bob"
-              onClick={reopenPlatformTour}
-            />
-            <ActionRow
-              icon={<RotateCcw size={18} />}
-              iconClass="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
-              title="Reexibir dicas das áreas"
-              description="As boas-vindas de cada tela voltam a aparecer uma vez"
-              onClick={resetAreaTours}
-            />
-          </div>
-        </Card>
-
-        {/* Conta e segurança (mora no Perfil — atalho para quem procura aqui) */}
-        <Card>
-          <SectionHeader
-            icon={<ShieldCheck size={18} />}
-            color="#F43F5E"
-            title="Conta e segurança"
-            subtitle="Nome, foto e senha ficam no seu Perfil."
-          />
-          <div className="flex flex-col gap-3">
-            <ActionRow
-              icon={<ShieldCheck size={18} />}
-              iconClass="bg-rose-50 dark:bg-rose-500/10 text-danger"
-              title="Ir para o Perfil"
-              description="Alterar nome, foto de perfil e senha"
-              onClick={() => navigate('/profile')}
-            />
-            <ActionRow
-              icon={<Trash2 size={18} />}
-              iconClass="bg-rose-50 dark:bg-rose-500/10 text-danger"
-              title="Excluir minha conta"
-              description="Apaga sua conta e seus dados pessoais definitivamente"
-              onClick={() => setConfirmDelete(true)}
-            />
-          </div>
-        </Card>
+                  {/* Acordeão dentro de acordeão. Funciona porque o painel de
+                      fora mede a altura com ResizeObserver, e não uma vez só:
+                      quando um submenu abre, o de fora cresce junto. */}
+                  <div className="rounded-xl border border-border px-4">
+                    <Accordion
+                      items={[
+                        {
+                          id: 'nome',
+                          icon: <Pencil size={15} className="shrink-0 text-primary-vibrant" />,
+                          title: 'Nome de usuário',
+                          content: (
+                            <>
+                              <SectionHint>
+                                Exibido na plataforma. Só pode ser alterado a cada 30 dias.
+                              </SectionHint>
+                              <AccountNameSection />
+                            </>
+                          ),
+                        },
+                        {
+                          id: 'senha',
+                          icon: <ShieldCheck size={15} className="shrink-0 text-primary-vibrant" />,
+                          title: 'Redefinição de senha',
+                          content: (
+                            <>
+                              <SectionHint>Sua senha de acesso ao Fassaja.</SectionHint>
+                              <AccountPasswordSection />
+                            </>
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                </>
+              ),
+            },
+            {
+              id: 'tutoriais',
+              icon: <SectionIcon icon={<PlayCircle size={18} />} color="#2477FF" />,
+              title: 'Tutoriais',
+              content: (
+                <>
+                  <SectionHint>Reveja o tour da plataforma ou as dicas de cada área.</SectionHint>
+                  <div className="space-y-3">
+                    <ActionRow
+                      icon={<PlayCircle size={18} />}
+                      iconClass="bg-primary-light text-primary-vibrant"
+                      title="Ver tour do Fassaja"
+                      description="O passeio pelos principais espaços, com o Bob"
+                      onClick={reopenPlatformTour}
+                    />
+                    <ActionRow
+                      icon={<RotateCcw size={18} />}
+                      iconClass="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
+                      title="Reexibir dicas das áreas"
+                      description="As boas-vindas de cada tela voltam a aparecer uma vez"
+                      onClick={resetAreaTours}
+                    />
+                  </div>
+                </>
+              ),
+            },
+            {
+              id: 'perigo',
+              icon: <SectionIcon icon={<AlertTriangle size={18} />} color="#F43F5E" />,
+              title: 'Zona de perigo',
+              content: (
+                <>
+                  <SectionHint>Ações que não têm volta.</SectionHint>
+                  <div className="flex flex-col gap-3">
+                    <ActionRow
+                      icon={<ShieldCheck size={18} />}
+                      iconClass="bg-primary-light text-primary-vibrant"
+                      title="Ir para o Perfil"
+                      description="Trocar sua foto e ver suas conquistas"
+                      onClick={() => navigate('/profile')}
+                    />
+                    <ActionRow
+                      icon={<Trash2 size={18} />}
+                      iconClass="bg-rose-50 dark:bg-rose-500/10 text-danger"
+                      title="Excluir minha conta"
+                      description="Apaga sua conta e seus dados pessoais definitivamente"
+                      onClick={() => setConfirmDelete(true)}
+                    />
+                  </div>
+                </>
+              ),
+            },
+          ]}
+        />
       </div>
 
       {/* Etapa 1 — o aviso. Explica o que some, o que fica, e que não tem volta. */}

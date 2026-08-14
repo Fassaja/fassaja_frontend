@@ -22,10 +22,12 @@ import { useToast } from '@/contexts/ToastContext';
 import {
   TaskScope,
   filterByScope,
+  isTeamTask,
   loadScope,
   saveScope,
   teamProjectIds,
 } from '@/utils/taskScope';
+import { whyHidden } from '@/utils/taskVisibility';
 
 const TasksPage: React.FC = () => {
   const { tasks: allTasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
@@ -97,6 +99,54 @@ const TasksPage: React.FC = () => {
 
   // Filtro por tags (OR: mostra tarefas com qualquer das tags marcadas).
   const [filterTags, setFilterTags] = useState<string[]>([]);
+
+  /**
+   * Cria a tarefa e GARANTE que ela apareça.
+   *
+   * Sem isto a tela mentia: a pessoa via "criada com sucesso" e nada na lista.
+   * O escopo (Pessoal × Equipe) fica salvo no localStorage, então quem uma vez
+   * abriu o lado "Equipe" continua nele em toda visita — e uma tarefa nova sem
+   * projeto é PESSOAL, ou seja, nasce do lado que não está aberto. Busca,
+   * status, prioridade, projeto e tag escondem do mesmo jeito.
+   *
+   * A regra aqui é simples: se o que a pessoa acabou de criar não caberia na
+   * lista, a lista é que se ajusta — nunca o contrário.
+   */
+  const handleCreateTask = async (data: Parameters<typeof createTask>[0]) => {
+    const nova = await createTask(data);
+
+    const bloqueio = whyHidden(nova, {
+      scope,
+      taskScope: isTeamTask(nova, teamIds) ? 'team' : 'solo',
+      searchTerm,
+      filterStatus,
+      filterPriority,
+      filterProject,
+      filterTags,
+    });
+    if (!bloqueio) return nova;
+
+    if (bloqueio.scope) {
+      setScope(bloqueio.scope);
+      saveScope(bloqueio.scope);
+    }
+    if (bloqueio.filters) {
+      setSearchTerm('');
+      setFilterStatus('all');
+      setFilterPriority('all');
+      setFilterProject('all');
+      setFilterTags([]);
+    }
+
+    toast.info(
+      bloqueio.scope && bloqueio.filters
+        ? 'Tarefa criada. Mudamos de lado e limpamos os filtros para mostrá-la.'
+        : bloqueio.scope
+        ? `Tarefa criada em ${bloqueio.scope === 'team' ? 'Equipe' : 'Pessoal'}. Levamos você até ela.`
+        : 'Tarefa criada. Limpamos os filtros para mostrá-la.',
+    );
+    return nova;
+  };
   const toggleTagFilter = (id: string) =>
     setFilterTags(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
 
@@ -223,7 +273,7 @@ const TasksPage: React.FC = () => {
       <CreateTaskModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onCreateTask={createTask}
+        onCreateTask={handleCreateTask}
       />
 
       <TaskDetailModal
