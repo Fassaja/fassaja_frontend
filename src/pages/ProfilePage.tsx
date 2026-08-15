@@ -131,8 +131,13 @@ const ProfilePage: React.FC = () => {
             content={`Nível ${xp.level}`}
             description={`${xp.intoLevel} de ${XP_PER_LEVEL} XP para o nível ${xp.level + 1}.`}
           >
-            <div className="relative shrink-0">
-              <svg width={RING} height={RING} className="-rotate-90" aria-hidden="true">
+            {/* Tamanho fixo, igual ao anel. No celular o Tooltip não envolve
+                nada (não há hover), então esta div vira filha direta da coluna
+                flex e, sem largura própria, o `stretch` a esticava até a borda:
+                o anel ficava à esquerda e a foto, o "Nv" e a câmera — todos
+                posicionados em relação a ela — saíam de cima do anel. */}
+            <div className="relative shrink-0" style={{ width: RING, height: RING }}>
+              <svg width={RING} height={RING} className="block -rotate-90" aria-hidden="true">
                 <circle
                   cx={RING / 2}
                   cy={RING / 2}
