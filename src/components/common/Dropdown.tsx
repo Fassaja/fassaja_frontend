@@ -105,7 +105,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
   }, [open]);
 
   const selected = options.find(o => o.value === value);
-  const triggerPad = size === 'sm' ? 'pl-3 pr-2.5 py-1.5 text-sm' : 'px-4 py-2.5';
+  const triggerPad =
+    size === 'sm' ? 'min-h-[40px] sm:min-h-0 pl-3 pr-2.5 py-1.5 text-sm' : 'px-4 py-2.5';
 
   return (
     <div className={`${fullWidth ? 'w-full' : 'inline-block'}`}>

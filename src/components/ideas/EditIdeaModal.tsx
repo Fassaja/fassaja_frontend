@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
+import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
 import { Button } from '@/components/common/Button';
 import { Select } from '@/components/common/Select';
 import { DatePicker } from '@/components/common/DatePicker';
@@ -126,24 +126,30 @@ export const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ isOpen, idea, onCl
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Editar ideia" size="lg">
       <form onSubmit={submit} className="space-y-5">
-        <Input
-          label="Título"
-          value={form.title}
-          onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-          maxLength={160}
-          disabled={saving}
-          error={error && !form.title.trim() ? error : undefined}
-        />
-
-        <Textarea
-          label="Descrição"
-          rows={4}
-          maxLength={4000}
-          value={form.description}
-          onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-          placeholder="O que é, por que vale a pena, o que ainda falta descobrir."
-          disabled={saving}
-        />
+        {/* Só o bloco de escrita muda aqui. O RESTO deste formulário fica
+            como está de propósito: ele é o formulário COMPLETO da ideia — o
+            cadastro rápido já existe no QuickIdeaModal —, e quem chega nesta
+            tela veio justamente para mexer nos detalhes. Esconder campos atrás
+            de "mais opções" aqui seria esconder o motivo da tela existir. */}
+        <div>
+          <HeadlineInput
+            aria-label="Título da ideia"
+            placeholder="Qual é a ideia?"
+            value={form.title}
+            onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+            maxLength={160}
+            disabled={saving}
+          />
+          <NoteField
+            aria-label="Descrição da ideia"
+            className="mt-2"
+            maxLength={4000}
+            value={form.description}
+            onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+            placeholder="O que é, por que vale a pena, o que ainda falta descobrir."
+            disabled={saving}
+          />
+        </div>
 
         <OptionSelector
           label="Em que pé está?"
@@ -297,7 +303,7 @@ export const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ isOpen, idea, onCl
           </div>
         </div>
 
-        {error && form.title.trim() && <p className="text-xs text-danger">{error}</p>}
+        {error && <p className="text-xs text-danger">{error}</p>}
 
         {/* Rodapé fixo: este formulário é longo e sem isto o "Salvar" fica
             abaixo da dobra em telas baixas. */}

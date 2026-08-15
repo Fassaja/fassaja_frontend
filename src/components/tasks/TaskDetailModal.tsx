@@ -75,7 +75,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const priorityInfo = priorityConfig[task.priority];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Detalhes da Tarefa" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Detalhes da tarefa" size="lg">
       <div className="space-y-1">
         {/* Cabeçalho do card com título e botão de editar */}
         <div className="relative rounded-2xl border border-border bg-bg-secondary/50 p-5 pr-14 mb-4">

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Lightbulb, Sparkles } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
+import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
 import { Button } from '@/components/common/Button';
 import { Select } from '@/components/common/Select';
 import { DatePicker } from '@/components/common/DatePicker';
@@ -114,43 +113,46 @@ export const QuickIdeaModal: React.FC<QuickIdeaModalProps> = ({
           </p>
         </div>
 
-        <Input
-          label="Título"
-          placeholder="Ex.: App de reconstrução 3D com smartwatch"
-          value={title}
-          onChange={e => {
-            setTitle(e.target.value);
-            if (error) setError('');
-          }}
-          error={error && !title.trim() ? error : undefined}
-          maxLength={160}
-          disabled={saving}
-          autoFocus
-        />
+        {/* Mesmo bloco de escrita da tarefa e do evento: o título é a ideia,
+            não um campo chamado "título". */}
+        <div>
+          <HeadlineInput
+            aria-label="Título da ideia"
+            placeholder="Qual é a ideia?"
+            value={title}
+            onChange={e => {
+              setTitle(e.target.value);
+              if (error) setError('');
+            }}
+            maxLength={160}
+            disabled={saving}
+            autoFocus
+          />
+          <NoteField
+            aria-label="Descrição da ideia"
+            className="mt-2"
+            maxLength={4000}
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="O suficiente para você lembrar do que era daqui a três meses."
+            disabled={saving}
+          />
+        </div>
 
-        <Textarea
-          label="Do que se trata? (opcional)"
-          rows={3}
-          maxLength={4000}
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="O suficiente para você lembrar do que era daqui a três meses."
-          disabled={saving}
-        />
-
-        <OptionSelector
-          label="Quando pretende começar?"
-          options={[
-            { value: 'nao-sei', label: 'Ainda não sei' },
-            { value: 'mes', label: 'Em um mês' },
-            { value: 'data', label: 'Em uma data' },
-          ]}
-          value={quando}
-          onChange={v => setQuando(v as Quando)}
-          layout="grid"
-          columns={3}
-          disabled={saving}
-        />
+        <div className="pt-4 border-t border-border">
+          <OptionSelector
+            label="Quando pretende começar?"
+            options={[
+              { value: 'nao-sei', label: 'Ainda não sei' },
+              { value: 'mes', label: 'Em um mês' },
+              { value: 'data', label: 'Em uma data' },
+            ]}
+            value={quando}
+            onChange={v => setQuando(v as Quando)}
+            size="sm"
+            disabled={saving}
+          />
+        </div>
 
         {/* Select em vez de <input type="month">: o Safari não suporta esse
             tipo e o campo vira texto livre, mostrando "2026-09" cru. */}
@@ -178,7 +180,9 @@ export const QuickIdeaModal: React.FC<QuickIdeaModalProps> = ({
           />
         )}
 
-        {error && title.trim() && <p className="text-xs text-danger">{error}</p>}
+        {/* Sem condição de título: o erro de "título vazio" era mostrado pelo
+            campo antigo, e o HeadlineInput não tem onde exibi-lo. */}
+        {error && <p className="text-xs text-danger">{error}</p>}
 
         {/* sticky: em janela baixa o modal rola, e sem isto os botões ficam
             abaixo da dobra — a pessoa preenche tudo e não acha como salvar. */}

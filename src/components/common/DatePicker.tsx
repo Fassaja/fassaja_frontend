@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { formatDateChip } from '@/utils/date';
 
 interface DatePickerProps {
   label?: string;
@@ -10,6 +11,12 @@ interface DatePickerProps {
   disabled?: boolean;
   /** Abre o calendário para cima (útil quando o campo fica no rodapé). */
   openUp?: boolean;
+  /**
+   * `sm` vira um chip do tamanho do próprio conteúdo, para a linha de
+   * controles rápidos dos modais de criação. O padrão segue sendo o campo de
+   * largura total dos formulários completos.
+   */
+  size?: 'sm' | 'md';
 }
 
 const MONTHS = [
@@ -45,7 +52,9 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   placeholder = 'Selecione uma data',
   disabled,
   openUp = false,
+  size = 'md',
 }) => {
+  const compact = size === 'sm';
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<Date>(() => parseISO(value) ?? new Date());
   const ref = useRef<HTMLDivElement>(null);
@@ -88,7 +97,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   return (
-    <div className="w-full">
+    <div className={compact ? 'inline-block' : 'w-full'}>
       {label && (
         <label className="block text-sm font-medium text-text-primary mb-2">{label}</label>
       )}
@@ -98,15 +107,25 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           disabled={disabled}
           onClick={() => setOpen(v => !v)}
           className={`
-            w-full flex items-center gap-3 px-4 py-2.5 rounded-xl border bg-surface text-left
+            flex items-center bg-surface text-left border
             transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60
             disabled:bg-bg-secondary disabled:cursor-not-allowed
+            ${compact
+              ? 'min-h-[40px] sm:min-h-0 gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-semibold'
+              : 'w-full gap-3 px-4 py-2.5 rounded-xl'}
             ${open ? 'border-primary-vibrant ring-4 ring-primary-light/60' : 'border-border hover:border-primary-vibrant/50'}
           `}
         >
-          <CalendarIcon size={18} className="text-text-secondary shrink-0" />
-          <span className={`flex-1 ${value ? 'text-text-primary' : 'text-text-soft'}`}>
-            {value ? formatLabel(value) : placeholder}
+          <CalendarIcon
+            size={compact ? 14 : 18}
+            className={`shrink-0 ${value && compact ? 'text-primary-vibrant' : 'text-text-secondary'}`}
+          />
+          <span
+            className={`${compact ? '' : 'flex-1'} ${
+              value ? (compact ? 'text-primary-vibrant' : 'text-text-primary') : 'text-text-soft'
+            }`}
+          >
+            {value ? (compact ? formatDateChip(value) : formatLabel(value)) : placeholder}
           </span>
           {value && (
             <span
@@ -119,7 +138,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               }}
               className="text-text-soft hover:text-danger transition-colors"
             >
-              <X size={16} />
+              <X size={compact ? 13 : 16} />
             </span>
           )}
         </button>
@@ -131,7 +150,11 @@ export const DatePicker: React.FC<DatePickerProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
               transition={{ duration: 0.14 }}
-              className={`absolute z-50 left-0 w-72 bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-4 ${
+              /* 18rem (288px) é a largura desenhada, mas ela não cabe num
+                 celular de 320-360px: o conteúdo do modal tem a viewport menos
+                 32px do wrapper e 48px do painel. Sem o teto, o calendário
+                 vazava e o corpo do modal ganhava rolagem horizontal. */
+              className={`absolute z-50 left-0 w-[min(18rem,calc(100vw_-_5rem))] bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-4 ${
                 openUp ? 'bottom-full mb-2' : 'top-full mt-2'
               }`}
             >

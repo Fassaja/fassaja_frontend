@@ -171,7 +171,7 @@ const ProjectsPage: React.FC = () => {
 
       <AppLayout
         onNewTask={() => setShowCreateModal(true)}
-        actionLabel="Novo Projeto"
+        actionLabel="Novo projeto"
         title="Projetos"
         subtitle="Organize suas tarefas por projetos."
       >

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Check, FolderOpen, Lock, User, Users } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
+import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
 import { Button } from '@/components/common/Button';
 import { OptionSelector } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
@@ -120,7 +119,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Editar Projeto" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Editar projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
         {!canEdit && (
           <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
@@ -152,63 +151,65 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
           </div>
         </div>
 
-        <Input
-          label="Nome do projeto"
-          name="name"
-          placeholder="Ex.: Marketing"
-          value={formData.name}
-          onChange={handleChange}
-          error={error && !formData.name.trim() ? error : undefined}
-          disabled={loading || !canEdit}
-          autoFocus
-        />
+        {/* Mesmo bloco de escrita da criação: é o mesmo projeto, visto de
+            novo. O cartão acima já mostra o nome enquanto se digita. */}
+        <div>
+          <HeadlineInput
+            name="name"
+            aria-label="Nome do projeto"
+            placeholder="Como se chama o projeto?"
+            value={formData.name}
+            onChange={handleChange}
+            disabled={loading || !canEdit}
+            maxLength={120}
+            autoFocus
+          />
+          <NoteField
+            name="description"
+            aria-label="Descrição do projeto"
+            className="mt-2"
+            placeholder="Para que serve este projeto?"
+            value={formData.description}
+            onChange={handleChange}
+            disabled={loading || !canEdit}
+          />
+        </div>
 
-        <Textarea
-          label="Descrição"
-          name="description"
-          placeholder="Para que serve este projeto? (opcional)"
-          value={formData.description}
-          onChange={handleChange}
-          disabled={loading || !canEdit}
-          rows={3}
-        />
+        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+          <OptionSelector
+            options={[
+              { value: 'solo', label: 'Solo' },
+              { value: 'team', label: 'Equipe' },
+            ]}
+            value={formData.type}
+            onChange={v => setFormData(prev => ({ ...prev, type: v as 'solo' | 'team' }))}
+            disabled={loading || !canEdit}
+            size="sm"
+          />
 
-        <OptionSelector
-          label="Tipo de projeto"
-          options={[
-            { value: 'solo', label: 'Solo' },
-            { value: 'team', label: 'Equipe' },
-          ]}
-          value={formData.type}
-          onChange={v => setFormData(prev => ({ ...prev, type: v as 'solo' | 'team' }))}
-          layout="grid"
-          columns={2}
-          disabled={loading || !canEdit}
-        />
-
-        {formData.type === 'team' &&
-          (teams.length > 0 ? (
+          {formData.type === 'team' && teams.length > 0 && (
             <Dropdown
-              label="Equipe"
               options={teams.map(t => ({ value: t.id, label: t.name }))}
               value={formData.teamId}
               onChange={v => {
                 setFormData(prev => ({ ...prev, teamId: v }));
                 if (error) setError('');
               }}
-              placeholder="Selecione a equipe"
-              fullWidth
+              placeholder="Escolher equipe"
+              size="sm"
               disabled={loading || !canEdit}
             />
-          ) : (
-            <p className="text-sm text-text-secondary bg-bg-secondary rounded-xl p-3">
-              Você ainda não tem equipes. Crie uma na aba <span className="font-semibold">Equipe</span>.
-            </p>
-          ))}
+          )}
+        </div>
+
+        {formData.type === 'team' && teams.length === 0 && (
+          <p className="text-sm text-text-secondary bg-bg-secondary rounded-xl p-3">
+            Você ainda não tem equipes. Crie uma na aba <span className="font-semibold">Equipe</span>.
+          </p>
+        )}
 
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">Cor</label>
-          <div className="flex gap-2.5 flex-wrap">
+          <div className="flex gap-2 flex-wrap" role="group" aria-label="Cor do projeto">
             {colorOptions.map(color => {
               const selected = formData.color === color;
               return (
@@ -219,39 +220,26 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
                   aria-pressed={selected}
                   disabled={loading || !canEdit}
                   onClick={() => setFormData(prev => ({ ...prev, color }))}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white transition-transform disabled:cursor-not-allowed disabled:opacity-60 ${
-                    selected ? 'ring-2 ring-offset-2 ring-offset-white scale-105' : 'enabled:hover:scale-105'
+                  className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-white transition-transform disabled:cursor-not-allowed disabled:opacity-60 ${
+                    selected ? 'ring-2 ring-offset-2 ring-offset-surface scale-105' : 'enabled:hover:scale-105'
                   }`}
                   style={{ backgroundColor: color, ...(selected ? { '--tw-ring-color': color } as React.CSSProperties : {}) }}
                 >
-                  {selected && <Check size={18} strokeWidth={3} />}
+                  {selected && <Check size={16} strokeWidth={3} />}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {error && formData.name.trim() && (
-          <p className="text-sm text-danger">{error}</p>
-        )}
+        {error && <p className="text-sm text-danger">{error}</p>}
 
-        <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={loading}
-            className="flex-1 rounded-xl"
-          >
+        <div className="sticky bottom-0 -mx-6 px-6 pt-3 pb-1 bg-surface border-t border-border flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
             {canEdit ? 'Cancelar' : 'Fechar'}
           </Button>
           {canEdit && (
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={loading}
-              className="flex-1 rounded-xl"
-            >
+            <Button type="submit" variant="primary" isLoading={loading}>
               Salvar alterações
             </Button>
           )}

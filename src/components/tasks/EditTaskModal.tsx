@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
+import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
+import { MoreOptions } from '@/components/common/MoreOptions';
 import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
@@ -30,7 +30,7 @@ const priorityOptions: SelectableOption[] = [
 
 const statusOptions: SelectableOption[] = [
   { value: 'pending', label: 'Pendente', color: '#64748B' },
-  { value: 'in_progress', label: 'Em Progresso', color: '#2477FF' },
+  { value: 'in_progress', label: 'Em progresso', color: '#2477FF' },
   { value: 'completed', label: 'Concluída', color: '#22C55E' },
 ];
 
@@ -139,98 +139,105 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     }
   };
 
+  // O que está definido atrás do "mais opções" — decide o contador e, na
+  // edição, se o bloco já nasce aberto.
+  const ajustesDefinidos =
+    (formData.status !== 'pending' ? 1 : 0) + (assigneeId ? 1 : 0) + tagIds.length;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Editar Tarefa" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Editar tarefa" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
-        <Input
-          label="Título"
-          name="title"
-          placeholder="Digite o título da tarefa"
-          value={formData.title}
-          onChange={e => {
-            set('title', e.target.value);
-            if (error) setError('');
-          }}
-          error={error && !formData.title.trim() ? error : undefined}
-          disabled={loading}
-          autoFocus
-        />
-
-        <Textarea
-          label="Descrição"
-          name="description"
-          placeholder="Detalhes da tarefa (opcional)"
-          value={formData.description}
-          onChange={e => set('description', e.target.value)}
-          disabled={loading}
-          rows={3}
-        />
-
-        <OptionSelector
-          label="Prioridade"
-          options={priorityOptions}
-          value={formData.priority}
-          onChange={v => set('priority', v as TaskPriority)}
-          layout="grid"
-          columns={3}
-        />
-
-        <OptionSelector
-          label="Status"
-          options={statusOptions}
-          value={formData.status}
-          onChange={v => set('status', v as TaskStatus)}
-          layout="grid"
-          columns={3}
-        />
-
-        <OptionSelector
-          label="Projeto"
-          options={projectOptions}
-          value={formData.projectId}
-          onChange={v => set('projectId', v)}
-        />
-
-        {teamProject && (
-          <Dropdown
-            label="Atribuir a (proposta para a equipe)"
-            options={memberOptions}
-            value={assigneeId}
-            onChange={setAssigneeId}
-            fullWidth
-          />
-        )}
-
-        {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
-
-        <DatePicker
-          label="Data de vencimento"
-          value={formData.dueDate}
-          onChange={v => set('dueDate', v)}
-          disabled={loading}
-          openUp
-        />
-
-        {error && formData.title.trim() && (
-          <p className="text-sm text-danger">{error}</p>
-        )}
-
-        <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
+        {/* Mesma estrutura da criação, de propósito: editar e criar são a mesma
+            tarefa vista duas vezes, e dar duas caras a ela é o que fazia a
+            edição parecer outro produto. */}
+        <div>
+          <HeadlineInput
+            name="title"
+            aria-label="Título da tarefa"
+            placeholder="O que precisa ser feito?"
+            value={formData.title}
+            onChange={e => {
+              set('title', e.target.value);
+              if (error) setError('');
+            }}
             disabled={loading}
-            className="flex-1 rounded-xl"
-          >
+            maxLength={200}
+            autoFocus
+          />
+          <NoteField
+            name="description"
+            aria-label="Descrição da tarefa"
+            className="mt-2"
+            placeholder="Adicionar detalhes…"
+            value={formData.description}
+            onChange={e => set('description', e.target.value)}
+            disabled={loading}
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+          <DatePicker
+            value={formData.dueDate}
+            onChange={v => set('dueDate', v)}
+            placeholder="Sem data"
+            disabled={loading}
+            size="sm"
+          />
+          <OptionSelector
+            options={priorityOptions}
+            value={formData.priority}
+            onChange={v => set('priority', v as TaskPriority)}
+            disabled={loading}
+            size="sm"
+          />
+          <Dropdown
+            options={projectOptions}
+            value={formData.projectId}
+            onChange={v => set('projectId', v)}
+            placeholder="Sem projeto"
+            size="sm"
+            disabled={loading}
+          />
+        </div>
+
+        {/* Na edição o bloco abre sozinho quando já há algo definido lá dentro:
+            esconder um responsável ou uma tag que a pessoa mesma escolheu
+            pareceria que a tarefa os perdeu. */}
+        <MoreOptions
+          key={task?.id}
+          activeCount={ajustesDefinidos}
+          defaultOpen={ajustesDefinidos > 0}
+        >
+          <OptionSelector
+            label="Status"
+            options={statusOptions}
+            value={formData.status}
+            onChange={v => set('status', v as TaskStatus)}
+            layout="grid"
+            columns={3}
+            disabled={loading}
+          />
+
+          {teamProject && (
+            <Dropdown
+              label="Propor a alguém da equipe"
+              options={memberOptions}
+              value={assigneeId}
+              onChange={setAssigneeId}
+              fullWidth
+            />
+          )}
+
+          {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
+        </MoreOptions>
+
+        {error && <p className="text-sm text-danger">{error}</p>}
+
+        <div className="sticky bottom-0 -mx-6 px-6 pt-3 pb-1 bg-surface border-t border-border flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            isLoading={loading}
-            className="flex-1 rounded-xl"
-          >
+          <Button type="submit" variant="primary" isLoading={loading}>
             Salvar alterações
           </Button>
         </div>

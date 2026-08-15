@@ -119,7 +119,7 @@ const DashboardPage: React.FC = () => {
                 mascotState="happy"
                 title="Tudo em dia!"
                 description="Você não tem tarefas pendentes. Que tal criar uma nova?"
-                action={{ label: 'Nova Tarefa', onClick: openNewTask }}
+                action={{ label: 'Nova tarefa', onClick: openNewTask }}
               />
             )}
           </div>

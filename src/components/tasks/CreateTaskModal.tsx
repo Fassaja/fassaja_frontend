@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
+import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
+import { MoreOptions } from '@/components/common/MoreOptions';
 import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
@@ -29,7 +29,7 @@ const priorityOptions: SelectableOption[] = [
 
 const statusOptions: SelectableOption[] = [
   { value: 'pending', label: 'Pendente', color: '#64748B' },
-  { value: 'in_progress', label: 'Em Progresso', color: '#2477FF' },
+  { value: 'in_progress', label: 'Em progresso', color: '#2477FF' },
   { value: 'completed', label: 'Concluída', color: '#22C55E' },
 ];
 
@@ -138,57 +138,71 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     }
   };
 
+  // Quantos ajustes escondidos já estão definidos. Sem esse aviso, quem abriu
+  // "mais opções", escolheu um responsável e recolheu de volta salvaria sem
+  // lembrar do que tinha marcado.
+  const ajustesDefinidos =
+    (formData.status !== 'pending' ? 1 : 0) + (assigneeId ? 1 : 0) + tagIds.length;
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Nova Tarefa" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Nova tarefa" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
-        <Input
-          label="Título"
-          name="title"
-          placeholder="Ex.: Finalizar protótipo da dashboard"
-          value={formData.title}
-          onChange={e => {
-            set('title', e.target.value);
-            if (error) setError('');
-          }}
-          error={error && !formData.title.trim() ? error : undefined}
-          disabled={loading}
-          autoFocus
-        />
+        {/* O título e a descrição formam UM bloco de escrita, sem rótulos e
+            sem molduras: é onde o cursor já está quando o modal abre, e
+            digitar + Enter basta para criar a tarefa. Todo o resto tem
+            padrão razoável e pode ficar como está. */}
+        <div>
+          <HeadlineInput
+            name="title"
+            aria-label="Título da tarefa"
+            placeholder="O que precisa ser feito?"
+            value={formData.title}
+            onChange={e => {
+              set('title', e.target.value);
+              if (error) setError('');
+            }}
+            disabled={loading}
+            maxLength={200}
+            autoFocus
+          />
+          <NoteField
+            name="description"
+            aria-label="Descrição da tarefa"
+            className="mt-2"
+            placeholder="Adicionar detalhes…"
+            value={formData.description}
+            onChange={e => set('description', e.target.value)}
+            disabled={loading}
+          />
+        </div>
 
-        <Textarea
-          label="Descrição"
-          name="description"
-          placeholder="Detalhes da tarefa (opcional)"
-          value={formData.description}
-          onChange={e => set('description', e.target.value)}
-          disabled={loading}
-          rows={3}
-        />
-
-        <OptionSelector
-          label="Prioridade"
-          options={priorityOptions}
-          value={formData.priority}
-          onChange={v => set('priority', v as TaskPriority)}
-          layout="grid"
-          columns={3}
-        />
-
-        <OptionSelector
-          label="Status inicial"
-          options={statusOptions}
-          value={formData.status}
-          onChange={v => set('status', v as TaskStatus)}
-          layout="grid"
-          columns={3}
-        />
-
-        <OptionSelector
-          label="Projeto"
-          options={projectOptions}
-          value={formData.projectId}
-          onChange={v => set('projectId', v)}
-        />
+        {/* A linha de decisões rápidas: quando, quanto importa, onde. São as
+            três que a pessoa realmente responde ao criar — como controles do
+            tamanho da resposta, não como três campos de formulário. */}
+        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+          <DatePicker
+            value={formData.dueDate}
+            onChange={v => set('dueDate', v)}
+            placeholder="Sem data"
+            disabled={loading}
+            size="sm"
+          />
+          <OptionSelector
+            options={priorityOptions}
+            value={formData.priority}
+            onChange={v => set('priority', v as TaskPriority)}
+            disabled={loading}
+            size="sm"
+          />
+          <Dropdown
+            options={projectOptions}
+            value={formData.projectId}
+            onChange={v => set('projectId', v)}
+            placeholder="Sem projeto"
+            size="sm"
+            disabled={loading}
+          />
+        </div>
 
         {blockedByPermission && (
           <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl px-3 py-2">
@@ -197,38 +211,38 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           </p>
         )}
 
-        {teamProject && !blockedByPermission && (
-          <Dropdown
-            label="Atribuir a (proposta para a equipe)"
-            options={memberOptions}
-            value={assigneeId}
-            onChange={setAssigneeId}
-            fullWidth
+        <MoreOptions activeCount={ajustesDefinidos}>
+          <OptionSelector
+            label="Começar como"
+            options={statusOptions}
+            value={formData.status}
+            onChange={v => set('status', v as TaskStatus)}
+            layout="grid"
+            columns={3}
+            disabled={loading}
           />
-        )}
 
-        {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
+          {teamProject && !blockedByPermission && (
+            <Dropdown
+              label="Propor a alguém da equipe"
+              options={memberOptions}
+              value={assigneeId}
+              onChange={setAssigneeId}
+              fullWidth
+            />
+          )}
 
-        <DatePicker
-          label="Data de vencimento"
-          value={formData.dueDate}
-          onChange={v => set('dueDate', v)}
-          disabled={loading}
-          openUp
-        />
+          {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
+        </MoreOptions>
 
-        {error && formData.title.trim() && (
+        {error && (
           <p className="text-sm text-danger">{error}</p>
         )}
 
-        <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleClose}
-            disabled={loading}
-            className="flex-1 rounded-xl"
-          >
+        {/* sticky: em janela baixa o modal rola, e sem isto os botões ficam
+            abaixo da dobra — a pessoa escreve tudo e não acha como salvar. */}
+        <div className="sticky bottom-0 -mx-6 px-6 pt-3 pb-1 bg-surface border-t border-border flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={handleClose} disabled={loading}>
             Cancelar
           </Button>
           <Button
@@ -236,7 +250,6 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             variant="primary"
             isLoading={loading}
             disabled={blockedByPermission}
-            className="flex-1 rounded-xl"
           >
             Criar tarefa
           </Button>

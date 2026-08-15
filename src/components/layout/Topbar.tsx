@@ -21,7 +21,7 @@ interface TopbarProps {
 
 export const Topbar: React.FC<TopbarProps> = ({
   onNewTask,
-  actionLabel = 'Nova Tarefa',
+  actionLabel = 'Nova tarefa',
   // Rótulo neutro: toda página passa o próprio título, e a saudação genérica
   // que ficava aqui competia com a que a Home já mostra logo abaixo.
   title = 'Fassaja',

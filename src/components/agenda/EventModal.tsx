@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Trash2, MapPin, Link2, Check, AlertTriangle, Bell, Repeat } from 'lucide-react';
+import { Trash2, MapPin, Link2, Check, AlertTriangle, Bell, Repeat, Sun } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
+import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
+import { MoreOptions } from '@/components/common/MoreOptions';
 import { Button } from '@/components/common/Button';
 import { DatePicker } from '@/components/common/DatePicker';
 import { TimePicker } from '@/components/common/TimePicker';
@@ -237,50 +238,83 @@ export const EventModal: React.FC<EventModalProps> = ({
     }
   };
 
+  // O contador do "mais opções": o que está definido lá dentro e sumiria de
+  // vista com o bloco recolhido.
+  const ajustesDefinidos =
+    (weekdays.length ? 1 : 0) +
+    (reminder ? 1 : 0) +
+    (color !== EVENT_COLORS[0] ? 1 : 0) +
+    (location.trim() ? 1 : 0) +
+    (link.trim() ? 1 : 0) +
+    (taskId ? 1 : 0);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? 'Editar evento' : 'Novo evento'} size="lg">
       <div className="space-y-5">
-        <Input
-          label="Título"
-          value={title}
-          onChange={e => {
-            setTitle(e.target.value);
-            if (error) setError('');
-          }}
-          placeholder="Ex.: Reunião com o cliente"
-          maxLength={200}
-          autoFocus
-        />
+        {/* Um bloco de escrita, sem rótulos: o título de um evento é o evento,
+            e a descrição é a linha seguinte da mesma anotação. */}
+        <div>
+          <HeadlineInput
+            aria-label="Título do evento"
+            value={title}
+            onChange={e => {
+              setTitle(e.target.value);
+              if (error) setError('');
+            }}
+            placeholder="O que vai acontecer?"
+            maxLength={200}
+            autoFocus
+          />
+          <NoteField
+            aria-label="Descrição do evento"
+            className="mt-2"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Pauta, observações…"
+            maxLength={2000}
+          />
+        </div>
 
-        <DatePicker label="Data" value={date} onChange={setDate} />
+        {/* A linha do "quando" — a única pergunta que um evento precisa
+            responder para existir. Data, horários e dia inteiro na mesma frase
+            visual, em vez de quatro campos empilhados. */}
+        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+          <DatePicker value={date} onChange={setDate} placeholder="Escolher data" size="sm" />
 
-        {/* Dia inteiro */}
-        <div className="flex items-center justify-between rounded-xl border border-border px-4 py-2.5">
-          <span className="text-sm font-medium text-text-primary">Dia inteiro</span>
+          {/* Os dois horários e o "até" quebram a linha JUNTOS. Soltos no
+              flex de fora, a quebra podia deixar o "até" sozinho no começo da
+              linha de baixo, sem o horário a que ele se refere. */}
+          {!allDay && (
+            <span className="inline-flex items-center gap-2">
+              <TimePicker value={startTime} onChange={setStartTime} size="sm" />
+              <span className="text-sm text-text-soft">até</span>
+              <TimePicker value={endTime} onChange={setEndTime} size="sm" menuAlign="right" />
+            </span>
+          )}
+
+          {/* O interruptor virou pílula: "dia inteiro" é uma escolha do mesmo
+              tipo que as vizinhas, e a linha inteira com moldura e switch
+              pesava mais que a data — o dado que de fato importa. */}
           <button
             type="button"
             role="switch"
             aria-checked={allDay}
             onClick={() => setAllDay(v => !v)}
-            className={`relative w-11 h-6 rounded-full transition-colors ${
-              allDay ? 'bg-primary-vibrant' : 'bg-border'
-            }`}
+            className={`inline-flex items-center gap-1.5 min-h-[40px] sm:min-h-0 px-2.5 py-1.5 rounded-lg border text-[13px] font-semibold
+              transition-all duration-150 active:scale-[0.96]
+              focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60
+              ${allDay
+                ? 'border-primary-vibrant text-primary-vibrant bg-primary-light'
+                : 'border-border text-text-secondary hover:border-text-soft hover:bg-bg-secondary'}`}
           >
-            <span
-              className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-surface shadow transition-transform ${
-                allDay ? 'translate-x-5' : ''
-              }`}
-            />
+            <Sun size={14} />
+            Dia inteiro
           </button>
         </div>
 
-        {!allDay && (
-          <div className="grid grid-cols-2 gap-3">
-            <TimePicker label="Início" value={startTime} onChange={setStartTime} />
-            <TimePicker label="Término" value={endTime} onChange={setEndTime} menuAlign="right" />
-          </div>
-        )}
-
+        {/* Na EDIÇÃO o bloco já começa aberto: os campos avançados costumam ter
+            valor, e escondê-los faria parecer que o evento os perdeu. */}
+        <MoreOptions key={event?.id ?? 'novo'} activeCount={ajustesDefinidos} defaultOpen={isEditing}>
         {/* Repetir nos dias da semana (só na criação; edição mexe num único evento) */}
         {!isEditing && (
           <div>
@@ -410,15 +444,7 @@ export const EventModal: React.FC<EventModalProps> = ({
             fullWidth
           />
         </div>
-
-        <Textarea
-          label="Descrição (opcional)"
-          value={description}
-          onChange={e => setDescription(e.target.value)}
-          placeholder="Detalhes, pauta, observações…"
-          rows={3}
-          maxLength={2000}
-        />
+        </MoreOptions>
 
         {error && <p className="text-sm text-danger">{error}</p>}
 

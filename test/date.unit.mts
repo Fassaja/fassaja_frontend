@@ -4,6 +4,7 @@
  */
 import {
   formatDate,
+  formatDateChip,
   isToday,
   isTomorrow,
   isOverdue,
@@ -68,6 +69,30 @@ check(
 check(
   'formatDate de outro ano inclui o ano',
   formatDate(`${thisYear - 2}-03-15`).includes(String(thisYear - 2)),
+);
+
+// formatDateChip: o rótulo curto dos chips de data nos modais de criação.
+// `hoje` é fixo de propósito — teste que lê o relógio muda de resultado
+// sozinho na virada do ano e vira falha misteriosa numa sexta-feira.
+const HOJE = new Date(2026, 7, 15); // 15 de agosto de 2026
+
+check('chip: hoje vira "Hoje"', formatDateChip('2026-08-15', HOJE) === 'Hoje');
+check('chip: amanhã vira "Amanhã"', formatDateChip('2026-08-16', HOJE) === 'Amanhã');
+check('chip: ontem vira "Ontem"', formatDateChip('2026-08-14', HOJE) === 'Ontem');
+
+// O motivo do helper existir: o pt-BR nativo devolveria "20 de ago." e
+// "10 de jan. de 2027", que num chip ao lado de outros controles quebram a linha.
+check('chip: data próxima é curta, sem "de"', formatDateChip('2026-08-20', HOJE) === '20 ago');
+check('chip: mês do ano corrente omite o ano', formatDateChip('2026-12-01', HOJE) === '1 dez');
+check('chip: outro ano mostra o ano', formatDateChip('2027-01-10', HOJE) === '10 jan 2027');
+check('chip: ano passado também', formatDateChip('2025-11-03', HOJE) === '3 nov 2025');
+check('chip: valor vazio não quebra', formatDateChip('', HOJE) === '');
+
+// A comparação é por DIA local, não por instante: a hora do "hoje" recebido
+// não pode mudar a resposta, senão o rótulo trocaria sozinho às 21h.
+check(
+  'chip: hora do dia não muda o resultado',
+  formatDateChip('2026-08-16', new Date(2026, 7, 15, 23, 59)) === 'Amanhã',
 );
 
 console.log(`\n${passed} passou, ${failed} falhou.`);

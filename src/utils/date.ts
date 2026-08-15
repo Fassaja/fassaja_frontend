@@ -32,6 +32,43 @@ export function todayISO(): string {
   return toISODate(new Date());
 }
 
+const MESES_ABREV = [
+  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+  'jul', 'ago', 'set', 'out', 'nov', 'dez',
+];
+
+/**
+ * Rótulo curto para um CHIP de data — o controle compacto dos modais de
+ * criação, onde `formatDate` não cabe.
+ *
+ * Duas diferenças, ambas por causa do espaço: o pt-BR do `toLocaleDateString`
+ * devolve "15 de ago. de 2026", que num chip ao lado da prioridade e do
+ * projeto quebra a linha sozinho; e o dia mais provável de ser escolhido tem
+ * nome — quem marca uma tarefa para hoje quer ler "Hoje", não a data de hoje.
+ *
+ * `hoje` é injetável para o teste não depender do relógio.
+ */
+export function formatDateChip(dateString: string, hoje: Date = new Date()): string {
+  const date = parseDate(dateString);
+  if (Number.isNaN(date.getTime())) return '';
+
+  // Normaliza os dois lados para meia-noite local: comparar instantes faria
+  // "hoje às 23h" e "hoje às 01h" caírem em dias diferentes.
+  const base = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+  const alvo = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  // Math.round e não trunc: uma virada de horário de verão entre as duas datas
+  // deixa a divisão em 0,96 dia, e o truncamento diria "Hoje" para amanhã.
+  const dias = Math.round((alvo.getTime() - base.getTime()) / 86400000);
+
+  if (dias === 0) return 'Hoje';
+  if (dias === 1) return 'Amanhã';
+  if (dias === -1) return 'Ontem';
+
+  const curto = `${alvo.getDate()} ${MESES_ABREV[alvo.getMonth()]}`;
+  // O ano só aparece quando não é o corrente — fora isso ele é ruído.
+  return alvo.getFullYear() === base.getFullYear() ? curto : `${curto} ${alvo.getFullYear()}`;
+}
+
 export function formatDate(dateString: string): string {
   const date = parseDate(dateString);
   return date.toLocaleDateString('pt-BR', {

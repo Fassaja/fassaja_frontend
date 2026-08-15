@@ -12,8 +12,8 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onNewTask }) => {
   const navigate = useNavigate();
 
   const actions = [
-    { icon: Plus, label: 'Nova Tarefa', color: '#2477FF', onClick: () => onNewTask?.() },
-    { icon: FolderPlus, label: 'Novo Projeto', color: '#22C55E', onClick: () => navigate('/projects') },
+    { icon: Plus, label: 'Nova tarefa', color: '#2477FF', onClick: () => onNewTask?.() },
+    { icon: FolderPlus, label: 'Novo projeto', color: '#22C55E', onClick: () => navigate('/projects') },
     { icon: BarChart3, label: 'Ver Relatórios', color: '#8B5CF6', onClick: () => navigate('/reports') },
     { icon: Calendar, label: 'Calendário', color: '#FB7185', onClick: () => navigate('/calendar') },
   ];

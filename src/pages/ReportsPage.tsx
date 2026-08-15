@@ -101,7 +101,7 @@ const ReportsPage: React.FC = () => {
   // Data for bar chart - tasks by status
   const statusData = [
     { name: 'Pendente', value: stats.pending, fill: '#2477FF' },
-    { name: 'Em Progresso', value: stats.inProgress, fill: '#FBBF24' },
+    { name: 'Em progresso', value: stats.inProgress, fill: '#FBBF24' },
     { name: 'Concluída', value: stats.completed, fill: '#22C55E' },
     { name: 'Atrasada', value: stats.overdue, fill: '#F43F5E' },
   ];

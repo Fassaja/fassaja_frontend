@@ -10,6 +10,8 @@ interface TimePickerProps {
   stepMinutes?: number;
   placeholder?: string;
   menuAlign?: 'left' | 'right';
+  /** `sm` vira um chip do tamanho do conteúdo, para a linha "quando". */
+  size?: 'sm' | 'md';
 }
 
 /**
@@ -25,6 +27,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   stepMinutes = 15,
   placeholder = '--:--',
   menuAlign,
+  size = 'md',
 }) => {
   const options = useMemo(() => {
     const opts: { value: string; label: string }[] = [];
@@ -50,7 +53,8 @@ export const TimePicker: React.FC<TimePickerProps> = ({
       placeholder={placeholder}
       disabled={disabled}
       menuAlign={menuAlign}
-      fullWidth
+      size={size}
+      fullWidth={size !== 'sm'}
     />
   );
 };

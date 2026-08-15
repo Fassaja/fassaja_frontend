@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Check, FolderOpen, User, Users } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
-import { Input } from '@/components/common/Input';
-import { Textarea } from '@/components/common/Textarea';
+import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
 import { Button } from '@/components/common/Button';
 import { OptionSelector } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
@@ -93,7 +92,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Novo Projeto" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title="Novo projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Live preview */}
         <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary">
@@ -116,105 +115,99 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           </div>
         </div>
 
-        <Input
-          label="Nome do projeto"
-          name="name"
-          placeholder="Ex.: Marketing"
-          value={formData.name}
-          onChange={handleChange}
-          error={error && !formData.name.trim() ? error : undefined}
-          disabled={loading}
-          autoFocus
-        />
+        {/* O nome do projeto é o projeto. O cartão acima já mostra o resultado
+            enquanto se digita — um rótulo "Nome do projeto" seria a terceira
+            vez que a mesma tela diz a mesma coisa. */}
+        <div>
+          <HeadlineInput
+            name="name"
+            aria-label="Nome do projeto"
+            placeholder="Como se chama o projeto?"
+            value={formData.name}
+            onChange={handleChange}
+            disabled={loading}
+            maxLength={120}
+            autoFocus
+          />
+          <NoteField
+            name="description"
+            aria-label="Descrição do projeto"
+            className="mt-2"
+            placeholder="Para que serve este projeto?"
+            value={formData.description}
+            onChange={handleChange}
+            disabled={loading}
+          />
+        </div>
 
-        <Textarea
-          label="Descrição"
-          name="description"
-          placeholder="Para que serve este projeto? (opcional)"
-          value={formData.description}
-          onChange={handleChange}
-          disabled={loading}
-          rows={3}
-        />
+        {/* Solo/equipe e a escolha da equipe na mesma linha: é uma decisão só,
+            e separá-las em dois campos fazia a segunda parecer desligada. */}
+        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+          <OptionSelector
+            options={[
+              { value: 'solo', label: 'Solo' },
+              { value: 'team', label: 'Equipe' },
+            ]}
+            value={formData.type}
+            onChange={v => setFormData(prev => ({ ...prev, type: v as 'solo' | 'team' }))}
+            disabled={loading}
+            size="sm"
+          />
 
-        {/* Solo / Equipe */}
-        <OptionSelector
-          label="Tipo de projeto"
-          options={[
-            { value: 'solo', label: 'Solo' },
-            { value: 'team', label: 'Equipe' },
-          ]}
-          value={formData.type}
-          onChange={v => setFormData(prev => ({ ...prev, type: v as 'solo' | 'team' }))}
-          layout="grid"
-          columns={2}
-        />
-
-        {formData.type === 'team' &&
-          (teams.length > 0 ? (
+          {formData.type === 'team' && teams.length > 0 && (
             <Dropdown
-              label="Equipe"
               options={teams.map(t => ({ value: t.id, label: t.name }))}
               value={formData.teamId}
               onChange={v => {
                 setFormData(prev => ({ ...prev, teamId: v }));
                 if (error) setError('');
               }}
-              placeholder="Selecione a equipe"
-              fullWidth
+              placeholder="Escolher equipe"
+              size="sm"
+              disabled={loading}
             />
-          ) : (
-            <p className="text-sm text-text-secondary bg-bg-secondary rounded-xl p-3">
-              Você ainda não tem equipes. Crie uma na aba <span className="font-semibold">Equipe</span> para
-              usar projetos de equipe.
-            </p>
-          ))}
-
-        {/* Color */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">Cor</label>
-          <div className="flex gap-2.5 flex-wrap">
-            {colorOptions.map(color => {
-              const selected = formData.color === color;
-              return (
-                <button
-                  key={color}
-                  type="button"
-                  aria-label={`Cor ${color}`}
-                  aria-pressed={selected}
-                  onClick={() => setFormData(prev => ({ ...prev, color }))}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center text-white transition-transform ${
-                    selected ? 'ring-2 ring-offset-2 ring-offset-white scale-105' : 'hover:scale-105'
-                  }`}
-                  style={{ backgroundColor: color, ...(selected ? { '--tw-ring-color': color } as React.CSSProperties : {}) }}
-                >
-                  {selected && <Check size={18} strokeWidth={3} />}
-                </button>
-              );
-            })}
-          </div>
+          )}
         </div>
 
-        {error && formData.name.trim() && (
-          <p className="text-sm text-danger">{error}</p>
+        {formData.type === 'team' && teams.length === 0 && (
+          <p className="text-sm text-text-secondary bg-bg-secondary rounded-xl p-3">
+            Você ainda não tem equipes. Crie uma na aba <span className="font-semibold">Equipe</span> para
+            usar projetos de equipe.
+          </p>
         )}
 
-        <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            disabled={loading}
-            className="flex-1 rounded-xl"
-          >
+        {/* A cor fica à vista, e não atrás de "mais opções", porque o cartão
+            no topo mostra o efeito dela em tempo real — esconder o controle e
+            deixar o resultado seria só um mistério. Bolinhas menores: é
+            escolha de identidade, não campo obrigatório. */}
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Cor do projeto">
+          {colorOptions.map(color => {
+            const selected = formData.color === color;
+            return (
+              <button
+                key={color}
+                type="button"
+                aria-label={`Cor ${color}`}
+                aria-pressed={selected}
+                onClick={() => setFormData(prev => ({ ...prev, color }))}
+                className={`w-10 h-10 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-white transition-transform ${
+                  selected ? 'ring-2 ring-offset-2 ring-offset-surface scale-105' : 'hover:scale-105'
+                }`}
+                style={{ backgroundColor: color, ...(selected ? { '--tw-ring-color': color } as React.CSSProperties : {}) }}
+              >
+                {selected && <Check size={16} strokeWidth={3} />}
+              </button>
+            );
+          })}
+        </div>
+
+        {error && <p className="text-sm text-danger">{error}</p>}
+
+        <div className="sticky bottom-0 -mx-6 px-6 pt-3 pb-1 bg-surface border-t border-border flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            isLoading={loading}
-            className="flex-1 rounded-xl"
-          >
+          <Button type="submit" variant="primary" isLoading={loading}>
             Criar projeto
           </Button>
         </div>
