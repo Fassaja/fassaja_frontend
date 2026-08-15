@@ -13,6 +13,8 @@ import { IdeasProvider } from '@/contexts/IdeasContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { AppRoutes } from '@/routes/AppRoutes';
 import { TopProgressBar } from '@/components/layout/TopProgressBar';
+import { Analytics } from '@vercel/analytics/react';
+import { sanitizePath } from '@/utils/analyticsPath';
 
 function App() {
   return (
@@ -34,6 +36,19 @@ function App() {
                       <IdeasProvider>
                         <NotificationsProvider>
                           <TopProgressBar />
+                          {/* Contagem de acessos (Vercel Web Analytics). Só
+                              envia em produção; em localhost fica inerte.
+
+                              O `beforeSend` NÃO é enfeite: duas rotas nossas
+                              carregam segredo no endereço, e a de redefinição
+                              de senha leva um token que dá acesso total à
+                              conta por uma hora. Ver utils/analyticsPath.ts. */}
+                          <Analytics
+                            beforeSend={evento => {
+                              const url = sanitizePath(evento.url);
+                              return url ? { ...evento, url } : null;
+                            }}
+                          />
                           <AppRoutes />
                         </NotificationsProvider>
                       </IdeasProvider>
