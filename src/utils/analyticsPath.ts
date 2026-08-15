@@ -27,10 +27,13 @@ const DESCARTAR = ['/reset-password'];
 const MASCARAR: Record<string, string> = { join: '/join/[token]' };
 
 /**
- * Devolve o caminho a registrar, ou `null` para não registrar nada.
+ * Devolve o CAMINHO a registrar, ou `null` para não registrar nada.
  *
  * Aceita caminho com ou sem query; a query é sempre descartada, porque nada
  * do que colocamos nela precisa ser medido.
+ *
+ * Para o que vai ao `beforeSend`, use `sanitizeUrl` — a medição espera uma URL
+ * inteira, e entregar só o caminho faz o servidor recusar com 400.
  */
 export function sanitizePath(url: string): string | null {
   if (!url) return null;
@@ -51,4 +54,26 @@ export function sanitizePath(url: string): string | null {
   if (partes.length > 1 && MASCARAR[partes[0]]) return MASCARAR[partes[0]];
 
   return path;
+}
+
+/**
+ * A URL a enviar à medição, ou `null` para não enviar nada.
+ *
+ * Mantém a origem e troca só o caminho. A primeira versão devolvia o caminho
+ * puro ("/", "/join/[token]"), e o endpoint respondeu **400 em toda visita** —
+ * ele espera uma URL inteira. O erro passou despercebido porque nada disso
+ * roda em localhost: só apareceu no console em produção.
+ */
+export function sanitizeUrl(raw: string): string | null {
+  const path = sanitizePath(raw);
+  if (path === null) return null;
+
+  try {
+    const u = new URL(raw);
+    return `${u.origin}${path}`;
+  } catch {
+    // `raw` relativo (não deve acontecer, mas não custa): devolve o caminho,
+    // que é o melhor possível sem saber a origem.
+    return path;
+  }
 }

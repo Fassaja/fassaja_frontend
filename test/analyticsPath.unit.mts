@@ -2,7 +2,7 @@
  * Testes da higiene do endereço enviado à medição de acessos.
  * Rodar: npm run test
  */
-import { sanitizePath } from '../src/utils/analyticsPath.ts';
+import { sanitizePath, sanitizeUrl } from '../src/utils/analyticsPath.ts';
 
 let passed = 0;
 let failed = 0;
@@ -48,6 +48,18 @@ check('URL absoluta de reset também é descartada', sanitizePath('https://www.f
 // Rota que só COMEÇA parecida não pode ser confundida com a protegida.
 check('/join sozinho não carrega segredo, passa como está', sanitizePath('/join') === '/join');
 check('/resetar não é /reset-password', sanitizePath('/resetar') === '/resetar');
+
+// --- sanitizeUrl: o que de fato vai para a medição ---------------------
+// A primeira versão mandava só o caminho e o endpoint devolvia 400 em TODA
+// visita. A origem tem de ser preservada; o caminho é que é higienizado.
+check('mantém a origem', sanitizeUrl('https://www.fassaja.com/tasks') === 'https://www.fassaja.com/tasks');
+check('raiz continua absoluta', sanitizeUrl('https://www.fassaja.com/') === 'https://www.fassaja.com/');
+check('convite: origem + rótulo', sanitizeUrl('https://www.fassaja.com/join/a420afff8ae107bb') === 'https://www.fassaja.com/join/[token]');
+check('o token real não sobra na URL', !(sanitizeUrl('https://www.fassaja.com/join/a420afff8ae107bb') ?? '').includes('a420afff'));
+check('reset continua descartado', sanitizeUrl('https://www.fassaja.com/reset-password?token=x') === null);
+check('query some, origem fica', sanitizeUrl('https://www.fassaja.com/tasks?project=p1') === 'https://www.fassaja.com/tasks');
+check('porta e host locais preservados', sanitizeUrl('http://localhost:5173/tasks') === 'http://localhost:5173/tasks');
+check('entrada relativa devolve o caminho', sanitizeUrl('/tasks') === '/tasks');
 
 console.log(`\n${passed} passaram, ${failed} falharam`);
 if (failed > 0) process.exit(1);

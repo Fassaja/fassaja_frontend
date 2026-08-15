@@ -14,7 +14,7 @@ import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { AppRoutes } from '@/routes/AppRoutes';
 import { TopProgressBar } from '@/components/layout/TopProgressBar';
 import { Analytics } from '@vercel/analytics/react';
-import { sanitizePath } from '@/utils/analyticsPath';
+import { sanitizeUrl } from '@/utils/analyticsPath';
 
 function App() {
   return (
@@ -45,7 +45,7 @@ function App() {
                               conta por uma hora. Ver utils/analyticsPath.ts. */}
                           <Analytics
                             beforeSend={evento => {
-                              const url = sanitizePath(evento.url);
+                              const url = sanitizeUrl(evento.url);
                               return url ? { ...evento, url } : null;
                             }}
                           />
