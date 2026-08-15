@@ -59,7 +59,7 @@ function resizeImage(file: File, size = 256): Promise<string> {
 const ProfilePage: React.FC = () => {
   const { user } = useUser();
   const { account, updateAvatar } = useAuth();
-  const { tasks } = useTasks();
+  const { tasks, loading: tasksLoading } = useTasks();
   const toast = useToast();
   const xp = useXp();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -221,7 +221,10 @@ const ProfilePage: React.FC = () => {
             Dashboard e na Equipe — menos moldura repetida, e os números do
             app passam a ter uma forma só em toda parte. */}
         <motion.div variants={BLOCO}>
-          <StatStrip stats={stats} />
+          {/* `loading` em vez de esqueleto: a faixa tem altura fixa e os rótulos
+              já são conhecidos, então trocar só os números por traços não move
+              nada na tela. Sem isso, os três saltavam de 0 para o valor real. */}
+          <StatStrip stats={stats} loading={tasksLoading} />
         </motion.div>
 
         {/* Sequência produtiva (foguinhos) */}

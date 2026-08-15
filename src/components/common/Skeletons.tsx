@@ -1,8 +1,23 @@
 import React from 'react';
 import { Card } from './Card';
 
-export const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`animate-pulse bg-border/70 rounded-lg ${className}`} />
+/**
+ * Bloco base de todo esqueleto. A cor e a varredura do brilho vivem na classe
+ * `.skeleton` (index.css) porque o brilho é um pseudo-elemento — Tailwind
+ * inline não alcança `::after`.
+ *
+ * `animate={false}` congela a varredura mantendo o bloco no lugar: serve para
+ * estado de erro, quando o esqueleto ainda reserva o espaço mas não há mais
+ * nada a caminho. Um brilho eterno faz parecer que a tela travou carregando.
+ */
+export const Skeleton: React.FC<{ className?: string; animate?: boolean }> = ({
+  className = '',
+  animate = true,
+}) => (
+  <div
+    className={`${animate ? 'skeleton' : 'bg-border/70'} rounded-lg ${className}`}
+    aria-hidden="true"
+  />
 );
 
 export const DashboardSkeleton: React.FC = () => (

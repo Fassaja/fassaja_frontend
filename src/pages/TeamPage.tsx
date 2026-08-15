@@ -39,6 +39,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
+import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
@@ -88,6 +89,7 @@ const TeamPage: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const showSkeleton = useDeferredLoading(loading);
 
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
@@ -425,7 +427,7 @@ const TeamPage: React.FC = () => {
       </Modal>
 
       {loading ? (
-        <TeamSkeleton />
+        showSkeleton ? <TeamSkeleton /> : null
       ) : teams.length === 0 ? (
         <EmptyState
           mascotState="confused"
