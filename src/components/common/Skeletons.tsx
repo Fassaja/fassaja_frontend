@@ -117,12 +117,27 @@ export const ProjectsSkeleton: React.FC = () => (
   </div>
 );
 
+/**
+ * Calendário/Agenda: mesma forma da grade real (6 semanas, célula da mesma
+ * altura), senão a troca do esqueleto pelo conteúdo empurra a página.
+ */
 export const CalendarSkeleton: React.FC = () => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <Card className="lg:col-span-2 space-y-3">
-      <Skeleton className="h-6 w-40 mb-4" />
-      <div className="grid grid-cols-7 gap-2">
-        {Array.from({ length: 35 }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-xl" />)}
+    <Card className="lg:col-span-2">
+      <div className="flex items-center justify-between mb-4">
+        <Skeleton className="h-6 w-40" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-9 rounded-xl" />
+          <Skeleton className="h-9 w-9 rounded-xl" />
+        </div>
+      </div>
+      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Skeleton key={`w${i}`} className="h-4 w-8 mx-auto my-1" />
+        ))}
+        {Array.from({ length: 42 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 sm:h-16 rounded-xl" />
+        ))}
       </div>
     </Card>
     <Card className="space-y-3">

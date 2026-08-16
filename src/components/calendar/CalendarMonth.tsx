@@ -1,9 +1,8 @@
 import React from 'react';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
-import { Card } from '@/components/common/Card';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { toISODate } from '@/utils/date';
+import { MonthGrid, DayMarker } from '@/components/common/MonthGrid';
+import { tint, chipText } from '@/utils/color';
 
 interface CalendarMonthProps {
   date: Date;
@@ -17,6 +16,9 @@ interface CalendarMonthProps {
   selectedDate?: Date;
 }
 
+/** Cor dos itens sem projeto, igual na legenda e nos pontos da grade. */
+const NO_PROJECT_COLOR = '#94A3B8';
+
 export const CalendarMonth: React.FC<CalendarMonthProps> = ({
   date,
   onDateChange,
@@ -28,177 +30,112 @@ export const CalendarMonth: React.FC<CalendarMonthProps> = ({
   selectedDate,
 }) => {
   const projectColor = (projectId?: string) =>
-    projects.find(p => p.id === projectId)?.color ?? '#94A3B8';
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const todayISO = toISODate(new Date());
-  const selectedISO = selectedDate ? toISODate(selectedDate) : null;
+    projects.find(p => p.id === projectId)?.color ?? NO_PROJECT_COLOR;
 
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
+  /**
+   * Um ponto por tarefa que vence no dia. Atrasadas vêm primeiro: quando há
+   * mais tarefas do que pontos, a que precisa de atenção é justamente a que
+   * não pode cair no "+N".
+   */
+  const markersFor = (iso: string): DayMarker[] =>
+    tasks
+      .filter(t => t.dueDate === iso)
+      .map(t => ({ color: projectColor(t.projectId), alert: t.status === 'overdue' }))
+      .sort((a, b) => Number(!!b.alert) - Number(!!a.alert));
 
-  const monthNames = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  // Quantas tarefas cada filtro alcança NO MÊS À VISTA. Sem isso, filtrar por
+  // um projeto sem prazos neste mês esvazia a grade sem explicar por quê.
+  const monthPrefix = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const monthTasks = tasks.filter(t => t.dueDate?.startsWith(monthPrefix));
+  const overdueCount = monthTasks.filter(t => t.status === 'overdue').length;
+  const countFor = (value: string) =>
+    value === '__none__'
+      ? monthTasks.filter(t => !t.projectId).length
+      : monthTasks.filter(t => t.projectId === value).length;
+
+  const filters = [
+    ...projects.map(p => ({ value: p.id, label: p.name, color: p.color })),
+    { value: '__none__', label: 'Sem projeto', color: NO_PROJECT_COLOR },
   ];
 
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-  const getTasksForDate = (day: number) => {
-    const dateStr = toISODate(new Date(year, month, day));
-    return tasks.filter(t => t.dueDate === dateStr);
-  };
-
-  const handlePrevMonth = () => {
-    onDateChange(new Date(year, month - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    onDateChange(new Date(year, month + 1, 1));
-  };
-
-  const handleDayClick = (day: number) => {
-    onSelectDate(new Date(year, month, day));
-  };
-
-  const days = [];
-  for (let i = 0; i < startingDayOfWeek; i++) {
-    days.push(null);
-  }
-  for (let i = 1; i <= daysInMonth; i++) {
-    days.push(i);
-  }
-
   return (
-    <Card>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-text-primary">
-          {monthNames[month]} {year}
-        </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handlePrevMonth}
-            aria-label="Mês anterior"
-            className="p-2 rounded-xl border border-border hover:bg-bg-secondary transition-colors"
-          >
-            <ChevronLeft size={20} className="text-text-secondary" />
-          </button>
-          <button
-            onClick={handleNextMonth}
-            aria-label="Próximo mês"
-            className="p-2 rounded-xl border border-border hover:bg-bg-secondary transition-colors"
-          >
-            <ChevronRight size={20} className="text-text-secondary" />
-          </button>
-        </div>
-      </div>
-
-      {/* Week days */}
-      <div className="grid grid-cols-7 gap-1.5 mb-2">
-        {weekDays.map(day => (
-          <div key={day} className="text-center text-xs font-bold text-text-secondary py-1">
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Days */}
-      <div className="grid grid-cols-7 gap-1.5">
-        {days.map((day, index) => {
-          const dayTasks = day ? getTasksForDate(day) : [];
-          const isToday = day !== null && toISODate(new Date(year, month, day)) === todayISO;
-          const isSelected =
-            day !== null && selectedISO !== null && toISODate(new Date(year, month, day)) === selectedISO;
-          // Esta tela é sobre PRAZOS: um dia com tarefa atrasada precisa gritar
-          // mais alto que a cor do projeto.
-          const hasOverdue = dayTasks.some(t => t.status === 'overdue');
-
-          return (
-            <button
-              key={index}
-              onClick={() => day && handleDayClick(day)}
-              disabled={!day}
-              aria-current={isToday ? 'date' : undefined}
-              aria-pressed={day ? isSelected : undefined}
-              className={`h-12 sm:h-14 p-1 rounded-xl transition-all flex flex-col items-center justify-center gap-1 border ${
-                !day
-                  ? 'cursor-default border-transparent'
-                  : isToday
-                  ? 'bg-primary-vibrant text-white font-bold border-transparent shadow-sm shadow-primary-vibrant/30'
-                  : isSelected
-                  ? 'bg-primary-light text-primary-vibrant font-bold border-primary-vibrant'
-                  : hasOverdue
-                  ? 'border-danger/40 bg-danger/5 hover:bg-danger/10'
-                  : 'border-transparent hover:bg-bg-secondary hover:border-border'
-              }`}
-            >
-              <span className="text-sm font-medium">{day}</span>
-              {dayTasks.length > 0 && (
-                <span className="flex items-center gap-0.5 h-1.5">
-                  {dayTasks.slice(0, 3).map((t, i) => (
-                    <span
-                      key={i}
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        !isToday && t.status === 'overdue' ? 'bg-danger' : ''
-                      }`}
-                      style={
-                        isToday
-                          ? { backgroundColor: 'rgba(255,255,255,0.9)' }
-                          : t.status === 'overdue'
-                          ? undefined
-                          : { backgroundColor: projectColor(t.projectId) }
-                      }
-                    />
-                  ))}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Legenda / filtro por projeto */}
-      {projects.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 mt-5 pt-4 border-t border-border">
-          {[
-            ...projects.map(p => ({ value: p.id, label: p.name, color: p.color })),
-            { value: '__none__', label: 'Sem projeto', color: '#94A3B8' },
-          ].map(item => {
-            const active = activeProject === item.value;
-            return (
+    <MonthGrid
+      month={date}
+      onMonthChange={onDateChange}
+      selectedDate={selectedDate ?? new Date()}
+      onSelectDate={onSelectDate}
+      markersFor={markersFor}
+      noun="tarefa"
+      summary={
+        monthTasks.length === 0 ? (
+          'Nenhum prazo neste mês'
+        ) : (
+          <>
+            {monthTasks.length} {monthTasks.length === 1 ? 'prazo' : 'prazos'} neste mês
+            {overdueCount > 0 && (
+              <span className="text-danger font-semibold"> · {overdueCount} atrasado{overdueCount === 1 ? '' : 's'}</span>
+            )}
+          </>
+        )
+      }
+      footer={
+        projects.length > 0 ? (
+          <div className="mt-5 pt-4 border-t border-border">
+            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrar por projeto">
+              {/* "Todos" é um chip como os outros, e não um link que só aparece
+                  quando há filtro: assim o estado sem filtro fica visível — dá
+                  para ver que nada está escondido sem precisar deduzir. */}
               <button
-                key={item.value}
                 type="button"
-                onClick={() => onProjectFilter?.(active ? 'all' : item.value)}
-                className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-all active:scale-95 ${
-                  active
-                    ? 'border-transparent text-white'
+                onClick={() => onProjectFilter?.('all')}
+                aria-pressed={activeProject === 'all'}
+                className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-all active:scale-95 ${
+                  activeProject === 'all'
+                    ? 'border-primary-vibrant bg-primary-light text-primary-vibrant'
                     : 'border-border text-text-secondary hover:bg-bg-secondary'
                 }`}
-                style={active ? { backgroundColor: item.color } : undefined}
               >
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: active ? 'rgba(255,255,255,0.9)' : item.color }}
-                />
-                {item.label}
+                Todos
               </button>
-            );
-          })}
-          {activeProject !== 'all' && (
-            <button
-              type="button"
-              onClick={() => onProjectFilter?.('all')}
-              className="text-xs font-semibold text-primary-vibrant hover:text-primary-hover ml-1"
-            >
-              Mostrar todos
-            </button>
-          )}
-        </div>
-      )}
-    </Card>
+
+              {filters.map(item => {
+                const active = activeProject === item.value;
+                const count = countFor(item.value);
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => onProjectFilter?.(active ? 'all' : item.value)}
+                    aria-pressed={active}
+                    className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border transition-all active:scale-95 ${
+                      active ? 'font-semibold' : 'border-border text-text-secondary hover:bg-bg-secondary'
+                    } ${count === 0 && !active ? 'opacity-50' : ''}`}
+                    // Ativo: fundo tingido com a cor do projeto e texto na mesma
+                    // cor legível — o fundo sólido de antes exigia texto branco,
+                    // que some sobre projetos de cor clara (amarelo, verde-claro).
+                    style={
+                      active
+                        ? {
+                            backgroundColor: tint(item.color, 'medium'),
+                            borderColor: tint(item.color, 'strong'),
+                            color: chipText(item.color),
+                          }
+                        : undefined
+                    }
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    {item.label}
+                    <span className={active ? '' : 'text-text-soft'}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : undefined
+      }
+    />
   );
 };

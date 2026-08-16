@@ -10,6 +10,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { toISODate } from '@/utils/date';
+import { tint, chipText } from '@/utils/color';
 import { Task } from '@/types/task';
 
 /**
@@ -22,6 +23,8 @@ const PRIORITY: Record<Task['priority'], { label: string; dot: string }> = {
   medium: { label: 'Média', dot: 'bg-priority-medium' },
   low: { label: 'Baixa', dot: 'bg-priority-low' },
 };
+
+const PRIORITY_ORDER: Record<Task['priority'], number> = { high: 0, medium: 1, low: 2 };
 
 const CalendarPage: React.FC = () => {
   const { tasks, completeTask, loading } = useTasks();
@@ -38,7 +41,16 @@ const CalendarPage: React.FC = () => {
   const visibleTasks = tasks.filter(t => matchesFilter(t.projectId));
 
   const selectedDateStr = toISODate(selectedDate);
-  const tasksForSelectedDate = visibleTasks.filter(t => t.dueDate === selectedDateStr);
+  /**
+   * Ordem do painel: atrasadas primeiro, concluídas por último e o resto por
+   * prioridade. Na ordem de chegada, uma tarefa atrasada podia ficar embaixo
+   * de três já concluídas — que é o oposto do que a tela existe para mostrar.
+   */
+  const rank = (t: Task) =>
+    t.status === 'completed' ? 3 : t.status === 'overdue' ? 0 : 1;
+  const tasksForSelectedDate = visibleTasks
+    .filter(t => t.dueDate === selectedDateStr)
+    .sort((a, b) => rank(a) - rank(b) || PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
 
   return (
     <AppLayout title="Calendário" subtitle="Os prazos das suas tarefas, mês a mês.">
@@ -86,11 +98,24 @@ const CalendarPage: React.FC = () => {
                   const overdue = task.status === 'overdue';
                   const priority = PRIORITY[task.priority];
 
+                  const project = projects.find(p => p.id === task.projectId);
+
                   return (
                     <li
                       key={task.id}
-                      className={`p-3 rounded-xl border flex items-start gap-3 ${
-                        overdue ? 'border-danger/30 bg-danger/10' : 'border-border bg-bg-secondary'
+                      /* A barra da esquerda é a cor do projeto: liga o item ao
+                         ponto colorido que ele desenha na grade ao lado. */
+                      style={
+                        project && !completed
+                          ? { borderLeftColor: project.color, borderLeftWidth: 3 }
+                          : undefined
+                      }
+                      className={`p-3 rounded-xl border flex items-start gap-3 transition-colors ${
+                        completed
+                          ? 'border-border bg-bg-secondary/50'
+                          : overdue
+                          ? 'border-danger/30 bg-danger/10'
+                          : 'border-border bg-bg-secondary'
                       }`}
                     >
                       <button
@@ -111,10 +136,25 @@ const CalendarPage: React.FC = () => {
                         >
                           {task.title}
                         </p>
-                        <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary mt-1">
-                          <span className={`w-2 h-2 rounded-full ${priority.dot}`} />
-                          {priority.label}
-                          {overdue && <span className="text-danger font-semibold">· Atrasada</span>}
+                        <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-secondary mt-1">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className={`w-2 h-2 rounded-full ${priority.dot}`} />
+                            {priority.label}
+                          </span>
+                          {/* De qual projeto a tarefa é: sem o filtro ligado, a
+                              lista mistura projetos e só o título não diz. */}
+                          {project && (
+                            <span
+                              className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md font-medium max-w-full truncate"
+                              style={{
+                                backgroundColor: tint(project.color, 'medium'),
+                                color: chipText(project.color),
+                              }}
+                            >
+                              {project.name}
+                            </span>
+                          )}
+                          {overdue && <span className="text-danger font-semibold">Atrasada</span>}
                         </span>
                       </div>
                     </li>
