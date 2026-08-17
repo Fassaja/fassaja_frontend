@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle, Lightbulb, X } from 'lucide-react';
+import { Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle, Lightbulb, ListChecks, Loader2, X } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -13,7 +13,6 @@ import { Select } from '@/components/common/Select';
 import { DatePicker } from '@/components/common/DatePicker';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Skeleton } from '@/components/common/Skeletons';
-import { Mascot } from '@/components/mascot/Mascot';
 import { Modal } from '@/components/common/Modal';
 import { AiHowToModal } from '@/components/ai/AiHowToModal';
 import { useCelebration } from '@/contexts/CelebrationContext';
@@ -384,49 +383,60 @@ const AiAssistantPage: React.FC = () => {
   return (
     <AppLayout
       title="Assistente de IA"
-      subtitle="Cole um documento, descreva o que quer, e a IA monta o projeto e os cards para você revisar."
+      subtitle="Rascunhos de projeto a partir de um documento"
     >
-      {/* HERO */}
-      <div className="mb-6 overflow-hidden rounded-2xl border border-primary-vibrant/30 bg-gradient-to-r from-primary-light via-primary-light/60 to-surface shadow-sm">
-        <div className="flex items-center gap-4 p-5 sm:p-6">
-          <motion.img
-            src="/bobapontando.png"
-            alt=""
-            className="hidden sm:block w-24 h-24 object-contain drop-shadow-md shrink-0"
-            animate={{ y: [0, -6, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <div className="flex-1 min-w-0">
-            {/* items-start + mt: no mobile o título quebra em duas linhas e, com
-                items-center, o ícone ficava flutuando no meio do bloco em vez de
-                acompanhar a primeira linha. shrink-0 impede que o flex o achate. */}
-            <div className="flex items-start gap-2">
-              <Sparkles size={18} className="mt-0.5 shrink-0 text-primary-vibrant" />
-              <h2 className="text-base sm:text-lg font-bold text-text-primary">
-                Transforme documentos em projetos
-              </h2>
-            </div>
-            <p className="text-sm text-text-secondary mt-1">
-              Envie um texto ou arquivo e deixe a IA montar os cards. Você revisa e aprova.
-            </p>
-          </div>
-          {/* O `aria-label` continua sendo o nome acessível: no mobile só sobra
-              o ícone, e lá a dica não existe (não há hover). Ela acrescenta a
-              duração no desktop, onde o rótulo já aparece. */}
-          <Tooltip content="Como usar o Assistente" description="Tour rápido, cerca de 1 minuto.">
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<HelpCircle size={16} />}
-              onClick={() => setShowHowTo(true)}
-              aria-label="Como usar o Assistente de IA"
-              className="shrink-0"
-            >
-              <span className="hidden sm:inline">Como usar</span>
-              <span className="hidden sm:inline font-normal text-text-soft">· ~1 min</span>
-            </Button>
-          </Tooltip>
+      {/*
+        Aqui havia um banner de degradê com o mascote flutuando e a manchete
+        "Transforme documentos em projetos". Três problemas, e o terceiro é o
+        que decidiu a remoção:
+
+        1. Vendia o que a pessoa já comprou — ela clicou em "Assistente de IA"
+           no menu para chegar aqui.
+        2. Repetia o subtítulo da página e o próprio corpo do banner: a mesma
+           frase dita três vezes, empilhada.
+        3. Empurrava a ferramenta para baixo da dobra num notebook. Cento e
+           poucos pixels do espaço mais valioso da tela ocupados por adjetivo.
+
+        No lugar entra a barra abaixo: mesma altura, carregando o número que
+        realmente muda uma decisão — quantos usos sobraram — que antes vivia
+        como texto cinza no rodapé da coluna da esquerda, onde só era visto
+        depois de gastar um.
+      */}
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <div className="flex items-center gap-2 text-sm">
+          {aiEnabled === false ? (
+            <span className="inline-flex items-center gap-1.5 text-text-secondary">
+              <Info size={15} className="shrink-0" />
+              Modo demonstração — a IA real está desativada.
+            </span>
+          ) : status ? (
+            <span className="text-text-secondary">
+              <strong
+                className={`font-semibold tabular-nums ${
+                  status.remaining === 0 ? 'text-danger' : 'text-text-primary'
+                }`}
+              >
+                {status.remaining} de {status.limit}
+              </strong>{' '}
+              usos disponíveis esta semana
+            </span>
+          ) : (
+            <span className="text-text-soft">Carregando usos disponíveis…</span>
+          )}
         </div>
+
+        <Tooltip content="Como usar o Assistente" description="Tour rápido, cerca de 1 minuto.">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<HelpCircle size={16} />}
+            onClick={() => setShowHowTo(true)}
+            aria-label="Como usar o Assistente de IA"
+            className="shrink-0"
+          >
+            <span className="hidden sm:inline">Como usar</span>
+          </Button>
+        </Tooltip>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -442,15 +452,6 @@ const AiAssistantPage: React.FC = () => {
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
         >
-          {aiEnabled === false && (
-            <div className="flex items-start gap-2 rounded-lg border border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-300">
-              <Info size={16} className="mt-0.5 shrink-0" />
-              <span>
-                <strong>Modo demonstração:</strong> a IA real está desativada.
-              </span>
-            </div>
-          )}
-
           {/* Entrada em 2 colunas (em telas largas): documento | comando.
               min-w-0 nas colunas é obrigatório: item de grid tem min-width:auto
               e NÃO encolhe abaixo da largura mínima do conteúdo. Sem isso, um
@@ -479,8 +480,8 @@ const AiAssistantPage: React.FC = () => {
           </div>
           <p className="-mt-1 text-xs text-text-secondary">
             {mode === 'structure'
-              ? 'A IA monta um projeto com os passos do documento.'
-              : 'A IA analisa o documento e sugere tarefas de melhoria.'}
+              ? 'Um projeto com um card para cada passo encontrado no documento.'
+              : 'Uma lista de melhorias sugeridas a partir do documento.'}
           </p>
 
           {/* flex-wrap: no celular "Documento de referência" + "Importar
@@ -565,31 +566,28 @@ const AiAssistantPage: React.FC = () => {
             onClick={handleGenerate}
             disabled={!canGenerate}
             isLoading={generating}
-            icon={<Sparkles size={18} />}
+            icon={<ListChecks size={18} />}
           >
-            {generating ? 'Gerando rascunho...' : 'Gerar rascunho'}
+            {generating ? 'Gerando rascunho…' : 'Gerar rascunho'}
           </Button>
 
           {generateError && <p className="text-xs text-danger">{generateError}</p>}
 
-          {aiEnabled && status && (
-            <p className="text-xs text-text-secondary">
-              Usos da IA nesta semana:{' '}
-              <strong className={status.remaining === 0 ? 'text-danger' : 'text-text-primary'}>
-                {status.remaining} de {status.limit} restantes
-              </strong>
-              .
-            </p>
-          )}
-
+          {/* Colada no botão de propósito: é a resposta à hesitação de quem
+              está prestes a clicar. No subtítulo da página ela não serviria —
+              lá o texto é truncado e fica escondido no celular. */}
           <p className="text-xs text-text-secondary">
             Nada é salvo até você revisar e aprovar o rascunho.
           </p>
 
+          {/* A ressalva de privacidade FICA: é a única linha desta coluna que
+              informa algo que a pessoa não teria como deduzir, e some junto com
+              a IA real no modo demonstração. O "nada é salvo" subiu para o
+              subtítulo da página, e o contador de usos para a barra do topo. */}
           {aiEnabled && (
             <p className="flex items-start gap-1.5 text-xs text-text-secondary">
               <Info size={13} className="mt-0.5 shrink-0" />
-              <span>Seu documento é enviado à IA (Anthropic) para análise.</span>
+              <span>O documento é enviado à Anthropic para análise.</span>
             </p>
           )}
           </div>
@@ -606,10 +604,10 @@ const AiAssistantPage: React.FC = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <Card className="h-full flex flex-col items-center gap-5 py-8">
-                  <Mascot state="strong" size="md" />
-                  <p className="font-medium text-text-primary">
-                    A IA está montando os cards...
+                <Card className="h-full flex flex-col gap-5 py-6">
+                  <p className="flex items-center gap-2 text-sm font-medium text-text-secondary">
+                    <Loader2 size={16} className="animate-spin shrink-0 text-primary-vibrant" />
+                    Analisando o documento e montando a proposta…
                   </p>
                   <div className="w-full space-y-3">
                     <Skeleton className="h-5 w-1/2" />
@@ -634,7 +632,7 @@ const AiAssistantPage: React.FC = () => {
                   <EmptyState
                     mascotState="happy"
                     title="Nenhum rascunho ainda"
-                    description="Preencha o documento à esquerda e clique em Gerar rascunho para ver a proposta da IA aqui."
+                    description="Preencha o documento acima e clique em Gerar rascunho. A proposta aparece aqui para você revisar."
                   />
                 </Card>
               </motion.div>
@@ -646,8 +644,12 @@ const AiAssistantPage: React.FC = () => {
                 exit={{ opacity: 0 }}
                 className="flex flex-col gap-4"
               >
-                {/* Cabeçalho do projeto proposto */}
-                <Card className="flex flex-col gap-3">
+                {/* Cabeçalho do rascunho: seção, não Card.
+                    Emoldurar isto dava ao painel de controle o mesmo peso
+                    visual dos cards propostos — e são eles o conteúdo. Com a
+                    moldura fora, a hierarquia passa a vir do tamanho do texto
+                    e do espaço, que é de onde ela deveria vir. */}
+                <div className="flex flex-col gap-3">
                   {/* A IA falhou: o rascunho é genérico, MAS o uso não foi
                       cobrado — deixamos isso explícito para a pessoa não achar
                       que gastou uma das 5 gerações da semana à toa. */}
@@ -665,11 +667,9 @@ const AiAssistantPage: React.FC = () => {
                       "Gerar de novo" + "Descartar" não cabem numa linha só. */}
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     {draft.generatedBy === 'ai' ? (
-                      <Badge variant="purple">
-                        <Sparkles size={11} className="inline mr-1 -mt-0.5" /> Feito com IA
-                      </Badge>
+                      <Badge variant="info">Rascunho · gerado por IA</Badge>
                     ) : (
-                      <Badge variant="warning">Demonstração (genérico)</Badge>
+                      <Badge variant="warning">Rascunho · exemplo genérico</Badge>
                     )}
                     <div className="flex items-center gap-3">
                       {/* Quando `canGenerate` é falso o botão desabilita e
@@ -767,16 +767,16 @@ const AiAssistantPage: React.FC = () => {
                         : ''}
                     </p>
                   )}
-                </Card>
+                </div>
 
                 {/* Sugestões + cards lado a lado (em telas largas) quando há sugestões */}
                 <div className={`grid items-start gap-4 ${suggestions.length > 0 ? '2xl:grid-cols-5' : 'grid-cols-1'}`}>
                 {/* Sugestões de melhoria (balões) — modo "Analisar melhorias" */}
                 {suggestions.length > 0 && (
-                  <Card className="flex flex-col gap-3 border-purple-200 dark:border-purple-500/30 bg-purple-50/40 dark:bg-purple-500/10 2xl:col-span-2">
+                  <section className="flex flex-col gap-3 2xl:col-span-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Lightbulb size={18} className="text-purple-500 dark:text-purple-400" />
+                        <Lightbulb size={18} className="text-text-secondary" />
                         <h3 className="font-semibold text-text-primary">Sugestões de melhoria</h3>
                       </div>
                       <button
@@ -787,7 +787,7 @@ const AiAssistantPage: React.FC = () => {
                       </button>
                     </div>
                     <p className="-mt-1 text-xs text-text-secondary">
-                      Ideias da IA. Toque em <Plus size={11} className="inline" /> para virar um card.
+                      Toque em <Plus size={11} className="inline" /> para transformar em card.
                     </p>
                     <div className="flex flex-col gap-3">
                       <AnimatePresence>
@@ -804,12 +804,12 @@ const AiAssistantPage: React.FC = () => {
                               exit={{ opacity: 0, x: 60, scale: 0.85 }}
                               transition={{ duration: 0.2 }}
                               className={`relative flex items-start gap-2 rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-colors ${
-                                added ? 'border-green-200 dark:border-green-500/30 bg-green-50/60 dark:bg-green-500/10' : 'border-purple-200 dark:border-purple-500/30 bg-surface'
+                                added ? 'border-green-200 dark:border-green-500/30 bg-green-50/60 dark:bg-green-500/10' : 'border-border bg-surface'
                               }`}
                             >
                               <span
                                 className={`absolute -bottom-1 left-4 h-3 w-3 rotate-45 border-b border-r ${
-                                  added ? 'border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10' : 'border-purple-200 dark:border-purple-500/30 bg-surface'
+                                  added ? 'border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10' : 'border-border bg-surface'
                                 }`}
                               />
                               <div className="flex-1 min-w-0">
@@ -873,7 +873,7 @@ const AiAssistantPage: React.FC = () => {
                         })}
                       </AnimatePresence>
                     </div>
-                  </Card>
+                  </section>
                 )}
 
                 {/* Cards (estrutura base, sempre à direita) */}
@@ -887,14 +887,39 @@ const AiAssistantPage: React.FC = () => {
                   </Button>
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <motion.div
+                  className="flex flex-col gap-3"
+                  initial="hidden"
+                  animate="shown"
+                  variants={{ shown: { transition: { staggerChildren: 0.04 } } }}
+                >
                   {draft.cards.length === 0 && (
                     <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-text-secondary">
                       Nenhum card ainda. Adicione as sugestões acima ou crie um card manualmente.
                     </p>
                   )}
+                  {/* Não dá para usar o AnimatedList aqui: ele nasce com
+                      `initial={false}` — de propósito, para uma lista de
+                      tarefas não animar inteira a cada carga de página —, e é
+                      exatamente a entrada que interessa neste caso. Mas as
+                      duas lições dele valem e estão aplicadas abaixo. */}
+                  <AnimatePresence mode="popLayout" initial={false}>
                   {draft.cards.map((card) => (
-                    <Card key={card.id} padding="sm" className="flex flex-col gap-2">
+                    <motion.div
+                      key={card.id}
+                      /* `layout="position"`, não `layout`: o layout completo
+                         interpola também a ALTURA, e o texto do card aparece
+                         esticado por alguns quadros. Mesma razão registrada em
+                         common/AnimatedList. */
+                      layout="position"
+                      variants={{
+                        hidden: { opacity: 0, y: 10 },
+                        shown: { opacity: 1, y: 0 },
+                      }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    >
+                    <Card padding="sm" className="flex flex-col gap-2">
                       <div className="flex items-start gap-2">
                         <input
                           className="flex-1 font-medium text-text-primary bg-transparent border-b border-transparent focus:border-border focus:outline-none py-1"
@@ -977,8 +1002,10 @@ const AiAssistantPage: React.FC = () => {
                         )}
                       </div>
                     </Card>
+                    </motion.div>
                   ))}
-                </div>
+                  </AnimatePresence>
+                </motion.div>
                 </div>
                 </div>
 

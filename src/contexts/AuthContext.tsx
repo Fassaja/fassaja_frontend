@@ -23,6 +23,11 @@ export interface Account {
   // Dias da sequência (0=domingo … 6=sábado). Fonte de verdade é o servidor;
   // hidratado no login e no /auth/me, espelhado no UserContext.
   streakDays?: number[];
+  // Metas de tarefas por dia e por semana. Opcionais pelo mesmo motivo dos
+  // outros campos novos: uma sessão gravada no localStorage antes desta versão
+  // não as tem, e quem lê precisa tolerar a ausência em vez de assumir zero.
+  dailyGoal?: number;
+  weeklyGoal?: number;
   nameChangedAt?: string | null;
   passwordChangedAt?: string | null;
   /**
@@ -99,7 +104,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
-  const { updateUser, setScope } = useUser();
+  const { updateUser, setScope, hydrateGoals } = useUser();
   const toast = useToast();
 
   const [account, setAccount] = useState<Account | null>(() =>
@@ -167,6 +172,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     guestTasksStore.clear();
     setScope(acc.id); // carrega metas/preferências/sequência desta conta
     syncAccount(acc);
+    // Depois do setScope, e com o id explícito: a reconciliação lê o
+    // localStorage daquela conta direto, sem depender do estado recém-trocado.
+    hydrateGoals(acc.id, { daily: acc.dailyGoal, weekly: acc.weeklyGoal });
     hydrateProductiveDays();
   };
 
@@ -217,6 +225,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .get<Account>('/auth/me')
         .then(acc => {
           syncAccount(acc);
+          // Também no F5 estando logado — é o caminho mais percorrido, e é por
+          // ele que a meta salva em outro aparelho chega até aqui.
+          hydrateGoals(acc.id, { daily: acc.dailyGoal, weekly: acc.weeklyGoal });
           hydrateProductiveDays();
         })
         .catch((err: Error & { status?: number }) => {

@@ -31,6 +31,7 @@ import {
   AccountNameSection,
   AccountPasswordSection,
 } from '@/components/settings/AccountSections';
+import { GOAL_LIMITS, clampGoal } from '@/utils/goals';
 import { useUser, NotificationPrefs } from '@/contexts/UserContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -118,10 +119,9 @@ const ActionRow: React.FC<{
   </button>
 );
 
-const GOAL_MAX = 999;
 
 const SettingsPage: React.FC = () => {
-  const { user, updateUser } = useUser();
+  const { user, updateUser, saveGoals } = useUser();
   const { preference, resolved, setPreference } = useTheme();
   const toast = useToast();
   const navigate = useNavigate();
@@ -184,21 +184,26 @@ const SettingsPage: React.FC = () => {
     setGoals({ daily: String(user.dailyGoal), weekly: String(user.weeklyGoal) });
   }, [user.dailyGoal, user.weeklyGoal]);
 
-  const clampGoal = (raw: string) => Math.min(GOAL_MAX, Math.max(0, parseInt(raw, 10) || 0));
+
 
   const commitGoals = () => {
-    const daily = clampGoal(goals.daily);
-    const weekly = clampGoal(goals.weekly);
+    const daily = clampGoal(goals.daily, 'daily');
+    const weekly = clampGoal(goals.weekly, 'weekly');
     setGoals({ daily: String(daily), weekly: String(weekly) });
     if (daily === user.dailyGoal && weekly === user.weeklyGoal) return;
-    updateUser({ dailyGoal: daily, weeklyGoal: weekly });
+    // saveGoals (e não updateUser): a meta agora é do servidor, e gravar só no
+    // estado local voltaria a perdê-la ao trocar de aparelho.
+    saveGoals({
+      ...(daily !== user.dailyGoal ? { daily } : {}),
+      ...(weekly !== user.weeklyGoal ? { weekly } : {}),
+    });
     setGoalsSaved(true);
     if (savedTimer.current) clearTimeout(savedTimer.current);
     savedTimer.current = setTimeout(() => setGoalsSaved(false), 2500);
   };
 
   const weeklyBelowDaily =
-    clampGoal(goals.weekly) > 0 && clampGoal(goals.weekly) < clampGoal(goals.daily);
+    clampGoal(goals.weekly, 'weekly') < clampGoal(goals.daily, 'daily');
 
   const toggleNotif = (key: keyof NotificationPrefs) =>
     updateUser({ notifications: { ...user.notifications, [key]: !user.notifications[key] } });
@@ -273,8 +278,8 @@ const SettingsPage: React.FC = () => {
                     <Input
                       label="Meta diária de tarefas"
                       type="number"
-                      min={0}
-                      max={GOAL_MAX}
+                      min={GOAL_LIMITS.daily.min}
+                      max={GOAL_LIMITS.daily.max}
                       value={goals.daily}
                       onChange={e => setGoals(g => ({ ...g, daily: e.target.value }))}
                       onBlur={commitGoals}
@@ -283,8 +288,8 @@ const SettingsPage: React.FC = () => {
                     <Input
                       label="Meta semanal de tarefas"
                       type="number"
-                      min={0}
-                      max={GOAL_MAX}
+                      min={GOAL_LIMITS.weekly.min}
+                      max={GOAL_LIMITS.weekly.max}
                       value={goals.weekly}
                       onChange={e => setGoals(g => ({ ...g, weekly: e.target.value }))}
                       onBlur={commitGoals}

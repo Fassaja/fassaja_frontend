@@ -1,7 +1,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { mockUser } from '@/data/mockUser';
 import { todayISO } from '@/utils/streak';
-import { recordProductiveDay as apiRecordProductiveDay } from '@/services/authService';
+import {
+  recordProductiveDay as apiRecordProductiveDay,
+  updateGoals as apiUpdateGoals,
+} from '@/services/authService';
+import { GOAL_DEFAULTS, clampGoal, clampGoals, shouldSeed, type Goals } from '@/utils/goals';
 
 export interface NotificationPrefs {
   pending: boolean;
@@ -30,9 +33,25 @@ interface UserContextValue {
   recordProductiveDay: () => void;
   // Troca o "escopo" dos dados por conta (id do usuário) ou null (visitante).
   setScope: (scope: string | null) => void;
+  /** Salva as metas no servidor (e localmente). Visitante fica só local. */
+  saveGoals: (goals: Partial<Goals>) => void;
+  /** Reconcilia as metas locais com as do servidor no login/hidratação. */
+  hydrateGoals: (scopeId: string, server: Partial<Goals>) => void;
 }
 
 const STORAGE_KEY = 'fassaja_user';
+
+/**
+ * Marca que a meta desta conta já foi reconciliada com o servidor.
+ *
+ * Chave própria em vez de um campo no perfil porque ela não é dado do usuário
+ * — é o registro de que uma migração de mão única já aconteceu neste
+ * navegador. Guardada junto do perfil, seria enviada, lida e persistida como
+ * se fizesse parte dele.
+ */
+function goalsSeededKey(scope: string): string {
+  return `fassaja_goals_seeded_${scope}`;
+}
 
 // Dados (metas/preferências/sequência) são por conta: guest na chave legada,
 // usuários autenticados em chaves próprias — evita vazar entre contas no mesmo navegador.
@@ -45,8 +64,11 @@ const defaultUser: UserProfile = {
   email: '',
   role: 'Conta visitante',
   avatar: undefined,
-  dailyGoal: mockUser.dailyGoal,
-  weeklyGoal: mockUser.weeklyGoal,
+  // Padrões de utils/goals — espelho dos defaults da coluna no banco. Até
+  // aqui vinham de src/data/mockUser.ts: a meta inicial de todo mundo em
+  // produção era a do "joao@example.com" de um arquivo de exemplo.
+  dailyGoal: GOAL_DEFAULTS.daily,
+  weeklyGoal: GOAL_DEFAULTS.weekly,
   notifications: { pending: true, deadline: true, daily: true, events: true },
   productiveDays: [],
   streakDays: [0, 1, 2, 3, 4, 5, 6],
@@ -67,6 +89,8 @@ const UserContext = createContext<UserContextValue>({
   updateUser: () => {},
   recordProductiveDay: () => {},
   setScope: () => {},
+  saveGoals: () => {},
+  hydrateGoals: () => {},
 });
 
 export const useUser = () => useContext(UserContext);
@@ -123,8 +147,88 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Salva as metas. Otimista na tela, best-effort no servidor: a meta é
+   * preferência, não transação — travar a interface esperando a rede para
+   * gravar o número 8 seria pior que o risco de ele chegar um segundo depois.
+   * Visitante não tem conta, então fica só no localStorage.
+   */
+  const saveGoals = useCallback(
+    (patch: Partial<Goals>) => {
+      setUser(prev => {
+        const alvo = clampGoals({
+          daily: patch.daily ?? prev.dailyGoal,
+          weekly: patch.weekly ?? prev.weeklyGoal,
+        });
+        return { ...prev, dailyGoal: alvo.daily, weeklyGoal: alvo.weekly };
+      });
+      if (scope === 'guest') return;
+      // Envia SÓ o que mudou: o backend trata cada campo como opcional para o
+      // blur de um input não gravar por cima do outro.
+      const corpo: { dailyGoal?: number; weeklyGoal?: number } = {};
+      if (patch.daily !== undefined) corpo.dailyGoal = clampGoal(patch.daily, 'daily');
+      if (patch.weekly !== undefined) corpo.weeklyGoal = clampGoal(patch.weekly, 'weekly');
+      if (Object.keys(corpo).length === 0) return;
+      apiUpdateGoals(corpo).catch(() => {
+        // Fica valendo o valor local; a próxima hidratação reconcilia.
+      });
+    },
+    [scope],
+  );
+
+  /**
+   * Reconcilia a meta local com a do servidor, uma vez por conta.
+   *
+   * Lê o localStorage direto (e não o estado) porque isto é chamado no mesmo
+   * tick do `setScope`, quando o estado ainda é o da conta anterior.
+   *
+   * A decisão de semear está em utils/goals.shouldSeed, com teste: é um
+   * caminho que roda UMA vez por conta e, se errar, apaga a meta de alguém.
+   */
+  const hydrateGoals = useCallback((scopeId: string, server: Partial<Goals>) => {
+    // Servidor antigo (sem os campos): não há nada a reconciliar, e adotar
+    // `undefined` como zero apagaria a meta local.
+    if (typeof server.daily !== 'number' || typeof server.weekly !== 'number') return;
+
+    const doServidor = clampGoals({ daily: server.daily, weekly: server.weekly });
+    const chave = goalsSeededKey(scopeId);
+    let jaSemeado = false;
+    try {
+      jaSemeado = localStorage.getItem(chave) === '1';
+    } catch {
+      // armazenamento indisponível: trata como não semeado
+    }
+
+    const local = loadUser(scopeId);
+    const doNavegador = clampGoals({ daily: local.dailyGoal, weekly: local.weeklyGoal });
+
+    const marcar = () => {
+      try {
+        localStorage.setItem(chave, '1');
+      } catch {
+        // sem armazenamento, a reconciliação roda de novo — é idempotente
+      }
+    };
+
+    if (!jaSemeado && shouldSeed(doNavegador, doServidor)) {
+      // Recuperação: a meta que a pessoa escolheu antes de existir coluna.
+      // Só marca como semeada se o servidor confirmar — falhar e marcar
+      // perderia a meta de vez na próxima carga.
+      apiUpdateGoals({ dailyGoal: doNavegador.daily, weeklyGoal: doNavegador.weekly })
+        .then(marcar)
+        .catch(() => undefined);
+      setUser(prev => ({ ...prev, dailyGoal: doNavegador.daily, weeklyGoal: doNavegador.weekly }));
+      return;
+    }
+
+    marcar();
+    setUser(prev => ({ ...prev, dailyGoal: doServidor.daily, weeklyGoal: doServidor.weekly }));
+  }, []);
+
   return (
-    <UserContext.Provider value={{ user, updateUser, recordProductiveDay, setScope }}>
+    <UserContext.Provider
+      value={{ user, updateUser, recordProductiveDay, setScope, saveGoals, hydrateGoals }}
+    >
       {children}
     </UserContext.Provider>
   );

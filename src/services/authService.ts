@@ -7,6 +7,8 @@ export interface PublicUser {
   email: string;
   avatar: string | null;
   streakDays: number[];
+  dailyGoal: number;
+  weeklyGoal: number;
   nameChangedAt: string | null;
   passwordChangedAt: string | null;
 }
@@ -39,6 +41,14 @@ export const resetPassword = (token: string, password: string) =>
  */
 export const updateStreakDays = (streakDays: number[]) =>
   api.patch<PublicUser>('/auth/streak-days', { streakDays });
+
+/**
+ * Persiste as metas de tarefas. Os dois campos são opcionais e independentes:
+ * a tela salva no blur de cada um, e mandar sempre os dois faria o primeiro
+ * blur gravar por cima do campo que ainda estava sendo digitado.
+ */
+export const updateGoals = (goals: { dailyGoal?: number; weeklyGoal?: number }) =>
+  api.patch<PublicUser>('/auth/goals', goals);
 
 /** Lista ordenada de dias produtivos ('YYYY-MM-DD') do usuário — para hidratar. */
 export const getProductiveDays = () => api.get<string[]>('/auth/productive-days');
