@@ -158,11 +158,14 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
  * não acompanhava a troca para o escuro. Os tokens `priority.*` já trazem o
  * par certo para cada tema.
  */
-const priorityConfig: Record<Task['priority'], { label: string; dot: string; className: string }> = {
-  low: { label: 'Baixa', dot: 'bg-priority-low', className: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' },
-  medium: { label: 'Média', dot: 'bg-priority-medium', className: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300' },
-  high: { label: 'Alta', dot: 'bg-priority-high', className: 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300' },
+const priorityConfig: Record<Task['priority'], { label: string; dot: string; stripe: string }> = {
+  low: { label: 'Baixa', dot: 'bg-priority-low', stripe: 'bg-priority-low' },
+  medium: { label: 'Média', dot: 'bg-priority-medium', stripe: 'bg-priority-medium' },
+  high: { label: 'Alta', dot: 'bg-priority-high', stripe: 'bg-priority-high' },
 };
+
+/** Tags mostradas no card; o resto vira "+N" e aparece ao abrir a tarefa. */
+const MAX_TAGS = 3;
 
 export const TaskCard: React.FC<TaskCardProps> = ({
   task,
@@ -220,10 +223,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         hoverable
         onClick={handleClick}
         padding="none"
-        className={`flex items-start gap-3 p-3.5 group ${
+        className={`relative flex items-start gap-3 overflow-hidden p-3.5 pl-4 group ${
           selected ? 'ring-2 ring-primary-vibrant border-primary-vibrant' : ''
         }`}
       >
+        {/* Prioridade como faixa lateral, e não como mais uma pílula.
+            Era a informação mais decisiva do card e tinha exatamente o mesmo
+            peso visual de uma tag qualquer — dava para ler seis pílulas antes
+            de achar "Alta". Aqui ela é lida de relance, sem custar linha.
+            A cor não fica sozinha: o rótulo continua escrito na linha de baixo,
+            porque quem não distingue as cores precisa da palavra. */}
+        <span
+          aria-hidden
+          className={`absolute inset-y-0 left-0 w-1 ${priorityInfo.stripe} ${
+            isCompleted ? 'opacity-40' : ''
+          }`}
+        />
         {/* Controle à esquerda: seleção (modo massa) ou concluir (normal) */}
         {selectionMode ? (
           <span
@@ -259,11 +274,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             </p>
           )}
 
-          {/* Badges */}
-          <div className="flex flex-wrap gap-1.5 items-center mt-2">
+          {/* Linha de contexto: prioridade, projeto e prazo em texto quieto,
+              separados por ponto médio. Só o status continua sendo pílula —
+              é o único item CLICÁVEL aqui (abre o menu de troca), e a forma de
+              botão é o que avisa disso. Quando tudo era pílula, nada parecia
+              clicável em especial. */}
+          <div className="flex flex-wrap gap-x-2 gap-y-1.5 items-center mt-2 text-[11px] text-text-secondary">
             {selectionMode ? (
               <span
-                className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${statusInfo.className}`}
+                className={`inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full ${statusInfo.className}`}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusInfo.dot }} />
                 {statusInfo.label}
@@ -271,46 +290,76 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             ) : (
               <StatusSelect task={task} />
             )}
-            <span
-              className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${priorityInfo.className}`}
-            >
+
+            <span className="inline-flex items-center gap-1 font-medium">
               <span className={`w-1.5 h-1.5 rounded-full ${priorityInfo.dot}`} />
               {priorityInfo.label}
             </span>
+
             {project && (
-              <span
-                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full text-text-primary"
-                style={{ backgroundColor: tint(project.color) }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: project.color }} />
-                {project.name}
-              </span>
+              <>
+                <span className="text-text-soft" aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1 font-medium min-w-0">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ backgroundColor: project.color }}
+                  />
+                  <span className="truncate">{project.name}</span>
+                </span>
+              </>
             )}
-            {(task.tags ?? []).map(tag => (
-              <span
-                key={tag.id}
-                className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: tint(tag.color), color: chipText(tag.color) }}
-              >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tag.color }} />
-                {tag.name}
-              </span>
-            ))}
+
             {task.dueDate && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-text-secondary">
-                <CalendarDays size={12} className="text-text-soft" />
-                {formatDate(task.dueDate)}
-              </span>
+              <>
+                <span className="text-text-soft" aria-hidden>·</span>
+                {/* Prazo vencido em vermelho: era a única informação urgente do
+                    card impressa no mesmo cinza do resto. */}
+                <span
+                  className={`inline-flex items-center gap-1 ${
+                    task.status === 'overdue' ? 'font-bold text-danger' : 'font-medium'
+                  }`}
+                >
+                  <CalendarDays size={12} className={task.status === 'overdue' ? '' : 'text-text-soft'} />
+                  {formatDate(task.dueDate)}
+                </span>
+              </>
             )}
+
             {assignment && (
               <span
-                className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${assignment.className}`}
+                className={`inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full ${assignment.className}`}
               >
                 {assignment.icon}
                 {assignment.label}
               </span>
             )}
           </div>
+
+          {/* Tags numa linha própria, abaixo do contexto: são rótulos que a
+              pessoa criou e cada uma traz cor forte. Misturadas à linha de cima
+              elas empurravam prazo e projeto para longe do título. Acima de
+              três viram "+N" — um card com oito tags virava uma parede. */}
+          {(task.tags ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1 items-center mt-1.5">
+              {(task.tags ?? []).slice(0, MAX_TAGS).map(tag => (
+                <span
+                  key={tag.id}
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                  style={{ backgroundColor: tint(tag.color), color: chipText(tag.color) }}
+                >
+                  {tag.name}
+                </span>
+              ))}
+              {(task.tags ?? []).length > MAX_TAGS && (
+                <span
+                  className="text-[10px] font-semibold text-text-soft"
+                  title={(task.tags ?? []).slice(MAX_TAGS).map(t => t.name).join(', ')}
+                >
+                  +{(task.tags ?? []).length - MAX_TAGS}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Proposta de tarefa para o usuário atual */}
           {isMyProposal && !selectionMode && (

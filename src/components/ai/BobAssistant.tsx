@@ -183,20 +183,36 @@ export const BobAssistant: React.FC = () => {
             // painel encosta onde ele estava em vez de deixar um vão vazio.
             className="fixed inset-x-4 bottom-6 z-50 flex max-h-[75dvh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl sm:left-auto sm:right-6 sm:w-[380px]"
           >
-            {/* Cabeçalho */}
-            <div className="flex shrink-0 items-center gap-2 border-b border-border bg-bg-secondary/60 px-4 py-3">
+            {/* Cabeçalho. Sem faixa própria: o Bob é recortado (PNG com fundo
+                transparente) e a faixa cinza atrás dele desenhava um retângulo
+                em volta do desenho, como se ele estivesse colado num adesivo.
+                Agora ele fica direto sobre a superfície do painel, e o único
+                branco que aparece é o que pertence ao próprio desenho.
+
+                A borda de baixo fica: é ela que separa o cabeçalho do corpo
+                rolável — sem faixa E sem borda, o título encostaria no
+                conteúdo ao rolar. */}
+            <div className="flex shrink-0 items-center gap-2.5 border-b border-border px-4 py-3">
               {view !== 'home' ? (
                 <button
                   type="button"
                   onClick={() => !busy && setView('home')}
                   aria-label="Voltar"
-                  className="-ml-1 rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-surface disabled:opacity-40"
+                  className="-ml-1 rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-bg-secondary disabled:opacity-40"
                   disabled={busy}
                 >
                   <ArrowLeft size={18} />
                 </button>
               ) : (
-                <img src="/bobparabens.png" alt="" className="h-9 w-9 shrink-0 object-contain" />
+                /* -my-1: o Bob cresce de 36 para 48px sem esticar o cabeçalho.
+                   Ele é recortado e tem folga transparente em cima e embaixo,
+                   então o desenho continua dentro da faixa mesmo transbordando
+                   a caixa — e o título ao lado não desce. */
+                <img
+                  src="/bobparabens.png"
+                  alt=""
+                  className="-my-1 h-12 w-12 shrink-0 object-contain"
+                />
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-text-primary">
@@ -214,7 +230,7 @@ export const BobAssistant: React.FC = () => {
                 type="button"
                 onClick={close}
                 aria-label="Fechar"
-                className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-surface disabled:opacity-40"
+                className="rounded-lg p-1.5 text-text-secondary transition-colors hover:bg-bg-secondary disabled:opacity-40"
                 disabled={busy}
               >
                 <X size={18} />

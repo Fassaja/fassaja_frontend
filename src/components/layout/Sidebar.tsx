@@ -14,6 +14,7 @@ import {
   Flag,
   Users,
   ChevronRight,
+  ChevronLeft,
   LogOut,
   Mail,
   MessageCircle,
@@ -30,9 +31,11 @@ import { NotificationsHelp } from './NotificationsHelp';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { FeedbackModal } from './FeedbackModal';
+import { Tooltip } from '@/components/common/Tooltip';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 
 /**
  * Ordem do menu, em quatro blocos: o trabalho de hoje (painel, tarefas,
@@ -62,6 +65,15 @@ export const Sidebar: React.FC = () => {
 
   // Trava o scroll da página atrás enquanto o menu (drawer mobile) está aberto.
   useBodyScrollLock(isOpen);
+  const { collapsed, toggleCollapsed } = useSidebar();
+  /**
+   * "Recolhida" vale só no desktop. No celular a barra é uma gaveta que abre
+   * por cima do conteúdo, e ali ela precisa aparecer inteira — recolhida em
+   * cima da gaveta daria uma tira de 80px com ícones soltos no meio da tela.
+   * Por isso o estado é aplicado por classes `lg:` e o conteúdo consulta este
+   * booleano, que já é falso enquanto a gaveta está aberta.
+   */
+  const rail = collapsed && !isOpen;
   const location = useLocation();
   const navigate = useNavigate();
   const { account, isGuest, logout, requireAuth } = useAuth();
@@ -90,79 +102,165 @@ export const Sidebar: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed left-0 top-0 h-tela w-64 bg-surface border-r border-border
-          transform transition-transform duration-300 ease-out-expo z-40
+          fixed left-0 top-0 h-tela ${SIDEBAR_LARGURA.aside.aberta} bg-surface border-r border-border
+          transform transition-[transform,width] duration-300 ease-out-expo z-40
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
+          ${collapsed ? SIDEBAR_LARGURA.aside.recolhida : ''}
         `}
       >
-        <div className="flex flex-col h-full overflow-y-auto">
-          {/* Logo */}
+        {/* A flechinha. Fica na BORDA, meio para fora, e não dentro da barra:
+            recolhida, a barra tem 80px e um botão interno disputaria espaço com
+            os ícones. Só no desktop — no celular quem fecha é o X do topo.
+
+            Precisa ficar fora do container de scroll abaixo, senão some junto
+            com o conteúdo ao rolar o menu. */}
+        <button
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? 'Expandir barra lateral' : 'Recolher barra lateral'}
+          aria-expanded={!collapsed}
+          title={collapsed ? 'Expandir' : 'Recolher'}
+          className="hidden lg:flex absolute -right-3 top-24 z-50 w-6 h-6 items-center justify-center rounded-full border border-border bg-surface text-text-secondary shadow-sm transition-colors hover:text-primary-vibrant hover:border-primary-vibrant/50 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+        >
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
+
+        {/* Sem overflow aqui: quem rola é o <nav>, que já tem `flex-1
+            overflow-y-auto`. O scroll nos dois recortava o menu da conta —
+            `overflow-y` obriga o eixo x a `auto` pelo CSS —, e recolhida a
+            barra tem 80px, largura em que o menu não caberia. Agora ele
+            transborda para fora da barra, como se espera de um rail. */}
+        <div className="flex flex-col h-full">
+          {/* Logo. Recolhida, troca pela marca quadrada: o logo com o nome tem
+              288px de largura e não cabe numa barra de 80px — encolhê-lo até
+              caber deixaria o texto ilegível. */}
           <div className="pt-6 pb-3 flex justify-center">
             <div className="w-full h-20 flex items-center justify-center overflow-hidden">
-              <img
-                src="/logofassaja.png"
-                data-logo
-                alt="Fassaja"
-                className="max-w-none w-72 h-auto object-contain select-none"
-                draggable={false}
-              />
+              {rail ? (
+                /* 64px numa barra de 80: o desenho tem margem transparente
+                   própria (ocupa ~60% da largura do arquivo), então a figura
+                   visível fica em torno de 38px e sobra respiro dos dois
+                   lados. Sem `rounded`, que só fazia sentido quando havia um
+                   fundo para arredondar. */
+                <img
+                  src="/icon-192.png"
+                  alt="Fassaja"
+                  className="w-16 h-16 object-contain select-none"
+                  draggable={false}
+                />
+              ) : (
+                <img
+                  src="/logofassaja.png"
+                  data-logo
+                  alt="Fassaja"
+                  className="max-w-none w-72 h-auto object-contain select-none"
+                  draggable={false}
+                />
+              )}
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
+          {/* `flex flex-col` e não só `space-y-1`: recolhida, cada item passa a
+              vir dentro do <span inline-flex> do Tooltip, e caixa inline se
+              apoia na linha de base do texto — o que acrescenta alguns pixels
+              embaixo de cada item e faria o espaçamento do rail diferir do
+              modo expandido. Como filhos de uma coluna flex, os dois casos
+              medem igual. */}
+          <nav
+            className={`flex flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden ${
+              rail ? 'px-3' : 'px-4'
+            }`}
+          >
             {navItems.map(item => {
               const Icon = item.icon;
               const active = isActive(item.path);
               const locked = isGuest && !item.free;
+              /* Recolhida, o item vira um quadrado com o ícone centrado. O
+                 `justify-center` sozinho não bastaria: o gap e o padding
+                 lateral continuariam reservando espaço para o rótulo ausente,
+                 e o ícone ficaria fora do eixo. */
+              /* w-full porque, recolhida, o item vira filho do <span
+                 inline-flex> do Tooltip e passaria a se dimensionar pelo
+                 conteúdo — o realce do item ativo encolheria para o tamanho do
+                 ícone em vez de ocupar a linha. */
               const baseClass = `
-                flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-[15px]
+                w-full flex items-center rounded-xl font-medium text-[15px]
                 transition-colors duration-200
+                ${rail ? 'justify-center px-0 py-2.5' : 'gap-3 px-4 py-2.5'}
                 ${active
                   ? 'bg-primary-vibrant text-white shadow-sm shadow-primary-vibrant/30'
                   : 'text-primary-dark/80 hover:bg-primary-light hover:text-primary-dark'
                 }
               `;
 
-              if (locked) {
-                return (
-                  <button
-                    key={item.path}
-                    onClick={() => {
-                      setIsOpen(false);
-                      requireAuth(
-                        `"${item.label}" está disponível para quem tem conta. Faça login para acessar — ou continue como visitante usando o Dashboard e Minhas Tarefas.`,
-                      );
-                    }}
-                    className={`${baseClass} w-full text-left`}
-                    title="Entre para acessar"
-                  >
-                    <Icon size={20} className="text-text-soft" />
-                    <span className="flex-1 text-text-soft">{item.label}</span>
-                    <Lock size={15} className="text-text-soft" />
-                  </button>
-                );
-              }
-
-              return (
+              const conteudo = locked ? (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    requireAuth(
+                      `"${item.label}" está disponível para quem tem conta. Faça login para acessar — ou continue como visitante usando o Dashboard e Minhas Tarefas.`,
+                    );
+                  }}
+                  className={`${baseClass} w-full text-left`}
+                  aria-label={rail ? `${item.label} (entre para acessar)` : undefined}
+                >
+                  <Icon size={20} className="text-text-soft shrink-0" />
+                  {!rail && (
+                    <>
+                      <span className="flex-1 text-text-soft">{item.label}</span>
+                      <Lock size={15} className="text-text-soft" />
+                    </>
+                  )}
+                </button>
+              ) : (
                 <Link
-                  key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
                   aria-current={active ? 'page' : undefined}
+                  aria-label={rail ? item.label : undefined}
                   className={baseClass}
                 >
-                  <Icon size={20} className={active ? 'text-white' : 'text-text-secondary'} />
-                  <span>{item.label}</span>
+                  <Icon size={20} className={`shrink-0 ${active ? 'text-white' : 'text-text-secondary'}`} />
+                  {!rail && <span className="truncate">{item.label}</span>}
                 </Link>
+              );
+
+              /* Recolhida, o ícone sozinho não diz para onde leva — a dica é o
+                 rótulo. Envolver SEMPRE deixaria uma dica redundante repetindo
+                 o texto que já está na tela. */
+              return rail ? (
+                <Tooltip
+                  key={item.path}
+                  content={item.label}
+                  description={locked ? 'Entre para acessar' : undefined}
+                  className="w-full"
+                >
+                  {conteudo}
+                </Tooltip>
+              ) : (
+                <React.Fragment key={item.path}>{conteudo}</React.Fragment>
               );
             })}
 
           </nav>
 
-          {/* Guest CTA */}
-          {isGuest && (
+          {/* Guest CTA. Recolhida vira só o botão de entrar: o cartão com duas
+              linhas de texto não cabe em 80px. */}
+          {isGuest && rail && (
+            <div className="px-3 pt-4">
+              <Tooltip content="Entrar" description="Você está como visitante" className="w-full">
+                <button
+                  onClick={() => goTo('/login')}
+                  aria-label="Entrar"
+                  className="w-full flex items-center justify-center py-2.5 rounded-xl bg-primary-vibrant text-white hover:bg-primary-hover active:scale-[0.98] transition-all"
+                >
+                  <LogIn size={18} />
+                </button>
+              </Tooltip>
+            </div>
+          )}
+          {isGuest && !rail && (
             <div className="px-4 pt-4">
               <div className="rounded-2xl border border-border p-3">
                 <p className="text-sm font-semibold text-text-primary">Você está como visitante</p>
@@ -180,7 +278,7 @@ export const Sidebar: React.FC = () => {
           )}
 
           {/* Menu (Configurações / Fale conosco / Central de feedbacks) */}
-          <div className="px-4 pt-4">
+          <div className={`pt-4 ${rail ? 'px-3' : 'px-4'}`}>
             <div className="relative">
               {showMenu && (
                 <>
@@ -188,7 +286,11 @@ export const Sidebar: React.FC = () => {
                     className="fixed inset-0 z-30"
                     onClick={() => setShowMenu(false)}
                   />
-                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-surface rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-40 overflow-hidden">
+                  <div
+                    className={`absolute bottom-full mb-2 bg-surface rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-40 overflow-hidden ${
+                      rail ? 'left-0 w-60' : 'left-0 right-0'
+                    }`}
+                  >
                     {/* Perfil entra aqui: antes só se chegava pelo avatar do
                         topo, que some no desktop agora que a identidade é esta. */}
                     {!isGuest && (
@@ -277,7 +379,9 @@ export const Sidebar: React.FC = () => {
                 onClick={() => setShowMenu(v => !v)}
                 aria-expanded={showMenu}
                 aria-label={isGuest ? 'Abrir menu' : 'Abrir menu da conta'}
-                className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-bg-secondary transition-colors"
+                className={`w-full flex items-center rounded-xl hover:bg-bg-secondary transition-colors ${
+                  rail ? 'justify-center p-2' : 'gap-3 p-2'
+                }`}
               >
                 {isGuest ? (
                   <div className="w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center text-text-secondary shrink-0">
@@ -294,22 +398,26 @@ export const Sidebar: React.FC = () => {
                     {initialsOf(user.name)}
                   </span>
                 )}
-                <div className="flex-1 min-w-0 text-left">
-                  {isGuest ? (
-                    <p className="text-sm font-semibold text-text-primary">Menu</p>
-                  ) : (
-                    <>
-                      <p className="text-sm font-semibold text-text-primary truncate">
-                        {user.name}
-                      </p>
-                      <p className="text-xs text-text-secondary truncate">{account?.email}</p>
-                    </>
-                  )}
-                </div>
-                <ChevronRight
-                  size={18}
-                  className={`text-text-soft shrink-0 transition-transform ${showMenu ? '-rotate-90' : ''}`}
-                />
+                {!rail && (
+                  <>
+                    <div className="flex-1 min-w-0 text-left">
+                      {isGuest ? (
+                        <p className="text-sm font-semibold text-text-primary">Menu</p>
+                      ) : (
+                        <>
+                          <p className="text-sm font-semibold text-text-primary truncate">
+                            {user.name}
+                          </p>
+                          <p className="text-xs text-text-secondary truncate">{account?.email}</p>
+                        </>
+                      )}
+                    </div>
+                    <ChevronRight
+                      size={18}
+                      className={`text-text-soft shrink-0 transition-transform ${showMenu ? '-rotate-90' : ''}`}
+                    />
+                  </>
+                )}
               </button>
             </div>
           </div>

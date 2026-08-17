@@ -5,7 +5,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { TaskList } from '@/components/tasks/TaskList';
 import { TaskBoard } from '@/components/tasks/TaskBoard';
-import { TaskFilters } from '@/components/tasks/TaskFilters';
+import { TaskSearch, TaskFilterMenu, ActiveFilterChips } from '@/components/tasks/TaskFilters';
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
@@ -28,6 +28,7 @@ import {
   teamProjectIds,
 } from '@/utils/taskScope';
 import { whyHidden } from '@/utils/taskVisibility';
+import { tint, chipText } from '@/utils/color';
 
 const TasksPage: React.FC = () => {
   const { tasks: allTasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
@@ -249,9 +250,17 @@ const TasksPage: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleResetFilters = () => {
-    setSearchTerm('');
-    setFilterStatus('all');
+  /**
+   * Limpa SÓ o que mora dentro do painel de filtros.
+   *
+   * A busca e as abas de status ficam fora dele, cada uma com o próprio
+   * comando à vista — a busca tem o X no campo, as abas voltam em "Todas".
+   * Zerar os três juntos daqui apagava controles que a pessoa não pediu para
+   * mexer, e o contraste com o badge do botão (que conta projeto, prioridade e
+   * tags) deixava a ação mentindo sobre o próprio alcance: contagem 1, três
+   * coisas apagadas.
+   */
+  const limparFiltrosDoPainel = () => {
     setFilterPriority('all');
     setFilterProject('all');
     setFilterTags([]);
@@ -265,8 +274,40 @@ const TasksPage: React.FC = () => {
     { value: 'overdue', label: 'Atrasadas', count: tasks.filter(t => t.status === 'overdue').length, color: '#F43F5E' },
   ];
 
-  const hasActiveFilters =
-    searchTerm !== '' || filterPriority !== 'all' || filterProject !== 'all' || filterTags.length > 0;
+  // Só os filtros que moram no painel — a busca não entra na conta porque o
+  // termo já fica visível dentro do próprio campo.
+  const activeFilterCount =
+    (filterPriority !== 'all' ? 1 : 0) + (filterProject !== 'all' ? 1 : 0) + filterTags.length;
+
+  /**
+   * Busca + filtros, um par só.
+   *
+   * Extraído porque precisa existir NOS DOIS modos: o "Selecionar tudo" mira
+   * exatamente as tarefas visíveis, então filtrar antes de marcar em massa é o
+   * caminho natural para "excluir todas as concluídas do projeto X". Deixar
+   * isso apenas no modo normal tirava a única forma de mirar a seleção.
+   */
+  const buscaEFiltros = (
+    <>
+      {/* Em tela estreita a busca ocupa uma linha inteira (basis-full): espremida
+          ao lado dos botões não sobrava largura nem para uma palavra. */}
+      <div className="order-last basis-full sm:order-none sm:basis-auto sm:flex-1">
+        <TaskSearch value={searchTerm} onChange={setSearchTerm} />
+      </div>
+      <TaskFilterMenu
+        filterPriority={filterPriority}
+        onPriorityChange={setFilterPriority}
+        filterProject={filterProject}
+        onProjectChange={setFilterProject}
+        projects={projects}
+        tags={tags}
+        filterTags={filterTags}
+        onToggleTag={toggleTagFilter}
+        activeCount={activeFilterCount}
+        onReset={limparFiltrosDoPainel}
+      />
+    </>
+  );
 
   return (
     <>
@@ -363,7 +404,8 @@ const TasksPage: React.FC = () => {
 
         {/* Barra de seleção em massa OU alternador de visão */}
         {selectionMode ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 rounded-xl border border-primary-vibrant/30 bg-primary-light px-3 py-2.5">
+          <>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2 rounded-xl border border-primary-vibrant/30 bg-primary-light px-3 py-2.5">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 type="button"
@@ -409,12 +451,17 @@ const TasksPage: React.FC = () => {
               </button>
             </div>
           </div>
+          <div className="flex flex-wrap items-center gap-2 mb-3">{buscaEFiltros}</div>
+          </>
         ) : (
-          <div className="flex items-center justify-between gap-3 mb-4">
-            {/* Os três controles desta linha têm altura fixa (h-10 no invólucro,
-                h-8 nos botões internos). Sem isso cada um se dimensiona pelo
-                próprio conteúdo — o par com badge de contagem cresce e o botão
-                solto, sem o p-1 do invólucro, encolhe. */}
+          /* Uma barra só: visão, busca, lado e filtros. Antes eram três faixas
+             empilhadas (controles, abas de status e um Card de filtros) — uns
+             220px de cromo antes da primeira tarefa aparecer. Em tela estreita
+             a busca quebra para a linha de baixo sozinha (basis-full), porque
+             espremida ao lado dos botões ela não cabia nem para uma palavra.
+             Todo controle tem h-10: sem isso cada um se dimensiona pelo próprio
+             conteúdo e o par com badge de contagem cresce mais que os outros. */
+          <div className="flex flex-wrap items-center gap-2 mb-3">
             <div className="inline-flex h-10 p-1 rounded-xl bg-bg-secondary border border-border">
               <button
                 onClick={() => setView('board')}
@@ -442,10 +489,11 @@ const TasksPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Pessoal x Equipe. Fica à direita, junto de "Selecionar", e não
-                numa linha própria: são todos controles do que a página mostra.
-                Em telas estreitas o rótulo some e ficam ícone + contagem, como
-                já acontece com o "Selecionar". */}
+            {buscaEFiltros}
+
+            {/* Pessoal x Equipe. Fica junto de "Selecionar", e não numa linha
+                própria: são todos controles do que a página mostra. Em telas
+                estreitas o rótulo some e ficam ícone + contagem. */}
             <div className="flex items-center gap-2 ml-auto">
               <div className="inline-flex h-10 p-1 rounded-xl bg-bg-secondary border border-border">
                 {([
@@ -484,19 +532,31 @@ const TasksPage: React.FC = () => {
                   );
                 })}
               </div>
-            {tasks.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setSelectionMode(true)}
-                className="inline-flex h-10 items-center gap-1.5 px-3 rounded-xl text-sm font-semibold bg-surface border border-border text-text-secondary hover:text-text-primary hover:border-primary-vibrant/40 active:scale-95 transition-all"
-              >
-                <ListChecks size={16} />
-                <span className="hidden sm:inline">Selecionar</span>
-              </button>
-            )}
+
+              {tasks.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectionMode(true)}
+                  className="inline-flex h-10 items-center gap-1.5 px-3 rounded-xl text-sm font-semibold bg-surface border border-border text-text-secondary hover:text-text-primary hover:border-primary-vibrant/40 active:scale-95 transition-all"
+                >
+                  <ListChecks size={16} />
+                  <span className="hidden sm:inline">Selecionar</span>
+                </button>
+              )}
             </div>
           </div>
         )}
+
+        <ActiveFilterChips
+          filterPriority={filterPriority}
+          onPriorityChange={setFilterPriority}
+          filterProject={filterProject}
+          onProjectChange={setFilterProject}
+          projects={projects}
+          tags={tags}
+          filterTags={filterTags}
+          onToggleTag={toggleTagFilter}
+        />
 
         {/* Status tabs (contagem + filtro) — só na visão Lista */}
         {view === 'list' && (
@@ -507,17 +567,30 @@ const TasksPage: React.FC = () => {
               <button
                 key={tab.value}
                 onClick={() => setFilterStatus(tab.value)}
-                className={`shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97] ${
+                /* Ativo tinge o fundo com a cor do status em vez de preenchê-lo
+                   sólido: cinco chips saturados lado a lado gritavam mais que
+                   as próprias tarefas, e o filtro é cromo. A cor não fica só no
+                   fundo — o ponto e o texto também a carregam, então dá para
+                   ver qual está ativo mesmo com o contraste baixo. */
+                className={`shrink-0 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold transition-all active:scale-[0.97] ${
                   active
-                    ? 'border-transparent text-white shadow-sm'
+                    ? 'border-transparent'
                     : 'bg-surface border-border text-text-secondary hover:bg-bg-secondary'
                 }`}
-                style={active ? { backgroundColor: tab.color } : undefined}
+                style={
+                  active
+                    ? { backgroundColor: tint(tab.color, 'medium'), color: chipText(tab.color) }
+                    : undefined
+                }
               >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: active ? tab.color : 'currentColor' }}
+                />
                 {tab.label}
                 <span
-                  className={`min-w-[20px] text-center text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                    active ? 'bg-white/25 text-white' : 'bg-bg-secondary text-text-secondary'
+                  className={`min-w-[20px] text-center text-xs font-bold ${
+                    active ? '' : 'text-text-soft'
                   }`}
                 >
                   {tab.count}
@@ -528,24 +601,8 @@ const TasksPage: React.FC = () => {
         </div>
         )}
 
-        {/* Filters */}
-        <TaskFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          filterPriority={filterPriority}
-          onPriorityChange={setFilterPriority}
-          filterProject={filterProject}
-          onProjectChange={setFilterProject}
-          projects={projects}
-          tags={tags}
-          filterTags={filterTags}
-          onToggleTag={toggleTagFilter}
-          hasActiveFilters={hasActiveFilters}
-          onReset={handleResetFilters}
-        />
-
         {/* Tarefas: Quadro (por status) ou Lista (por data) */}
-        <div className="mt-6">
+        <div className="mt-4">
           {view === 'board' ? (
             <TaskBoard
               tasks={tasksForView}

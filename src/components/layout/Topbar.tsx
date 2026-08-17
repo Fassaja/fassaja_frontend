@@ -11,6 +11,8 @@ import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/contexts/TasksContext';
 import { useProjects } from '@/contexts/ProjectsContext';
+import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
+import { usePageScrolled } from '@/hooks/usePageScrolled';
 
 interface TopbarProps {
   onNewTask?: () => void;
@@ -38,6 +40,9 @@ export const Topbar: React.FC<TopbarProps> = ({
   const { refresh: refreshTasks } = useTasks();
   const { refresh: refreshProjects } = useProjects();
   const [refreshing, setRefreshing] = useState(false);
+  const { collapsed } = useSidebar();
+  const inicio = collapsed ? SIDEBAR_LARGURA.topo.recolhida : SIDEBAR_LARGURA.topo.aberta;
+  const rolou = usePageScrolled();
 
   const handleRefresh = async () => {
     if (refreshing) return;
@@ -67,7 +72,24 @@ export const Topbar: React.FC<TopbarProps> = ({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 min-h-20 bg-surface/90 backdrop-blur-sm border-b border-border z-30 lg:left-64">
+    /* No topo a barra não tem caixa nenhuma: só o título e os botões sobre o
+       fundo da página. O retângulo de superfície com borda existia o tempo
+       todo e desenhava uma faixa cheia mesmo sem nada por baixo dela.
+
+       Ao rolar, o conteúdo passa POR BAIXO e o fundo aparece — fosco, para o
+       texto da barra continuar legível sobre o que estiver deslizando ali.
+       A borda entra junto, porque é o fosco que precisa de um fim visível. */
+    <div
+      className={`fixed top-0 left-0 right-0 min-h-20 z-30 transition-[left] duration-300 ease-out-expo ${inicio}`}
+    >
+      <div
+        aria-hidden
+        className={`absolute inset-0 -z-10 border-b transition-[background-color,backdrop-filter,border-color] duration-200 ${
+          rolou
+            ? 'bg-surface/70 backdrop-blur-md border-border'
+            : 'bg-transparent border-transparent'
+        }`}
+      />
       <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
       <StreakDaysModal isOpen={showStreakDays} onClose={() => setShowStreakDays(false)} />
 

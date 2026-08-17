@@ -1,6 +1,7 @@
 import { MotionConfig } from 'framer-motion';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { SidebarProvider } from '@/contexts/SidebarContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { UserProvider } from '@/contexts/UserContext';
 import { CelebrationProvider } from '@/contexts/CelebrationContext';
@@ -22,6 +23,9 @@ function App() {
     {/* Mais externo: o tema não depende de sessão nem de dados, e a tela de
         login também precisa dele. */}
     <ThemeProvider>
+    {/* Fora do Router: recolher a barra é preferência de layout, não depende de
+        rota nem de sessão, e não pode piscar ao navegar entre páginas. */}
+    <SidebarProvider>
     <ToastProvider>
       <UserProvider>
         <CelebrationProvider>
@@ -61,6 +65,7 @@ function App() {
         </CelebrationProvider>
       </UserProvider>
       </ToastProvider>
+    </SidebarProvider>
     </ThemeProvider>
     </MotionConfig>
   );

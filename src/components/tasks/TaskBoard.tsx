@@ -230,7 +230,12 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveId(null)}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[calc(100vh-16rem)]">
+      {/* A altura desconta o que existe acima do quadro: cabeçalho da página +
+          a barra de controles. Eram 16rem quando havia três faixas de cromo;
+          com a barra única sobram cerca de 10,5rem, e 12rem deixa uma folga de
+          propósito — errar para baixo custa um pouco de espaço morto, errar
+          para cima empurra as colunas para fora da janela. */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[calc(100vh-12rem)]">
         {columns.map(col => (
           <BoardColumn key={col.key} col={col} count={col.items.length}>
             {col.items.length > 0 ? (
