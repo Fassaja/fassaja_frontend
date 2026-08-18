@@ -33,6 +33,8 @@ import {
 } from '@/components/settings/AccountSections';
 import { GOAL_LIMITS, clampGoal } from '@/utils/goals';
 import { useUser, NotificationPrefs } from '@/contexts/UserContext';
+import { Toggle } from '@/components/common/Toggle';
+import { TaskReminderSection } from '@/components/settings/TaskReminderSection';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, ThemePreference } from '@/contexts/ThemeContext';
@@ -70,23 +72,6 @@ const SectionHint: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <p className="text-sm text-text-secondary mb-5">{children}</p>
 );
 
-const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked, onChange }) => (
-  <button
-    type="button"
-    role="switch"
-    aria-checked={checked}
-    onClick={onChange}
-    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors shrink-0 ${
-      checked ? 'bg-primary-vibrant' : 'bg-primary-dark/20'
-    }`}
-  >
-    <span
-      className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow transition-transform ${
-        checked ? 'translate-x-6' : 'translate-x-1'
-      }`}
-    />
-  </button>
-);
 
 const notifLabels: { key: keyof NotificationPrefs; label: string; hint: string }[] = [
   { key: 'pending', label: 'Tarefas que vencem hoje', hint: 'Mostra no sino o que vence hoje' },
@@ -310,6 +295,20 @@ const SettingsPage: React.FC = () => {
                       </span>
                     )}
                   </div>
+                </>
+              ),
+            },
+            {
+              // Separada das notificações do sino: aquelas são o que aparece
+              // DENTRO do app; esta é a única que toca o celular da pessoa com
+              // o app fechado. Juntá-las esconderia essa diferença.
+              id: 'lembretes',
+              icon: <SectionIcon icon={<Bell size={18} />} color="#F43F5E" />,
+              title: 'Lembrete de prazo',
+              content: (
+                <>
+                  <SectionHint>Vale para toda tarefa com prazo.</SectionHint>
+                  <TaskReminderSection />
                 </>
               ),
             },

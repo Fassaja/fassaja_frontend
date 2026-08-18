@@ -11,6 +11,7 @@ import {
   Tags,
 } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
+import { SubtaskList } from './SubtaskList';
 import { Tooltip } from '@/components/common/Tooltip';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
@@ -113,6 +114,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             <p className="mt-2 text-sm italic text-text-soft">Sem descrição.</p>
           )}
         </div>
+
+        {/* Antes da grade de metadados, e não depois: os passos são o que a
+            pessoa veio fazer; prioridade e datas são referência. */}
+        <SubtaskList task={task} />
 
         {/* Detalhes em grade */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 divide-y divide-border sm:divide-y-0">

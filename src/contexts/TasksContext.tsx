@@ -15,6 +15,7 @@ import { useAuth } from './AuthContext';
 import { isToday, todayISO, toISODate } from '@/utils/date';
 import { detectMilestone } from '@/utils/milestones';
 import { deriveTaskStatus } from '@/utils/taskStatus';
+import { MAX_SUBTASKS } from '@/utils/subtasks';
 
 interface TasksContextValue {
   tasks: Task[];
@@ -26,6 +27,14 @@ interface TasksContextValue {
   deleteTask: (id: string) => Promise<void>;
   assignTask: (id: string, assigneeId: string | null) => Promise<Task>;
   respondAssignment: (id: string, action: 'accept' | 'reject') => Promise<Task>;
+  addSubtask: (taskId: string, title: string) => Promise<void>;
+  updateSubtask: (
+    taskId: string,
+    subtaskId: string,
+    updates: { title?: string; done?: boolean },
+  ) => Promise<void>;
+  removeSubtask: (taskId: string, subtaskId: string) => Promise<void>;
+  reorderSubtasks: (taskId: string, ids: string[]) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -168,6 +177,69 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [],
   );
 
+
+  // --- Passos (checklist) -----------------------------------------------------
+  //
+  // Cada ação devolve a tarefa inteira já atualizada (pela API ou pela sandbox
+  // do visitante) e ela substitui a anterior no estado. Isso mantém uma fonte
+  // de verdade só: nada aqui recalcula a lista de passos por conta própria.
+
+  /** Substitui a tarefa no estado; `undefined` (tarefa sumiu) não faz nada. */
+  const aplicar = useCallback((id: string, atualizada: Task | undefined) => {
+    if (!atualizada) return;
+    setRawTasks(prev => prev.map(t => (t.id === id ? atualizada : t)));
+  }, []);
+
+  const addSubtask = useCallback(
+    async (taskId: string, title: string) => {
+      const limpo = title.trim();
+      if (!limpo) return;
+      aplicar(
+        taskId,
+        isGuest
+          ? guestTasksStore.addSubtask(taskId, limpo, MAX_SUBTASKS)
+          : await tasksService.addSubtask(taskId, limpo),
+      );
+    },
+    [isGuest, aplicar],
+  );
+
+  const updateSubtask = useCallback(
+    async (taskId: string, subtaskId: string, updates: { title?: string; done?: boolean }) => {
+      aplicar(
+        taskId,
+        isGuest
+          ? guestTasksStore.updateSubtask(taskId, subtaskId, updates)
+          : await tasksService.updateSubtask(taskId, subtaskId, updates),
+      );
+    },
+    [isGuest, aplicar],
+  );
+
+  const removeSubtask = useCallback(
+    async (taskId: string, subtaskId: string) => {
+      aplicar(
+        taskId,
+        isGuest
+          ? guestTasksStore.removeSubtask(taskId, subtaskId)
+          : await tasksService.removeSubtask(taskId, subtaskId),
+      );
+    },
+    [isGuest, aplicar],
+  );
+
+  const reorderSubtasks = useCallback(
+    async (taskId: string, ids: string[]) => {
+      aplicar(
+        taskId,
+        isGuest
+          ? guestTasksStore.reorderSubtasks(taskId, ids)
+          : await tasksService.reorderSubtasks(taskId, ids),
+      );
+    },
+    [isGuest, aplicar],
+  );
+
   return (
     <TasksContext.Provider
       value={{
@@ -180,6 +252,10 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deleteTask,
         assignTask,
         respondAssignment,
+        addSubtask,
+        updateSubtask,
+        removeSubtask,
+        reorderSubtasks,
         refresh,
       }}
     >

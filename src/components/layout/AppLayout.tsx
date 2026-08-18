@@ -4,6 +4,8 @@ import { Topbar } from './Topbar';
 import { PlatformTourModal } from './PlatformTourModal';
 import { BobAssistant } from '@/components/ai/BobAssistant';
 import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTimeZoneSync } from '@/hooks/useTimeZoneSync';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -21,6 +23,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   subtitle,
 }) => {
   const { collapsed } = useSidebar();
+  // Aqui, e não numa tela específica: o servidor precisa do fuso para agendar
+  // o lembrete de prazo, e quem nunca abre Ajustes jamais o enviaria. Só para
+  // quem tem conta — visitante não tem tarefa no servidor para lembrar.
+  const { status } = useAuth();
+  useTimeZoneSync(status === 'authed');
   const margem = collapsed ? SIDEBAR_LARGURA.conteudo.recolhida : SIDEBAR_LARGURA.conteudo.aberta;
 
   return (

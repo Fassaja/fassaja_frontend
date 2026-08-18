@@ -35,6 +35,30 @@ export const tasksService = {
     return api.patch<Task>(`/tasks/${id}/assignment`, { action });
   },
 
+  // --- Passos (checklist) ---------------------------------------------------
+  // Todas devolvem a TAREFA inteira já atualizada: o front troca o objeto e não
+  // precisa costurar a lista de passos na mão.
+
+  async addSubtask(taskId: string, title: string): Promise<Task> {
+    return api.post<Task>(`/tasks/${taskId}/subtasks`, { title });
+  },
+
+  async updateSubtask(
+    taskId: string,
+    subtaskId: string,
+    updates: { title?: string; done?: boolean },
+  ): Promise<Task> {
+    return api.patch<Task>(`/tasks/${taskId}/subtasks/${subtaskId}`, updates);
+  },
+
+  async removeSubtask(taskId: string, subtaskId: string): Promise<Task> {
+    return api.delete<Task>(`/tasks/${taskId}/subtasks/${subtaskId}`);
+  },
+
+  async reorderSubtasks(taskId: string, ids: string[]): Promise<Task> {
+    return api.patch<Task>(`/tasks/${taskId}/subtasks/reorder`, { ids });
+  },
+
   async getTasksByProject(projectId: string): Promise<Task[]> {
     const tasks = await api.get<Task[]>('/tasks');
     return tasks.filter(task => task.projectId === projectId);

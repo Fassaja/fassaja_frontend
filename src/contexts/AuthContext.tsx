@@ -28,6 +28,12 @@ export interface Account {
   // não as tem, e quem lê precisa tolerar a ausência em vez de assumir zero.
   dailyGoal?: number;
   weeklyGoal?: number;
+  /** Lembrete de prazo (preferência única). Opcionais como os demais campos
+   *  novos: uma sessão gravada antes desta versão não os tem. */
+  taskReminder?: boolean;
+  taskReminderTime?: string;
+  taskReminderDaysBefore?: number;
+  timeZone?: string | null;
   nameChangedAt?: string | null;
   passwordChangedAt?: string | null;
   /**
@@ -79,6 +85,15 @@ interface AuthContextValue {
   guestTaskCount: number;
   noteGuestTask: () => void;
   requireAuth: (reason?: string) => void;
+  /**
+   * Mescla campos no `account` já em memória (e no que fica gravado).
+   *
+   * Existe para preferências que têm rota própria fora do /auth — hoje o
+   * lembrete de prazo, que mora no módulo de tarefas. Sem isto a tela salvaria
+   * no servidor e continuaria mostrando o valor antigo ao ser reaberta, até o
+   * próximo /auth/me.
+   */
+  patchAccount: (campos: Partial<Account>) => void;
 }
 
 const SESSION_KEY = 'fassaja_session';
@@ -364,6 +379,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const patchAccount = (campos: Partial<Account>) => {
+    if (!account) return;
+    syncAccount({ ...account, ...campos });
+  };
+
   const updateName = async (name: string): Promise<AuthResult> => {
     if (!account) return { ok: false, error: 'Faça login primeiro.' };
     try {
@@ -451,6 +471,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         guestTaskCount,
         noteGuestTask,
         requireAuth,
+        patchAccount,
       }}
     >
       {children}

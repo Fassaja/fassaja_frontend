@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trash2, Check, CalendarDays, Send, UserCheck, UserX, ChevronDown } from 'lucide-react';
+import { Trash2, Check, CalendarDays, Send, UserCheck, UserX, ChevronDown, ListChecks } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Task, TaskStatus } from '@/types/task';
 import { Project } from '@/types/project';
@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
 import { tint, chipText } from '@/utils/color';
+import { subtaskProgress } from '@/utils/subtasks';
 
 interface TaskCardProps {
   task: Task;
@@ -182,6 +183,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const toast = useToast();
   const isCompleted = task.status === 'completed';
   const priorityInfo = priorityConfig[task.priority];
+  const passos = subtaskProgress(task.subtasks);
   const statusInfo = statusConfig[task.status];
 
   const isMyProposal =
@@ -295,6 +297,24 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               <span className={`w-1.5 h-1.5 rounded-full ${priorityInfo.dot}`} />
               {priorityInfo.label}
             </span>
+
+            {/* Progresso do checklist: fica ANTES do projeto porque é estado
+                da tarefa, não classificação dela. Some quando não há passos —
+                "0/0" não informa nada. */}
+            {passos.total > 0 && (
+              <>
+                <span className="text-text-soft" aria-hidden>·</span>
+                <span
+                  className={`inline-flex items-center gap-1 font-medium tabular-nums ${
+                    passos.completo ? 'text-success' : ''
+                  }`}
+                  title={`${passos.feitos} de ${passos.total} passos concluídos`}
+                >
+                  <ListChecks size={12} />
+                  {passos.feitos}/{passos.total}
+                </span>
+              </>
+            )}
 
             {project && (
               <>
