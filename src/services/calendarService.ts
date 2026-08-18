@@ -14,9 +14,24 @@ export const calendarService = {
   },
 };
 
-/** URL que a pessoa cola no Google/Apple Calendar. */
+/**
+ * URL que a pessoa cola no Google/Apple Calendar — sempre ABSOLUTA.
+ *
+ * Em produção o `VITE_API_URL` é `/api`: um caminho relativo, que funciona
+ * para o `fetch` do navegador porque ele resolve contra a página atual. Mas
+ * este endereço vai para FORA — o Google, o Outlook e o app de calendário
+ * precisam de esquema e domínio. Relativo, o Google recusa antes mesmo de
+ * tentar buscar ("URL de agenda inválido"), e o webcal:// nem se forma, porque
+ * não há "https:" para trocar.
+ *
+ * Resolver contra a origem da página é o que faz o endereço apontar para
+ * `https://www.fassaja.com/api/...` — que é público e serve o feed.
+ */
 export function urlDoFeed(token: string): string {
-  return `${API_URL}/calendar/${token}.ics`;
+  const base = /^https?:\/\//i.test(API_URL)
+    ? API_URL
+    : `${window.location.origin}${API_URL.startsWith('/') ? '' : '/'}${API_URL}`;
+  return `${base.replace(/\/$/, '')}/calendar/${token}.ics`;
 }
 
 /**
