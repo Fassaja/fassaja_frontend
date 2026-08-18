@@ -34,22 +34,57 @@ const BotaoCalendario: React.FC<{
   cor: string;
   icone: React.ReactNode;
   children: React.ReactNode;
-}> = ({ href, cor, icone, children }) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-semibold text-text-primary transition-all hover:border-primary-vibrant/40 hover:bg-bg-secondary active:scale-95"
-  >
-    <span
-      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
-      style={{ backgroundColor: cor }}
+  desabilitado?: boolean;
+  /** Por que está desabilitado — vira o `title`, para não ser um botão morto e mudo. */
+  motivo?: string;
+  onClick?: () => void;
+}> = ({ href, cor, icone, children, desabilitado = false, motivo, onClick }) => {
+  const conteudo = (
+    <>
+      <span
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
+        style={{ backgroundColor: cor }}
+      >
+        {icone}
+      </span>
+      {children}
+    </>
+  );
+  const base =
+    'inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold transition-all';
+
+  if (desabilitado) {
+    return (
+      <span
+        title={motivo}
+        aria-disabled="true"
+        className={`${base} cursor-not-allowed bg-bg-secondary text-text-soft opacity-60`}
+      >
+        {conteudo}
+      </span>
+    );
+  }
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onClick}
+      className={`${base} bg-surface text-text-primary hover:border-primary-vibrant/40 hover:bg-bg-secondary active:scale-95`}
     >
-      {icone}
-    </span>
-    {children}
-  </a>
-);
+      {conteudo}
+    </a>
+  );
+};
+
+/**
+ * O endereço é local? O Google busca o arquivo dos servidores DELE, então
+ * `localhost` ali é a máquina do próprio Google — onde não há Fassaja nenhum.
+ * Oferecer o botão em desenvolvimento só entrega um erro sem explicação.
+ * (Apple e Outlook web também não alcançam; só o webcal local funciona, porque
+ * quem busca é o aplicativo na mesma máquina.)
+ */
+const ehLocal = (url: string) => /^(webcal|https?):\/\/(localhost|127\.0\.0\.1|\[::1\])/.test(url);
 
 export const CalendarSubscriptionSection: React.FC = () => {
   const toast = useToast();
@@ -57,6 +92,23 @@ export const CalendarSubscriptionSection: React.FC = () => {
   const [carregando, setCarregando] = useState(true);
   const [copiado, setCopiado] = useState(false);
   const [confirmarTroca, setConfirmarTroca] = useState(false);
+  const local = !!token && ehLocal(urlDoFeed(token));
+
+  /**
+   * Copia o endereço ANTES de abrir a Agenda.
+   *
+   * A tela que abre pede a URL num campo; ter o endereço já na área de
+   * transferência transforma "vá buscar o link em outra aba" num Cmd+V. A
+   * cópia não bloqueia a navegação: se a permissão for negada, o link abre
+   * assim mesmo e o endereço continua visível aqui embaixo.
+   */
+  const abrirNoGoogle = () => {
+    if (!token) return;
+    navigator.clipboard
+      ?.writeText(urlDoFeed(token))
+      .then(() => toast.info('Endereço copiado. Cole no campo que abriu na Agenda.'))
+      .catch(() => toast.info('Cole o endereço do calendário no campo que abriu.'));
+  };
 
   useEffect(() => {
     calendarService
@@ -100,7 +152,14 @@ export const CalendarSubscriptionSection: React.FC = () => {
 
       {token && (
         <div className="flex flex-wrap gap-2">
-          <BotaoCalendario href={linksDeAssinatura(token).google} cor="#fff" icone={<MarcaGoogle />}>
+          <BotaoCalendario
+            href={linksDeAssinatura(token).google}
+            cor="#fff"
+            icone={<MarcaGoogle />}
+            desabilitado={local}
+            motivo="O Google busca o arquivo pelos servidores dele e não enxerga localhost. Funciona no site publicado."
+            onClick={abrirNoGoogle}
+          >
             Google Agenda
           </BotaoCalendario>
           <BotaoCalendario
@@ -114,6 +173,8 @@ export const CalendarSubscriptionSection: React.FC = () => {
             href={linksDeAssinatura(token).outlook}
             cor="#0F6CBD"
             icone={<CalendarDays size={14} className="text-white" />}
+            desabilitado={local}
+            motivo="O Outlook na web também busca pelo servidor dele; não enxerga localhost."
           >
             Outlook
           </BotaoCalendario>
@@ -147,6 +208,10 @@ export const CalendarSubscriptionSection: React.FC = () => {
               {copiado ? <Check size={15} className="text-success" /> : <Copy size={15} />}
             </button>
           </div>
+          <p>
+            <strong className="text-text-primary">Google:</strong> o botão copia o endereço e abre
+            a tela "Adicionar por URL" — é só colar e confirmar.
+          </p>
           <p>
             O Google atualiza calendários assinados no ritmo dele — costuma levar de algumas horas
             a um dia, e não há como acelerar. No Apple Calendar você escolhe o intervalo ao

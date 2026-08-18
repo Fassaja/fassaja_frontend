@@ -41,8 +41,16 @@ export function linksDeAssinatura(token: string, nome = 'Fassaja') {
   const feed = urlDoFeed(token);
   const webcal = urlWebcal(token);
   return {
-    // O Google aceita a URL webcal em `cid` e abre a caixa de confirmação.
-    google: `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`,
+    /**
+     * Tela de "Adicionar por URL" da Agenda, e NÃO o atalho `?cid=`.
+     *
+     * O `cid` é convenção não documentada: o Google mudou o comportamento dele
+     * ao longo dos anos e em muitas contas ele responde "não foi possível
+     * adicionar a agenda", sem dizer por quê. Esta tela é parte da interface
+     * de configurações e não some — o preço é a pessoa colar o endereço, que
+     * o botão já deixa na área de transferência.
+     */
+    google: 'https://calendar.google.com/calendar/u/0/r/settings/addbyurl',
     // Deixa o sistema escolher o aplicativo padrão — no Mac e no iPhone é o
     // Calendário, mas pode ser outro, e forçar "Apple" seria mentira.
     webcal,
