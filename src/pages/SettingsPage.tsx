@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell,
+  CalendarPlus,
   Target,
   Check,
   ChevronRight,
@@ -35,6 +36,7 @@ import { GOAL_LIMITS, clampGoal } from '@/utils/goals';
 import { useUser, NotificationPrefs } from '@/contexts/UserContext';
 import { Toggle } from '@/components/common/Toggle';
 import { TaskReminderSection } from '@/components/settings/TaskReminderSection';
+import { CalendarSubscriptionSection } from '@/components/settings/CalendarSubscriptionSection';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, ThemePreference } from '@/contexts/ThemeContext';
@@ -309,6 +311,17 @@ const SettingsPage: React.FC = () => {
                 <>
                   <SectionHint>Vale para toda tarefa com prazo.</SectionHint>
                   <TaskReminderSection />
+                </>
+              ),
+            },
+            {
+              id: 'calendario',
+              icon: <SectionIcon icon={<CalendarPlus size={18} />} color="#2DD4BF" />,
+              title: 'Calendário externo',
+              content: (
+                <>
+                  <SectionHint>Google, Apple ou Outlook — somente leitura.</SectionHint>
+                  <CalendarSubscriptionSection />
                 </>
               ),
             },
