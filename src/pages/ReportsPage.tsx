@@ -22,6 +22,8 @@ import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { ReportsSkeleton } from '@/components/common/Skeletons';
 import { TeamReportView } from '@/components/reports/TeamReportView';
 import { useTasks } from '@/hooks/useTasks';
+import { useTaskHistory } from '@/hooks/useTaskHistory';
+import { toISODate } from '@/utils/date';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useChartTheme, type ChartTheme } from '@/utils/chartTheme';
@@ -50,20 +52,28 @@ const PRIORITY_COLORS = ['#22C55E', '#FBBF24', '#8B5CF6'];
 
 const WEEK_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
-function sameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
 const ReportsPage: React.FC = () => {
   const { tasks, loading } = useTasks();
   const chart = useChartTheme();
   const { axis: AXIS_PROPS, grid: GRID_COLOR, tooltip: TOOLTIP_STYLE } = chartStyles(chart);
   const showSkeleton = useDeferredLoading(loading);
   const stats = useDashboardStats(tasks);
+
+  /**
+   * Intervalo do histórico: o mês corrente cobre também a visão semanal, que é
+   * um recorte dele. Uma faixa só evita refazer a busca ao alternar o período.
+   */
+  const [inicioPeriodo, fimPeriodo] = useMemo(() => {
+    const hoje = new Date();
+    const primeiro = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const ultimo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    // Recua até a segunda-feira: a semana em curso pode começar no mês passado.
+    const segunda = new Date(hoje);
+    segunda.setDate(hoje.getDate() - ((hoje.getDay() + 6) % 7));
+    const de = segunda < primeiro ? segunda : primeiro;
+    return [toISODate(de), toISODate(ultimo)];
+  }, []);
+  const { porDia } = useTaskHistory(inicioPeriodo, fimPeriodo);
   const [period, setPeriod] = useState('week');
 
   /**
@@ -123,43 +133,46 @@ const ReportsPage: React.FC = () => {
   ];
 
   // Tendência por datas reais do período (semana atual ou mês atual).
+  /**
+   * Tendência a partir do HISTÓRICO do servidor, e não da lista de tarefas.
+   *
+   * A lista não serve: a faxina apaga as concluídas após 4 dias, então no modo
+   * "mês" as três primeiras semanas apareciam zeradas — o gráfico afirmava que
+   * a pessoa não fez nada, o que é pior do que não mostrar. O servidor guarda a
+   * contagem de cada dia numa linha que não some.
+   */
   const trendData = useMemo(() => {
-    const now = new Date();
+    const doDia = (d: Date) => porDia.get(toISODate(d)) ?? { created: 0, completed: 0 };
+    const hoje = new Date();
+
     if (period === 'month') {
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      const weeks = Math.ceil(new Date(year, month + 1, 0).getDate() / 7);
-      const buckets = Array.from({ length: weeks }, (_, i) => ({
+      const ano = hoje.getFullYear();
+      const mes = hoje.getMonth();
+      const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+      const semanas = Math.ceil(diasNoMes / 7);
+      const baldes = Array.from({ length: semanas }, (_, i) => ({
         day: `Sem ${i + 1}`,
         created: 0,
         completed: 0,
       }));
-      const inMonth = (d: Date) => d.getFullYear() === year && d.getMonth() === month;
-      tasks.forEach(t => {
-        const c = new Date(t.createdAt);
-        if (inMonth(c)) buckets[Math.floor((c.getDate() - 1) / 7)].created += 1;
-        if (t.completedAt) {
-          const d = new Date(t.completedAt);
-          if (inMonth(d)) buckets[Math.floor((d.getDate() - 1) / 7)].completed += 1;
-        }
-      });
-      return buckets;
+      for (let dia = 1; dia <= diasNoMes; dia++) {
+        const n = doDia(new Date(ano, mes, dia));
+        const balde = baldes[Math.floor((dia - 1) / 7)];
+        balde.created += n.created;
+        balde.completed += n.completed;
+      }
+      return baldes;
     }
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    monday.setHours(0, 0, 0, 0);
+
+    const segunda = new Date(hoje);
+    segunda.setDate(hoje.getDate() - ((hoje.getDay() + 6) % 7));
     return WEEK_LABELS.map((label, i) => {
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + i);
-      let created = 0;
-      let completed = 0;
-      tasks.forEach(t => {
-        if (sameDay(new Date(t.createdAt), day)) created += 1;
-        if (t.completedAt && sameDay(new Date(t.completedAt), day)) completed += 1;
-      });
-      return { day: label, created, completed };
+      const d = new Date(segunda);
+      d.setDate(segunda.getDate() + i);
+      const n = doDia(d);
+      return { day: label, created: n.created, completed: n.completed };
     });
-  }, [tasks, period]);
+  }, [porDia, period]);
 
   const priorityTotal = priorityData.reduce((s, d) => s + d.value, 0);
 
