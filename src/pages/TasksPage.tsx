@@ -48,7 +48,15 @@ const TasksPage: React.FC = () => {
   };
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | undefined>();
+  /**
+   * A tarefa aberta é guardada por ID, e não como objeto.
+   *
+   * Guardar o objeto congelava um RETRATO do momento da abertura: adicionar um
+   * passo atualizava a lista no contexto, mas o modal seguia mostrando a cópia
+   * antiga — o passo só aparecia ao fechar e abrir de novo. Derivando da lista
+   * viva, qualquer mudança na tarefa chega ao modal sozinha.
+   */
+  const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>();
   const [deletingTask, setDeletingTask] = useState<Task | undefined>();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -97,6 +105,13 @@ const TasksPage: React.FC = () => {
     [allTasks, teamIds],
   );
   const teamCount = allTasks.length - soloCount;
+
+  // `allTasks` e não `tasks`: o recorte Pessoal x Equipe pode mudar embaixo de
+  // um modal aberto, e a tarefa não pode sumir da tela por causa disso.
+  const selectedTask = useMemo(
+    () => allTasks.find(t => t.id === selectedTaskId),
+    [allTasks, selectedTaskId],
+  );
 
   // Filtro por tags (OR: mostra tarefas com qualquer das tags marcadas).
   const [filterTags, setFilterTags] = useState<string[]>([]);
@@ -240,13 +255,13 @@ const TasksPage: React.FC = () => {
   };
 
   const handleOpenTask = (task: Task) => {
-    setSelectedTask(task);
+    setSelectedTaskId(task.id);
     setShowDetailModal(true);
   };
 
   const handleEditTask = (task: Task) => {
     setShowDetailModal(false);
-    setSelectedTask(task);
+    setSelectedTaskId(task.id);
     setShowEditModal(true);
   };
 
@@ -323,17 +338,21 @@ const TasksPage: React.FC = () => {
         project={projects.find(p => p.id === selectedTask?.projectId)}
         onClose={() => {
           setShowDetailModal(false);
-          setSelectedTask(undefined);
+          setSelectedTaskId(undefined);
         }}
         onEdit={handleEditTask}
       />
 
+      {/* `&& !!selectedTask`: agora que a tarefa vem da lista viva, ela pode
+          sumir com o modal aberto (exclusão em massa, faxina das concluídas).
+          O de detalhe já se protege sozinho; este renderizaria um formulário
+          vazio. */}
       <EditTaskModal
-        isOpen={showEditModal}
+        isOpen={showEditModal && !!selectedTask}
         task={selectedTask}
         onClose={() => {
           setShowEditModal(false);
-          setSelectedTask(undefined);
+          setSelectedTaskId(undefined);
         }}
         onUpdateTask={updateTask}
       />
