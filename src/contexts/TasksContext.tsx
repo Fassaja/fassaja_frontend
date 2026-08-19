@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { Task } from '@/types/task';
@@ -45,6 +46,20 @@ export const useTasks = () => useContext(TasksContext);
 
 export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [rawTasks, setRawTasks] = useState<Task[]>([]);
+  /**
+   * Espelho do estado CRU, para as ações otimistas guardarem o valor anterior
+   * e conseguirem desfazer.
+   *
+   * Ref, e não a variável de estado: as ações são `useCallback` com lista de
+   * dependências curta, e ler `rawTasks` direto capturaria o valor do render
+   * em que a função foi criada — desfazendo para um estado velho.
+   *
+   * Cru e não derivado: o derivado tem `status: 'overdue'` calculado no
+   * cliente, e devolvê-lo ao estado gravaria como real um status que o
+   * servidor nunca enviou.
+   */
+  const tasksRef = useRef<Task[]>([]);
+  tasksRef.current = rawTasks;
   // Status "overdue" é calculado aqui (fuso local), não vem pronto do servidor.
   const tasks = useMemo(() => rawTasks.map(deriveTaskStatus), [rawTasks]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +105,21 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isGuest, noteGuestTask]);
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
+    const anterior = tasksRef.current.find(t => t.id === id);
+
+    /**
+     * Aplica na tela antes da resposta — é este o caminho de arrastar o cartão
+     * entre colunas do quadro. Sem isto o cartão voltava para a coluna de
+     * origem e só pulava para a certa quando o servidor respondia, o que lê
+     * como "não funcionou".
+     *
+     * Mescla superficial: `updates` é parcial por natureza (só o status, só o
+     * prazo), e substituir a tarefa inteira apagaria o resto.
+     */
+    if (anterior) {
+      setRawTasks(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+    }
+
     try {
       const updated = isGuest
         ? guestTasksStore.update(id, updates)
@@ -99,14 +129,37 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return updated;
     } catch (err) {
+      if (anterior) setRawTasks(prev => prev.map(t => (t.id === id ? anterior : t)));
       setError(err as Error);
       throw err;
     }
   }, [isGuest]);
 
   const completeTask = useCallback(async (id: string) => {
+    const anterior = tasksRef.current.find(t => t.id === id);
+    const wasCompleted = anterior?.status === 'completed';
+
+    /**
+     * Marca na tela ANTES de falar com o servidor.
+     *
+     * A resposta leva uns 400ms — a distância até a API, que nenhuma
+     * otimização de código encurta. Esperar por ela deixava o cartão parado
+     * depois do clique, e a pessoa clicava de novo achando que não pegou.
+     *
+     * `completedAt` provisório para o cartão já riscar e sair da coluna; o
+     * valor de verdade chega na resposta e substitui este. Se o servidor
+     * recusar, `anterior` volta ao lugar — por isso ele é capturado aqui, e
+     * não relido depois, quando o estado já teria mudado.
+     */
+    if (!wasCompleted && anterior) {
+      setRawTasks(prev =>
+        prev.map(t =>
+          t.id === id ? { ...t, status: 'completed', completedAt: new Date().toISOString() } : t,
+        ),
+      );
+    }
+
     try {
-      const wasCompleted = tasks.find(t => t.id === id)?.status === 'completed';
       const updated = isGuest
         ? guestTasksStore.complete(id)
         : await tasksService.completeTask(id);
@@ -143,6 +196,10 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       return updated;
     } catch (err) {
+      // Desfaz o palpite: sem isto o cartão fica riscado para sempre por uma
+      // conclusão que o servidor nunca registrou — e a pessoa só descobre ao
+      // recarregar a página.
+      if (anterior) setRawTasks(prev => prev.map(t => (t.id === id ? anterior : t)));
       setError(err as Error);
       throw err;
     }
