@@ -7,6 +7,7 @@ import { TaskPriority } from '@/types/task';
 import { Project } from '@/types/project';
 import { Tag } from '@/types/tag';
 import { tint, chipText } from '@/utils/color';
+import { SEM_PROJETO, TODOS_PROJETOS } from '@/utils/taskFilters';
 
 const priorityOptions = [
   { value: 'all', label: 'Todas as prioridades' },
@@ -106,7 +107,10 @@ export const TaskFilterMenu: React.FC<TaskFilterMenuProps> = ({
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
   const projectOptions = [
-    { value: 'all', label: 'Todos os projetos' },
+    { value: TODOS_PROJETOS, label: 'Todos os projetos' },
+    // Logo depois de "todos", antes da lista: é o recorte padrão da tela, e
+    // enterrá-lo no fim de vinte projetos o esconderia de quem mais o usa.
+    { value: SEM_PROJETO, label: 'Sem projeto' },
     ...projects.map(p => ({ value: p.id, label: p.name })),
   ];
 
@@ -325,9 +329,12 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
   onToggleTag,
 }) => {
   const project = projects.find(p => p.id === filterProject);
+  const semProjeto = filterProject === SEM_PROJETO;
   const activeTags = tags.filter(t => filterTags.includes(t.id));
 
-  if (filterProject === 'all' && filterPriority === 'all' && activeTags.length === 0) return null;
+  if (filterProject === TODOS_PROJETOS && filterPriority === 'all' && activeTags.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mb-3 flex flex-wrap items-center gap-1.5">
@@ -335,8 +342,13 @@ export const ActiveFilterChips: React.FC<ActiveFilterChipsProps> = ({
         <Chip
           label={project.name}
           color={project.color}
-          onRemove={() => onProjectChange('all')}
+          onRemove={() => onProjectChange(TODOS_PROJETOS)}
         />
+      )}
+      {/* Sem cor: "sem projeto" não É um projeto, e pintá-lo como se fosse o
+          faria parecer mais um da lista. */}
+      {semProjeto && (
+        <Chip label="Sem projeto" onRemove={() => onProjectChange(TODOS_PROJETOS)} />
       )}
       {filterPriority !== 'all' && (
         <Chip

@@ -102,18 +102,27 @@ export const SubtaskList: React.FC<{ task: Task }> = ({ task }) => {
               transition={{ duration: 0.16 }}
               className="group flex items-center gap-2.5 rounded-lg py-1.5 pl-1 pr-1 hover:bg-bg-secondary/60"
             >
+              {/* O botão é o ALVO (40px no celular); o quadrado visual tem
+                  20px e vive dentro dele. Com o alvo do tamanho do desenho, a
+                  caixinha mais tocada do app tinha 20px — metade do mínimo
+                  confortável, e errar o toque marca o passo errado. */}
               <button
                 type="button"
                 role="checkbox"
                 aria-checked={passo.done}
                 onClick={() => alternar(passo.id, !passo.done)}
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
-                  passo.done
-                    ? 'border-success bg-success text-white'
-                    : 'border-border hover:border-primary-vibrant'
-                }`}
+                className="-m-2 flex h-10 w-10 shrink-0 items-center justify-center sm:-m-1.5 sm:h-8 sm:w-8"
               >
-                {passo.done && <Check size={13} strokeWidth={3} />}
+                <span
+                  aria-hidden
+                  className={`flex h-5 w-5 items-center justify-center rounded-md border-2 transition-colors ${
+                    passo.done
+                      ? 'border-success bg-success text-white'
+                      : 'border-border hover:border-primary-vibrant'
+                  }`}
+                >
+                  {passo.done && <Check size={13} strokeWidth={3} />}
+                </span>
               </button>
               <span
                 className={`min-w-0 flex-1 break-words text-sm ${
@@ -128,7 +137,7 @@ export const SubtaskList: React.FC<{ task: Task }> = ({ task }) => {
                 type="button"
                 onClick={() => excluir(passo.id)}
                 aria-label={`Excluir passo ${passo.title}`}
-                className="shrink-0 rounded-md p-1 text-text-soft opacity-100 transition-opacity hover:text-danger sm:opacity-0 sm:group-hover:opacity-100"
+                className="shrink-0 rounded-md p-2.5 text-text-soft opacity-100 transition-opacity hover:text-danger sm:p-1 sm:opacity-0 sm:group-hover:opacity-100"
               >
                 <Trash2 size={14} />
               </button>
@@ -152,13 +161,13 @@ export const SubtaskList: React.FC<{ task: Task }> = ({ task }) => {
             maxLength={120}
             placeholder={cheio ? `Limite de ${MAX_SUBTASKS} passos` : 'Adicionar um passo...'}
             aria-label="Novo passo"
-            className="h-9 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-sm text-text-primary placeholder-text-soft transition-shadow focus:border-primary-vibrant focus:outline-none focus:ring-4 focus:ring-primary-light/60 disabled:bg-bg-secondary"
+            className="h-10 sm:h-9 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-sm text-text-primary placeholder-text-soft transition-shadow focus:border-primary-vibrant focus:outline-none focus:ring-4 focus:ring-primary-light/60 disabled:bg-bg-secondary"
           />
           <button
             type="submit"
             disabled={!novo.trim() || cheio}
             aria-label="Adicionar passo"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-vibrant text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-vibrant text-white transition-colors hover:bg-primary-hover disabled:opacity-40 sm:h-9 sm:w-9"
           >
             <Plus size={17} />
           </button>

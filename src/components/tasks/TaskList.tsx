@@ -6,6 +6,7 @@ import { TaskCard } from './TaskCard';
 import { AnimatedList } from '@/components/common/AnimatedList';
 import { EmptyState } from '@/components/common/EmptyState';
 import { isToday, isTomorrow } from '@/utils/date';
+import { combinaComProjeto } from '@/utils/taskFilters';
 
 interface TaskListProps {
   tasks: Task[];
@@ -69,7 +70,7 @@ export const TaskList: React.FC<TaskListProps> = ({
       const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === 'all' || task.status === filterStatus;
       const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
-      const matchesProject = filterProject === 'all' || task.projectId === filterProject;
+      const matchesProject = combinaComProjeto(task, filterProject);
 
       return matchesSearch && matchesStatus && matchesPriority && matchesProject;
     });

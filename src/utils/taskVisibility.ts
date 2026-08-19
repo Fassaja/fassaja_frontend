@@ -1,5 +1,9 @@
 import type { Task } from '@/types/task';
 import type { TaskScope } from './taskScope.ts';
+// Com extensão .ts porque este arquivo é importado pelos testes que rodam em
+// Node puro (`--experimental-strip-types`), onde o resolvedor exige o caminho
+// completo. Mesma convenção de `teamReport.ts`.
+import { combinaComProjeto } from './taskFilters.ts';
 
 /**
  * Por que uma tarefa recém-criada não apareceria na lista.
@@ -47,7 +51,7 @@ export function whyHidden(task: Task, f: ActiveFilters): VisibilityBlock | null 
     !task.title.toLowerCase().includes(f.searchTerm.trim().toLowerCase());
   const statusEsconde = f.filterStatus !== 'all' && task.status !== f.filterStatus;
   const prioridadeEsconde = f.filterPriority !== 'all' && task.priority !== f.filterPriority;
-  const projetoEsconde = f.filterProject !== 'all' && task.projectId !== f.filterProject;
+  const projetoEsconde = !combinaComProjeto(task, f.filterProject);
   // Tarefa nova nasce sem tag, então QUALQUER tag marcada a esconde.
   const tagEsconde =
     f.filterTags.length > 0 &&

@@ -18,6 +18,7 @@ import { TaskCard } from './TaskCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
+import { combinaComProjeto } from '@/utils/taskFilters';
 
 interface TaskBoardProps {
   tasks: Task[];
@@ -161,7 +162,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
     return tasks.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
-      const matchesProject = filterProject === 'all' || task.projectId === filterProject;
+      const matchesProject = combinaComProjeto(task, filterProject);
       return matchesSearch && matchesPriority && matchesProject;
     });
   }, [tasks, searchTerm, filterPriority, filterProject]);

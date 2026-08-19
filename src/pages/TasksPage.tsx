@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LayoutGrid, List, ListChecks, Trash2, Check, Minus, X, User, Users } from 'lucide-react';
+import { LayoutGrid, List, ListChecks, Trash2, Check, Minus, X, User, Users, FolderOpen } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { TaskList } from '@/components/tasks/TaskList';
@@ -29,6 +29,10 @@ import {
 } from '@/utils/taskScope';
 import { whyHidden } from '@/utils/taskVisibility';
 import { tint, chipText } from '@/utils/color';
+import { combinaComProjeto, SEM_PROJETO, TODOS_PROJETOS } from '@/utils/taskFilters';
+import { WorkspaceBar } from '@/components/tasks/WorkspaceBar';
+import { FiltrosDaArea } from '@/services/workspacesService';
+import { useWorkspaces } from '@/hooks/useWorkspaces';
 
 const TasksPage: React.FC = () => {
   const { tasks: allTasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
@@ -79,9 +83,16 @@ const TasksPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
   const [filterPriority, setFilterPriority] = useState<TaskPriority | 'all'>('all');
-  // Pré-seleciona o projeto vindo de "Ver tarefas" em Projetos (?project=ID).
-  const [filterProject, setFilterProject] = useState<string | 'all'>(
-    () => searchParams.get('project') ?? 'all',
+  /**
+   * Começa em "Sem projeto" — as tarefas avulsas, que são a caixa de entrada
+   * de quem anota primeiro e organiza depois. O que já foi para um projeto tem
+   * a tela de Projetos.
+   *
+   * O `?project=ID` vindo de "Ver tarefas" continua vencendo: quem chegou
+   * pedindo um projeto específico quer aquele, não o padrão.
+   */
+  const [filterProject, setFilterProject] = useState<string>(
+    () => searchParams.get('project') ?? SEM_PROJETO,
   );
   // --- Pessoal x Equipe ---
   // A API devolve as duas coisas juntas; a separação acontece aqui. Tudo abaixo
@@ -115,6 +126,45 @@ const TasksPage: React.FC = () => {
 
   // Filtro por tags (OR: mostra tarefas com qualquer das tags marcadas).
   const [filterTags, setFilterTags] = useState<string[]>([]);
+
+  // --- Áreas de trabalho ---
+  // O recorte da tela AGORA, no formato que a área guarda. A busca fica de
+  // fora de propósito: buscar é gesto do momento, não característica da área.
+  const filtrosAtuais = useMemo(
+    () => ({
+      filterStatus,
+      filterPriority,
+      filterProject,
+      filterTags,
+      view,
+      scope,
+    }),
+    [filterStatus, filterPriority, filterProject, filterTags, view, scope],
+  );
+
+  /** Aplica um recorte na tela inteira, de uma vez. */
+  const aplicarFiltros = useCallback(
+    (f: FiltrosDaArea) => {
+      setFilterStatus(f.filterStatus as TaskStatus | 'all');
+      setFilterPriority(f.filterPriority as TaskPriority | 'all');
+      setFilterProject(f.filterProject);
+      setFilterTags(f.filterTags);
+      setView(f.view === 'list' ? 'list' : 'board');
+      // `saveScope` junto do `setScope`: o lado Pessoal x Equipe também vive no
+      // localStorage, e sem gravar aqui as duas fontes divergiriam — a tela
+      // mostrando o lado da área e o navegador lembrando o anterior na próxima
+      // visita.
+      const lado: TaskScope = f.scope === 'team' ? 'team' : 'solo';
+      setScope(lado);
+      saveScope(lado);
+      // A busca NÃO é restaurada, mas é LIMPA: deixar um termo antigo em cima
+      // de um recorte novo esconderia tarefas sem explicação aparente.
+      setSearchTerm('');
+    },
+    [],
+  );
+
+  const areas = useWorkspaces({ filtrosAtuais, aplicarFiltros, projects, tags });
 
   /**
    * Cria a tarefa e GARANTE que ela apareça.
@@ -150,7 +200,7 @@ const TasksPage: React.FC = () => {
       setSearchTerm('');
       setFilterStatus('all');
       setFilterPriority('all');
-      setFilterProject('all');
+      setFilterProject(TODOS_PROJETOS);
       setFilterTags([]);
     }
 
@@ -188,7 +238,7 @@ const TasksPage: React.FC = () => {
     return tasksForView.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(term);
       const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
-      const matchesProject = filterProject === 'all' || task.projectId === filterProject;
+      const matchesProject = combinaComProjeto(task, filterProject);
       const matchesStatus = view === 'list' ? filterStatus === 'all' || task.status === filterStatus : true;
       return matchesSearch && matchesPriority && matchesProject && matchesStatus;
     });
@@ -277,7 +327,7 @@ const TasksPage: React.FC = () => {
    */
   const limparFiltrosDoPainel = () => {
     setFilterPriority('all');
-    setFilterProject('all');
+    setFilterProject(TODOS_PROJETOS);
     setFilterTags([]);
   };
 
@@ -292,7 +342,9 @@ const TasksPage: React.FC = () => {
   // Só os filtros que moram no painel — a busca não entra na conta porque o
   // termo já fica visível dentro do próprio campo.
   const activeFilterCount =
-    (filterPriority !== 'all' ? 1 : 0) + (filterProject !== 'all' ? 1 : 0) + filterTags.length;
+    (filterPriority !== 'all' ? 1 : 0) +
+    (filterProject !== TODOS_PROJETOS ? 1 : 0) +
+    filterTags.length;
 
   /**
    * Busca + filtros, um par só.
@@ -419,6 +471,25 @@ const TasksPage: React.FC = () => {
               </p>
             </div>
           </div>
+        )}
+
+        {/* Áreas de trabalho: acima de tudo, porque trocar de área troca TODO o
+            resto — filtros, visão e lado. Deixá-la abaixo faria parecer que ela
+            é mais um filtro entre os outros. */}
+        {!selectionMode && (
+          <WorkspaceBar
+            areas={areas.lista}
+            ativaId={areas.ativaId}
+            alterada={areas.alterada}
+            onSelecionar={areas.selecionar}
+            onCriar={areas.criar}
+            onRenomear={areas.renomear}
+            onSalvarFiltros={areas.salvarFiltros}
+            onDescartar={areas.descartar}
+            onExcluir={areas.excluir}
+            filtrosAtuais={filtrosAtuais}
+            limite={areas.limite}
+          />
         )}
 
         {/* Barra de seleção em massa OU alternador de visão */}
@@ -618,6 +689,33 @@ const TasksPage: React.FC = () => {
             );
           })}
         </div>
+        )}
+
+        {/* Explica o padrão em vez de deixar a tela vazia sem motivo aparente.
+            Quem organiza tudo em projetos chegaria aqui e veria nada — e o
+            estado vazio genérico ("ajuste seus filtros") não diz QUAL filtro
+            está agindo nem que ele veio ligado de fábrica. */}
+        {visibleTasks.length === 0 && filterProject === SEM_PROJETO && tasks.length > 0 && (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-border bg-bg-secondary/60 p-4">
+            <FolderOpen size={20} className="mt-0.5 shrink-0 text-text-secondary" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-text-primary">
+                Você está vendo só as tarefas sem projeto
+              </p>
+              <p className="mt-0.5 text-sm text-text-secondary">
+                {tasks.length === 1
+                  ? 'Há 1 tarefa em projetos, escondida por este filtro.'
+                  : `Há ${tasks.length} tarefas em projetos, escondidas por este filtro.`}{' '}
+                <button
+                  type="button"
+                  onClick={() => setFilterProject(TODOS_PROJETOS)}
+                  className="font-semibold text-primary-vibrant underline underline-offset-2"
+                >
+                  Ver todas
+                </button>
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Tarefas: Quadro (por status) ou Lista (por data) */}

@@ -50,8 +50,10 @@ const BotaoCalendario: React.FC<{
       {children}
     </>
   );
+  // min-h de 40px no celular: com py-2 o botão fica em ~36px, abaixo do alvo
+  // confortável de toque que o resto do app já adota.
   const base =
-    'inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold transition-all';
+    'inline-flex min-h-[40px] sm:min-h-0 items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold transition-all';
 
   if (desabilitado) {
     return (
@@ -203,7 +205,7 @@ export const CalendarSubscriptionSection: React.FC = () => {
               onClick={copiar}
               disabled={!token}
               aria-label="Copiar endereço"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:text-primary-vibrant disabled:opacity-50"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:text-primary-vibrant disabled:opacity-50 sm:h-9 sm:w-9"
             >
               {copiado ? <Check size={15} className="text-success" /> : <Copy size={15} />}
             </button>
