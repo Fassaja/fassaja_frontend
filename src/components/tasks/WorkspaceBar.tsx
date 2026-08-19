@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { Plus, Check, Pencil, Trash2, X, LayoutPanelLeft } from 'lucide-react';
-import { Workspace, FiltrosDaArea } from '@/services/workspacesService';
+import React, { useEffect, useRef, useState } from 'react';
+import { Plus, ChevronDown, Pencil, Trash2 } from 'lucide-react';
+import { Workspace } from '@/services/workspacesService';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 
 interface Props {
   areas: Workspace[];
   ativaId: string | null;
-  /** Os filtros da tela AGORA — para saber se a área ativa foi alterada. */
   alterada: boolean;
   onSelecionar: (id: string | null) => void;
   onCriar: (nome: string) => void;
@@ -14,19 +13,24 @@ interface Props {
   onSalvarFiltros: (id: string) => void;
   onDescartar: () => void;
   onExcluir: (id: string) => void;
-  filtrosAtuais: FiltrosDaArea;
   limite: number;
 }
 
 /**
  * Barra de áreas de trabalho.
  *
- * Aparece como abas porque a ação é TROCAR entre recortes — o mesmo gesto de
- * trocar de aba no navegador. Um seletor suspenso esconderia quantas existem e
- * qual está ativa, que é a informação principal.
+ * Abas, porque a ação principal é TROCAR de recorte — o mesmo gesto de trocar
+ * de aba no navegador, e o mesmo aprendizado.
  *
- * Quem nunca criou uma área vê só o botão de criar, discreto. Cromo permanente
- * para um recurso opcional é peso para todo mundo pagar pelo uso de alguns.
+ * Duas decisões mantêm a barra quieta:
+ *
+ * 1. Nomear acontece DENTRO da aba. A versão anterior trocava a barra inteira
+ *    por um formulário: as abas sumiam, e quem estava só renomeando perdia de
+ *    vista onde estava. Aqui a aba vira um campo do próprio tamanho dela.
+ *
+ * 2. Renomear e excluir moram num menu na aba ativa. Eram dois botões fixos ao
+ *    lado de outros dois — quatro controles permanentes para ações que se usa
+ *    uma vez por mês.
  */
 export const WorkspaceBar: React.FC<Props> = ({
   areas,
@@ -40,145 +44,99 @@ export const WorkspaceBar: React.FC<Props> = ({
   onExcluir,
   limite,
 }) => {
-  const [criando, setCriando] = useState(false);
-  const [nome, setNome] = useState('');
-  const [renomeando, setRenomeando] = useState<string | null>(null);
+  // `null` = ninguém em edição; 'nova' = criando; um id = renomeando aquela.
+  const [editando, setEditando] = useState<string | 'nova' | null>(null);
+  const [menuAberto, setMenuAberto] = useState(false);
   const [excluindo, setExcluindo] = useState<Workspace | null>(null);
 
-  const cheio = areas.length >= limite;
-
-  const confirmarNome = (e: React.FormEvent) => {
-    e.preventDefault();
+  const confirmar = (nome: string) => {
     const limpo = nome.trim();
-    if (!limpo) return;
-    if (renomeando) onRenomear(renomeando, limpo);
-    else onCriar(limpo);
-    setNome('');
-    setCriando(false);
-    setRenomeando(null);
+    if (limpo) {
+      if (editando === 'nova') onCriar(limpo);
+      else if (editando) onRenomear(editando, limpo);
+    }
+    setEditando(null);
   };
 
-  const cancelar = () => {
-    setNome('');
-    setCriando(false);
-    setRenomeando(null);
-  };
-
-  if (criando || renomeando) {
-    return (
-      <form onSubmit={confirmarNome} className="mb-3 flex items-center gap-2">
-        <input
-          autoFocus
-          value={nome}
-          onChange={e => setNome(e.target.value)}
-          onKeyDown={e => e.key === 'Escape' && cancelar()}
-          maxLength={32}
-          placeholder={renomeando ? 'Novo nome da área' : 'Nome da área (ex.: Trabalho)'}
-          aria-label={renomeando ? 'Novo nome da área' : 'Nome da nova área'}
-          className="h-10 sm:h-9 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-sm text-text-primary placeholder-text-soft focus:border-primary-vibrant focus:outline-none focus:ring-4 focus:ring-primary-light/60 sm:max-w-xs"
-        />
-        <button
-          type="submit"
-          disabled={!nome.trim()}
-          className="inline-flex h-10 sm:h-9 items-center gap-1.5 rounded-xl bg-primary-vibrant px-3 text-sm font-semibold text-white disabled:opacity-40"
-        >
-          <Check size={15} /> {renomeando ? 'Renomear' : 'Criar'}
-        </button>
-        <button
-          type="button"
-          onClick={cancelar}
-          aria-label="Cancelar"
-          className="inline-flex h-10 w-10 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-border text-text-secondary"
-        >
-          <X size={15} />
-        </button>
-      </form>
-    );
-  }
+  const ativa = areas.find(a => a.id === ativaId) ?? null;
+  const cheio = areas.length >= limite;
 
   return (
     <>
-      <div className="mb-3 flex flex-wrap items-center gap-1.5">
+      <div className="mb-3 flex flex-wrap items-center gap-x-1 gap-y-1.5">
         {areas.length > 0 && (
-          <>
-            {/* "Padrão" é o estado sem área: sempre existe e não se apaga.
-                Sem ele não haveria caminho de volta depois de entrar numa. */}
-            <Aba
-              ativa={ativaId === null}
-              onClick={() => onSelecionar(null)}
-              icone={<LayoutPanelLeft size={14} />}
-            >
-              Padrão
-            </Aba>
-            {areas.map(a => (
-              <Aba
-                key={a.id}
-                ativa={ativaId === a.id}
-                onClick={() => onSelecionar(a.id)}
-                marcador={ativaId === a.id && alterada}
-              >
-                {a.name}
-              </Aba>
-            ))}
-          </>
+          <Aba ativa={ativaId === null} onClick={() => onSelecionar(null)}>
+            Início
+          </Aba>
         )}
 
-        {!cheio && (
+        {areas.map(a =>
+          editando === a.id ? (
+            <CampoDeNome key={a.id} inicial={a.name} onConfirmar={confirmar} onCancelar={() => setEditando(null)} />
+          ) : (
+            <Aba
+              key={a.id}
+              ativa={ativaId === a.id}
+              onClick={() => onSelecionar(a.id)}
+              pendente={ativaId === a.id && alterada}
+              // A seta só existe na aba ativa: é dela que as ações tratam.
+              menu={
+                ativaId === a.id ? (
+                  <MenuDaAba
+                    aberto={menuAberto}
+                    onAbrir={() => setMenuAberto(v => !v)}
+                    onFechar={() => setMenuAberto(false)}
+                    onRenomear={() => {
+                      setMenuAberto(false);
+                      setEditando(a.id);
+                    }}
+                    onExcluir={() => {
+                      setMenuAberto(false);
+                      setExcluindo(a);
+                    }}
+                  />
+                ) : undefined
+              }
+            >
+              {a.name}
+            </Aba>
+          ),
+        )}
+
+        {editando === 'nova' && (
+          <CampoDeNome inicial="" onConfirmar={confirmar} onCancelar={() => setEditando(null)} />
+        )}
+
+        {!cheio && editando !== 'nova' && (
           <button
             type="button"
-            onClick={() => setCriando(true)}
-            className="inline-flex h-10 sm:h-8 items-center gap-1.5 rounded-lg border border-dashed border-border px-2.5 text-sm font-semibold text-text-secondary transition-colors hover:border-primary-vibrant/50 hover:text-primary-vibrant"
+            onClick={() => setEditando('nova')}
+            className="inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm font-medium text-text-secondary transition-colors hover:text-primary-vibrant sm:h-8"
           >
-            <Plus size={14} />
-            {areas.length === 0 ? 'Salvar estes filtros como área' : 'Nova área'}
+            <Plus size={15} />
+            {areas.length === 0 ? 'Salvar filtros como área' : 'Nova área'}
           </button>
         )}
 
-        {/* Ações da área ativa. Só aparecem quando há uma — e a de salvar, só
-            quando há de fato o que salvar.
-
-            `w-full` no celular: com as abas quebrando em várias linhas, o
-            `ml-auto` sozinho jogava as ações para o fim de qualquer linha em que
-            sobrassem — às vezes espremidas ao lado de uma aba. */}
-        {ativaId && (
-          <span className="flex w-full items-center justify-end gap-1.5 sm:ml-auto sm:w-auto">
-            {alterada && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onSalvarFiltros(ativaId)}
-                  className="inline-flex h-10 sm:h-8 items-center gap-1.5 rounded-lg bg-primary-vibrant px-2.5 text-sm font-semibold text-white"
-                >
-                  <Check size={14} /> Salvar alterações
-                </button>
-                <button
-                  type="button"
-                  onClick={onDescartar}
-                  className="inline-flex h-10 sm:h-8 items-center rounded-lg border border-border px-2.5 text-sm font-semibold text-text-secondary hover:text-text-primary"
-                >
-                  Descartar
-                </button>
-              </>
-            )}
+        {/* Aparecem só quando há o que salvar. Texto simples, e não botões
+            preenchidos: são ações passageiras ao lado de uma barra que a pessoa
+            usa o tempo todo, e dois botões sólidos ali roubariam a atenção das
+            próprias abas. */}
+        {ativa && alterada && (
+          <span className="ml-auto flex items-center gap-3 pl-2 text-sm">
             <button
               type="button"
-              onClick={() => {
-                const a = areas.find(x => x.id === ativaId);
-                setNome(a?.name ?? '');
-                setRenomeando(ativaId);
-              }}
-              aria-label="Renomear área"
-              className="inline-flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-text-soft transition-colors hover:text-text-primary"
+              onClick={() => onSalvarFiltros(ativa.id)}
+              className="font-semibold text-primary-vibrant underline-offset-4 hover:underline"
             >
-              <Pencil size={14} />
+              Salvar
             </button>
             <button
               type="button"
-              onClick={() => setExcluindo(areas.find(x => x.id === ativaId) ?? null)}
-              aria-label="Excluir área"
-              className="inline-flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-lg text-text-soft transition-colors hover:text-danger"
+              onClick={onDescartar}
+              className="text-text-secondary underline-offset-4 hover:text-text-primary hover:underline"
             >
-              <Trash2 size={14} />
+              Desfazer
             </button>
           </span>
         )}
@@ -211,27 +169,131 @@ const Aba: React.FC<{
   ativa: boolean;
   onClick: () => void;
   children: React.ReactNode;
-  icone?: React.ReactNode;
-  /** Ponto de "tem alteração não salva". */
-  marcador?: boolean;
-}> = ({ ativa, onClick, children, icone, marcador }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-current={ativa ? 'true' : undefined}
-    className={`inline-flex h-10 sm:h-8 max-w-[12rem] items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold transition-colors ${
-      ativa
-        ? 'bg-primary-light text-primary-vibrant'
-        : 'text-text-secondary hover:bg-bg-secondary hover:text-text-primary'
+  /** Ponto de "há filtros alterados que esta área ainda não guarda". */
+  pendente?: boolean;
+  menu?: React.ReactNode;
+}> = ({ ativa, onClick, children, pendente, menu }) => (
+  <span
+    className={`relative inline-flex h-10 items-center rounded-lg transition-colors sm:h-8 ${
+      ativa ? 'bg-primary-light' : 'hover:bg-bg-secondary'
     }`}
   >
-    {icone}
-    <span className="truncate">{children}</span>
-    {marcador && (
-      <span
-        className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-vibrant"
-        title="Filtros alterados — não salvos nesta área"
-      />
-    )}
-  </button>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={ativa ? 'true' : undefined}
+      className={`inline-flex h-full max-w-[11rem] items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold ${
+        ativa ? 'text-primary-vibrant' : 'text-text-secondary'
+      } ${menu ? 'pr-1' : ''}`}
+    >
+      <span className="truncate">{children}</span>
+      {pendente && (
+        <span
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-vibrant"
+          title="Filtros alterados que esta área ainda não guarda"
+        />
+      )}
+    </button>
+    {menu}
+  </span>
 );
+
+/** Campo que ocupa o lugar da aba enquanto se dá nome a ela. */
+const CampoDeNome: React.FC<{
+  inicial: string;
+  onConfirmar: (nome: string) => void;
+  onCancelar: () => void;
+}> = ({ inicial, onConfirmar, onCancelar }) => {
+  const [valor, setValor] = useState(inicial);
+  /* Esc desfoca o campo, e o `onBlur` salvaria logo depois — desfazendo o
+     cancelamento que a pessoa acabou de pedir. Esta trava marca a saída como
+     intencional para o blur ignorá-la. */
+  const cancelado = useRef(false);
+
+  return (
+    <input
+      autoFocus
+      value={valor}
+      onChange={e => setValor(e.target.value)}
+      onBlur={() => {
+        if (cancelado.current) return;
+        onConfirmar(valor);
+      }}
+      onKeyDown={e => {
+        if (e.key === 'Enter') onConfirmar(valor);
+        if (e.key === 'Escape') {
+          cancelado.current = true;
+          onCancelar();
+        }
+      }}
+      maxLength={32}
+      placeholder="Nome da área"
+      aria-label="Nome da área"
+      // `w-36` e não `flex-1`: um campo que se estica empurraria as abas
+      // vizinhas para outra linha só por entrar em modo de edição.
+      className="h-10 w-36 rounded-lg border border-primary-vibrant bg-surface px-2.5 text-sm font-semibold text-text-primary outline-none ring-4 ring-primary-light/60 placeholder:font-normal placeholder:text-text-soft sm:h-8"
+    />
+  );
+};
+
+const MenuDaAba: React.FC<{
+  aberto: boolean;
+  onAbrir: () => void;
+  onFechar: () => void;
+  onRenomear: () => void;
+  onExcluir: () => void;
+}> = ({ aberto, onAbrir, onFechar, onRenomear, onExcluir }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!aberto) return;
+    const fora = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) onFechar();
+    };
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && onFechar();
+    document.addEventListener('mousedown', fora);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('mousedown', fora);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [aberto, onFechar]);
+
+  return (
+    <span ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={onAbrir}
+        aria-haspopup="menu"
+        aria-expanded={aberto}
+        aria-label="Ações da área"
+        className="inline-flex h-10 w-7 items-center justify-center rounded-r-lg text-primary-vibrant/70 hover:text-primary-vibrant sm:h-8"
+      >
+        <ChevronDown size={14} className={aberto ? 'rotate-180' : ''} />
+      </button>
+      {aberto && (
+        <span
+          role="menu"
+          className="absolute right-0 top-full z-30 mt-1 flex w-44 flex-col overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-lg"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={onRenomear}
+            className="flex items-center gap-2.5 px-3 py-2 text-left text-sm text-text-primary hover:bg-bg-secondary"
+          >
+            <Pencil size={15} className="text-text-secondary" /> Renomear
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={onExcluir}
+            className="flex items-center gap-2.5 px-3 py-2 text-left text-sm text-danger hover:bg-rose-50 dark:hover:bg-rose-500/10"
+          >
+            <Trash2 size={15} /> Excluir área
+          </button>
+        </span>
+      )}
+    </span>
+  );
+};

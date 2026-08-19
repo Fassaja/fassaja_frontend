@@ -91,7 +91,7 @@ export function useWorkspaces({ filtrosAtuais, aplicarFiltros, projects, tags }:
       setAtivaId(id);
       lembrar(id);
       if (!id) {
-        // "Padrão" volta ao estado de fábrica da tela.
+        // "Início" volta ao estado de fábrica da tela.
         aplicarFiltros({
           filterStatus: 'all',
           filterPriority: 'all',

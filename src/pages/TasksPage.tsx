@@ -487,7 +487,6 @@ const TasksPage: React.FC = () => {
             onSalvarFiltros={areas.salvarFiltros}
             onDescartar={areas.descartar}
             onExcluir={areas.excluir}
-            filtrosAtuais={filtrosAtuais}
             limite={areas.limite}
           />
         )}
