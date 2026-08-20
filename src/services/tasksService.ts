@@ -27,13 +27,11 @@ export const tasksService = {
     return api.patch<Task>(`/tasks/${id}/complete`, {});
   },
 
-  async assignTask(id: string, assigneeId: string | null): Promise<Task> {
-    return api.patch<Task>(`/tasks/${id}/assign`, { assigneeId });
+  /** Define o conjunto FINAL de responsáveis. Lista vazia remove todos. */
+  async assignTask(id: string, assigneeIds: string[]): Promise<Task> {
+    return api.patch<Task>(`/tasks/${id}/assign`, { assigneeIds });
   },
 
-  async respondAssignment(id: string, action: 'accept' | 'reject'): Promise<Task> {
-    return api.patch<Task>(`/tasks/${id}/assignment`, { action });
-  },
 
   // --- Passos (checklist) ---------------------------------------------------
   // Todas devolvem a TAREFA inteira já atualizada: o front troca o objeto e não

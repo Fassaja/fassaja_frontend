@@ -31,7 +31,12 @@ const iso = (offset: number) => {
 };
 
 let seq = 0;
-const t = (over: Partial<Task>): Task =>
+/**
+ * `dono` continua sendo escrito como um id só nos casos abaixo — é o que os
+ * testes medem (carga por pessoa). O helper traduz para a lista de
+ * responsáveis do modelo novo, onde uma tarefa pode ter vários.
+ */
+const t = (over: Partial<Task> & { dono?: string }): Task =>
   ({
     id: `t${++seq}`,
     title: 'Tarefa',
@@ -40,6 +45,9 @@ const t = (over: Partial<Task>): Task =>
     createdAt: new Date().toISOString(),
     tags: [],
     ...over,
+    assignees: over.dono
+      ? [{ id: over.dono, name: over.dono, done: over.status === 'completed' }]
+      : [],
   }) as Task;
 
 const member = (userId: string, name: string): TeamMember =>
@@ -61,9 +69,9 @@ const projB = { id: 'p2', name: 'Projeto B', color: '#222222' };
 // ---------- Totais ----------
 {
   const tasks = [
-    t({ projectId: 'p1', assigneeId: 'u1', status: 'completed' }),
-    t({ projectId: 'p1', assigneeId: 'u1' }),
-    t({ projectId: 'p1', assigneeId: 'u2', dueDate: iso(-3) }), // atrasada
+    t({ projectId: 'p1', dono: 'u1', status: 'completed' }),
+    t({ projectId: 'p1', dono: 'u1' }),
+    t({ projectId: 'p1', dono: 'u2', dueDate: iso(-3) }), // atrasada
     t({ projectId: 'p1' }), // sem responsável
   ];
   const r = buildTeamReport(tasks, [ana, bruno], [projA]);
@@ -79,10 +87,10 @@ const projB = { id: 'p2', name: 'Projeto B', color: '#222222' };
 // ---------- "Atrasada" segue a regra do app ----------
 {
   const tasks = [
-    t({ assigneeId: 'u1', status: 'in_progress', dueDate: iso(-5) }), // NÃO é atrasada
-    t({ assigneeId: 'u1', status: 'completed', dueDate: iso(-5) }), // NÃO é atrasada
-    t({ assigneeId: 'u1', dueDate: iso(0) }), // vence hoje: NÃO é atrasada
-    t({ assigneeId: 'u1', dueDate: iso(-1) }), // atrasada
+    t({ dono: 'u1', status: 'in_progress', dueDate: iso(-5) }), // NÃO é atrasada
+    t({ dono: 'u1', status: 'completed', dueDate: iso(-5) }), // NÃO é atrasada
+    t({ dono: 'u1', dueDate: iso(0) }), // vence hoje: NÃO é atrasada
+    t({ dono: 'u1', dueDate: iso(-1) }), // atrasada
   ];
   const r = buildTeamReport(tasks, [ana], []);
 
@@ -94,12 +102,12 @@ const projB = { id: 'p2', name: 'Projeto B', color: '#222222' };
 // ---------- Carga por membro ----------
 {
   const tasks = [
-    t({ assigneeId: 'u1', status: 'completed' }),
-    t({ assigneeId: 'u1', status: 'completed' }),
-    t({ assigneeId: 'u1' }),
-    t({ assigneeId: 'u2' }),
-    t({ assigneeId: 'u2' }),
-    t({ assigneeId: 'u2', dueDate: iso(-2) }),
+    t({ dono: 'u1', status: 'completed' }),
+    t({ dono: 'u1', status: 'completed' }),
+    t({ dono: 'u1' }),
+    t({ dono: 'u2' }),
+    t({ dono: 'u2' }),
+    t({ dono: 'u2', dueDate: iso(-2) }),
     t({}), // sem responsável: não entra na carga de ninguém
   ];
   const r = buildTeamReport(tasks, [ana, bruno], []);
@@ -155,7 +163,7 @@ const projB = { id: 'p2', name: 'Projeto B', color: '#222222' };
 
 // ---------- Imutabilidade ----------
 {
-  const tasks = [t({ assigneeId: 'u1', status: 'pending', dueDate: iso(-1) })];
+  const tasks = [t({ dono: 'u1', status: 'pending', dueDate: iso(-1) })];
   const snapshot = JSON.stringify(tasks);
   buildTeamReport(tasks, [ana], []);
   check('não muta as tarefas recebidas', JSON.stringify(tasks) === snapshot);

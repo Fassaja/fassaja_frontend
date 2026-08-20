@@ -5,7 +5,8 @@ import {
   Flag,
   Activity,
   FolderOpen,
-  User,
+  Users,
+  Check,
   Clock,
   CheckCircle2,
   Tags,
@@ -37,12 +38,6 @@ const priorityConfig: Record<Task['priority'], { label: string; color: string }>
   low: { label: 'Baixa', color: '#22C55E' },
   medium: { label: 'Média', color: '#FBBF24' },
   high: { label: 'Alta', color: '#8B5CF6' },
-};
-
-const assignmentLabel: Record<NonNullable<Task['assignmentStatus']>, string> = {
-  pending: 'Proposta pendente',
-  accepted: 'Aceitou',
-  rejected: 'Recusou',
 };
 
 interface FieldProps {
@@ -151,16 +146,32 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             )}
           </Field>
 
-          {task.assigneeName && (
-            <Field icon={<User size={18} />} label="Responsável">
-              <span className="inline-flex items-center gap-2">
-                {task.assigneeName}
-                {task.assignmentStatus && (
-                  <span className="text-xs font-medium text-text-soft">
-                    · {assignmentLabel[task.assignmentStatus]}
-                  </span>
-                )}
-              </span>
+          {(task.assignees ?? []).length > 0 && (
+            <Field
+              icon={<Users size={18} />}
+              label={`Responsáveis · ${(task.assignees ?? []).filter(a => a.done).length} de ${
+                (task.assignees ?? []).length
+              }`}
+            >
+              {/* Uma linha por pessoa, com quem já entregou marcado. É aqui que
+                  a pergunta "quem ainda falta?" tem resposta — o card mostra só
+                  o número. */}
+              <ul className="flex flex-col gap-1.5">
+                {(task.assignees ?? []).map(a => (
+                  <li key={a.id} className="flex items-center gap-2 text-sm">
+                    <span
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                        a.done ? 'bg-success text-white' : 'border-2 border-border'
+                      }`}
+                    >
+                      {a.done && <Check size={10} strokeWidth={3} />}
+                    </span>
+                    <span className={a.done ? 'text-text-soft line-through' : 'text-text-primary'}>
+                      {a.name}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </Field>
           )}
 

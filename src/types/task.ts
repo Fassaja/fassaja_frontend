@@ -23,6 +23,13 @@ export interface Subtask {
   done: boolean;
 }
 
+/** Um responsável e se já entregou a parte dele. */
+export interface Assignee {
+  id: string;
+  name: string;
+  done: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -33,9 +40,21 @@ export interface Task {
   dueDate?: string;
   createdAt: string;
   completedAt?: string;
-  assigneeId?: string;
-  assigneeName?: string;
-  assignmentStatus?: AssignmentStatus;
+  /**
+   * Responsáveis, com a entrega de cada um.
+   *
+   * Substitui o par `assigneeId`/`assignmentStatus`, que só comportava uma
+   * pessoa. Lista vazia = tarefa sem atribuição, que se comporta exatamente
+   * como antes deste recurso — é o caso de toda tarefa pessoal.
+   */
+  assignees?: Assignee[];
+  /**
+   * A tarefa fechou PARA A EQUIPE (todos entregaram)?
+   *
+   * Discorda de `status` de propósito: quem já entregou vê `status:
+   * 'completed'` enquanto `teamCompleted` ainda é false, porque falta alguém.
+   */
+  teamCompleted?: boolean;
   /** Tags aplicadas — devolvidas pela API na leitura. */
   tags?: TaskTag[];
   /** Passos, já na ordem. A API sempre manda a lista (vazia quando não há). */

@@ -44,11 +44,6 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'tasks', label: 'Tarefas', icon: <ListTodo size={15} /> },
 ];
 
-const ASSIGNMENT_HINT: Record<string, string> = {
-  pending: 'Aguardando aceite',
-  accepted: 'Aceita',
-  rejected: 'Recusada',
-};
 
 export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
   isOpen,
@@ -97,13 +92,6 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
 
   const projectIds = useMemo(() => new Set(projects.map(p => p.id)), [projects]);
 
-  const memberOptions = useMemo(
-    () => [
-      { value: '', label: 'Sem responsável' },
-      ...members.map(m => ({ value: m.userId, label: m.name })),
-    ],
-    [members],
-  );
 
   // Carrega as tarefas dos projetos da equipe quando a aba é aberta.
   useEffect(() => {
@@ -211,10 +199,15 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
     }
   };
 
-  const reassign = async (task: Task, assigneeId: string) => {
+  /** Alterna uma pessoa na lista de responsáveis desta tarefa. */
+  const toggleAssignee = async (task: Task, userId: string) => {
     setAssigning(task.id);
+    const atuais = (task.assignees ?? []).map(a => a.id);
+    const proximos = atuais.includes(userId)
+      ? atuais.filter(id => id !== userId)
+      : [...atuais, userId];
     try {
-      const updated = await tasksService.assignTask(task.id, assigneeId || null);
+      const updated = await tasksService.assignTask(task.id, proximos);
       setTasks(prev => prev.map(t => (t.id === task.id ? updated : t)));
     } catch (err) {
       toast.error((err as Error).message || 'Não foi possível atribuir a tarefa.');
@@ -474,21 +467,51 @@ export const TeamSettingsModal: React.FC<TeamSettingsModalProps> = ({
                         >
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-text-primary truncate">{task.title}</p>
-                            {task.assigneeId && task.assignmentStatus && (
-                              <p className="text-[11px] text-text-secondary">
-                                {ASSIGNMENT_HINT[task.assignmentStatus] ?? ''}
+                            {/* Quantos entregaram, e quem falta pelo nome ao
+                                passar o mouse: é a pergunta de quem gerencia. */}
+                            {(task.assignees ?? []).length > 0 && (
+                              <p
+                                className="text-[11px] text-text-secondary"
+                                title={(task.assignees ?? [])
+                                  .map(a => `${a.name}${a.done ? ' ✓' : ''}`)
+                                  .join(', ')}
+                              >
+                                {(task.assignees ?? []).filter(a => a.done).length} de{' '}
+                                {(task.assignees ?? []).length} entregaram
                               </p>
                             )}
                           </div>
-                          <Dropdown
-                            size="sm"
-                            menuAlign="right"
-                            value={task.assigneeId ?? ''}
-                            options={memberOptions}
-                            onChange={v => reassign(task, v)}
-                            placeholder="Atribuir"
-                            disabled={assigning === task.id}
-                          />
+                          {/* Um botão por membro: marcar e desmarcar direto,
+                              sem abrir menu. Numa tela de gestão o gesto é
+                              distribuir várias tarefas seguidas, e cada menu a
+                              abrir custa dois cliques a mais. */}
+                          <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                            {members.map(m => {
+                              const marcado = (task.assignees ?? []).some(a => a.id === m.userId);
+                              const entregou = (task.assignees ?? []).some(
+                                a => a.id === m.userId && a.done,
+                              );
+                              return (
+                                <button
+                                  key={m.userId}
+                                  type="button"
+                                  disabled={assigning === task.id}
+                                  onClick={() => toggleAssignee(task, m.userId)}
+                                  title={`${m.name}${entregou ? ' — já entregou' : ''}`}
+                                  aria-pressed={marcado}
+                                  className={`inline-flex h-8 min-w-[2rem] items-center justify-center rounded-lg px-2 text-[11px] font-bold transition-colors disabled:opacity-50 ${
+                                    entregou
+                                      ? 'bg-success text-white'
+                                      : marcado
+                                      ? 'bg-primary-vibrant text-white'
+                                      : 'border border-border text-text-secondary hover:border-primary-vibrant/50'
+                                  }`}
+                                >
+                                  {initialsOf(m.name)}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       ))}
                     </div>

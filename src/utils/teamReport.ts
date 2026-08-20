@@ -77,10 +77,14 @@ export function buildTeamReport(
   const total = derived.length;
   const completed = derived.filter(isDone).length;
   const overdue = derived.filter(isLate).length;
-  const unassigned = derived.filter(t => !t.assigneeId).length;
+  // Sem responsável = ninguém na lista. Antes era um campo nulo; agora é uma
+  // lista vazia, e a pergunta continua a mesma: quantas ninguém pegou?
+  const unassigned = derived.filter(t => (t.assignees ?? []).length === 0).length;
 
   const memberLoads: MemberLoad[] = members.map(m => {
-    const mine = derived.filter(t => t.assigneeId === m.userId);
+    // Uma tarefa com três responsáveis conta para os três: cada um tem uma
+    // entrega a fazer nela, e o relatório mede carga, não posse.
+    const mine = derived.filter(t => (t.assignees ?? []).some(a => a.id === m.userId));
     const done = mine.filter(isDone).length;
     return {
       userId: m.userId,

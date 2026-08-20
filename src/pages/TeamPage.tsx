@@ -819,7 +819,7 @@ const TeamPage: React.FC = () => {
                     <div className="flex-1 divide-y divide-border">
                       {visibleTasks.map(t => {
                         const due = dueLabel(t);
-                        const assignee = members.find(mm => mm.userId === t.assigneeId);
+                        const responsaveis = t.assignees ?? [];
                         const done = t.status === 'completed';
                         return (
                           <div key={t.id} className="flex items-center gap-3 py-2.5">
@@ -843,22 +843,33 @@ const TeamPage: React.FC = () => {
                             <Badge variant={PRIORITY_VARIANT[t.priority]} className="shrink-0">
                               {PRIORITY_LABEL[t.priority]}
                             </Badge>
-                            {t.assigneeId ? (
-                              assignee?.avatar ? (
-                                <img
-                                  src={assignee.avatar}
-                                  alt={assignee.name}
-                                  className="h-7 w-7 shrink-0 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div
-                                  title={assignee?.name ?? t.assigneeName}
-                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
-                                  style={{ backgroundColor: memberColor(t.assigneeId) }}
-                                >
-                                  {initialsOf(assignee?.name ?? t.assigneeName ?? '?')}
-                                </div>
-                              )
+                            {/* Uma bolinha por responsável, verde para quem
+                                já entregou. Pilha sobreposta porque a linha é
+                                estreita e o número de pessoas varia — o nome
+                                completo fica no title. */}
+                            {responsaveis.length > 0 ? (
+                              <div className="flex shrink-0 -space-x-1.5">
+                                {responsaveis.slice(0, 4).map(a => {
+                                  const membro = members.find(mm => mm.userId === a.id);
+                                  return (
+                                    <div
+                                      key={a.id}
+                                      title={`${a.name}${a.done ? ' — entregou' : ' — ainda deve'}`}
+                                      className={`flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface text-[10px] font-bold text-white ${
+                                        a.done ? 'ring-2 ring-success' : ''
+                                      }`}
+                                      style={{ backgroundColor: memberColor(a.id) }}
+                                    >
+                                      {initialsOf(membro?.name ?? a.name)}
+                                    </div>
+                                  );
+                                })}
+                                {responsaveis.length > 4 && (
+                                  <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface bg-bg-secondary text-[10px] font-bold text-text-secondary">
+                                    +{responsaveis.length - 4}
+                                  </div>
+                                )}
+                              </div>
                             ) : (
                               <span className="h-7 w-7 shrink-0" aria-hidden="true" />
                             )}

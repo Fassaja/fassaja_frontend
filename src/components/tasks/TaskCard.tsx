@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trash2, Check, CalendarDays, Send, UserCheck, UserX, ChevronDown, ListChecks } from 'lucide-react';
+import { Trash2, Check, CalendarDays, ChevronDown, ListChecks, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Task, TaskStatus } from '@/types/task';
 import { Project } from '@/types/project';
@@ -179,35 +179,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onToggleSelect,
 }) => {
   const { account } = useAuth();
-  const { respondAssignment } = useTasks();
-  const toast = useToast();
   const isCompleted = task.status === 'completed';
   const priorityInfo = priorityConfig[task.priority];
   const passos = subtaskProgress(task.subtasks);
   const statusInfo = statusConfig[task.status];
 
-  const isMyProposal =
-    !!account && task.assigneeId === account.id && task.assignmentStatus === 'pending';
-
-  const assignment =
-    task.assigneeId && task.assigneeName
-      ? task.assignmentStatus === 'accepted'
-        ? { label: task.assigneeName, className: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300', icon: <UserCheck size={12} /> }
-        : task.assignmentStatus === 'rejected'
-        ? { label: `${task.assigneeName} recusou`, className: 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-300', icon: <UserX size={12} /> }
-        : { label: `Proposta: ${task.assigneeName}`, className: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300', icon: <Send size={11} /> }
-      : null;
-
-  const respond = async (e: React.MouseEvent, action: 'accept' | 'reject') => {
-    e.stopPropagation();
-    if (!account) return;
-    try {
-      await respondAssignment(task.id, action);
-      toast.success(action === 'accept' ? 'Tarefa aceita.' : 'Tarefa recusada.');
-    } catch (err) {
-      toast.error((err as Error).message || 'Não foi possível responder à proposta.');
-    }
-  };
+  /**
+   * Responsáveis, do ponto de vista de quem está olhando.
+   *
+   * A proposta (aceitar/recusar) deixou de existir: quem é adicionado já
+   * responde pela tarefa. Sobrou o que importa na lista — quantos já
+   * entregaram, e se eu sou um deles.
+   */
+  const responsaveis = task.assignees ?? [];
+  const entregues = responsaveis.filter(a => a.done).length;
+  const souResponsavel = !!account && responsaveis.some(a => a.id === account.id);
+  const jaEntreguei = !!account && responsaveis.some(a => a.id === account.id && a.done);
 
   const handleClick = () => {
     if (selectionMode) onToggleSelect?.(task.id);
@@ -345,13 +332,28 @@ export const TaskCard: React.FC<TaskCardProps> = ({
               </>
             )}
 
-            {assignment && (
-              <span
-                className={`inline-flex items-center gap-1 font-semibold px-2 py-0.5 rounded-full ${assignment.className}`}
-              >
-                {assignment.icon}
-                {assignment.label}
-              </span>
+            {/* Progresso da equipe, não o nome de um responsável.
+                Com várias pessoas, "quem é o responsável" deixou de ter
+                resposta única; o que a pessoa precisa saber de relance é
+                quantos faltam — e se ela mesma já entregou. */}
+            {responsaveis.length > 0 && (
+              <>
+                <span className="text-text-soft" aria-hidden>·</span>
+                <span
+                  className={`inline-flex items-center gap-1 font-semibold ${
+                    entregues === responsaveis.length ? 'text-success' : ''
+                  }`}
+                  title={responsaveis
+                    .map(a => `${a.name}${a.done ? ' (entregou)' : ''}`)
+                    .join(', ')}
+                >
+                  <Users size={12} />
+                  {entregues}/{responsaveis.length}
+                  {souResponsavel && !jaEntreguei && (
+                    <span className="font-normal text-text-secondary">· falta você</span>
+                  )}
+                </span>
+              </>
             )}
           </div>
 
@@ -382,25 +384,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           )}
 
           {/* Proposta de tarefa para o usuário atual */}
-          {isMyProposal && !selectionMode && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50/70 dark:bg-amber-500/10 px-3 py-2">
-              <span className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex-1 min-w-0">
-                Esta tarefa foi proposta a você.
-              </span>
-              <button
-                onClick={e => respond(e, 'accept')}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-success text-white hover:bg-emerald-600 active:scale-95 transition-all"
-              >
-                Aceitar
-              </button>
-              <button
-                onClick={e => respond(e, 'reject')}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold border border-border text-danger hover:bg-rose-50 active:scale-95 transition-all"
-              >
-                Recusar
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Ações (escondidas no modo seleção; a exclusão em massa cuida disso) */}

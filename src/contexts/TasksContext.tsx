@@ -26,8 +26,7 @@ interface TasksContextValue {
   updateTask: (id: string, updates: Partial<Task>) => Promise<Task | undefined>;
   completeTask: (id: string) => Promise<Task | undefined>;
   deleteTask: (id: string) => Promise<void>;
-  assignTask: (id: string, assigneeId: string | null) => Promise<Task>;
-  respondAssignment: (id: string, action: 'accept' | 'reject') => Promise<Task>;
+  assignTask: (id: string, assigneeIds: string[]) => Promise<Task>;
   addSubtask: (taskId: string, title: string) => Promise<void>;
   updateSubtask: (
     taskId: string,
@@ -217,22 +216,14 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isGuest]);
 
   const assignTask = useCallback(
-    async (id: string, assigneeId: string | null) => {
-      const updated = await tasksService.assignTask(id, assigneeId);
+    async (id: string, assigneeIds: string[]) => {
+      const updated = await tasksService.assignTask(id, assigneeIds);
       setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
       return updated;
     },
     [],
   );
 
-  const respondAssignment = useCallback(
-    async (id: string, action: 'accept' | 'reject') => {
-      const updated = await tasksService.respondAssignment(id, action);
-      setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
-      return updated;
-    },
-    [],
-  );
 
 
   // --- Passos (checklist) -----------------------------------------------------
@@ -308,7 +299,6 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         completeTask,
         deleteTask,
         assignTask,
-        respondAssignment,
         addSubtask,
         updateSubtask,
         removeSubtask,

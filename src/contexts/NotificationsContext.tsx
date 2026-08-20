@@ -14,7 +14,7 @@ import {
   HeartHandshake,
   Lightbulb,
   Rocket,
-  Send,
+  Users,
   UserPlus,
 } from 'lucide-react';
 import { useTasks } from './TasksContext';
@@ -183,20 +183,30 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   const items = useMemo<NotificationItem[]>(() => {
     const raw: Omit<NotificationItem, 'read'>[] = [];
 
-    // Propostas de tarefa pendentes para o usuário atual.
+    /**
+     * Tarefas de equipe que ainda dependem de você.
+     *
+     * Substitui a antiga "proposta pendente": sem a etapa de aceite, não há
+     * mais o que responder — o que resta avisar é o que continua na sua mão.
+     * Só entram as de equipe: as suas próprias já estão na lista da tela, e
+     * repeti-las no sino transformaria o sino na lista de tarefas.
+     */
     if (account) {
       tasks
-        .filter(t => t.assigneeId === account.id && t.assignmentStatus === 'pending')
-        .forEach(t =>
+        .filter(t => (t.assignees ?? []).some(a => a.id === account.id && !a.done))
+        .forEach(t => {
+          const total = (t.assignees ?? []).length;
+          const feitos = (t.assignees ?? []).filter(a => a.done).length;
           raw.push({
             id: `p-${t.id}`,
-            icon: <Send size={18} />,
+            icon: <Users size={18} />,
             title: t.title,
-            detail: 'Tarefa proposta a você',
+            detail:
+              total > 1 ? `Falta você — ${feitos} de ${total} já entregaram` : 'Atribuída a você',
             tone: '#FBBF24',
             link: '/tasks',
-          }),
-        );
+          });
+        });
     }
 
     // Pedidos de entrada nas equipes que você administra.

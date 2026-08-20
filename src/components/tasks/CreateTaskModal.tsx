@@ -5,6 +5,7 @@ import { MoreOptions } from '@/components/common/MoreOptions';
 import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
+import { AssigneeSelector } from './AssigneeSelector';
 import { DatePicker } from '@/components/common/DatePicker';
 import { TagSelector } from './TagSelector';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
@@ -55,7 +56,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const [error, setError] = useState('');
   const [formData, setFormData] = useState(emptyForm);
   const [members, setMembers] = useState<TeamMember[]>([]);
-  const [assigneeId, setAssigneeId] = useState('');
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
 
   const set = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) =>
@@ -72,7 +73,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       teamsService.getMembers(teamProject.teamId).then(setMembers).catch(() => setMembers([]));
     } else {
       setMembers([]);
-      setAssigneeId('');
+      setAssigneeIds([]);
     }
   }, [teamProject?.teamId]);
 
@@ -81,10 +82,6 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     ...projects.map(p => ({ value: p.id, label: p.name, color: p.color, dot: true })),
   ];
 
-  const memberOptions = [
-    { value: '', label: 'Ninguém (sem responsável)' },
-    ...members.map(m => ({ value: m.userId, label: m.role === 'owner' ? `${m.name} (dono)` : m.name })),
-  ];
 
   // Em projeto de equipe, só o dono ou um "gerente de tarefas" pode criar.
   // A lista de membros (já carregada) traz canManageTasks (true para o dono).
@@ -120,12 +117,12 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         dueDate: formData.dueDate || undefined,
         tagIds: tagIds.length ? tagIds : undefined,
       });
-      // Em projeto de equipe, propõe a tarefa ao membro escolhido.
-      if (teamProject && assigneeId && account) {
-        await assignTask(created.id, assigneeId);
+      // Em projeto de equipe, já nasce com os responsáveis escolhidos.
+      if (teamProject && assigneeIds.length && account) {
+        await assignTask(created.id, assigneeIds);
       }
       setFormData(emptyForm);
-      setAssigneeId('');
+      setAssigneeIds([]);
       setTagIds([]);
       setError('');
       toast.success('Tarefa criada.');
@@ -142,7 +139,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   // "mais opções", escolheu um responsável e recolheu de volta salvaria sem
   // lembrar do que tinha marcado.
   const ajustesDefinidos =
-    (formData.status !== 'pending' ? 1 : 0) + (assigneeId ? 1 : 0) + tagIds.length;
+    (formData.status !== 'pending' ? 1 : 0) + (assigneeIds.length ? 1 : 0) + tagIds.length;
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Nova tarefa" size="lg">
@@ -223,12 +220,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           />
 
           {teamProject && !blockedByPermission && (
-            <Dropdown
-              label="Propor a alguém da equipe"
-              options={memberOptions}
-              value={assigneeId}
-              onChange={setAssigneeId}
-              fullWidth
+            <AssigneeSelector
+              members={members}
+              value={assigneeIds}
+              onChange={setAssigneeIds}
+              disabled={loading}
             />
           )}
 

@@ -5,6 +5,7 @@ import { MoreOptions } from '@/components/common/MoreOptions';
 import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
+import { AssigneeSelector } from './AssigneeSelector';
 import { DatePicker } from '@/components/common/DatePicker';
 import { TagSelector } from './TagSelector';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
@@ -47,7 +48,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [members, setMembers] = useState<TeamMember[]>([]);
-  const [assigneeId, setAssigneeId] = useState('');
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -68,7 +69,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         projectId: task.projectId || '',
         dueDate: task.dueDate || '',
       });
-      setAssigneeId(task.assigneeId || '');
+      setAssigneeIds((task.assignees ?? []).map(a => a.id));
       setTagIds((task.tags ?? []).map(t => t.id));
       setError('');
     }
@@ -96,10 +97,6 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     ...projects.map(p => ({ value: p.id, label: p.name, color: p.color, dot: true })),
   ];
 
-  const memberOptions = [
-    { value: '', label: 'Ninguém (sem responsável)' },
-    ...members.map(m => ({ value: m.userId, label: m.role === 'owner' ? `${m.name} (dono)` : m.name })),
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,13 +118,23 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         // Sempre envia (mesmo []) para o backend substituir o conjunto de tags.
         ...(isGuest ? {} : { tagIds }),
       });
-      // Reconcilia a atribuição se mudou (em projeto de equipe).
-      const currentAssignee = task.assigneeId || '';
-      if (teamProject && assigneeId !== currentAssignee && account) {
-        await assignTask(task.id, assigneeId || null);
-      } else if (!teamProject && currentAssignee) {
-        // Saiu de um projeto de equipe: remove a atribuição.
-        await assignTask(task.id, null);
+      /**
+       * Reconcilia a lista de responsáveis.
+       *
+       * Compara conjuntos, não igualdade de array: marcar A depois B produz a
+       * mesma lista que B depois A, e salvar por diferença de ordem geraria
+       * uma escrita — e um push para quem já era responsável.
+       */
+      const atuais = (task.assignees ?? []).map(a => a.id);
+      const mudou =
+        atuais.length !== assigneeIds.length ||
+        [...atuais].sort().join(',') !== [...assigneeIds].sort().join(',');
+
+      if (teamProject && mudou && account) {
+        await assignTask(task.id, assigneeIds);
+      } else if (!teamProject && atuais.length > 0) {
+        // Saiu de um projeto de equipe: fora da equipe não há a quem atribuir.
+        await assignTask(task.id, []);
       }
       toast.success('Alterações salvas.');
       onClose();
@@ -142,7 +149,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   // O que está definido atrás do "mais opções" — decide o contador e, na
   // edição, se o bloco já nasce aberto.
   const ajustesDefinidos =
-    (formData.status !== 'pending' ? 1 : 0) + (assigneeId ? 1 : 0) + tagIds.length;
+    (formData.status !== 'pending' ? 1 : 0) + (assigneeIds.length ? 1 : 0) + tagIds.length;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Editar tarefa" size="lg">
@@ -219,12 +226,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           />
 
           {teamProject && (
-            <Dropdown
-              label="Propor a alguém da equipe"
-              options={memberOptions}
-              value={assigneeId}
-              onChange={setAssigneeId}
-              fullWidth
+            <AssigneeSelector
+              members={members}
+              value={assigneeIds}
+              onChange={setAssigneeIds}
+              disabled={loading}
             />
           )}
 
