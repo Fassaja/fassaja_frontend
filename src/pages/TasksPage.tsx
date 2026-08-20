@@ -208,7 +208,30 @@ const TasksPage: React.FC = () => {
     [],
   );
 
-  const areas = useWorkspaces({ filtrosAtuais, aplicarFiltros, projects, tags });
+  /**
+   * O recorte pedido no link, se houve um.
+   *
+   * `useMemo` porque este objeto é dependência do efeito que reabre a área:
+   * criado a cada render, o efeito rodaria sem parar.
+   *
+   * O lado só entra quando dá para saber qual é — projetos ainda carregando
+   * devolvem `null`, e aí a busca pela área ignora o lado em vez de chutar um.
+   */
+  const escopoDaUrl = searchParams.get('scope');
+  const pedidoDoLink = useMemo(() => {
+    if (projetoDaUrl) {
+      return {
+        filterProject: projetoDaUrl,
+        scope: escopoDoProjeto(projects, projetoDaUrl),
+      };
+    }
+    if (escopoDaUrl === 'team' || escopoDaUrl === 'solo') {
+      return { filterProject: TODOS_PROJETOS, scope: escopoDaUrl as TaskScope };
+    }
+    return null;
+  }, [projetoDaUrl, escopoDaUrl, projects]);
+
+  const areas = useWorkspaces({ filtrosAtuais, aplicarFiltros, projects, tags, pedidoDoLink });
 
   /**
    * Cria a tarefa e GARANTE que ela apareça.

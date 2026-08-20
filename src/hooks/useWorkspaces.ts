@@ -8,6 +8,7 @@ import {
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { TODOS_PROJETOS } from '@/utils/taskFilters';
+import { PedidoDoLink, areaParaOLink } from '@/utils/areaDoLink';
 import { Project } from '@/types/project';
 import { Tag } from '@/types/tag';
 
@@ -20,6 +21,15 @@ interface Params {
   aplicarFiltros: (f: FiltrosDaArea) => void;
   projects: Project[];
   tags: Tag[];
+  /**
+   * O recorte que veio no link, quando veio (por exemplo "Ver tarefas" de um
+   * projeto). Muda o que acontece quando a lista de áreas chega:
+   *
+   * - existe área para esse recorte → ela é ABERTA, com a aba marcada;
+   * - não existe → ficam os filtros do link, e a área da última visita NÃO é
+   *   reaberta por cima deles.
+   */
+  pedidoDoLink?: PedidoDoLink | null;
 }
 
 /**
@@ -30,7 +40,13 @@ interface Params {
  * aparelho. Guardá-la no servidor faria abrir o celular no recorte que ficou
  * aberto no computador — quase sempre não é o que se quer.
  */
-export function useWorkspaces({ filtrosAtuais, aplicarFiltros, projects, tags }: Params) {
+export function useWorkspaces({
+  filtrosAtuais,
+  aplicarFiltros,
+  projects,
+  tags,
+  pedidoDoLink = null,
+}: Params) {
   const { status } = useAuth();
   const toast = useToast();
   const [lista, setLista] = useState<Workspace[]>([]);
@@ -53,9 +69,27 @@ export function useWorkspaces({ filtrosAtuais, aplicarFiltros, projects, tags }:
    * Depende de `lista` e não roda em toda mudança dela: sem a guarda do
    * `ativaId`, salvar uma área recarregaria a lista e reaplicaria os filtros
    * por cima do que a pessoa acabou de mexer.
+   *
+   * A lista chega do servidor DEPOIS da tela montar, então este efeito roda
+   * por último e vence quem definiu filtro antes dele. Era o que quebrava o
+   * "Ver tarefas" de um projeto: o link escolhia o projeto e o lado, e um
+   * instante depois a área salva trocava os dois.
    */
   useEffect(() => {
     if (ativaId !== null || lista.length === 0) return;
+
+    // Veio de um link: ou ele cai numa área existente, ou os filtros dele
+    // ficam como estão. Em nenhum dos dois casos a área da última visita volta.
+    if (pedidoDoLink) {
+      const doLink = areaParaOLink(lista, pedidoDoLink);
+      if (doLink) {
+        setAtivaId(doLink.id);
+        lembrar(doLink.id); // passa a ser a área aberta, como se tivesse clicado nela
+        aplicarFiltros(comReferenciasValidas(doLink, projects, tags));
+      }
+      return;
+    }
+
     let salva: string | null = null;
     try {
       salva = localStorage.getItem(CHAVE_ATIVA);
@@ -70,7 +104,7 @@ export function useWorkspaces({ filtrosAtuais, aplicarFiltros, projects, tags }:
     // Só na chegada da lista: incluir `aplicarFiltros` reaplicaria a área a
     // cada render em que ela mudasse de identidade.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lista]);
+  }, [lista, pedidoDoLink]);
 
   const alterada = useMemo(
     () => (ativa ? !mesmosFiltros(filtrosAtuais, ativa) : false),

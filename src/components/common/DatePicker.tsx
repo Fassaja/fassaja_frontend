@@ -32,9 +32,8 @@ const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const LARGURA = 288; // 18rem, a largura desenhada
 const FOLGA = 8; // respiro entre o botão e o painel, e das bordas da tela
 /**
- * Altura aproximada do painel (cabeçalho + 6 linhas de dias + rodapé). Serve
- * só para decidir o lado que tem mais espaço; o valor exato não importa, e
- * medir de verdade exigiria renderizar antes de posicionar.
+ * Altura aproximada do painel (cabeçalho + 6 linhas de dias + rodapé). Só é
+ * usada na primeiríssima medição; a partir daí vale a altura real do elemento.
  */
 const ALTURA_ESTIMADA = 352;
 
@@ -82,29 +81,49 @@ export const DatePicker: React.FC<DatePickerProps> = ({
     const el = ref.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    const espacoAbaixo = window.innerHeight - r.bottom;
-    const espacoAcima = r.top;
+    // Altura real assim que o painel existe; a estimativa só cobre o primeiro
+    // cálculo. Medir importa porque é ela que decide o quanto subir.
+    const altura = painelRef.current?.offsetHeight || ALTURA_ESTIMADA;
 
-    // `openUp` é preferência; o que manda é onde cabe. Sem esta parte, um
-    // campo no rodapé abriria para baixo e sairia da tela de novo.
-    const paraCima = openUp
-      ? espacoAcima > ALTURA_ESTIMADA + FOLGA || espacoAcima > espacoAbaixo
-      : espacoAbaixo < ALTURA_ESTIMADA + FOLGA && espacoAcima > espacoAbaixo;
+    /*
+     * Abre para BAIXO por padrão, mesmo quando não sobra espaço.
+     *
+     * Antes ele virava para cima assim que faltava altura embaixo, e o
+     * resultado era pior do que o problema: o campo de data fica perto do
+     * rodapé dos modais, então o painel cobria o formulário inteiro — título,
+     * tudo. Descendo, ele tapa só o que está abaixo do campo, que é o que a
+     * pessoa já respondeu.
+     *
+     * Para cima agora só quando quem chamou pediu (`openUp`) E realmente cabe.
+     */
+    const paraCima = openUp && r.top > altura + FOLGA;
 
     const largura = Math.min(LARGURA, window.innerWidth - FOLGA * 2);
     const maxEsquerda = Math.max(FOLGA, window.innerWidth - FOLGA - largura);
 
-    setEstilo({
+    const estilo: React.CSSProperties = {
       position: 'fixed',
       width: largura,
       // Preso à viewport: em tela estreita o painel encostava na borda.
       left: Math.min(Math.max(r.left, FOLGA), maxEsquerda),
-      ...(paraCima
-        ? { bottom: window.innerHeight - r.top + FOLGA }
-        : { top: r.bottom + FOLGA }),
+      // Painel mais alto que a janela (celular deitado) rola por dentro, em
+      // vez de ter o rodapé "Limpar / Hoje" cortado fora da tela.
+      maxHeight: window.innerHeight - FOLGA * 2,
+      overflowY: 'auto',
       // Acima do modal (z-70), como o Dropdown.
       zIndex: 80,
-    });
+    };
+
+    if (paraCima) {
+      estilo.bottom = window.innerHeight - r.top + FOLGA;
+    } else {
+      // Quando não cabe embaixo, sobe só o necessário para não sair da tela —
+      // em vez de virar de lado. Continua sendo "para baixo", sobrepondo.
+      const topoMax = Math.max(FOLGA, window.innerHeight - FOLGA - altura);
+      estilo.top = Math.min(r.bottom + FOLGA, topoMax);
+    }
+
+    setEstilo(estilo);
   }, [openUp]);
 
   useLayoutEffect(() => {
@@ -218,7 +237,10 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -6, scale: 0.98 }}
                 transition={{ duration: 0.14 }}
-                className="bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-4"
+                /* w-72 = os mesmos 288px do style: o painel é filho de <body> até o
+                   style chegar, e sem largura aqui a primeira medição de altura
+                   sairia errada. */
+                className="w-72 max-w-[calc(100vw-1rem)] bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-4"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between mb-3">
