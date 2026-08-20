@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Users,
   Plus,
-  Crown,
   UserPlus,
   Link2,
   Copy,
@@ -10,10 +9,6 @@ import {
   Clock,
   FolderOpen,
   Settings,
-  ShieldCheck,
-  MoreVertical,
-  ChevronLeft,
-  ChevronRight,
   CheckCircle2,
   Circle,
   Calendar,
@@ -25,7 +20,6 @@ import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { Card } from '@/components/common/Card';
-import { Tooltip } from '@/components/common/Tooltip';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
@@ -44,10 +38,11 @@ import { initialsOf } from '@/contexts/UserContext';
 import { teamsService } from '@/services/teamsService';
 import { invitesService } from '@/services/invitesService';
 import { TeamSummary, TeamMember, PendingRequest, TeamProjectSummary } from '@/types/team';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/common/Badge';
 import { Task } from '@/types/task';
 import { sortTeamTasks } from '@/utils/teamTasks';
+import { buildTeamReport } from '@/utils/teamReport';
+import { MemberLoadRow } from '@/components/team/MemberLoadRow';
 import { isToday, isTomorrow, formatDate } from '@/utils/date';
 
 const PRIORITY_LABEL: Record<Task['priority'], string> = {
@@ -108,7 +103,6 @@ const TeamPage: React.FC = () => {
 
   const [teamProjects, setTeamProjects] = useState<TeamProjectSummary[]>([]);
   const [teamTasks, setTeamTasks] = useState<Task[]>([]);
-  const [projIndex, setProjIndex] = useState(0);
   // Carregamento do DETALHE (membros/projetos/tarefas), separado do `loading`,
   // que cobre só a lista de equipes. Sem ele, trocar de equipe mostrava as
   // seções vazias como se a equipe não tivesse nada.
@@ -117,26 +111,24 @@ const TeamPage: React.FC = () => {
   const selectedTeam = teams.find(t => t.id === selectedId) ?? null;
   const isOwner = selectedTeam?.ownerId === userId;
   const inviteLink = inviteToken ? `${window.location.origin}/join/${inviteToken}` : '';
-
-  // Métricas do "pulso" da equipe (derivadas dos projetos carregados).
-  const activeProjects = teamProjects.filter(
-    p => p.taskCount > 0 && p.completedCount < p.taskCount,
-  ).length;
-  const avgCompletion = teamProjects.length
-    ? Math.round(
-        teamProjects.reduce(
-          (s, p) => s + (p.taskCount ? (p.completedCount / p.taskCount) * 100 : 0),
-          0,
-        ) / teamProjects.length,
-      )
-    : 0;
-  const safeProjIndex = teamProjects.length ? Math.min(projIndex, teamProjects.length - 1) : 0;
-  const currentProject = teamProjects[safeProjIndex];
-  const currentPct =
-    currentProject && currentProject.taskCount
-      ? Math.round((currentProject.completedCount / currentProject.taskCount) * 100)
-      : 0;
   const visibleTasks = sortTeamTasks(teamTasks).slice(0, 6);
+
+  /**
+   * Carga por pessoa, progresso por projeto e atrasos — já existiam em
+   * `teamReport.ts`, mas só apareciam na tela de Relatórios. Aqui é onde a
+   * decisão de redistribuir é tomada, então é aqui que o número precisa estar.
+   */
+  const relatorio = useMemo(
+    () =>
+      buildTeamReport(
+        teamTasks,
+        members,
+        teamProjects.map(p => ({ id: p.id, name: p.name, color: p.color })),
+      ),
+    [teamTasks, members, teamProjects],
+  );
+  /** Maior carga da equipe: as barras são relativas a ela, não a um teto fixo. */
+  const maiorCarga = Math.max(0, ...relatorio.members.map(m => m.open));
 
   const loadTeams = useCallback(async () => {
     if (!userId) return;
@@ -256,11 +248,6 @@ const TeamPage: React.FC = () => {
   useEffect(() => {
     loadRequests();
   }, [loadRequests]);
-
-  // Volta o carrossel de projetos ao primeiro item ao trocar de equipe.
-  useEffect(() => {
-    setProjIndex(0);
-  }, [selectedId]);
 
   const openInvite = async () => {
     if (!selectedId || !userId) return;
@@ -538,10 +525,16 @@ const TeamPage: React.FC = () => {
                 className="mb-5"
                 loading={detailLoading}
                 stats={[
-                  { label: 'Membros', value: selectedTeam.memberCount },
-                  { label: 'Projetos ativos', value: activeProjects },
-                  { label: 'Conclusão média', value: avgCompletion, suffix: '%' },
-                  { label: 'Pedidos pendentes', value: requests.length, alert: true },
+                  /* Números do TRABALHO, não da administração. "Membros" e
+                     "Pedidos pendentes" descreviam a equipe como cadastro; o
+                     número de membros já está na lista logo abaixo, e os
+                     pedidos têm o próprio bloco, com botão de aprovar.
+                     Quem administra precisa saber o que está aberto, o que
+                     atrasou e quanto anda. */
+                  { label: 'Tarefas abertas', value: relatorio.open },
+                  { label: 'Atrasadas', value: relatorio.overdue, alert: true },
+                  { label: 'Sem responsável', value: relatorio.unassigned, alert: true },
+                  { label: 'Conclusão', value: relatorio.completionRate, suffix: '%' },
                 ]}
               />
 
@@ -581,89 +574,38 @@ const TeamPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Carga da equipe. Substitui a grade de cartões de contato:
+                  aquela respondia "quem está aqui", pergunta que se faz uma
+                  vez; quem administra pergunta todo dia quem está afogado. */}
+              <div className="divide-y divide-border">
                 {detailLoading &&
-                  // Tantos quantos a equipe declara ter: a contagem já veio na
-                  // lista de equipes, então o espaço reservado é o certo e a
-                  // grade não salta quando os membros chegam.
-                  Array.from({ length: Math.min(selectedTeam.memberCount, 8) }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4"
-                    >
-                      <Skeleton className="h-16 w-16 rounded-full" />
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-3 w-32" />
+                  Array.from({ length: Math.min(selectedTeam.memberCount, 6) }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 py-3">
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                      <div className="flex-1 space-y-1.5">
+                        <Skeleton className="h-3.5 w-32" />
+                        <Skeleton className="h-2.5 w-20" />
+                      </div>
+                      <Skeleton className="h-1.5 w-28 sm:w-40" />
                     </div>
                   ))}
-                {members.map(m => {
-                  const isOwnerCard = m.role === 'owner';
-                  return (
-                    <div
-                      key={m.userId}
-                      className={`relative flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-colors ${
-                        isOwnerCard
-                          ? 'border-primary-vibrant/40 bg-primary-light/25 ring-1 ring-primary-vibrant/15'
-                          : 'border-border bg-surface hover:border-primary-vibrant/40'
-                      }`}
-                    >
-                      {isOwnerCard ? (
-                        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                          <Crown size={12} /> Dono
-                        </span>
-                      ) : (
-                        isOwner && (
-                          // Posição no invólucro: com o botão absoluto, o span
-                          // ficaria como caixa vazia no fluxo do card.
-                          <Tooltip content="Gerenciar membro" className="absolute right-2.5 top-2.5">
-                            <button
-                              type="button"
-                              onClick={() => setShowSettings(true)}
-                              aria-label={`Gerenciar ${m.name}`}
-                              className="rounded-lg p-1.5 text-text-soft transition-colors hover:bg-bg-secondary hover:text-primary-vibrant"
-                            >
-                              <MoreVertical size={16} />
-                            </button>
-                          </Tooltip>
-                        )
-                      )}
 
-                      {m.avatar ? (
-                        <img src={m.avatar} alt={m.name} className="h-16 w-16 rounded-full object-cover" />
-                      ) : (
-                        <div
-                          className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white"
-                          style={{ backgroundColor: memberColor(m.userId) }}
-                        >
-                          {initialsOf(m.name)}
-                        </div>
-                      )}
-
-                      <div className="w-full min-w-0">
-                        <p className="flex items-center justify-center gap-1.5 truncate font-bold text-text-primary">
-                          {m.name}
-                          {isOwnerCard && <Crown size={14} className="shrink-0 text-amber-500 dark:text-amber-400" />}
-                        </p>
-                        <p className="truncate text-xs text-text-secondary">{m.email}</p>
-                      </div>
-
-                      {(m.title || (!isOwnerCard && m.canManageTasks)) && (
-                        <div className="flex flex-wrap items-center justify-center gap-1">
-                          {m.title && (
-                            <span className="rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-semibold text-primary-vibrant">
-                              {m.title}
-                            </span>
-                          )}
-                          {!isOwnerCard && m.canManageTasks && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-primary-light px-2 py-0.5 text-[11px] font-semibold text-primary-vibrant">
-                              <ShieldCheck size={11} /> Gerente de tarefas
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {!detailLoading &&
+                  relatorio.members.map(m => {
+                    const original = members.find(x => x.userId === m.userId);
+                    return (
+                      <MemberLoadRow
+                        key={m.userId}
+                        membro={m}
+                        ehDono={original?.role === 'owner'}
+                        gerenciaTarefas={!!original?.canManageTasks}
+                        maiorCarga={maiorCarga}
+                        // Só quem administra vê as ações — e a tela de ajustes
+                        // é onde cargo, permissão e remoção já moram.
+                        onAcoes={isOwner ? () => setShowSettings(true) : undefined}
+                      />
+                    );
+                  })}
               </div>
 
             </Card>
@@ -673,129 +615,66 @@ const TeamPage: React.FC = () => {
           {selectedTeam && (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
               <div className="lg:col-span-2">
-            <Card>
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-text-primary">
-                  <FolderOpen size={16} className="text-primary-vibrant" /> Projetos da equipe (
-                  {teamProjects.length})
-                </h3>
-                {teamProjects.length > 1 && (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setProjIndex(i => (i - 1 + teamProjects.length) % teamProjects.length)
-                      }
-                      aria-label="Projeto anterior"
-                      className="rounded-lg border border-border p-1.5 text-text-secondary transition-all hover:border-primary-vibrant/50 hover:text-primary-vibrant active:scale-95"
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-                    <span className="w-9 text-center text-xs font-semibold tabular-nums text-text-secondary">
-                      {safeProjIndex + 1}/{teamProjects.length}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setProjIndex(i => (i + 1) % teamProjects.length)}
-                      aria-label="Próximo projeto"
-                      className="rounded-lg border border-border p-1.5 text-text-secondary transition-all hover:border-primary-vibrant/50 hover:text-primary-vibrant active:scale-95"
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
-                )}
-              </div>
+            <Card className="flex h-full flex-col">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-text-primary">
+                <FolderOpen size={16} className="text-primary-vibrant" /> Projetos da equipe
+              </h3>
 
-              {currentProject ? (
-                <>
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentProject.id}
-                      initial={{ opacity: 0, x: 14 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -14 }}
-                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className="rounded-2xl border border-border p-4"
-                    >
-                      <div className="mb-3 flex items-center gap-2.5">
+              {/* Lista, e não carrossel. O carrossel mostrava um projeto por
+                  vez e escondia os outros atrás de setas — mas a pergunta de
+                  quem administra é comparativa ("qual está travado?"), e
+                  comparar exige ver junto. A ordem vem do relatório: o mais
+                  travado primeiro. */}
+              {detailLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-1.5">
+                      <Skeleton className="h-3.5 w-2/3" />
+                      <Skeleton className="h-1.5 w-full rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : relatorio.projects.length === 0 ? (
+                <p className="text-sm text-text-soft">
+                  Nenhum projeto de equipe ainda. Crie um em Projetos para começar a
+                  distribuir tarefas.
+                </p>
+              ) : (
+                <ul className="flex flex-1 flex-col gap-3">
+                  {relatorio.projects.map(p => (
+                    <li key={p.id}>
+                      <div className="mb-1 flex items-center gap-2">
                         <span
                           className="h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: currentProject.color }}
+                          style={{ backgroundColor: p.color }}
                         />
-                        <p className="min-w-0 flex-1 truncate text-base font-bold text-text-primary">
-                          {currentProject.name}
-                        </p>
-                        <span className="shrink-0 text-sm font-bold text-text-secondary">
-                          {currentPct}%
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
+                          {p.name}
+                        </span>
+                        {p.overdue > 0 && (
+                          <span
+                            className="shrink-0 text-xs font-bold text-danger tabular-nums"
+                            title={`${p.overdue} atrasada${p.overdue > 1 ? 's' : ''}`}
+                          >
+                            {p.overdue} atrasada{p.overdue > 1 ? 's' : ''}
+                          </span>
+                        )}
+                        <span className="w-9 shrink-0 text-right text-xs font-semibold text-text-secondary tabular-nums">
+                          {p.progress}%
                         </span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-bg-secondary">
-                        <motion.div
-                          className="h-full rounded-full"
-                          style={{ backgroundColor: currentProject.color }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${currentPct}%` }}
-                          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-secondary">
+                        <div
+                          className="h-full rounded-full transition-[width] duration-300"
+                          style={{
+                            width: `${p.progress}%`,
+                            backgroundColor: p.overdue > 0 ? undefined : p.color,
+                          }}
                         />
                       </div>
-                      <div className="mt-4 grid grid-cols-3 gap-2">
-                        <div className="rounded-xl bg-bg-secondary/60 p-2.5 text-center">
-                          <p className="text-base font-extrabold leading-none text-text-primary">
-                            {currentProject.taskCount}
-                          </p>
-                          <p className="mt-1 text-[11px] text-text-secondary">Tarefas</p>
-                        </div>
-                        <div className="rounded-xl bg-bg-secondary/60 p-2.5 text-center">
-                          <p className="text-base font-extrabold leading-none text-text-primary">
-                            {currentProject.completedCount}
-                          </p>
-                          <p className="mt-1 text-[11px] text-text-secondary">Concluídas</p>
-                        </div>
-                        <div className="rounded-xl bg-bg-secondary/60 p-2.5 text-center">
-                          <p className="text-base font-extrabold leading-none text-text-primary">
-                            {currentPct}%
-                          </p>
-                          <p className="mt-1 text-[11px] text-text-secondary">Progresso</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </AnimatePresence>
-
-                  {teamProjects.length > 1 && (
-                    <div className="mt-4 flex justify-center gap-1.5">
-                      {teamProjects.map((p, i) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => setProjIndex(i)}
-                          aria-label={`Ir para o projeto ${i + 1}`}
-                          className={`h-1.5 rounded-full transition-all ${
-                            i === safeProjIndex
-                              ? 'w-5 bg-primary-vibrant'
-                              : 'w-1.5 bg-border hover:bg-text-soft'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : detailLoading ? (
-                // Sem esta guarda a tela afirmava "não há projetos" enquanto a
-                // resposta ainda estava a caminho.
-                <div className="space-y-3">
-                  <Skeleton className="h-5 w-2/3" />
-                  <Skeleton className="h-2 w-full rounded-full" />
-                  <div className="grid grid-cols-3 gap-2">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Skeleton key={i} className="h-14 rounded-xl" />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-text-secondary">
-                  Projetos atribuídos a esta equipe aparecem aqui. Crie um projeto do tipo equipe para
-                  começar a acompanhar o progresso em conjunto.
-                </p>
+                    </li>
+                  ))}
+                </ul>
               )}
             </Card>
               </div>
