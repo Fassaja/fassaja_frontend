@@ -41,6 +41,24 @@ export function filterByScope(
   );
 }
 
+/**
+ * De que lado vive um projeto.
+ *
+ * Existe para quem chega em Minhas Tarefas por "Ver tarefas" de um projeto: o
+ * lado (Pessoal x Equipe) fica salvo no localStorage, então clicar num projeto
+ * de equipe com "Pessoal" guardado filtrava o projeto certo dentro do lado
+ * errado — e a lista vinha vazia, sem dizer por quê.
+ *
+ * Devolve `null` quando o projeto não está na lista: ou os projetos ainda
+ * estão carregando, ou a pessoa não tem acesso. Nos dois casos não dá para
+ * decidir, e trocar de lado no chute seria pior do que não mexer.
+ */
+export function escopoDoProjeto(projects: Project[], projectId: string): TaskScope | null {
+  const projeto = projects.find(p => p.id === projectId);
+  if (!projeto) return null;
+  return projeto.type === 'team' ? 'team' : 'solo';
+}
+
 export function loadScope(): TaskScope {
   try {
     return localStorage.getItem(TASK_SCOPE_KEY) === 'team' ? 'team' : 'solo';

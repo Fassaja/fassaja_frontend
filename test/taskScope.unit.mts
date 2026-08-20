@@ -11,6 +11,7 @@ import {
   loadScope,
   saveScope,
   teamProjectIds,
+  escopoDoProjeto,
 } from '../src/utils/taskScope.ts';
 import type { Task } from '../src/types/task.ts';
 import type { Project } from '../src/types/project.ts';
@@ -133,6 +134,20 @@ try {
 }
 check('localStorage bloqueado não derruba a página', !quebrou);
 globalThis.localStorage = real;
+
+// --- Chegar por "Ver tarefas" de um projeto ---
+// A lista tem que se ajustar ao que a pessoa pediu, nos DOIS sentidos: não
+// adianta filtrar o projeto certo dentro do lado errado.
+check('projeto de equipe pede o lado Equipe',
+  escopoDoProjeto(projetos, 'p-time') === 'team');
+check('projeto solo pede o lado Pessoal',
+  escopoDoProjeto(projetos, 'p-solo') === 'solo');
+check('projeto legado (sem type) pede o lado Pessoal',
+  escopoDoProjeto(projetos, 'p-legado') === 'solo');
+check('projeto fora da lista não decide nada (ainda carregando ou sem acesso)',
+  escopoDoProjeto(projetos, 'p-inexistente') === null);
+check('lista vazia não decide nada',
+  escopoDoProjeto([], 'p-time') === null);
 
 console.log(`\n${passed} ok, ${failed} falha(s)\n`);
 if (failed > 0) process.exit(1);

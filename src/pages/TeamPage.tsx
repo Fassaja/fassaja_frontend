@@ -687,7 +687,7 @@ const TeamPage: React.FC = () => {
                     </h3>
                     <button
                       type="button"
-                      onClick={() => navigate('/tasks')}
+                      onClick={() => navigate('/tasks?scope=team')}
                       className="inline-flex items-center gap-1 text-xs font-semibold text-primary-vibrant transition-colors hover:text-primary-hover"
                     >
                       Ver todas as tarefas <ArrowRight size={14} />
@@ -774,7 +774,7 @@ const TeamPage: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => navigate('/tasks')}
+                    onClick={() => navigate('/tasks?scope=team')}
                     className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-sm font-semibold text-text-secondary transition-colors hover:border-primary-vibrant/50 hover:text-primary-vibrant"
                   >
                     <Plus size={16} /> Nova tarefa

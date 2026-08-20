@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { formatDateChip } from '@/utils/date';
@@ -9,7 +10,10 @@ interface DatePickerProps {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
-  /** Abre o calendário para cima (útil quando o campo fica no rodapé). */
+  /**
+   * Preferência por abrir para cima. É só preferência: se não couber acima,
+   * o calendário vira para baixo sozinho.
+   */
   openUp?: boolean;
   /**
    * `sm` vira um chip do tamanho do próprio conteúdo, para a linha de
@@ -24,6 +28,15 @@ const MONTHS = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+const LARGURA = 288; // 18rem, a largura desenhada
+const FOLGA = 8; // respiro entre o botão e o painel, e das bordas da tela
+/**
+ * Altura aproximada do painel (cabeçalho + 6 linhas de dias + rodapé). Serve
+ * só para decidir o lado que tem mais espaço; o valor exato não importa, e
+ * medir de verdade exigiria renderizar antes de posicionar.
+ */
+const ALTURA_ESTIMADA = 352;
 
 function toISO(d: Date): string {
   const y = d.getFullYear();
@@ -58,6 +71,53 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<Date>(() => parseISO(value) ?? new Date());
   const ref = useRef<HTMLDivElement>(null);
+  const painelRef = useRef<HTMLDivElement>(null);
+  const [estilo, setEstilo] = useState<React.CSSProperties>({});
+
+  // O calendário vai para um portal com position: fixed. Dentro do modal, o
+  // corpo é `overflow-y-auto`: um painel `absolute` era recortado ali, e a
+  // pessoa tinha que rolar o formulário para enxergar os dias. Em portal ele
+  // fica por cima de tudo, que é o comportamento certo para um popup.
+  const reposicionar = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const espacoAbaixo = window.innerHeight - r.bottom;
+    const espacoAcima = r.top;
+
+    // `openUp` é preferência; o que manda é onde cabe. Sem esta parte, um
+    // campo no rodapé abriria para baixo e sairia da tela de novo.
+    const paraCima = openUp
+      ? espacoAcima > ALTURA_ESTIMADA + FOLGA || espacoAcima > espacoAbaixo
+      : espacoAbaixo < ALTURA_ESTIMADA + FOLGA && espacoAcima > espacoAbaixo;
+
+    const largura = Math.min(LARGURA, window.innerWidth - FOLGA * 2);
+    const maxEsquerda = Math.max(FOLGA, window.innerWidth - FOLGA - largura);
+
+    setEstilo({
+      position: 'fixed',
+      width: largura,
+      // Preso à viewport: em tela estreita o painel encostava na borda.
+      left: Math.min(Math.max(r.left, FOLGA), maxEsquerda),
+      ...(paraCima
+        ? { bottom: window.innerHeight - r.top + FOLGA }
+        : { top: r.bottom + FOLGA }),
+      // Acima do modal (z-70), como o Dropdown.
+      zIndex: 80,
+    });
+  }, [openUp]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    reposicionar();
+    const aoMover = () => reposicionar();
+    window.addEventListener('scroll', aoMover, true); // capture: pega o scroll do modal
+    window.addEventListener('resize', aoMover);
+    return () => {
+      window.removeEventListener('scroll', aoMover, true);
+      window.removeEventListener('resize', aoMover);
+    };
+  }, [open, reposicionar]);
 
   useEffect(() => {
     if (open) setView(parseISO(value) ?? new Date());
@@ -66,7 +126,12 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const alvo = e.target as Node;
+      if (ref.current?.contains(alvo)) return;
+      // O painel está fora da árvore do gatilho: sem esta linha, clicar numa
+      // seta de mês fecharia o calendário.
+      if (painelRef.current?.contains(alvo)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     document.addEventListener('mousedown', onDown);
@@ -143,108 +208,107 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           )}
         </button>
 
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: -6, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -6, scale: 0.98 }}
-              transition={{ duration: 0.14 }}
-              /* 18rem (288px) é a largura desenhada, mas ela não cabe num
-                 celular de 320-360px: o conteúdo do modal tem a viewport menos
-                 32px do wrapper e 48px do painel. Sem o teto, o calendário
-                 vazava e o corpo do modal ganhava rolagem horizontal. */
-              className={`absolute z-50 left-0 w-[min(18rem,calc(100vw_-_5rem))] bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-4 ${
-                openUp ? 'bottom-full mb-2' : 'top-full mt-2'
-              }`}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between mb-3">
-                <button
-                  type="button"
-                  aria-label="Mês anterior"
-                  onClick={() => setView(new Date(view.getFullYear(), view.getMonth() - 1, 1))}
-                  className="p-1.5 rounded-lg hover:bg-bg-secondary text-text-secondary transition-colors"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <span className="text-sm font-bold text-text-primary">
-                  {MONTHS[view.getMonth()]} {view.getFullYear()}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Próximo mês"
-                  onClick={() => setView(new Date(view.getFullYear(), view.getMonth() + 1, 1))}
-                  className="p-1.5 rounded-lg hover:bg-bg-secondary text-text-secondary transition-colors"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-
-              {/* Weekdays */}
-              <div className="grid grid-cols-7 mb-1">
-                {WEEKDAYS.map((w, i) => (
-                  <span key={i} className="text-center text-[11px] font-semibold text-text-soft py-1">
-                    {w}
+        {createPortal(
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                ref={painelRef}
+                style={estilo}
+                initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                transition={{ duration: 0.14 }}
+                className="bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-4"
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <button
+                    type="button"
+                    aria-label="Mês anterior"
+                    onClick={() => setView(new Date(view.getFullYear(), view.getMonth() - 1, 1))}
+                    className="p-1.5 rounded-lg hover:bg-bg-secondary text-text-secondary transition-colors"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <span className="text-sm font-bold text-text-primary">
+                    {MONTHS[view.getMonth()]} {view.getFullYear()}
                   </span>
-                ))}
-              </div>
+                  <button
+                    type="button"
+                    aria-label="Próximo mês"
+                    onClick={() => setView(new Date(view.getFullYear(), view.getMonth() + 1, 1))}
+                    className="p-1.5 rounded-lg hover:bg-bg-secondary text-text-secondary transition-colors"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
 
-              {/* Days */}
-              <div className="grid grid-cols-7 gap-0.5">
-                {days.map((day, i) => {
-                  if (!day) return <span key={i} />;
-                  const iso = toISO(new Date(view.getFullYear(), view.getMonth(), day));
-                  const isToday = iso === todayISO;
-                  const isSelected =
-                    selected &&
-                    selected.getDate() === day &&
-                    selected.getMonth() === view.getMonth() &&
-                    selected.getFullYear() === view.getFullYear();
+                {/* Weekdays */}
+                <div className="grid grid-cols-7 mb-1">
+                  {WEEKDAYS.map((w, i) => (
+                    <span key={i} className="text-center text-[11px] font-semibold text-text-soft py-1">
+                      {w}
+                    </span>
+                  ))}
+                </div>
 
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => pick(day)}
-                      className={`
-                        h-9 rounded-lg text-sm font-medium transition-colors
-                        ${isSelected
-                          ? 'bg-primary-vibrant text-white font-bold'
-                          : isToday
-                          ? 'text-primary-vibrant font-bold bg-primary-light'
-                          : 'text-text-primary hover:bg-bg-secondary'}
-                      `}
-                    >
-                      {day}
-                    </button>
-                  );
-                })}
-              </div>
+                {/* Days */}
+                <div className="grid grid-cols-7 gap-0.5">
+                  {days.map((day, i) => {
+                    if (!day) return <span key={i} />;
+                    const iso = toISO(new Date(view.getFullYear(), view.getMonth(), day));
+                    const isToday = iso === todayISO;
+                    const isSelected =
+                      selected &&
+                      selected.getDate() === day &&
+                      selected.getMonth() === view.getMonth() &&
+                      selected.getFullYear() === view.getFullYear();
 
-              {/* Footer */}
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => onChange('')}
-                  className="text-xs font-medium text-text-secondary hover:text-danger transition-colors"
-                >
-                  Limpar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(todayISO);
-                    setOpen(false);
-                  }}
-                  className="text-xs font-semibold text-primary-vibrant hover:text-primary-hover transition-colors"
-                >
-                  Hoje
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => pick(day)}
+                        className={`
+                          h-9 rounded-lg text-sm font-medium transition-colors
+                          ${isSelected
+                            ? 'bg-primary-vibrant text-white font-bold'
+                            : isToday
+                            ? 'text-primary-vibrant font-bold bg-primary-light'
+                            : 'text-text-primary hover:bg-bg-secondary'}
+                        `}
+                      >
+                        {day}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                  <button
+                    type="button"
+                    onClick={() => onChange('')}
+                    className="text-xs font-medium text-text-secondary hover:text-danger transition-colors"
+                  >
+                    Limpar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(todayISO);
+                      setOpen(false);
+                    }}
+                    className="text-xs font-semibold text-primary-vibrant hover:text-primary-hover transition-colors"
+                  >
+                    Hoje
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
       </div>
     </div>
   );

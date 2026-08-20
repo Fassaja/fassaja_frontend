@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { LayoutGrid, List, ListChecks, Trash2, Check, Minus, X, User, Users, FolderOpen } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import {
   TaskScope,
+  escopoDoProjeto,
   filterByScope,
   isTeamTask,
   loadScope,
@@ -99,13 +100,56 @@ const TasksPage: React.FC = () => {
   // (abas de status, filtros, seleção em massa, quadro e lista) enxerga apenas
   // `tasks` — o recorte do lado escolhido —, então nenhuma outra parte da tela
   // precisa saber que existe essa divisão.
-  const [scope, setScope] = useState<TaskScope>(() => loadScope());
+  // `?scope=team` vence o localStorage já na primeira renderização: quem veio
+  // da área de Equipe pedindo as tarefas do time não pode cair no lado
+  // Pessoal. Diferente do `?project=`, aqui não é preciso esperar nada
+  // carregar — o lado veio dito no link.
+  const [scope, setScope] = useState<TaskScope>(() => {
+    const pedido = searchParams.get('scope');
+    if (pedido === 'team' || pedido === 'solo') return pedido;
+    return loadScope();
+  });
   const teamIds = useMemo(() => teamProjectIds(projects), [projects]);
   // O alternador aparece SEMPRE, mesmo sem nenhum projeto de equipe. Escondê-lo
   // nesse caso deixava a separação invisível justamente para quem ainda não
   // sabe que ela existe — e quem abre o lado vazio recebe uma explicação, que
   // é mais útil do que um botão que nunca apareceu.
   const hasTeamSide = teamIds.size > 0;
+
+  /**
+   * Chegou por "Ver tarefas" de um projeto: abre o lado onde aquele projeto
+   * vive, em vez do lado que ficou salvo da última visita.
+   *
+   * É a mesma regra que já vale ao criar uma tarefa: se o que a pessoa pediu
+   * não caberia na lista, a lista é que se ajusta. Vale nos dois sentidos —
+   * projeto de equipe com "Pessoal" salvo, e projeto solo com "Equipe" salvo.
+   *
+   * O efeito espera os projetos chegarem (antes disso não dá para saber o tipo
+   * do projeto) e roda UMA vez por link: sem a trava, trocar de lado no botão
+   * seria desfeito no próximo render, e o alternador ficaria preso.
+   */
+  // Um link com escopo explícito passa a valer como o lado em que a pessoa
+  // está trabalhando, igual ao que já acontece quando o alternador é clicado.
+  const escopoDaUrlSalvo = useRef(false);
+  useEffect(() => {
+    // Só na chegada: depois disso quem manda é o alternador.
+    if (escopoDaUrlSalvo.current) return;
+    escopoDaUrlSalvo.current = true;
+    const pedido = searchParams.get('scope');
+    if (pedido === 'team' || pedido === 'solo') saveScope(pedido);
+  }, [searchParams]);
+
+  const projetoDaUrl = searchParams.get('project');
+  const escopoJaAplicado = useRef(false);
+  useEffect(() => {
+    if (!projetoDaUrl || escopoJaAplicado.current) return;
+    const alvo = escopoDoProjeto(projects, projetoDaUrl);
+    if (!alvo) return; // projetos ainda carregando, ou sem acesso a este
+    escopoJaAplicado.current = true;
+    if (alvo === scope) return;
+    setScope(alvo);
+    saveScope(alvo);
+  }, [projetoDaUrl, projects, scope]);
 
   const tasks = useMemo(
     () => filterByScope(allTasks, teamIds, scope),
