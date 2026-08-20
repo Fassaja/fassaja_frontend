@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
 import { MoreOptions } from '@/components/common/MoreOptions';
@@ -15,6 +15,9 @@ import { useTasks } from '@/hooks/useTasks';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { teamsService } from '@/services/teamsService';
+import { useTags } from '@/contexts/TagsContext';
+import { interpretar } from '@/utils/quickParse';
+import { QuickParseHint } from './QuickParseHint';
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -51,6 +54,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const { projects } = useProjects();
   const { assignTask } = useTasks();
   const { account, isGuest } = useAuth();
+  const { tags } = useTags();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -77,6 +81,14 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     }
   }, [teamProject?.teamId]);
 
+  // Lê o título procurando prazo, prioridade e tags. Só reconhece tags que já
+  // existem — ver `Opcoes.tagsConhecidas`. Convidado não tem tags, então a
+  // lista vazia já faz o parser ignorar todos os "#".
+  const interpretado = useMemo(
+    () => interpretar(formData.title, new Date(), { tagsConhecidas: tags.map(t => t.name) }),
+    [formData.title, tags],
+  );
+
   const projectOptions: SelectableOption[] = [
     { value: '', label: 'Sem projeto' },
     ...projects.map(p => ({ value: p.id, label: p.name, color: p.color, dot: true })),
@@ -101,6 +113,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       setError('Dê um título para a tarefa antes de continuar.');
       return;
     }
+    // "amanhã !alta" sem mais nada: havia texto, mas nada dele era o título.
+    if (!interpretado.title) {
+      setError('Faltou dizer o que precisa ser feito, além da data e da prioridade.');
+      return;
+    }
     if (blockedByPermission) {
       setError('Você não tem permissão para criar tarefas neste projeto de equipe.');
       return;
@@ -108,14 +125,22 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
     try {
       setLoading(true);
+      // O que foi escrito no título vence o que estava nos controles: quem
+      // digitou "!alta" acabou de dizer isso, e o seletor está no padrão.
+      // As tags do texto SOMAM às escolhidas à mão, em vez de substituir.
+      const tagsDoTexto = interpretado.tags
+        .map(nome => tags.find(t => t.name === nome)?.id)
+        .filter((id): id is string => !!id);
+      const tagsFinais = [...new Set([...tagIds, ...tagsDoTexto])];
+
       const created = await onCreateTask({
-        title: formData.title.trim(),
+        title: interpretado.title,
         description: formData.description || undefined,
-        priority: formData.priority,
+        priority: interpretado.priority ?? formData.priority,
         status: formData.status,
         projectId: formData.projectId || undefined,
-        dueDate: formData.dueDate || undefined,
-        tagIds: tagIds.length ? tagIds : undefined,
+        dueDate: interpretado.dueDate ?? formData.dueDate ?? undefined,
+        tagIds: tagsFinais.length ? tagsFinais : undefined,
       });
       // Em projeto de equipe, já nasce com os responsáveis escolhidos.
       if (teamProject && assigneeIds.length && account) {
@@ -162,6 +187,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             maxLength={200}
             autoFocus
           />
+          <QuickParseHint resultado={interpretado} vazio={!formData.title.trim()} />
           <NoteField
             name="description"
             aria-label="Descrição da tarefa"
