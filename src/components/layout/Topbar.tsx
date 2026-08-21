@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Plus, RefreshCw, Flame } from 'lucide-react';
 import { Button } from '@/components/common/Button';
@@ -13,6 +13,7 @@ import { useTasks } from '@/contexts/TasksContext';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 import { usePageScrolled } from '@/hooks/usePageScrolled';
+import { plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
 
 interface TopbarProps {
   onNewTask?: () => void;
@@ -43,6 +44,25 @@ export const Topbar: React.FC<TopbarProps> = ({
   const { collapsed } = useSidebar();
   const inicio = collapsed ? SIDEBAR_LARGURA.topo.recolhida : SIDEBAR_LARGURA.topo.aberta;
   const rolou = usePageScrolled();
+
+  // ⌘K no Mac, Ctrl+K no Windows e no Linux. O rótulo é lido uma vez: a
+  // plataforma não muda no meio da visita.
+  const atalhoBusca = useMemo(() => rotuloAtalho('k', plataformaAtual()), []);
+
+  useEffect(() => {
+    const aoTeclar = (e: KeyboardEvent) => {
+      // `metaKey || ctrlKey` cobre os dois sistemas com um caminho só. `e.key`
+      // e não `e.code`: em teclado ABNT2 e AZERTY o que importa é a letra que
+      // a pessoa vê na tecla, não a posição física dela.
+      if (e.key.toLowerCase() !== 'k' || !(e.metaKey || e.ctrlKey)) return;
+      if (e.altKey) return; // ⌥⌘K e Ctrl+Alt+K são outros atalhos
+      // Sem isto o Chrome e o Firefox levam o foco para a barra de endereços.
+      e.preventDefault();
+      setShowSearch(aberto => !aberto);
+    };
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, []);
 
   const handleRefresh = async () => {
     if (refreshing) return;
@@ -133,14 +153,23 @@ export const Topbar: React.FC<TopbarProps> = ({
             </button>
           </Tooltip>
 
-          <button
-            type="button"
-            aria-label="Buscar"
-            onClick={() => setShowSearch(true)}
-            className="hidden sm:flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
-          >
-            <Search size={20} />
-          </button>
+          {/* A visibilidade fica AQUI, não no botão: o Tooltip envolve tudo num
+              <span className="inline-flex">, e `hidden` no filho deixaria o
+              invólucro vazio ocupando um `gap` no celular. Disputar as duas
+              classes de display no mesmo elemento também não resolveria — quem
+              vence depende da ordem no CSS gerado, não da ordem que escrevemos. */}
+          <div className="hidden sm:block">
+          <Tooltip content={`Buscar (${atalhoBusca})`}>
+            <button
+              type="button"
+              aria-label={`Buscar, atalho ${atalhoBusca}`}
+              onClick={() => setShowSearch(true)}
+              className="flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+            >
+              <Search size={20} />
+            </button>
+          </Tooltip>
+          </div>
 
           <div className="relative">
             <button

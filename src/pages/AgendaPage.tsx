@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Clock, MapPin, Link2, Bell } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
@@ -43,8 +44,25 @@ const AgendaPage: React.FC = () => {
   const { events, loading } = useEvents();
   const showSkeleton = useDeferredLoading(loading);
 
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  /**
+   * `?date=AAAA-MM-DD` abre a Agenda naquele dia — é assim que um evento
+   * achado na busca rápida (⌘K / Ctrl+K) leva ao dia dele, e não ao de hoje.
+   *
+   * Só o valor inicial: depois disso quem manda é a navegação da própria tela.
+   * Data inválida cai em hoje, que é o padrão de sempre.
+   */
+  const [searchParams] = useSearchParams();
+  const dataInicial = () => {
+    const pedida = searchParams.get('date');
+    if (!pedida) return new Date();
+    const [a, m, d] = pedida.split('-').map(Number);
+    if (!a || !m || !d) return new Date();
+    const data = new Date(a, m - 1, d);
+    return Number.isNaN(data.getTime()) ? new Date() : data;
+  };
+
+  const [currentDate, setCurrentDate] = useState(dataInicial);
+  const [selectedDate, setSelectedDate] = useState(dataInicial);
   // Semana é o padrão: a Agenda existe para horários, e é a visão em que o
   // horário aparece. O mês continua a um clique, para quem quer o panorama.
   const [view, setView] = useState<AgendaView>('week');

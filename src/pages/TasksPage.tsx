@@ -139,6 +139,23 @@ const TasksPage: React.FC = () => {
     if (pedido === 'team' || pedido === 'solo') saveScope(pedido);
   }, [searchParams]);
 
+  /**
+   * `?task=ID` abre a tarefa direto, para a busca rápida (⌘K / Ctrl+K) aterrissar NELA em vez
+   * de largar a pessoa na lista para procurar de novo.
+   *
+   * Espera as tarefas carregarem e roda uma vez: sem a trava, fechar o modal
+   * o reabriria no render seguinte, e não haveria como sair dele.
+   */
+  const tarefaDaUrl = searchParams.get('task');
+  const tarefaJaAberta = useRef(false);
+  useEffect(() => {
+    if (!tarefaDaUrl || tarefaJaAberta.current) return;
+    if (!allTasks.some(t => t.id === tarefaDaUrl)) return; // ainda carregando
+    tarefaJaAberta.current = true;
+    setSelectedTaskId(tarefaDaUrl);
+    setShowDetailModal(true);
+  }, [tarefaDaUrl, allTasks]);
+
   const projetoDaUrl = searchParams.get('project');
   const escopoJaAplicado = useRef(false);
   useEffect(() => {
