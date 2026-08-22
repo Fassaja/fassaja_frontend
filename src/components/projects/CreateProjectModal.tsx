@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Check, FolderOpen, User, Users } from 'lucide-react';
+import { ArrowRight, Check, FolderOpen, Sparkles, User, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Modal } from '@/components/common/Modal';
 import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
 import { Button } from '@/components/common/Button';
@@ -34,6 +35,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onCreateProject,
 }) => {
+  const navigate = useNavigate();
   const { account } = useAuth();
   const toast = useToast();
   const [teams, setTeams] = useState<TeamSummary[]>([]);
@@ -94,6 +96,25 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Novo projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Aqui, e não só na tela vazia: quem já tem projetos nunca vê a tela
+            vazia — e é exatamente ao criar o próximo que a pessoa está com o
+            documento aberto do lado. Uma linha, sem peso de botão, para não
+            competir com o formulário que ela veio preencher. */}
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            navigate('/ai');
+          }}
+          className="w-full flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2.5 text-left text-sm text-text-secondary hover:border-primary-vibrant/50 hover:text-primary-vibrant transition-colors"
+        >
+          <Sparkles size={16} className="shrink-0 text-primary-vibrant" />
+          <span className="flex-1">
+            Tem um documento? A IA monta o projeto e os cards a partir dele.
+          </span>
+          <ArrowRight size={15} className="shrink-0" />
+        </button>
+
         {/* Live preview */}
         <div className="flex items-center gap-3 p-3 rounded-xl bg-bg-secondary">
           <div

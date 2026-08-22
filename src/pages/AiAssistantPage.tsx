@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle, Lightbulb, ListChecks, Loader2, X } from 'lucide-react';
+import { Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle, Lightbulb, Loader2, Send, X } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
 import { Textarea } from '@/components/common/Textarea';
+import { Dropdown } from '@/components/common/Dropdown';
+import { Mascot } from '@/components/mascot/Mascot';
+import { DicasDePrompt } from '@/components/ai/DicasDePrompt';
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
 import { DatePicker } from '@/components/common/DatePicker';
-import { EmptyState } from '@/components/common/EmptyState';
-import { Skeleton } from '@/components/common/Skeletons';
 import { Modal } from '@/components/common/Modal';
 import { AiHowToModal } from '@/components/ai/AiHowToModal';
 import { useCelebration } from '@/contexts/CelebrationContext';
@@ -22,6 +23,30 @@ import { TeamSummary, TeamMember } from '@/types/team';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { useTasks } from '@/contexts/TasksContext';
 import { tint, chipText } from '@/utils/color';
+
+/**
+ * O que a IA está fazendo, em português.
+ *
+ * Serve para a espera não ser um vazio: quem lê "montando os cards" entende o
+ * que vem a seguir e por que demora. Também ensina o modelo mental da
+ * ferramenta — ela LÊ, depois RECORTA, depois PROPÕE, e nada é criado antes de
+ * você aprovar.
+ */
+const PASSOS_DA_GERACAO = [
+  'Lendo o documento',
+  'Encontrando as etapas do trabalho',
+  'Montando os cards e os prazos',
+];
+
+/**
+ * Quanto cada passo fica em destaque.
+ *
+ * A API responde de uma vez só, sem avisar em que ponto está — então isto é
+ * ILUSTRATIVO, e é assim de propósito: o último passo NUNCA se marca como
+ * concluído sozinho. Ele fica girando até a resposta chegar de verdade, para a
+ * tela não afirmar um progresso que ninguém mediu.
+ */
+const MS_POR_PASSO = 2500;
 
 /**
  * Tela do Assistente de IA.
@@ -91,6 +116,13 @@ const AiAssistantPage: React.FC = () => {
   const [documentText, setDocumentText] = useState('');
   const [command, setCommand] = useState('');
   const [mode, setMode] = useState<DraftMode>('structure');
+  // Gaveta do documento: recolhida por padrão para o balão ser a primeira
+  // coisa que se vê. Abre sozinha ao arrastar um arquivo.
+  const [docAberto, setDocAberto] = useState(false);
+  // Qual passo está em destaque durante a geração.
+  const [passo, setPasso] = useState(0);
+  // Ponteiro sobre o balão (ou sobre a própria dica logo acima dele).
+  const [pertoDoBalao, setPertoDoBalao] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [draft, setDraft] = useState<ProjectDraft | null>(null);
   // Sugestões de melhoria (modo "improve"): a pessoa escolhe quais viram cards.
@@ -238,8 +270,25 @@ const AiAssistantPage: React.FC = () => {
     e.preventDefault();
     setDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) processFile(file);
+    if (file) {
+      // Abre a gaveta junto: soltar um arquivo e não ver nada acontecer
+      // parece que o arraste falhou.
+      setDocAberto(true);
+      processFile(file);
+    }
   };
+
+  useEffect(() => {
+    if (!generating) {
+      setPasso(0);
+      return;
+    }
+    const id = setInterval(() => {
+      // Trava no último: daí em diante quem manda é a resposta, não o relógio.
+      setPasso(pp => Math.min(pp + 1, PASSOS_DA_GERACAO.length - 1));
+    }, MS_POR_PASSO);
+    return () => clearInterval(id);
+  }, [generating]);
 
   const handleGenerate = async () => {
     setGenerating(true);
@@ -439,202 +488,72 @@ const AiAssistantPage: React.FC = () => {
         </Tooltip>
       </div>
 
-      <div className="flex flex-col gap-6">
-        {/* ENTRADA (em cima, largura total) */}
-        <Card
-          className={`flex flex-col gap-4 transition-all ${
-            dragging ? 'ring-2 ring-primary-vibrant ring-offset-2 bg-primary-light/30' : ''
-          }`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={handleDrop}
-        >
-          {/* Entrada em 2 colunas (em telas largas): documento | comando.
-              min-w-0 nas colunas é obrigatório: item de grid tem min-width:auto
-              e NÃO encolhe abaixo da largura mínima do conteúdo. Sem isso, um
-              botão ou título que não quebra empurra a coluna para além do card
-              e o layout inteiro vaza para fora da tela no celular. */}
-          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <div className="flex min-w-0 flex-col gap-4">
-          {/* Modo: estruturar projeto x analisar melhorias */}
-          <div className="grid grid-cols-2 gap-2">
-            {([
-              { id: 'structure', label: 'Estruturar projeto' },
-              { id: 'improve', label: 'Analisar melhorias' },
-            ] as { id: DraftMode; label: string }[]).map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setMode(m.id)}
-                className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                  mode === m.id
-                    ? 'border-primary-vibrant bg-primary-light text-primary-dark'
-                    : 'border-border bg-surface text-text-secondary hover:bg-bg-secondary'
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-          <p className="-mt-1 text-xs text-text-secondary">
-            {mode === 'structure'
-              ? 'Um projeto com um card para cada passo encontrado no documento.'
-              : 'Uma lista de melhorias sugeridas a partir do documento.'}
-          </p>
+      {/*
+        A tela é uma conversa, não uma página: o composer fica ancorado embaixo
+        e o resultado ocupa o espaço de cima.
 
-          {/* flex-wrap: no celular "Documento de referência" + "Importar
-              arquivo" não cabem em 280px. Em vez de forçar tudo numa linha (e
-              vazar do card), o botão desce para a linha de baixo. */}
-          <div className="flex flex-wrap items-center justify-between gap-2 text-text-primary">
-            <div className="flex min-w-0 items-center gap-2">
-              <FileText size={20} className="shrink-0 text-primary-vibrant" />
-              <h2 className="truncate font-semibold">Documento de referência</h2>
-            </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<Upload size={16} />}
-              onClick={handlePickFile}
-              isLoading={extracting}
-              disabled={extracting}
-              className="shrink-0 whitespace-nowrap"
-            >
-              {extracting ? 'Lendo arquivo...' : 'Importar arquivo'}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
-              className="hidden"
-              onChange={handleFileSelected}
-            />
-          </div>
+        A altura é travada e quem rola é a FAIXA DE CIMA, por dentro. Antes o
+        rascunho nascia abaixo do formulário e a pessoa tinha de rolar a página
+        inteira para ver o que acabou de pedir — o resultado do trabalho ficava
+        fora da tela justo no momento em que mais importa.
 
-          {fileName && (
-            <div className="flex items-center justify-between gap-2 rounded-lg bg-bg-secondary px-3 py-2 text-sm text-text-secondary">
-              <span className="flex items-center gap-2 truncate">
-                <FileText size={14} className="text-primary-vibrant shrink-0" />
-                <span className="truncate">{fileName}</span>
-              </span>
-              <button
-                onClick={() => {
-                  setFileName(null);
-                  setDocumentText('');
-                }}
-                className="text-text-soft hover:text-danger transition-colors shrink-0"
-                aria-label="Remover arquivo"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          )}
-
-          <Textarea
-            label="Documento (PDF, Word .docx, .txt ou .md)"
-            placeholder="Cole, importe ou arraste seu documento aqui."
-            rows={10}
-            // No celular 10 linhas comem metade da tela. A altura é calculada
-            // para caber 6 linhas EXATAS: 6 × line-height (leading-6 = 1.5rem)
-            // + 22px de padding e borda. Número redondo de linhas é o que evita
-            // a última aparecer cortada ao meio. Em sm+ volta a valer o rows.
-            className="h-[calc(6*1.5rem_+_22px)] sm:h-auto"
-            value={documentText}
-            onChange={(e) => setDocumentText(e.target.value)}
-            error={importError ?? undefined}
-          />
-          <div className="-mt-2 flex justify-end">
-            <span className={`text-xs ${overLimit ? 'text-danger font-medium' : 'text-text-secondary'}`}>
-              {documentText.length.toLocaleString('pt-BR')} / {MAX_DOC_CHARS.toLocaleString('pt-BR')}
-              {overLimit && ' — documento muito grande'}
-            </span>
-          </div>
-          </div>
-
-          {/* Célula direita: comando + ação */}
-          <div className="flex min-w-0 flex-col gap-4">
-          <Textarea
-            label="O que você quer? (comando)"
-            placeholder='Ex.: "Crie um projeto para este cliente com os cards de cada etapa."'
-            rows={3}
-            value={command}
-            onChange={(e) => setCommand(e.target.value)}
-          />
-
-          <Button
-            onClick={handleGenerate}
-            disabled={!canGenerate}
-            isLoading={generating}
-            icon={<ListChecks size={18} />}
-          >
-            {generating ? 'Gerando rascunho…' : 'Gerar rascunho'}
-          </Button>
-
-          {generateError && <p className="text-xs text-danger">{generateError}</p>}
-
-          {/* Colada no botão de propósito: é a resposta à hesitação de quem
-              está prestes a clicar. No subtítulo da página ela não serviria —
-              lá o texto é truncado e fica escondido no celular. */}
-          <p className="text-xs text-text-secondary">
-            Nada é salvo até você revisar e aprovar o rascunho.
-          </p>
-
-          {/* A ressalva de privacidade FICA: é a única linha desta coluna que
-              informa algo que a pessoa não teria como deduzir, e some junto com
-              a IA real no modo demonstração. O "nada é salvo" subiu para o
-              subtítulo da página, e o contador de usos para a barra do topo. */}
-          {aiEnabled && (
-            <p className="flex items-start gap-1.5 text-xs text-text-secondary">
-              <Info size={13} className="mt-0.5 shrink-0" />
-              <span>O documento é enviado à Anthropic para análise.</span>
-            </p>
-          )}
-          </div>
-          </div>
-        </Card>
-
-        {/* RASCUNHO (embaixo, largura total) */}
-        <div>
+        Só em lg+: em tela pequena, altura fixa briga com o teclado virtual, que
+        come metade da janela e espremeria tudo. Ali o fluxo natural é melhor.
+      */}
+      <div className="flex flex-col gap-4 lg:h-[calc(100dvh-14rem)] lg:min-h-0">
+        {/* FAIXA DE CIMA — o que a IA tem a dizer. Rola por dentro. */}
+        <div className="flex-1 lg:min-h-0 lg:overflow-y-auto">
           <AnimatePresence mode="wait">
             {generating ? (
               <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                key="gerando"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="flex h-full flex-col items-center justify-center gap-5 py-6 text-center"
               >
-                <Card className="h-full flex flex-col gap-5 py-6">
-                  <p className="flex items-center gap-2 text-sm font-medium text-text-secondary">
-                    <Loader2 size={16} className="animate-spin shrink-0 text-primary-vibrant" />
-                    Analisando o documento e montando a proposta…
-                  </p>
-                  <div className="w-full space-y-3">
-                    <Skeleton className="h-5 w-1/2" />
-                    <Skeleton className="h-3 w-full" />
-                    <Skeleton className="h-3 w-2/3" />
-                    <div className="pt-2 space-y-3">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <Skeleton key={i} className="h-16 w-full rounded-xl" />
-                      ))}
+                <Mascot state="investigate" size="lg" animate />
+                <div className="w-full max-w-sm space-y-2 text-left">
+                  {PASSOS_DA_GERACAO.map((texto, i) => (
+                    <div
+                      key={texto}
+                      className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-colors ${
+                        i === passo
+                          ? 'bg-primary-light/50 text-primary-vibrant font-semibold'
+                          : i < passo
+                          ? 'text-text-secondary'
+                          : 'text-text-soft'
+                      }`}
+                    >
+                      {i < passo && <Check size={15} className="shrink-0 text-emerald-500" />}
+                      {i === passo && <Loader2 size={15} className="shrink-0 animate-spin" />}
+                      {i > passo && <span className="w-[15px] shrink-0 text-center">·</span>}
+                      <span>{texto}</span>
                     </div>
-                  </div>
-                </Card>
+                  ))}
+                </div>
+                <p className="text-xs text-text-soft">
+                  Leva alguns segundos. Nada é criado ainda.
+                </p>
               </motion.div>
             ) : !draft ? (
               <motion.div
-                key="empty"
+                key="parado"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="flex h-full flex-col items-center justify-center gap-4"
               >
-                <Card className="h-full">
-                  <EmptyState
-                    mascotState="happy"
-                    title="Nenhum rascunho ainda"
-                    description="Preencha o documento acima e clique em Gerar rascunho. A proposta aparece aqui para você revisar."
-                  />
-                </Card>
+              <div className="flex flex-col items-center text-center gap-2 pt-2">
+                <Mascot state="confused" size="lg" animate />
+                <div>
+                  <h2 className="text-lg font-bold text-text-primary">O que vamos montar?</h2>
+                  <p className="text-sm text-text-secondary">
+                    Me dê um documento e diga o que fazer com ele.
+                  </p>
+                </div>
+              </div>
+
               </motion.div>
             ) : (
               <motion.div
@@ -1029,6 +948,199 @@ const AiAssistantPage: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* COMPOSER — ancorado embaixo, sempre à mão.
+            `shrink-0` para a gaveta do documento crescer PARA CIMA, comendo a
+            faixa de cima, em vez de ser espremida contra a borda da janela. */}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+            setDocAberto(true); // arrastar já abre a gaveta: o alvo tem de existir
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={handleDrop}
+          className={`shrink-0 flex flex-col items-center gap-3 rounded-2xl transition-all ${
+            dragging ? 'ring-2 ring-primary-vibrant bg-primary-light/20' : ''
+          }`}
+        >
+          {/*
+            A área que revela a dica envolve a DICA e o BALÃO juntos.
+
+            Se ouvisse só o balão, mover o ponteiro para cima — para clicar na
+            dica — já seria "saiu", e ela sumiria no caminho: o alvo foge do
+            cursor que vai atrás dele. Envolvendo os dois, o trajeto entre um e
+            outro continua dentro da área.
+
+            A gaveta do documento fica de fora de propósito: abri-la não tem
+            nada a ver com querer uma dica de texto.
+          */}
+          <div
+            onMouseEnter={() => setPertoDoBalao(true)}
+            onMouseLeave={() => setPertoDoBalao(false)}
+            className="w-full max-w-3xl flex flex-col gap-1"
+          >
+            <DicasDePrompt visivel={pertoDoBalao} onEscolher={setCommand} />
+
+            {/* O balão */}
+            <div className="w-full rounded-2xl border border-border bg-surface/70 backdrop-blur-md shadow-sm focus-within:border-primary-vibrant/50 transition-colors">
+              <textarea
+                value={command}
+                onChange={(e) => setCommand(e.target.value)}
+                rows={2}
+                // O balão não tem rótulo visível: sem isto o leitor de tela
+                // anuncia só "caixa de texto".
+                aria-label="O que você quer que a IA faça com o documento"
+                placeholder="Diga o que você quer que eu faça…"
+                className="w-full resize-none bg-transparent px-4 pt-3.5 pb-2 text-sm text-text-primary placeholder-text-soft focus:outline-none"
+              />
+
+              <div className="flex items-center gap-2 px-2 pb-2">
+                {/* O "+" é o documento: anexar, colar ou arrastar. Fica como
+                    gaveta porque na maior parte do tempo o documento já está lá
+                    e só atrapalharia ocupando meia tela. */}
+                <button
+                  type="button"
+                  onClick={() => setDocAberto((v) => !v)}
+                  aria-expanded={docAberto}
+                  className={`flex items-center gap-1.5 rounded-xl border px-2.5 h-9 text-xs font-semibold transition-colors ${
+                    documentText.trim()
+                      ? 'border-primary-vibrant/40 bg-primary-light/40 text-primary-vibrant'
+                      : 'border-border text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/40'
+                  }`}
+                >
+                  <Plus size={15} className="shrink-0" />
+                  <span className="hidden sm:inline">
+                    {documentText.trim() ? 'Documento anexado' : 'Documento'}
+                  </span>
+                </button>
+
+                <Dropdown
+                  options={[
+                    { value: 'structure', label: 'Estruturar projeto' },
+                    { value: 'improve', label: 'Analisar melhorias' },
+                  ]}
+                  value={mode}
+                  onChange={(v) => setMode(v as DraftMode)}
+                  size="sm"
+                />
+
+                <span className="flex-1" />
+
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={!canGenerate}
+                  aria-label="Gerar rascunho"
+                  // Só aparece quando o botão está apagado — é ali que a pessoa
+                  // se pergunta o porquê, e era o que a linha solta abaixo dizia.
+                  title={
+                    documentText.trim() ? 'Gerar rascunho' : 'Anexe um documento no + para começar'
+                  }
+                  className="grid place-items-center w-9 h-9 shrink-0 rounded-xl bg-primary-vibrant text-white transition-colors hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {generating ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* A gaveta do documento. Abre sozinha quando não há documento e a
+              pessoa clica em "+", e continua aceitando arrastar de qualquer
+              lugar do bloco. */}
+          {docAberto && (
+            <div className="w-full max-w-3xl flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                  <FileText size={16} className="text-primary-vibrant" />
+                  Documento de referência
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Upload size={15} />}
+                    onClick={handlePickFile}
+                    isLoading={extracting}
+                    disabled={extracting}
+                    className="shrink-0 whitespace-nowrap"
+                  >
+                    {extracting ? 'Lendo…' : 'Importar'}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setDocAberto(false)}
+                    aria-label="Recolher documento"
+                    className="p-1.5 rounded-lg text-text-soft hover:text-text-primary hover:bg-bg-secondary"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown"
+                  className="hidden"
+                  onChange={handleFileSelected}
+                />
+              </div>
+
+              {fileName && (
+                <div className="flex items-center justify-between gap-2 rounded-lg bg-bg-secondary px-3 py-2 text-sm text-text-secondary">
+                  <span className="flex items-center gap-2 truncate">
+                    <FileText size={14} className="text-primary-vibrant shrink-0" />
+                    <span className="truncate">{fileName}</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      setFileName(null);
+                      setDocumentText('');
+                    }}
+                    className="text-text-soft hover:text-danger transition-colors shrink-0"
+                    aria-label="Remover arquivo"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
+
+              <Textarea
+                placeholder="Cole, importe ou arraste seu documento aqui."
+                rows={8}
+                className="h-[calc(6*1.5rem_+_22px)] sm:h-auto"
+                value={documentText}
+                onChange={(e) => setDocumentText(e.target.value)}
+                error={importError ?? undefined}
+              />
+              <div className="-mt-1 flex justify-end">
+                <span
+                  className={`text-xs ${overLimit ? 'text-danger font-medium' : 'text-text-secondary'}`}
+                >
+                  {documentText.length.toLocaleString('pt-BR')} /{' '}
+                  {MAX_DOC_CHARS.toLocaleString('pt-BR')}
+                  {overLimit && ' — documento muito grande'}
+                </span>
+              </div>
+            </div>
+          )}
+
+
+          {generateError && <p className="text-xs text-danger">{generateError}</p>}
+
+          {/* As duas ressalvas numa linha só. Nenhuma sai: são o que a pessoa
+              NÃO tem como deduzir — que nada é gravado antes de aprovar, e que
+              o documento sai daqui. Empilhadas viravam parede de texto embaixo
+              do campo; juntas, leem-se de uma vez. A de privacidade some junto
+              com a IA real no modo demonstração. */}
+          <p className="pb-1 text-center text-xs text-text-soft">
+            Nada é salvo até você revisar e aprovar.
+            {aiEnabled && ' O documento é enviado à Anthropic para análise.'}
+          </p>
         </div>
       </div>
 

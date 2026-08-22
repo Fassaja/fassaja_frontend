@@ -143,3 +143,37 @@ export function getDayOfWeek(dateString: string): string {
   const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
   return days[date.getDay()];
 }
+
+/**
+ * Quanto tempo faz, em português curto.
+ *
+ * Serve para conversa: numa lista de comentários, "há 5 min" diz na hora se a
+ * pessoa acabou de escrever ou se aquilo é de semana passada — uma data
+ * completa em cada linha obriga a fazer a conta de cabeça.
+ *
+ * Acima de uma semana volta a ser data, porque aí "há 23 dias" já não ajuda
+ * ninguém a se situar.
+ *
+ * `agora` é injetável para o teste não depender do relógio.
+ */
+export function tempoRelativo(iso: string, agora: Date = new Date()): string {
+  const quando = new Date(iso);
+  if (Number.isNaN(quando.getTime())) return '';
+
+  const seg = Math.floor((agora.getTime() - quando.getTime()) / 1000);
+  // Relógio do aparelho atrasado em relação ao servidor faria "daqui a -3s".
+  // Tratar o futuro como agora é a saída honesta: nada foi escrito no futuro.
+  if (seg < 60) return 'agora';
+
+  const min = Math.floor(seg / 60);
+  if (min < 60) return `há ${min} min`;
+
+  const horas = Math.floor(min / 60);
+  if (horas < 24) return `há ${horas} h`;
+
+  const dias = Math.floor(horas / 24);
+  if (dias === 1) return 'ontem';
+  if (dias < 7) return `há ${dias} dias`;
+
+  return formatDate(iso);
+}

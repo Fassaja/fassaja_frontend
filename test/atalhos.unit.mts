@@ -5,7 +5,7 @@
  * não funciona — e é o tipo de erro que ninguém percebe testando só no Mac.
  * Rodar: npm test
  */
-import { ehMac, rotuloAtalho } from '../src/utils/atalhos.ts';
+import { ehMac, partesDoAtalho, rotuloAtalho } from '../src/utils/atalhos.ts';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {
@@ -34,6 +34,11 @@ check('userAgent do Windows não vira Mac',
   !ehMac('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'));
 check('userAgent do Mac vira Mac',
   ehMac('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'));
+
+// Uma tecla por chip, como no teclado.
+check('partes no Mac', partesDoAtalho('k', 'MacIntel').join('|') === '⌘|K');
+check('partes no Windows', partesDoAtalho('k', 'Win32').join('|') === 'Ctrl|K');
+check('sempre dois chips', partesDoAtalho('k', 'Linux').length === 2);
 
 console.log(`\n${passed} ok, ${failed} falha(s)\n`);
 if (failed > 0) process.exit(1);

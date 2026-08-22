@@ -13,7 +13,8 @@ import { useTasks } from '@/contexts/TasksContext';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 import { usePageScrolled } from '@/hooks/usePageScrolled';
-import { plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
+import { partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
+import { Kbd } from '@/components/common/Kbd';
 
 interface TopbarProps {
   onNewTask?: () => void;
@@ -48,6 +49,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   // ⌘K no Mac, Ctrl+K no Windows e no Linux. O rótulo é lido uma vez: a
   // plataforma não muda no meio da visita.
   const atalhoBusca = useMemo(() => rotuloAtalho('k', plataformaAtual()), []);
+  const teclasBusca = useMemo(() => partesDoAtalho('k', plataformaAtual()), []);
 
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
@@ -153,23 +155,29 @@ export const Topbar: React.FC<TopbarProps> = ({
             </button>
           </Tooltip>
 
-          {/* A visibilidade fica AQUI, não no botão: o Tooltip envolve tudo num
-              <span className="inline-flex">, e `hidden` no filho deixaria o
-              invólucro vazio ocupando um `gap` no celular. Disputar as duas
-              classes de display no mesmo elemento também não resolveria — quem
-              vence depende da ordem no CSS gerado, não da ordem que escrevemos. */}
-          <div className="hidden sm:block">
-          <Tooltip content={`Buscar (${atalhoBusca})`}>
-            <button
-              type="button"
-              aria-label={`Buscar, atalho ${atalhoBusca}`}
-              onClick={() => setShowSearch(true)}
-              className="flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
-            >
-              <Search size={20} />
-            </button>
-          </Tooltip>
-          </div>
+          {/* Só a lupa e as teclas — sem a palavra "Pesquisar".
+
+              O botão abre um cartão de busca; ele não É o campo. Escrever
+              "Pesquisar…" numa caixa larga o fazia parecer um campo em que dá
+              para digitar ali mesmo, e clicar para abrir outra coisa por cima
+              desmente isso. A lupa diz o que é, as teclas dizem o atalho, e
+              nada promete o que não acontece.
+
+              Os chips só no lg+: abaixo disso é toque, e um atalho de teclado
+              não tem o que informar a quem não tem teclado. */}
+          <button
+            type="button"
+            aria-label={`Buscar, atalho ${atalhoBusca}`}
+            onClick={() => setShowSearch(true)}
+            className="hidden sm:flex items-center gap-2 h-9 sm:h-11 px-2.5 lg:pl-3 lg:pr-2 rounded-xl border border-border bg-surface/70 backdrop-blur-md text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/40 hover:bg-primary-light/30 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+          >
+            <Search size={20} className="shrink-0 lg:w-[18px] lg:h-[18px]" />
+            <span className="hidden lg:flex items-center gap-1">
+              {teclasBusca.map(t => (
+                <Kbd key={t}>{t}</Kbd>
+              ))}
+            </span>
+          </button>
 
           <div className="relative">
             <button

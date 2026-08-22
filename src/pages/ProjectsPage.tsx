@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Archive, ChevronDown } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
@@ -21,6 +22,7 @@ import { HIDE_COMPLETED_AFTER_DAYS, splitByVisibility } from '@/utils/projectVis
 import { projectSummary } from '@/utils/cardSummary';
 
 const ProjectsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { projects, createProject, updateProject, setProjectCompleted, deleteProject, loading } =
     useProjects();
   const showSkeleton = useDeferredLoading(loading);
@@ -262,6 +264,14 @@ const ProjectsPage: React.FC = () => {
             action={{
               label: 'Criar Projeto',
               onClick: () => setShowCreateModal(true),
+            }}
+            /* Quem chega aqui com um documento na mão (proposta, ata, escopo)
+               não quer criar um projeto vazio e digitar tudo de novo: a IA
+               monta o projeto e os cards a partir dele. O caminho existia e só
+               era encontrado por quem já sabia que existia. */
+            secondaryAction={{
+              label: 'Ou monte a partir de um documento, com a IA →',
+              onClick: () => navigate('/ai'),
             }}
           />
         )}

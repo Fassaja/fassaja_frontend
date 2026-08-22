@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { SubtaskList } from './SubtaskList';
+import { TaskComments } from './TaskComments';
 import { Tooltip } from '@/components/common/Tooltip';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
@@ -202,6 +203,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             </Field>
           )}
         </div>
+
+        {/* Depois da grade: a conversa é o que continua acontecendo na tarefa,
+            então fica no fim, onde se lê por último e se escreve em seguida. */}
+        <TaskComments taskId={task.id} />
       </div>
     </Modal>
   );

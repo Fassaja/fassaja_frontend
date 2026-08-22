@@ -17,6 +17,17 @@ export function rotuloAtalho(tecla: string, plataforma: string): string {
 }
 
 /**
+ * O atalho quebrado em teclas, uma por chip: ['⌘','K'] ou ['Ctrl','K'].
+ *
+ * Separado do `rotuloAtalho` porque são usos diferentes: texto corrido (dica,
+ * leitor de tela) precisa de uma string só; a tela desenha uma tecla por
+ * quadradinho, como o teclado de verdade.
+ */
+export function partesDoAtalho(tecla: string, plataforma: string): string[] {
+  return [ehMac(plataforma) ? '⌘' : 'Ctrl', tecla.toUpperCase()];
+}
+
+/**
  * O que o navegador diz sobre a plataforma.
  *
  * `userAgentData` é o caminho novo; `platform` está obsoleto mas ainda é o

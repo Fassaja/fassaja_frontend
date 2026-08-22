@@ -19,6 +19,7 @@ import { projectsService } from '@/services/projectsService';
 import { ideasService } from '@/services/ideasService';
 import { eventsService } from '@/services/eventsService';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { Kbd } from '@/components/common/Kbd';
 import { useAuth } from '@/contexts/AuthContext';
 import { buscar, trecho } from '@/utils/buscaGlobal';
 import { tint, chipText } from '@/utils/color';
@@ -206,14 +207,18 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Sem backdrop-blur (caro em tela cheia); o deslize fica só no painel. */}
+          {/* O fosco fica no PAINEL, nunca aqui. Desfocar o fundo inteiro é
+              repintar a tela toda a cada quadro — caro, e some com o texto
+              que estava atrás. Um véu mais leve que o normal (50%) de
+              propósito: se o fundo some, não há o que o painel translúcido
+              deixe transparecer, e o fosco vira só um cinza. */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-scrim/70 z-[60]"
+            className="fixed inset-0 bg-scrim/50 z-[60]"
           />
           <motion.div
             initial={{ opacity: 0 }}
@@ -228,10 +233,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               animate={{ y: 0 }}
               exit={{ y: -16, transition: { duration: 0.15, ease: 'easeIn' } }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-xl bg-surface rounded-2xl shadow-xl ring-1 ring-primary-vibrant/20 border-2 border-border overflow-hidden"
+              /* Fosco: translúcido + desfoque do que passa por baixo. A borda
+                 fica fina e discreta — no vidro é a sombra que separa o painel
+                 do fundo, e uma moldura grossa o transformaria numa caixa
+                 opaca com um fundo bonito atrás. */
+              className="w-full max-w-xl bg-surface/80 backdrop-blur-xl rounded-2xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 border border-border/60 overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border/60">
                 <Search size={20} className="text-text-secondary" />
                 <input
                   autoFocus
@@ -240,9 +249,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                   placeholder="Buscar tarefas, projetos, ideias e agenda…"
                   className="flex-1 bg-transparent text-text-primary placeholder-text-soft focus:outline-none"
                 />
-                <kbd className="hidden sm:inline text-[11px] text-text-soft border border-border rounded px-1.5 py-0.5">
-                  Esc
-                </kbd>
+                {/* Esc, e não o próprio atalho: aqui dentro a pessoa já
+                    entrou — o que ela ainda não sabe é como sair.
+
+                    A visibilidade vai no invólucro: o Kbd já é `inline-grid`, e
+                    mandar `hidden` junto deixaria as duas classes de display
+                    disputando — quem vence depende da ordem no CSS gerado. */}
+                <span className="hidden sm:block">
+                  <Kbd>Esc</Kbd>
+                </span>
               </div>
 
               <div ref={listaRef} className="max-h-[60vh] overflow-y-auto p-2">
