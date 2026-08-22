@@ -11,6 +11,7 @@ import { Textarea } from '@/components/common/Textarea';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Mascot } from '@/components/mascot/Mascot';
 import { DicasDePrompt } from '@/components/ai/DicasDePrompt';
+import { MS_POR_PASSO, PASSOS_DA_GERACAO, proximoPasso } from '@/utils/passosDaGeracao';
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
 import { DatePicker } from '@/components/common/DatePicker';
@@ -24,29 +25,6 @@ import { useProjects } from '@/contexts/ProjectsContext';
 import { useTasks } from '@/contexts/TasksContext';
 import { tint, chipText } from '@/utils/color';
 
-/**
- * O que a IA está fazendo, em português.
- *
- * Serve para a espera não ser um vazio: quem lê "montando os cards" entende o
- * que vem a seguir e por que demora. Também ensina o modelo mental da
- * ferramenta — ela LÊ, depois RECORTA, depois PROPÕE, e nada é criado antes de
- * você aprovar.
- */
-const PASSOS_DA_GERACAO = [
-  'Lendo o documento',
-  'Encontrando as etapas do trabalho',
-  'Montando os cards e os prazos',
-];
-
-/**
- * Quanto cada passo fica em destaque.
- *
- * A API responde de uma vez só, sem avisar em que ponto está — então isto é
- * ILUSTRATIVO, e é assim de propósito: o último passo NUNCA se marca como
- * concluído sozinho. Ele fica girando até a resposta chegar de verdade, para a
- * tela não afirmar um progresso que ninguém mediu.
- */
-const MS_POR_PASSO = 2500;
 
 /**
  * Tela do Assistente de IA.
@@ -285,7 +263,7 @@ const AiAssistantPage: React.FC = () => {
     }
     const id = setInterval(() => {
       // Trava no último: daí em diante quem manda é a resposta, não o relógio.
-      setPasso(pp => Math.min(pp + 1, PASSOS_DA_GERACAO.length - 1));
+      setPasso(pp => proximoPasso(pp, PASSOS_DA_GERACAO.length));
     }, MS_POR_PASSO);
     return () => clearInterval(id);
   }, [generating]);
@@ -510,7 +488,12 @@ const AiAssistantPage: React.FC = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="flex h-full flex-col items-center justify-center gap-5 py-6 text-center"
+                /* `min-h-full`, nunca `h-full`: com altura travada e
+                   `justify-center`, o que não coube some para CIMA — e o
+                   scroll não alcança, porque o excesso fica fora da caixa de
+                   rolagem. Com min-h, a caixa cresce e o conteúdo volta a ser
+                   alcançável. */
+                className="flex min-h-full flex-col items-center justify-center gap-5 py-6 text-center"
               >
                 <Mascot state="investigate" size="lg" animate />
                 <div className="w-full max-w-sm space-y-2 text-left">
@@ -537,14 +520,20 @@ const AiAssistantPage: React.FC = () => {
                 </p>
               </motion.div>
             ) : !draft ? (
+              /* Com a gaveta aberta o Bob SAI de cena.
+                 Ele é a pergunta inicial — "o que vamos montar?" —, e quem
+                 acabou de abrir o documento já respondeu isso. Encolhê-lo
+                 deixava um mascote pequeno e sem função ocupando o espaço que
+                 o documento pede. Some inteiro, e a gaveta ganha a tela. */
               <motion.div
                 key="parado"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="flex h-full flex-col items-center justify-center gap-4"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: docAberto ? 0 : 1, scale: docAberto ? 0.94 : 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                style={{ pointerEvents: docAberto ? 'none' : 'auto' }}
+                className="flex min-h-full flex-col items-center justify-center gap-4 text-center"
               >
-              <div className="flex flex-col items-center text-center gap-2 pt-2">
                 <Mascot state="confused" size="lg" animate />
                 <div>
                   <h2 className="text-lg font-bold text-text-primary">O que vamos montar?</h2>
@@ -552,8 +541,6 @@ const AiAssistantPage: React.FC = () => {
                     Me dê um documento e diga o que fazer com ele.
                   </p>
                 </div>
-              </div>
-
               </motion.div>
             ) : (
               <motion.div
@@ -976,7 +963,16 @@ const AiAssistantPage: React.FC = () => {
             A gaveta do documento fica de fora de propósito: abri-la não tem
             nada a ver com querer uma dica de texto.
           */}
-          <div
+          {/*
+            `layout="position"` e não `layout`: o segundo interpola também a
+            LARGURA e a ALTURA, e durante a transição o texto do balão sairia
+            esticado. Position anima só o deslocamento — que é exatamente o
+            que queremos: o balão subindo enquanto a gaveta ocupa o espaço
+            embaixo dele.
+          */}
+          <motion.div
+            layout="position"
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
             onMouseEnter={() => setPertoDoBalao(true)}
             onMouseLeave={() => setPertoDoBalao(false)}
             className="w-full max-w-3xl flex flex-col gap-1"
@@ -1048,13 +1044,31 @@ const AiAssistantPage: React.FC = () => {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* A gaveta do documento. Abre sozinha quando não há documento e a
               pessoa clica em "+", e continua aceitando arrastar de qualquer
               lugar do bloco. */}
-          {docAberto && (
-            <div className="w-full max-w-3xl flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3">
+          <AnimatePresence initial={false}>
+            {docAberto && (
+            /* Teto na gaveta: sem ele, um documento aberto tomava a altura
+               toda e o Bob (ou o rascunho) ficava espremido a nada. Ela rola
+               por dentro; a faixa de cima continua existindo.
+
+               A altura anima de 0 até `auto`: é isso que empurra o balão para
+               cima em vez de ele saltar de posição. `overflow-hidden` durante
+               o trajeto para o conteúdo não vazar da caixa que ainda está
+               crescendo — e volta a `auto` só no fim, senão a rolagem interna
+               brigaria com a animação. */
+            <motion.div
+              key="gaveta"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-3xl overflow-hidden"
+            >
+            <div className="flex max-h-[45vh] flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-sm font-semibold text-text-primary">
                   <FileText size={16} className="text-primary-vibrant" />
@@ -1111,8 +1125,8 @@ const AiAssistantPage: React.FC = () => {
 
               <Textarea
                 placeholder="Cole, importe ou arraste seu documento aqui."
-                rows={8}
-                className="h-[calc(6*1.5rem_+_22px)] sm:h-auto"
+                rows={5}
+                className="h-[calc(5*1.5rem_+_22px)] sm:h-auto"
                 value={documentText}
                 onChange={(e) => setDocumentText(e.target.value)}
                 error={importError ?? undefined}
@@ -1127,7 +1141,9 @@ const AiAssistantPage: React.FC = () => {
                 </span>
               </div>
             </div>
-          )}
+            </motion.div>
+            )}
+          </AnimatePresence>
 
 
           {generateError && <p className="text-xs text-danger">{generateError}</p>}
