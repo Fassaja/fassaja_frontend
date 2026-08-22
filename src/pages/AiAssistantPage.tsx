@@ -623,7 +623,15 @@ const AiAssistantPage: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                </div>
 
+                {/* Só ESTA faixa rola. A sombra na borda de baixo acende
+                    apenas quando há mesmo mais coisa embaixo. */}
+                <AreaRolavel className="flex-1">
+                {/* O respiro entre o formulário de destino e os cards vivia no
+                    contêiner que virou três faixas; volta aqui dentro. */}
+                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3">
                   <Select
                     label="Destino"
                     value={draft.targetProjectId}
@@ -694,9 +702,6 @@ const AiAssistantPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Só ESTA faixa rola. A sombra na borda de baixo acende
-                    apenas quando há mesmo mais coisa embaixo. */}
-                <AreaRolavel className="flex-1">
                 {/* Sugestões + cards lado a lado (em telas largas) quando há sugestões */}
                 <div className={`grid items-start gap-4 ${suggestions.length > 0 ? '2xl:grid-cols-5' : 'grid-cols-1'}`}>
                 {/* Sugestões de melhoria (balões) — modo "Analisar melhorias" */}
@@ -936,6 +941,7 @@ const AiAssistantPage: React.FC = () => {
                 </motion.div>
                 </div>
                 </div>
+                </div>
                 </AreaRolavel>
 
                 {applyError && <p className="shrink-0 text-xs text-danger">{applyError}</p>}
@@ -950,6 +956,17 @@ const AiAssistantPage: React.FC = () => {
                   isLoading={applying}
                   icon={<Check size={18} />}
                   className="w-full shrink-0"
+                  /* O "Destino" e o "Nome do projeto" agora rolam junto com os
+                     cards e podem estar fora da vista. Sem esta explicação, o
+                     botão preso aqui embaixo ficaria apagado sem motivo
+                     aparente — e o motivo estaria escondido lá em cima. */
+                  title={
+                    draft.cards.length === 0
+                      ? 'Nenhum card para criar'
+                      : !draft.targetProjectId && !draft.name.trim()
+                      ? 'Dê um nome ao projeto, no topo do rascunho'
+                      : 'Cria o projeto e os cards'
+                  }
                 >
                   {applying
                     ? 'Criando...'
