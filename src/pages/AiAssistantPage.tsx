@@ -11,6 +11,7 @@ import { Textarea } from '@/components/common/Textarea';
 import { Dropdown } from '@/components/common/Dropdown';
 import { Mascot } from '@/components/mascot/Mascot';
 import { DicasDePrompt } from '@/components/ai/DicasDePrompt';
+import { AreaRolavel } from '@/components/common/AreaRolavel';
 import { MS_POR_PASSO, PASSOS_DA_GERACAO, proximoPasso } from '@/utils/passosDaGeracao';
 import { Input } from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
@@ -561,14 +562,19 @@ const AiAssistantPage: React.FC = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col gap-4"
+                /* Altura travada e três faixas: cabeçalho, cards, ação.
+                   Antes era uma coluna única dentro da área que rola — e o
+                   botão de aprovar, que é o FIM do fluxo, ficava depois de
+                   todos os cards. Quem gerava doze só encontrava a ação
+                   principal rolando até o fundo. */
+                className="flex flex-col gap-3 lg:h-full"
               >
                 {/* Cabeçalho do rascunho: seção, não Card.
                     Emoldurar isto dava ao painel de controle o mesmo peso
                     visual dos cards propostos — e são eles o conteúdo. Com a
                     moldura fora, a hierarquia passa a vir do tamanho do texto
                     e do espaço, que é de onde ela deveria vir. */}
-                <div className="flex flex-col gap-3">
+                <div className="flex shrink-0 flex-col gap-3">
                   {/* A IA falhou: o rascunho é genérico, MAS o uso não foi
                       cobrado — deixamos isso explícito para a pessoa não achar
                       que gastou uma das 5 gerações da semana à toa. */}
@@ -688,6 +694,9 @@ const AiAssistantPage: React.FC = () => {
                   )}
                 </div>
 
+                {/* Só ESTA faixa rola. A sombra na borda de baixo acende
+                    apenas quando há mesmo mais coisa embaixo. */}
+                <AreaRolavel className="flex-1">
                 {/* Sugestões + cards lado a lado (em telas largas) quando há sugestões */}
                 <div className={`grid items-start gap-4 ${suggestions.length > 0 ? '2xl:grid-cols-5' : 'grid-cols-1'}`}>
                 {/* Sugestões de melhoria (balões) — modo "Analisar melhorias" */}
@@ -927,8 +936,9 @@ const AiAssistantPage: React.FC = () => {
                 </motion.div>
                 </div>
                 </div>
+                </AreaRolavel>
 
-                {applyError && <p className="text-xs text-danger">{applyError}</p>}
+                {applyError && <p className="shrink-0 text-xs text-danger">{applyError}</p>}
 
                 <Button
                   onClick={handleApprove}
@@ -939,7 +949,7 @@ const AiAssistantPage: React.FC = () => {
                   }
                   isLoading={applying}
                   icon={<Check size={18} />}
-                  className="w-full"
+                  className="w-full shrink-0"
                 >
                   {applying
                     ? 'Criando...'
