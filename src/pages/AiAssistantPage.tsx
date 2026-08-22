@@ -272,6 +272,19 @@ const AiAssistantPage: React.FC = () => {
     setGenerating(true);
     setGenerateError(null);
     setApplyError(null);
+    /*
+     * Fecha a gaveta ao enviar.
+     *
+     * O documento já cumpriu o papel — daqui em diante ele só tapa a faixa
+     * onde a IA mostra o que está fazendo, e é justamente a hora em que a
+     * pessoa quer ver aquilo. Ela fecha com a mesma animação de sempre, então
+     * lê como "recebi, pode deixar comigo".
+     *
+     * O texto NÃO é apagado: o chip continua marcado como "Documento anexado"
+     * e o "+" reabre a gaveta com tudo lá. Fechar é arrumar a mesa, não jogar
+     * fora o que estava em cima dela.
+     */
+    setDocAberto(false);
     try {
       const result = await aiService.draft(documentText, command || undefined, mode);
       // O back-end devolve cards sem id; adicionamos um id local para edição.
