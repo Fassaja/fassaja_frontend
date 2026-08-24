@@ -149,5 +149,24 @@ check('projeto fora da lista não decide nada (ainda carregando ou sem acesso)',
 check('lista vazia não decide nada',
   escopoDoProjeto([], 'p-time') === null);
 
+// --- tarefa delegada SEM projeto ---
+// Ela é de equipe pelo `teamId`, e é isso que a mantém no lado certo. Sem
+// isso, delegar algo solto colocaria a tarefa em Pessoal para os dois lados —
+// quem delega e quem recebe.
+{
+  const solta = { ...tarefa('t-solta'), teamId: 'time-1' } as Task;
+  check('tarefa com teamId é de equipe mesmo sem projeto',
+    isTeamTask(solta, new Set()));
+  check('e o recorte Equipe a inclui',
+    filterByScope([solta], new Set(), 'team').length === 1);
+  check('o recorte Pessoal a exclui',
+    filterByScope([solta], new Set(), 'solo').length === 0);
+}
+
+// A reserva pelo projeto cobre o intervalo entre os dois deploys: enquanto o
+// back antigo não manda `teamId`, a dedução pelo projeto ainda vale.
+check('sem teamId, o projeto de equipe ainda responde',
+  isTeamTask(tarefa('t2', 'p-time'), new Set(['p-time'])));
+
 console.log(`\n${passed} ok, ${failed} falha(s)\n`);
 if (failed > 0) process.exit(1);

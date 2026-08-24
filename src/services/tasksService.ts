@@ -28,8 +28,13 @@ export const tasksService = {
   },
 
   /** Define o conjunto FINAL de responsáveis. Lista vazia remove todos. */
-  async assignTask(id: string, assigneeIds: string[]): Promise<Task> {
-    return api.patch<Task>(`/tasks/${id}/assign`, { assigneeIds });
+  /**
+   * `teamId` só é necessário para delegar tarefa que NÃO está em projeto de
+   * equipe — nesse caso não há de onde deduzir o time. Com projeto, o servidor
+   * ignora o que vier aqui: a fonte é o projeto.
+   */
+  async assignTask(id: string, assigneeIds: string[], teamId?: string): Promise<Task> {
+    return api.patch<Task>(`/tasks/${id}/assign`, { assigneeIds, teamId });
   },
 
 

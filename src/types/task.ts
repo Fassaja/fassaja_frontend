@@ -37,6 +37,14 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   projectId?: string;
+  /**
+   * A equipe da tarefa, explícita.
+   *
+   * Antes o "isto é de equipe?" era deduzido do projeto. Com este campo, uma
+   * tarefa delegada SEM projeto também é de equipe — e continua aparecendo no
+   * painel e no recorte certo.
+   */
+  teamId?: string;
   dueDate?: string;
   createdAt: string;
   completedAt?: string;

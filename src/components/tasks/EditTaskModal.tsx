@@ -6,6 +6,7 @@ import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
 import { AssigneeSelector } from './AssigneeSelector';
+import { DelegarSemProjeto } from './DelegarSemProjeto';
 import { DatePicker } from '@/components/common/DatePicker';
 import { TagSelector } from './TagSelector';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
@@ -48,6 +49,9 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [members, setMembers] = useState<TeamMember[]>([]);
+  // Equipe escolhida para delegar uma tarefa SEM projeto. Começa na que a
+  // tarefa já tem, se tiver.
+  const [equipeSolta, setEquipeSolta] = useState<string | null>(task?.teamId ?? null);
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
@@ -130,8 +134,11 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         atuais.length !== assigneeIds.length ||
         [...atuais].sort().join(',') !== [...assigneeIds].sort().join(',');
 
-      if (teamProject && mudou && account) {
-        await assignTask(task.id, assigneeIds);
+      // Com projeto de equipe o time vem do projeto; sem ele, da escolha
+      // acima. O servidor ignora o `teamId` no primeiro caso.
+      const podeAtribuir = teamProject || equipeSolta;
+      if (podeAtribuir && mudou && account) {
+        await assignTask(task.id, assigneeIds, teamProject ? undefined : equipeSolta ?? undefined);
       } else if (!teamProject && atuais.length > 0) {
         // Saiu de um projeto de equipe: fora da equipe não há a quem atribuir.
         await assignTask(task.id, []);
@@ -225,11 +232,21 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             disabled={loading}
           />
 
-          {teamProject && (
+          {teamProject ? (
             <AssigneeSelector
               members={members}
               value={assigneeIds}
               onChange={setAssigneeIds}
+              disabled={loading}
+            />
+          ) : (
+            // Sem projeto de equipe, a equipe é escolhida aqui — é o caminho
+            // de delegar algo solto, que antes exigia criar um projeto.
+            <DelegarSemProjeto
+              teamId={equipeSolta}
+              onTeamChange={setEquipeSolta}
+              assigneeIds={assigneeIds}
+              onAssigneesChange={setAssigneeIds}
               disabled={loading}
             />
           )}

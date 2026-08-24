@@ -26,7 +26,7 @@ interface TasksContextValue {
   updateTask: (id: string, updates: Partial<Task>) => Promise<Task | undefined>;
   completeTask: (id: string) => Promise<Task | undefined>;
   deleteTask: (id: string) => Promise<void>;
-  assignTask: (id: string, assigneeIds: string[]) => Promise<Task>;
+  assignTask: (id: string, assigneeIds: string[], teamId?: string) => Promise<Task>;
   addSubtask: (taskId: string, title: string) => Promise<void>;
   updateSubtask: (
     taskId: string,
@@ -216,8 +216,8 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isGuest]);
 
   const assignTask = useCallback(
-    async (id: string, assigneeIds: string[]) => {
-      const updated = await tasksService.assignTask(id, assigneeIds);
+    async (id: string, assigneeIds: string[], teamId?: string) => {
+      const updated = await tasksService.assignTask(id, assigneeIds, teamId);
       setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
       return updated;
     },

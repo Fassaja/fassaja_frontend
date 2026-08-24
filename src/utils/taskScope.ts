@@ -28,6 +28,14 @@ export function teamProjectIds(projects: Project[]): Set<string> {
  * pessoal em vez de sumir da tela, que é o pior desfecho possível.
  */
 export function isTeamTask(task: Task, teamIds: Set<string>): boolean {
+  // `teamId` é a resposta direta: a tarefa diz de que equipe ela é, inclusive
+  // quando não está em projeto nenhum (delegada solta).
+  //
+  // O caminho pelo projeto FICA como reserva. Ele cobre a resposta de uma
+  // versão anterior da API (sem o campo) durante o intervalo entre o deploy do
+  // front e o do back — sem ele, nesse intervalo, TODA tarefa de equipe cairia
+  // no lado Pessoal de uma vez só.
+  if (task.teamId) return true;
   return !!task.projectId && teamIds.has(task.projectId);
 }
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/common/Button';
 import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
 import { Dropdown } from '@/components/common/Dropdown';
 import { AssigneeSelector } from './AssigneeSelector';
+import { DelegarSemProjeto } from './DelegarSemProjeto';
 import { DatePicker } from '@/components/common/DatePicker';
 import { TagSelector } from './TagSelector';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
@@ -62,6 +63,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const [formData, setFormData] = useState(emptyForm);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
+  // Equipe para delegar uma tarefa que não vai para projeto de equipe.
+  const [equipeSolta, setEquipeSolta] = useState<string | null>(null);
   const [tagIds, setTagIds] = useState<string[]>([]);
 
   const set = <K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) =>
@@ -144,11 +147,16 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         tagIds: tagsFinais.length ? tagsFinais : undefined,
       });
       // Em projeto de equipe, já nasce com os responsáveis escolhidos.
-      if (teamProject && assigneeIds.length && account) {
-        await assignTask(created.id, assigneeIds);
+      if ((teamProject || equipeSolta) && assigneeIds.length && account) {
+        await assignTask(
+          created.id,
+          assigneeIds,
+          teamProject ? undefined : equipeSolta ?? undefined,
+        );
       }
       setFormData(emptyForm);
       setAssigneeIds([]);
+      setEquipeSolta(null);
       setTagIds([]);
       setError('');
       toast.success('Tarefa criada.');
@@ -256,13 +264,25 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             disabled={loading}
           />
 
-          {teamProject && !blockedByPermission && (
+          {teamProject && !blockedByPermission ? (
             <AssigneeSelector
               members={members}
               value={assigneeIds}
               onChange={setAssigneeIds}
               disabled={loading}
             />
+          ) : (
+            !teamProject &&
+            !isGuest && (
+              // Dá para já criar a tarefa delegada, sem projeto nenhum.
+              <DelegarSemProjeto
+                teamId={equipeSolta}
+                onTeamChange={setEquipeSolta}
+                assigneeIds={assigneeIds}
+                onAssigneesChange={setAssigneeIds}
+                disabled={loading}
+              />
+            )
           )}
 
           {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
