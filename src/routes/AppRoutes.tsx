@@ -6,6 +6,7 @@ import ProjectsPage from '@/pages/ProjectsPage';
 import CalendarPage from '@/pages/CalendarPage';
 import AgendaPage from '@/pages/AgendaPage';
 import PrioritiesPage from '@/pages/PrioritiesPage';
+import FocusPage from '@/pages/FocusPage';
 import ReportsPage from '@/pages/ReportsPage';
 import TeamPage from '@/pages/TeamPage';
 import ProfilePage from '@/pages/ProfilePage';
@@ -44,6 +45,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/projects" element={<RequireAuth><ProjectsPage /></RequireAuth>} />
       <Route path="/calendar" element={<RequireAuth><CalendarPage /></RequireAuth>} />
       <Route path="/agenda" element={<RequireAuth><AgendaPage /></RequireAuth>} />
+      <Route path="/focus" element={<RequireAuth><FocusPage /></RequireAuth>} />
       <Route path="/priorities" element={<RequireAuth><PrioritiesPage /></RequireAuth>} />
       <Route path="/reports" element={<RequireAuth><ReportsPage /></RequireAuth>} />
       <Route path="/team" element={<RequireAuth><TeamPage /></RequireAuth>} />

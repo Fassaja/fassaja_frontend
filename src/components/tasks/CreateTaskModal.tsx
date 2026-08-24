@@ -18,6 +18,7 @@ import { teamsService } from '@/services/teamsService';
 import { useTags } from '@/contexts/TagsContext';
 import { interpretar } from '@/utils/quickParse';
 import { QuickParseHint } from './QuickParseHint';
+import { AjudaDoTitulo } from './AjudaDoTitulo';
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -174,20 +175,30 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             digitar + Enter basta para criar a tarefa. Todo o resto tem
             padrão razoável e pode ficar como está. */}
         <div>
-          <HeadlineInput
-            name="title"
-            aria-label="Título da tarefa"
-            placeholder="O que precisa ser feito?"
-            value={formData.title}
-            onChange={e => {
-              set('title', e.target.value);
-              if (error) setError('');
-            }}
-            disabled={loading}
-            maxLength={200}
-            autoFocus
-          />
-          <QuickParseHint resultado={interpretado} vazio={!formData.title.trim()} />
+          {/* O "?" na MESMA linha do campo: a ajuda pertence ao que se está
+              escrevendo ali, e uma linha própria abaixo era exatamente o que
+              deixava o modal poluído. */}
+          <div className="flex items-start gap-1">
+            <div className="min-w-0 flex-1">
+              <HeadlineInput
+                name="title"
+                aria-label="Título da tarefa"
+                placeholder="O que precisa ser feito?"
+                value={formData.title}
+                onChange={e => {
+                  set('title', e.target.value);
+                  if (error) setError('');
+                }}
+                disabled={loading}
+                maxLength={200}
+                autoFocus
+              />
+            </div>
+            <div className="pt-1.5">
+              <AjudaDoTitulo />
+            </div>
+          </div>
+          <QuickParseHint resultado={interpretado} />
           <NoteField
             name="description"
             aria-label="Descrição da tarefa"

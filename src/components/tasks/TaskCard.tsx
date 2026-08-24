@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Trash2, Check, CalendarDays, ChevronDown, ListChecks, Users } from 'lucide-react';
+import { Trash2, Check, CalendarDays, ChevronDown, ListChecks, Timer, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Task, TaskStatus } from '@/types/task';
 import { Project } from '@/types/project';
@@ -12,6 +12,8 @@ import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
 import { tint, chipText } from '@/utils/color';
 import { subtaskProgress } from '@/utils/subtasks';
+import { useFocusTimes } from '@/contexts/FocusTimesContext';
+import { rotuloDeDuracao } from '@/utils/focoCoach';
 
 interface TaskCardProps {
   task: Task;
@@ -182,6 +184,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const isCompleted = task.status === 'completed';
   const priorityInfo = priorityConfig[task.priority];
   const passos = subtaskProgress(task.subtasks);
+  // Tempo focado nesta tarefa. Só aparece quando existe — a maioria não tem,
+  // e um "0 min" em todo cartão seria ruído puro.
+  const minutosFoco = useFocusTimes().get(task.id) ?? 0;
   const statusInfo = statusConfig[task.status];
 
   /**
@@ -328,6 +333,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 >
                   <CalendarDays size={12} className={task.status === 'overdue' ? '' : 'text-text-soft'} />
                   {formatDate(task.dueDate)}
+                </span>
+              </>
+            )}
+
+            {minutosFoco > 0 && (
+              <>
+                <span className="text-text-soft" aria-hidden>·</span>
+                {/* O tempo que já foi investido aqui. É a única informação do
+                    cartão que fala do PASSADO, e é o que dá peso à decisão de
+                    continuar ou largar. */}
+                <span
+                  className="inline-flex items-center gap-1 font-medium text-primary-vibrant"
+                  title={`${rotuloDeDuracao(minutosFoco)} de foco nesta tarefa`}
+                >
+                  <Timer size={12} />
+                  {rotuloDeDuracao(minutosFoco)}
                 </span>
               </>
             )}

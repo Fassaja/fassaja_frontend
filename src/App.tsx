@@ -9,6 +9,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ProjectsProvider } from '@/contexts/ProjectsContext';
 import { TagsProvider } from '@/contexts/TagsContext';
 import { TasksProvider } from '@/contexts/TasksContext';
+import { FocusProvider } from '@/contexts/FocusContext';
+import { FocusTimesProvider } from '@/contexts/FocusTimesContext';
 import { EventsProvider } from '@/contexts/EventsContext';
 import { IdeasProvider } from '@/contexts/IdeasContext';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
@@ -39,6 +41,10 @@ function App() {
                           se o projeto do qual ela depende já terminou. */}
                       <IdeasProvider>
                         <NotificationsProvider>
+                          {/* Dentro de Auth: a sessão de foco vive no servidor
+                              e só é buscada por quem tem conta. */}
+                          <FocusProvider>
+                          <FocusTimesProvider>
                           <TopProgressBar />
                           {/* Contagem de acessos (Vercel Web Analytics). Só
                               envia em produção; em localhost fica inerte.
@@ -54,6 +60,8 @@ function App() {
                             }}
                           />
                           <AppRoutes />
+                          </FocusTimesProvider>
+                          </FocusProvider>
                         </NotificationsProvider>
                       </IdeasProvider>
                     </EventsProvider>

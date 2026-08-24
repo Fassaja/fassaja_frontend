@@ -17,25 +17,16 @@ const ROTULO_PRIORIDADE: Record<NonNullable<Interpretado['priority']>, string> =
  * vai acontecer e só acontece ao salvar — se não era o que queria, é só apagar
  * a palavra.
  */
-export const QuickParseHint: React.FC<{ resultado: Interpretado; vazio: boolean }> = ({
-  resultado,
-  vazio,
-}) => {
+/**
+ * Mostra o que foi entendido no que a pessoa está digitando.
+ *
+ * Só isso: o ENSINO de como escrever saiu daqui para o "?" ao lado do campo
+ * (AjudaDoTitulo). Uma linha fixa de instrução cobrava a leitura em toda
+ * criação de tarefa, inclusive de quem já sabe, e empurrava o formulário para
+ * baixo num modal já cheio.
+ */
+export const QuickParseHint: React.FC<{ resultado: Interpretado }> = ({ resultado }) => {
   const { dueDate, priority, tags } = resultado;
-
-  // Com o campo vazio, ensina o atalho — é o único momento em que a dica não
-  // disputa espaço com o que a pessoa está escrevendo. Ninguém usa um atalho
-  // que não sabe que existe.
-  if (vazio) {
-    return (
-      <p className="mt-2 text-xs text-text-soft">
-        Dica: escreva <span className="font-semibold">amanhã</span>,{' '}
-        <span className="font-semibold">!alta</span> ou{' '}
-        <span className="font-semibold">#tag</span> no título e eles viram prazo,
-        prioridade e etiqueta.
-      </p>
-    );
-  }
 
   if (!dueDate && !priority && tags.length === 0) return null;
 

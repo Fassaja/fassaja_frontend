@@ -25,6 +25,7 @@ import {
   PlayCircle,
   HeartHandshake,
   Lightbulb,
+  Timer,
 } from 'lucide-react';
 import { OPEN_TOUR_EVENT } from './PlatformTourModal';
 import { NotificationsHelp } from './NotificationsHelp';
@@ -46,6 +47,7 @@ import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/', free: true },
   { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks', free: true },
+  { icon: Timer, label: 'Foco', path: '/focus', free: false },
   { icon: Flag, label: 'Prioridades', path: '/priorities', free: false },
   { icon: FolderOpen, label: 'Projetos', path: '/projects', free: false },
   { icon: CalendarClock, label: 'Agenda', path: '/agenda', free: false },

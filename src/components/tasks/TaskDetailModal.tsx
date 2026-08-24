@@ -14,6 +14,7 @@ import {
 import { Modal } from '@/components/common/Modal';
 import { SubtaskList } from './SubtaskList';
 import { TaskComments } from './TaskComments';
+import { FocusStarter } from '@/components/focus/FocusStarter';
 import { Tooltip } from '@/components/common/Tooltip';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
@@ -113,6 +114,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
         {/* Antes da grade de metadados, e não depois: os passos são o que a
             pessoa veio fazer; prioridade e datas são referência. */}
+        {/* Acima dos passos: decidir "vou trabalhar nisto agora" vem antes de
+            olhar a lista do que fazer dentro. */}
+        {task.status !== 'completed' && <FocusStarter taskId={task.id} />}
+
         <SubtaskList task={task} />
 
         {/* Detalhes em grade */}

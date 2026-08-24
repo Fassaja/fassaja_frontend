@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Tag as TagIcon, X } from 'lucide-react';
 import { useTags } from '@/contexts/TagsContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -29,12 +30,56 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
   const wrapRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+
+  const listaRef = useRef<HTMLDivElement>(null);
+  const [estilo, setEstilo] = useState<React.CSSProperties>({});
+
+  /*
+   * A lista vai para um portal com position: fixed.
+   *
+   * Antes era `absolute` dentro do modal, cujo corpo é `overflow-y-auto`:
+   * qualquer ancestral com overflow recorta um popup posicionado assim, e a
+   * lista de tags aparecia cortada na borda — para ver as últimas era preciso
+   * rolar o formulário inteiro. É a mesma correção já feita no DatePicker.
+   */
+  const reposicionar = useCallback(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const altura = listaRef.current?.offsetHeight ?? 224; // max-h-56
+    const espacoAbaixo = window.innerHeight - r.bottom;
+    // Abre para cima quando não cabe embaixo E cabe em cima. A lista rola por
+    // dentro, então nunca precisa de mais que o teto.
+    const paraCima = espacoAbaixo < altura + 8 && r.top > espacoAbaixo;
+    setEstilo({
+      position: 'fixed',
+      left: r.left,
+      width: r.width,
+      ...(paraCima ? { bottom: window.innerHeight - r.top + 6 } : { top: r.bottom + 6 }),
+      zIndex: 80, // acima do modal (z-70)
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    reposicionar();
+    const aoMover = () => reposicionar();
+    window.addEventListener('scroll', aoMover, true); // capture: pega o scroll do modal
+    window.addEventListener('resize', aoMover);
+    return () => {
+      window.removeEventListener('scroll', aoMover, true);
+      window.removeEventListener('resize', aoMover);
+    };
+  }, [open, reposicionar]);
   const [creating, setCreating] = useState(false);
 
   // Fecha a lista ao clicar fora.
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
+      // A lista vive em outro nó (portal): sem incluí-la, clicar numa tag
+      // fecharia o menu antes de o clique chegar nela.
+      if (listaRef.current?.contains(e.target as Node)) return;
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
@@ -130,8 +175,12 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
       </div>
 
       {/* Lista de sugestões */}
-      {open && (matches.length > 0 || canCreate) && (
-        <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-border bg-surface shadow-xl max-h-56 overflow-y-auto py-1">
+      {open && (matches.length > 0 || canCreate) && createPortal(
+        <div
+          ref={listaRef}
+          style={estilo}
+          className="rounded-xl border border-border bg-surface shadow-xl max-h-56 overflow-y-auto py-1"
+        >
           {matches.map(tag => (
             <button
               key={tag.id}
@@ -154,15 +203,19 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
               <span className="flex-1 text-left truncate">Criar tag "{q}"</span>
             </button>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* Dica quando ainda não há nenhuma tag */}
-      {open && tags.length === 0 && !q && (
-        <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-border bg-surface shadow-xl px-3 py-2.5 flex items-center gap-2 text-sm text-text-secondary">
+      {open && tags.length === 0 && !q && createPortal(
+        <div
+          style={estilo}
+          className="rounded-xl border border-border bg-surface shadow-xl px-3 py-2.5 flex items-center gap-2 text-sm text-text-secondary">
           <TagIcon size={15} className="text-text-soft shrink-0" />
           Digite um nome para criar sua primeira tag.
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
