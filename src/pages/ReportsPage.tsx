@@ -25,6 +25,9 @@ import { useTasks } from '@/hooks/useTasks';
 import { useTaskHistory } from '@/hooks/useTaskHistory';
 import { toISODate } from '@/utils/date';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { resumoDeConclusao } from '@/utils/conclusao';
+import { serieDaSemana, serieDoMes } from '@/utils/produtividade';
+import { useAuth } from '@/contexts/AuthContext';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useChartTheme, type ChartTheme } from '@/utils/chartTheme';
 
@@ -50,14 +53,32 @@ function chartStyles(chart: ChartTheme) {
 // Cores de SÉRIE: significado, não cromo — iguais nos dois temas.
 const PRIORITY_COLORS = ['#22C55E', '#FBBF24', '#8B5CF6'];
 
-const WEEK_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 const ReportsPage: React.FC = () => {
+  const { account } = useAuth();
   const { tasks, loading } = useTasks();
   const chart = useChartTheme();
   const { axis: AXIS_PROPS, grid: GRID_COLOR, tooltip: TOOLTIP_STYLE } = chartStyles(chart);
   const showSkeleton = useDeferredLoading(loading);
   const stats = useDashboardStats(tasks);
+
+  /*
+   * Os três números do topo (total, concluídas, taxa) passam a sair do
+   * contador VITALÍCIO do servidor, não das tarefas na tela.
+   *
+   * O motivo é a faxina: concluídas somem do banco em 4 dias. A taxa antiga
+   * era `concluídas visíveis / tudo visível` — e como as abertas nunca somem,
+   * ela caía sozinha com o tempo. Quem tivesse 50 abertas e 200 concluídas no
+   * ano lia "6% de conclusão".
+   *
+   * Visitante não tem conta nem servidor, e as tarefas dele vivem no navegador
+   * sem faxina nenhuma: ali a contagem local É a correta.
+   */
+  const conclusao = useMemo(() => {
+    const abertas = tasks.filter(t => t.status !== 'completed').length;
+    const vitalicias = account?.completedTasks;
+    return resumoDeConclusao(vitalicias ?? stats.completed, abertas);
+  }, [tasks, account?.completedTasks, stats.completed]);
 
   /**
    * Intervalo do histórico: o mês corrente cobre também a visão semanal, que é
@@ -98,10 +119,10 @@ const ReportsPage: React.FC = () => {
       };
     }
     return {
-      state: stats.completionRate >= 75 ? 'strong' : 'happy',
-      title: `${stats.completionRate}% de conclusão`,
-      message: `${stats.completed} de ${stats.total} ${
-        stats.total === 1 ? 'tarefa concluída' : 'tarefas concluídas'
+      state: conclusao.taxa >= 75 ? 'strong' : 'happy',
+      title: `${conclusao.taxa}% de conclusão`,
+      message: `${conclusao.concluidas} de ${conclusao.total} ${
+        conclusao.total === 1 ? 'tarefa concluída' : 'tarefas concluídas'
       }.`,
     };
   };
@@ -141,38 +162,13 @@ const ReportsPage: React.FC = () => {
    * a pessoa não fez nada, o que é pior do que não mostrar. O servidor guarda a
    * contagem de cada dia numa linha que não some.
    */
-  const trendData = useMemo(() => {
-    const doDia = (d: Date) => porDia.get(toISODate(d)) ?? { created: 0, completed: 0 };
-    const hoje = new Date();
-
-    if (period === 'month') {
-      const ano = hoje.getFullYear();
-      const mes = hoje.getMonth();
-      const diasNoMes = new Date(ano, mes + 1, 0).getDate();
-      const semanas = Math.ceil(diasNoMes / 7);
-      const baldes = Array.from({ length: semanas }, (_, i) => ({
-        day: `Sem ${i + 1}`,
-        created: 0,
-        completed: 0,
-      }));
-      for (let dia = 1; dia <= diasNoMes; dia++) {
-        const n = doDia(new Date(ano, mes, dia));
-        const balde = baldes[Math.floor((dia - 1) / 7)];
-        balde.created += n.created;
-        balde.completed += n.completed;
-      }
-      return baldes;
-    }
-
-    const segunda = new Date(hoje);
-    segunda.setDate(hoje.getDate() - ((hoje.getDay() + 6) % 7));
-    return WEEK_LABELS.map((label, i) => {
-      const d = new Date(segunda);
-      d.setDate(segunda.getDate() + i);
-      const n = doDia(d);
-      return { day: label, created: n.created, completed: n.completed };
-    });
-  }, [porDia, period]);
+  // Mesmas funções que o gráfico do Dashboard usa. Eram duas cópias da mesma
+  // conta em telas diferentes — e duas cópias divergem no dia em que só uma
+  // delas é corrigida.
+  const trendData = useMemo(
+    () => (period === 'month' ? serieDoMes(porDia, new Date()) : serieDaSemana(porDia, new Date())),
+    [porDia, period],
+  );
 
   const priorityTotal = priorityData.reduce((s, d) => s + d.value, 0);
 
@@ -206,15 +202,18 @@ const ReportsPage: React.FC = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-text-primary">{stats.total}</p>
+          <p className="text-3xl font-bold text-text-primary">{conclusao.total}</p>
           <p className="text-sm text-text-secondary">Total de Tarefas</p>
         </Card>
+        {/* Concluídas, total e taxa vêm do mesmo lugar de propósito: os três
+            são o mesmo fato dito de formas diferentes, e misturar a origem
+            (uma vitalícia, outra da tela) faria a conta não fechar. */}
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-green-500 dark:text-green-400">{stats.completed}</p>
+          <p className="text-3xl font-bold text-green-500 dark:text-green-400">{conclusao.concluidas}</p>
           <p className="text-sm text-text-secondary">Concluídas</p>
         </Card>
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-primary-vibrant">{stats.completionRate}%</p>
+          <p className="text-3xl font-bold text-primary-vibrant">{conclusao.taxa}%</p>
           <p className="text-sm text-text-secondary">Taxa de Conclusão</p>
         </Card>
         <Card className="text-center py-4">

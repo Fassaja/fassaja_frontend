@@ -51,6 +51,15 @@ export interface Account {
    * nesse caso (ver hooks/useXp).
    */
   xp?: number;
+  /**
+   * Tarefas concluídas em toda a vida da conta.
+   *
+   * Vem do servidor pelo mesmo motivo do `xp`: a faxina apaga concluídas
+   * depois de 4 dias, então somar o que está na tela dá um total que encolhe.
+   * Opcional como os demais campos novos — uma sessão salva antes desta versão
+   * não o tem, e quem lê deve tolerar a ausência.
+   */
+  completedTasks?: number;
 }
 
 type AuthStatus = 'guest' | 'authed';

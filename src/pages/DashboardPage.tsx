@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { TodayFocus } from '@/components/dashboard/TodayFocus';
@@ -18,6 +18,8 @@ import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { isToday } from '@/utils/date';
+import { useTaskHistory } from '@/hooks/useTaskHistory';
+import { diaISO, inicioDaSemana, resumoSemanal } from '@/utils/produtividade';
 
 const DashboardPage: React.FC = () => {
   const { tasks, completeTask, createTask, loading } = useTasks();
@@ -25,7 +27,25 @@ const DashboardPage: React.FC = () => {
   const { projects } = useProjects();
   const { user } = useUser();
   const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
-  const stats = useDashboardStats(tasks);
+  /*
+   * Semana a partir do histórico do servidor.
+   *
+   * A faxina apaga tarefas concluídas depois de 4 dias, então qualquer número
+   * de semana somado a partir da lista encolhe sozinho no meio da semana. Uma
+   * busca só, cobrindo a semana passada e a atual — é o que a comparação e a
+   * meta precisam.
+   */
+  const [deSemana, ateSemana] = useMemo(() => {
+    const hoje = new Date();
+    const segunda = inicioDaSemana(hoje);
+    const anterior = new Date(segunda);
+    anterior.setDate(segunda.getDate() - 7);
+    return [diaISO(anterior), diaISO(hoje)];
+  }, []);
+  const { porDia: historicoSemana } = useTaskHistory(deSemana, ateSemana);
+  const semana = useMemo(() => resumoSemanal(historicoSemana, new Date()), [historicoSemana]);
+
+  const stats = useDashboardStats(tasks, semana);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
   const openNewTask = () => {
@@ -44,6 +64,7 @@ const DashboardPage: React.FC = () => {
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     })
     .slice(0, 8);
+
 
   // Números do dia: é o que o bloco de abertura mostra, no lugar da saudação.
   const completedToday = tasks.filter(
@@ -96,14 +117,20 @@ const DashboardPage: React.FC = () => {
         {/* Overview + Progress */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <WeeklyOverviewChart tasks={tasks} />
+            <WeeklyOverviewChart />
           </div>
           <div className="lg:col-span-1">
             <ProgressCard
               percentage={stats.completionRate}
               goals={{
                 daily: { done: completedToday, goal: user.dailyGoal },
-                weekly: { done: stats.thisWeekCompleted, goal: user.weeklyGoal },
+                // Do histórico do servidor, não das tarefas na tela.
+                //
+                // Contando as vivas, a barra ANDAVA PARA TRÁS: quem concluía
+                // 20 na segunda via o número cair na sexta, quando a faxina
+                // apagava as de segunda. Uma meta que desanda sozinha é pior
+                // do que não ter meta.
+                weekly: { done: semana.estaSemana, goal: user.weeklyGoal },
               }}
             />
           </div>

@@ -33,12 +33,28 @@ function weekChange(thisW: number, lastW: number, upIsGood: boolean): WeekChange
   return { percent, good };
 }
 
-export function useDashboardStats(tasks: Task[]): DashboardStats {
+/**
+ * `semana` vem do histórico do servidor e é opcional.
+ *
+ * Quando presente, "esta semana" e "semana passada" saem dele — e é o único
+ * jeito de estarem certos, porque a faxina apaga as concluídas depois de 4
+ * dias e a semana passada já não existe na lista. Era isso que fazia a
+ * comparação exibir "+100%" toda semana, para todo mundo: a base era zero.
+ *
+ * Sem ele (visitante, ou tela que não busca histórico), vale a contagem local,
+ * que ali é a correta — as tarefas do visitante não passam por faxina.
+ */
+export function useDashboardStats(
+  tasks: Task[],
+  semana?: { estaSemana: number; semanaPassada: number },
+): DashboardStats {
   return useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Segunda-feira, como no resto do app. Aqui a semana começava no DOMINGO,
+    // e "esta semana" significava duas coisas diferentes na mesma tela.
     const thisWeekStart = new Date(today);
-    thisWeekStart.setDate(today.getDate() - today.getDay());
+    thisWeekStart.setDate(today.getDate() - ((today.getDay() + 6) % 7));
     const lastWeekStart = new Date(thisWeekStart);
     lastWeekStart.setDate(thisWeekStart.getDate() - 7);
 
@@ -50,21 +66,28 @@ export function useDashboardStats(tasks: Task[]): DashboardStats {
 
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    const thisWeekCompleted = tasks.filter(t => {
-      if (t.status !== 'completed' || !t.completedAt) return false;
-      const completedDate = new Date(t.completedAt);
-      return completedDate >= thisWeekStart && completedDate <= now;
-    }).length;
+    const contarLocal = (de: Date, ate: Date, inclusivo: boolean) =>
+      tasks.filter(t => {
+        if (t.status !== 'completed' || !t.completedAt) return false;
+        const quando = new Date(t.completedAt);
+        return quando >= de && (inclusivo ? quando <= ate : quando < ate);
+      }).length;
 
-    const lastWeekCompleted = tasks.filter(t => {
-      if (t.status !== 'completed' || !t.completedAt) return false;
-      const completedDate = new Date(t.completedAt);
-      return completedDate >= lastWeekStart && completedDate < thisWeekStart;
-    }).length;
+    const thisWeekCompleted = semana?.estaSemana ?? contarLocal(thisWeekStart, now, true);
+    const lastWeekCompleted =
+      semana?.semanaPassada ?? contarLocal(lastWeekStart, thisWeekStart, false);
 
-    const weekComparisonPercent = lastWeekCompleted > 0
-      ? Math.round(((thisWeekCompleted - lastWeekCompleted) / lastWeekCompleted) * 100)
-      : thisWeekCompleted > 0 ? 100 : 0;
+    /*
+     * Sem base de comparação a variação é 0, e não 100%.
+     *
+     * Quem está na primeira semana de uso não "melhorou 100%" — não tem com o
+     * que comparar. Antes esta era a resposta padrão, porque a semana passada
+     * já tinha sido apagada e a base era sempre zero.
+     */
+    const weekComparisonPercent =
+      lastWeekCompleted > 0
+        ? Math.round(((thisWeekCompleted - lastWeekCompleted) / lastWeekCompleted) * 100)
+        : 0;
 
     // Variação semana-a-semana por métrica, usando a data relevante de cada uma.
     const inThisWeek = (d: Date) => d >= thisWeekStart && d <= now;
@@ -77,9 +100,20 @@ export function useDashboardStats(tasks: Task[]): DashboardStats {
     const ipThis = ip.filter(t => inThisWeek(new Date(t.createdAt))).length;
     const ipLast = ip.filter(t => inLastWeek(new Date(t.createdAt))).length;
 
+    /*
+     * `dueDate` é 'AAAA-MM-DD' e precisa ser lido no fuso LOCAL.
+     *
+     * `new Date('2026-08-23')` é meia-noite UTC — que no Brasil é 21h do dia
+     * 22. Uma tarefa com prazo no domingo caía na semana anterior, e a
+     * comparação de atrasadas errava justo na borda.
+     */
+    const diaLocal = (iso: string) => {
+      const [a, m, d] = iso.split('-').map(Number);
+      return new Date(a, (m ?? 1) - 1, d ?? 1);
+    };
     const od = tasks.filter(t => t.status === 'overdue' && t.dueDate);
-    const odThis = od.filter(t => inThisWeek(new Date(t.dueDate as string))).length;
-    const odLast = od.filter(t => inLastWeek(new Date(t.dueDate as string))).length;
+    const odThis = od.filter(t => inThisWeek(diaLocal(t.dueDate as string))).length;
+    const odLast = od.filter(t => inLastWeek(diaLocal(t.dueDate as string))).length;
 
     const comparisons = {
       total: weekChange(createdThis, createdLast, true),
@@ -100,5 +134,5 @@ export function useDashboardStats(tasks: Task[]): DashboardStats {
       weekComparisonPercent,
       comparisons,
     };
-  }, [tasks]);
+  }, [tasks, semana?.estaSemana, semana?.semanaPassada]);
 }

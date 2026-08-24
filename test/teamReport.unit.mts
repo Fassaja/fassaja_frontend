@@ -169,5 +169,74 @@ const projB = { id: 'p2', name: 'Projeto B', color: '#222222' };
   check('não muta as tarefas recebidas', JSON.stringify(tasks) === snapshot);
 }
 
+// ---------- Vários responsáveis: o relatório é da EQUIPE ----------
+// O servidor personaliza `status` por quem pede. Se o relatório olhasse esse
+// campo, o mesmo time teria números diferentes conforme quem abrisse a tela.
+{
+  // Tarefa dividida entre Ana e Bruno. Só a Ana entregou.
+  const meioFeita = {
+    id: 'tm1',
+    title: 'Dividida',
+    status: 'completed', // como CHEGA para a Ana, que já entregou
+    priority: 'medium',
+    createdAt: new Date().toISOString(),
+    projectId: 'p1',
+    tags: [],
+    teamCompleted: false, // mas para a equipe NÃO acabou
+    assignees: [
+      { id: 'u1', name: 'Ana', done: true },
+      { id: 'u2', name: 'Bruno', done: false },
+    ],
+  } as unknown as Task;
+
+  const r = buildTeamReport([meioFeita], [ana, bruno], [projA]);
+
+  check('tarefa que falta alguém NÃO conta como concluída para a equipe', r.completed === 0);
+  check('ela continua aberta para a equipe', r.open === 1);
+  check('a taxa de conclusão da equipe é 0%', r.completionRate === 0);
+  check('o progresso do projeto é 0%', r.projects[0].progress === 0);
+
+  const linhaAna = r.members.find(m => m.userId === 'u1')!;
+  const linhaBruno = r.members.find(m => m.userId === 'u2')!;
+  check('a linha da Ana mostra a entrega DELA', linhaAna.completed === 1);
+  check('e ela não tem mais nada em aberto', linhaAna.open === 0);
+  check('a linha do Bruno mostra que ele ainda deve', linhaBruno.completed === 0);
+  check('e a tarefa continua na mão dele', linhaBruno.open === 1);
+  check('a mesma tarefa conta como carga para os dois', linhaAna.assigned === 1 && linhaBruno.assigned === 1);
+
+  // Agora o Bruno entrega: fecha para a equipe.
+  const fechada = {
+    ...meioFeita,
+    teamCompleted: true,
+    assignees: [
+      { id: 'u1', name: 'Ana', done: true },
+      { id: 'u2', name: 'Bruno', done: true },
+    ],
+  } as unknown as Task;
+  const r2 = buildTeamReport([fechada], [ana, bruno], [projA]);
+  check('com todos entregando, fecha para a equipe', r2.completed === 1 && r2.open === 0);
+  check('e o projeto vai a 100%', r2.projects[0].progress === 100);
+}
+
+// ---------- Atrasada não sobrevive à conclusão ----------
+{
+  const entregueAtrasada = {
+    id: 'tm2',
+    title: 'Entregue depois do prazo',
+    status: 'pending',
+    priority: 'medium',
+    createdAt: new Date().toISOString(),
+    dueDate: iso(-5),
+    projectId: 'p1',
+    tags: [],
+    teamCompleted: true,
+    assignees: [{ id: 'u1', name: 'Ana', done: true }],
+  } as unknown as Task;
+
+  const r = buildTeamReport([entregueAtrasada], [ana], [projA]);
+  check('tarefa concluída depois do prazo não fica atrasada para sempre', r.overdue === 0);
+  check('e conta como concluída', r.completed === 1);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -10,71 +10,41 @@ import {
 } from 'recharts';
 import { Card } from '@/components/common/Card';
 import { Dropdown } from '@/components/common/Dropdown';
-import { Task } from '@/types/task';
+import { useTaskHistory } from '@/hooks/useTaskHistory';
 import { useChartTheme } from '@/utils/chartTheme';
+import { diaISO, serieDaSemana, serieDoMes } from '@/utils/produtividade';
 
-interface WeeklyOverviewChartProps {
-  tasks: Task[];
-}
-
-const WEEK_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-
-function sameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
-export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks }) => {
+/**
+ * O gráfico não recebe mais a lista de tarefas.
+ *
+ * Ele contava `completedAt` das tarefas vivas — e a faxina apaga as concluídas
+ * depois de 4 dias. No modo "mês", as três primeiras semanas apareciam
+ * zeradas: o gráfico afirmava que a pessoa não tinha feito nada. Agora vem do
+ * histórico do servidor, uma linha por dia que não some.
+ */
+export const WeeklyOverviewChart: React.FC = () => {
   const chart = useChartTheme();
   const [period, setPeriod] = useState('week');
 
-  const data = useMemo(() => {
-    const now = new Date();
+  /*
+   * Uma busca só cobre os dois períodos: o mês corrente contém a semana em
+   * curso, e recuar até a segunda-feira cobre a semana que começou no mês
+   * passado. Alternar semana/mês não refaz a chamada.
+   */
+  const [de, ate] = useMemo(() => {
+    const hoje = new Date();
+    const primeiro = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const segunda = new Date(hoje);
+    segunda.setDate(hoje.getDate() - ((hoje.getDay() + 6) % 7));
+    const ultimo = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    return [diaISO(segunda < primeiro ? segunda : primeiro), diaISO(ultimo)];
+  }, []);
+  const { porDia } = useTaskHistory(de, ate);
 
-    if (period === 'month') {
-      // Mês atual, agrupado por semana do mês (Sem 1, Sem 2, ...).
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const weeks = Math.ceil(daysInMonth / 7);
-      const buckets = Array.from({ length: weeks }, (_, i) => ({
-        day: `Sem ${i + 1}`,
-        criadas: 0,
-        concluidas: 0,
-      }));
-      const inMonth = (d: Date) => d.getFullYear() === year && d.getMonth() === month;
-      tasks.forEach(task => {
-        const c = new Date(task.createdAt);
-        if (inMonth(c)) buckets[Math.floor((c.getDate() - 1) / 7)].criadas += 1;
-        if (task.completedAt) {
-          const d = new Date(task.completedAt);
-          if (inMonth(d)) buckets[Math.floor((d.getDate() - 1) / 7)].concluidas += 1;
-        }
-      });
-      return buckets;
-    }
-
-    // Semana atual (segunda a domingo), por data real.
-    const monday = new Date(now);
-    const offset = (now.getDay() + 6) % 7; // 0 = segunda
-    monday.setDate(now.getDate() - offset);
-    monday.setHours(0, 0, 0, 0);
-
-    return WEEK_LABELS.map((label, i) => {
-      const day = new Date(monday);
-      day.setDate(monday.getDate() + i);
-      let criadas = 0;
-      let concluidas = 0;
-      tasks.forEach(task => {
-        if (sameDay(new Date(task.createdAt), day)) criadas += 1;
-        if (task.completedAt && sameDay(new Date(task.completedAt), day)) concluidas += 1;
-      });
-      return { day: label, criadas, concluidas };
-    });
-  }, [tasks, period]);
+  const data = useMemo(
+    () => (period === 'month' ? serieDoMes(porDia, new Date()) : serieDaSemana(porDia, new Date())),
+    [porDia, period],
+  );
 
   return (
     <Card className="h-full">
@@ -127,12 +97,12 @@ export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks 
             labelStyle={{ fontWeight: 700, color: chart.tooltipLabel }}
             formatter={(value: number, name: string) => [
               value,
-              name === 'concluidas' ? 'Concluídas' : 'Criadas',
+              name === 'completed' ? 'Concluídas' : 'Criadas',
             ]}
           />
           <Area
             type="monotone"
-            dataKey="criadas"
+            dataKey="created"
             stroke={chart.muted}
             strokeWidth={2.5}
             fill="transparent"
@@ -141,7 +111,7 @@ export const WeeklyOverviewChart: React.FC<WeeklyOverviewChartProps> = ({ tasks 
           />
           <Area
             type="monotone"
-            dataKey="concluidas"
+            dataKey="completed"
             stroke="#2477FF"
             strokeWidth={3}
             fill="url(#fillConcluidas)"

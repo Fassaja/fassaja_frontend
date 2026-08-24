@@ -71,8 +71,24 @@ export function buildTeamReport(
   // Deriva "atrasada" uma única vez; daqui para frente o status é o visual.
   const derived = tasks.map(deriveTaskStatus);
 
-  const isDone = (t: Task) => t.status === 'completed';
-  const isLate = (t: Task) => t.status === 'overdue';
+  /*
+   * `teamCompleted`, e NÃO `t.status`.
+   *
+   * O servidor personaliza `status` por quem pede: numa tarefa de três, quem
+   * já entregou recebe 'completed' enquanto os outros recebem 'pending'. Usar
+   * esse campo aqui fazia o relatório da equipe MUDAR conforme quem abria a
+   * tela — o mesmo time, no mesmo instante, com duas taxas de conclusão. E a
+   * resposta certa é sempre uma só: para a equipe, a tarefa está feita quando
+   * TODOS entregaram.
+   *
+   * O `??` cobre o payload sem o campo — tarefa sem responsáveis, ou resposta
+   * de uma versão anterior da API.
+   */
+  const isDone = (t: Task) => t.teamCompleted ?? t.status === 'completed';
+
+  // Atrasada só vale para o que ainda não fechou para a equipe: senão uma
+  // tarefa entregue depois do prazo contaria como atrasada para sempre.
+  const isLate = (t: Task) => t.status === 'overdue' && !isDone(t);
 
   const total = derived.length;
   const completed = derived.filter(isDone).length;
@@ -85,7 +101,16 @@ export function buildTeamReport(
     // Uma tarefa com três responsáveis conta para os três: cada um tem uma
     // entrega a fazer nela, e o relatório mede carga, não posse.
     const mine = derived.filter(t => (t.assignees ?? []).some(a => a.id === m.userId));
-    const done = mine.filter(isDone).length;
+    /*
+     * A entrega DAQUELA pessoa, não o estado da tarefa inteira.
+     *
+     * `isDone` responde pela tarefa: numa de três em que só o Magnum entregou,
+     * a linha dele mostrava 0 feitas — a tarefa não fechou, mas ele fez a
+     * parte dele. É isso que a linha de uma pessoa precisa dizer.
+     */
+    const done = mine.filter(t =>
+      (t.assignees ?? []).some(a => a.id === m.userId && a.done),
+    ).length;
     return {
       userId: m.userId,
       name: m.name,
