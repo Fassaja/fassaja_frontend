@@ -135,5 +135,21 @@ check('uma hora exata fala em hora', rotuloDeDuracao(60) === '1h');
 check('o maior atalho fala em minutos', rotuloDeDuracao(50) === '50 min');
 check('o rótulo respeita o teto', rotuloDeDuracao(999) === '1h');
 
+// --- a sugestão é atalho, não cerca ---
+// A aba Foco pede a lista SEM limite quando a pessoa abre a busca. O corte de
+// cinco não pode ser a única forma de chamar isto.
+{
+  const muitas = Array.from({ length: 12 }, (_, i) => t({ title: `Tarefa ${i}` }));
+  check('sem limite, devolve todas as abertas',
+    candidatasParaFoco(muitas, HOJE, Number.MAX_SAFE_INTEGER).length === 12);
+  check('e o padrão continua cortando em cinco', candidatasParaFoco(muitas, HOJE).length === 5);
+
+  // Mesmo sem limite, a ordem continua sendo a de urgência: quem abre a busca
+  // e não digita nada vê o mais urgente primeiro.
+  const mix = [t({ title: 'Solta' }), t({ title: 'Atrasada', dueDate: '2026-08-20' })];
+  const todas = candidatasParaFoco(mix, HOJE, Number.MAX_SAFE_INTEGER);
+  check('a ordem de urgência vale também na lista inteira', todas[0].task.title === 'Atrasada');
+}
+
 console.log(`\n${passed} ok, ${failed} falha(s)\n`);
 if (failed > 0) process.exit(1);

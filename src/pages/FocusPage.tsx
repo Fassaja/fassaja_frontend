@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Timer, Square, Check, Coffee } from 'lucide-react';
+import { Timer, Square, Check, Coffee, Search, X } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Mascot, precarregarMascotes } from '@/components/mascot/Mascot';
@@ -15,6 +15,7 @@ import NumberFlow from '@number-flow/react';
 import { candidatasParaFoco, duracaoSugerida, falaDoBob } from '@/utils/focoCoach';
 import { SeletorDeTempo } from '@/components/focus/SeletorDeTempo';
 import { todayISO } from '@/utils/date';
+import { buscar } from '@/utils/buscaGlobal';
 import { tint } from '@/utils/color';
 
 /** Curva usada no app inteiro. Repetida aqui para o ritmo ser o mesmo. */
@@ -40,6 +41,9 @@ const FocusPage: React.FC = () => {
 
   const hoje = todayISO();
   const [tarefaId, setTarefaId] = useState<string | null>(null);
+  // Procurar entre TODAS as tarefas, não só as sugeridas.
+  const [procurando, setProcurando] = useState(false);
+  const [termo, setTermo] = useState('');
   const [hojeStats, setHojeStats] = useState({ minutes: 0, sessions: 0 });
 
   /*
@@ -56,6 +60,28 @@ const FocusPage: React.FC = () => {
   }, []);
 
   const candidatas = useMemo(() => candidatasParaFoco(tasks, hoje), [tasks, hoje]);
+
+  /**
+   * A lista mostrada: as cinco sugeridas, ou TODAS as abertas ao procurar.
+   *
+   * A busca é a mesma do ⌘K (`buscar`), então acento é opcional aqui também —
+   * "reuniao" acha "reunião". Reusar em vez de refazer garante que as duas
+   * telas respondam igual à mesma digitação.
+   *
+   * Sem termo, a lista completa vem na ordem das sugestões: quem abriu para
+   * procurar e não digitou nada continua vendo o mais urgente primeiro.
+   */
+  const lista = useMemo(() => {
+    if (!procurando) return candidatas;
+    const todas = candidatasParaFoco(tasks, hoje, Number.MAX_SAFE_INTEGER);
+    if (!termo.trim()) return todas;
+    return buscar(
+      todas,
+      termo,
+      c => ({ titulo: c.task.title, corpo: c.task.description }),
+      30,
+    );
+  }, [procurando, termo, candidatas, tasks, hoje]);
   const tarefa = useMemo(
     () => tasks.find(t => t.id === (sessao?.taskId ?? tarefaId)) ?? null,
     [tasks, sessao?.taskId, tarefaId],
@@ -178,63 +204,120 @@ const FocusPage: React.FC = () => {
               transition={SUAVE}
               className="flex w-full flex-col items-center gap-5"
             >
-              {/* 1. No que — as tarefas que já existem, com o motivo à mostra. */}
-              {candidatas.length > 0 && (
-                <div className="w-full">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-text-soft">
-                    No que vamos trabalhar?
+              {/* 1. No que — sugestões primeiro, lista inteira a um clique.
+                  A sugestão é atalho, não cerca: na maioria das vezes a
+                  resposta está nas cinco primeiras, mas quem quer outra coisa
+                  não pode ficar preso a elas. */}
+              <div className="w-full">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-soft">
+                    {procurando ? 'Escolha a tarefa' : 'No que vamos trabalhar?'}
                   </p>
-                  <motion.div
-                    className="flex flex-col gap-1.5"
-                    initial="oculto"
-                    animate="visivel"
-                    /* Cascata: as tarefas entram em sequência, guiando o olho
-                       de cima para baixo — a mesma ordem em que a lista deve
-                       ser lida. Um bloco inteiro aparecendo de uma vez não diz
-                       por onde começar. */
-                    variants={{ visivel: { transition: { staggerChildren: 0.045 } } }}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProcurando(v => !v);
+                      setTermo('');
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-text-soft transition-colors hover:text-primary-vibrant"
                   >
-                    {candidatas.map(({ task, motivo }) => {
-                      const escolhida = tarefaId === task.id;
-                      const cor = projects.find(p => p.id === task.projectId)?.color;
-                      return (
-                        <motion.button
-                          key={task.id}
-                          type="button"
-                          layout
-                          variants={{
-                            oculto: { opacity: 0, y: 10 },
-                            visivel: { opacity: 1, y: 0 },
-                          }}
-                          transition={SUAVE}
-                          whileTap={{ scale: 0.99 }}
-                          onClick={() => setTarefaId(escolhida ? null : task.id)}
-                          className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors ${
-                            escolhida
-                              ? 'border-primary-vibrant bg-primary-light/40'
-                              : 'border-border bg-surface hover:border-primary-vibrant/40'
-                          }`}
-                        >
-                          <span
-                            aria-hidden
-                            className="h-2.5 w-2.5 shrink-0 rounded-full"
-                            style={{ backgroundColor: cor ?? 'var(--color-border)' }}
-                          />
-                          <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
-                            {task.title}
-                          </span>
-                          {motivo && (
-                            <span className="shrink-0 text-[11px] font-semibold text-text-soft">
-                              {motivo}
-                            </span>
-                          )}
-                          {escolhida && <Check size={15} className="shrink-0 text-primary-vibrant" />}
-                        </motion.button>
-                      );
-                    })}
-                  </motion.div>
+                    {procurando ? (
+                      <>
+                        <X size={13} /> Ver sugestões
+                      </>
+                    ) : (
+                      <>
+                        <Search size={13} /> Outra tarefa
+                      </>
+                    )}
+                  </button>
                 </div>
-              )}
+
+                <AnimatePresence mode="wait" initial={false}>
+                  {procurando && (
+                    <motion.div
+                      key="busca"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={SUAVE}
+                      className="mb-2"
+                    >
+                      <input
+                        autoFocus
+                        value={termo}
+                        onChange={e => setTermo(e.target.value)}
+                        placeholder="Buscar entre todas as tarefas…"
+                        className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder-text-soft focus:border-primary-vibrant focus:outline-none"
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.div
+                  key={procurando ? 'todas' : 'sugeridas'}
+                  className={`flex flex-col gap-1.5 ${
+                    /* Só a lista completa rola: as cinco sugestões cabem
+                       inteiras, e uma caixa de rolagem em volta delas seria
+                       moldura sem função. */
+                    procurando ? 'max-h-64 overflow-y-auto pr-0.5' : ''
+                  }`}
+                  initial="oculto"
+                  animate="visivel"
+                  /* Cascata: as tarefas entram em sequência, guiando o olho de
+                     cima para baixo — a mesma ordem em que a lista deve ser
+                     lida. Um bloco inteiro aparecendo de uma vez não diz por
+                     onde começar. */
+                  variants={{ visivel: { transition: { staggerChildren: 0.045 } } }}
+                >
+                  {lista.map(({ task, motivo }) => {
+                    const escolhida = tarefaId === task.id;
+                    const cor = projects.find(p => p.id === task.projectId)?.color;
+                    return (
+                      <motion.button
+                        key={task.id}
+                        type="button"
+                        layout
+                        variants={{
+                          oculto: { opacity: 0, y: 10 },
+                          visivel: { opacity: 1, y: 0 },
+                        }}
+                        transition={SUAVE}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={() => setTarefaId(escolhida ? null : task.id)}
+                        className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                          escolhida
+                            ? 'border-primary-vibrant bg-primary-light/40'
+                            : 'border-border bg-surface hover:border-primary-vibrant/40'
+                        }`}
+                      >
+                        <span
+                          aria-hidden
+                          className="h-2.5 w-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: cor ?? 'var(--color-border)' }}
+                        />
+                        <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+                          {task.title}
+                        </span>
+                        {motivo && (
+                          <span className="shrink-0 text-[11px] font-semibold text-text-soft">
+                            {motivo}
+                          </span>
+                        )}
+                        {escolhida && <Check size={15} className="shrink-0 text-primary-vibrant" />}
+                      </motion.button>
+                    );
+                  })}
+                </motion.div>
+
+                {lista.length === 0 && (
+                  <p className="py-3 text-center text-xs text-text-soft">
+                    {procurando && termo.trim()
+                      ? `Nada encontrado para "${termo}".`
+                      : 'Nenhuma tarefa aberta. Dá para focar sem escolher nada.'}
+                  </p>
+                )}
+              </div>
 
               {/* 2. Por quanto tempo — atalhos, e tempo livre para quem quer
                   uma hora nesta tarefa. Ver components/focus/SeletorDeTempo. */}
