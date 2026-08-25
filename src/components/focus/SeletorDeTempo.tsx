@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Minus, Plus, SlidersHorizontal, X } from 'lucide-react';
+import { Loader2, Minus, Plus, SlidersHorizontal, X } from 'lucide-react';
 import {
   DURACOES_RAPIDAS,
   MAX_MINUTOS,
@@ -31,6 +31,14 @@ export const SeletorDeTempo: React.FC<{
   onEscolher: (minutos: number) => void;
 }> = ({ sugerida, desabilitado, onEscolher }) => {
   const [livre, setLivre] = useState(false);
+  /*
+   * Qual botão foi clicado.
+   *
+   * `desabilitado` sozinho apaga os três ao mesmo tempo e não diz qual está
+   * trabalhando: no tempo da resposta do servidor a tela parecia congelada.
+   * Guardando o escolhido, só ele mostra o giro — o resto apenas espera.
+   */
+  const [escolhido, setEscolhido] = useState<number | null>(null);
   // Abre em 45: fica entre o maior atalho (50) e o teto (60), então a régua
   // já nasce num lugar em que dá para ir para os dois lados.
   const [minutos, setMinutos] = useState(45);
@@ -57,7 +65,10 @@ export const SeletorDeTempo: React.FC<{
                   key={m}
                   type="button"
                   disabled={desabilitado}
-                  onClick={() => onEscolher(m)}
+                  onClick={() => {
+                    setEscolhido(m);
+                    onEscolher(m);
+                  }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   // Entram em cascata: a sequência conduz o olho da esquerda
@@ -70,7 +81,11 @@ export const SeletorDeTempo: React.FC<{
                       : 'border-border bg-surface text-text-secondary hover:border-primary-vibrant/40 hover:text-primary-vibrant'
                   }`}
                 >
-                  {m} min
+                  {desabilitado && escolhido === m ? (
+                    <Loader2 size={16} className="mx-auto animate-spin" />
+                  ) : (
+                    `${m} min`
+                  )}
                 </motion.button>
               ))}
             </div>
@@ -158,11 +173,18 @@ export const SeletorDeTempo: React.FC<{
             <motion.button
               type="button"
               disabled={desabilitado}
-              onClick={() => onEscolher(limitarMinutos(minutos))}
+              onClick={() => {
+                setEscolhido(minutos);
+                onEscolher(limitarMinutos(minutos));
+              }}
               whileTap={{ scale: 0.98 }}
-              className="w-full rounded-xl bg-primary-vibrant py-3 text-sm font-bold text-white transition-colors hover:bg-primary-hover disabled:opacity-50 min-h-[52px]"
+              className="flex w-full items-center justify-center rounded-xl bg-primary-vibrant py-3 text-sm font-bold text-white transition-colors hover:bg-primary-hover disabled:opacity-50 min-h-[52px]"
             >
-              Focar por {rotuloDeDuracao(minutos)}
+              {desabilitado ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                `Focar por ${rotuloDeDuracao(minutos)}`
+              )}
             </motion.button>
           </motion.div>
         )}

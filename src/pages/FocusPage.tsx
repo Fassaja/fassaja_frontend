@@ -3,13 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Square, Check, Coffee } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
-import { Mascot } from '@/components/mascot/Mascot';
+import { Mascot, precarregarMascotes } from '@/components/mascot/Mascot';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useFocus } from '@/contexts/FocusContext';
 import { focusService } from '@/services/focusService';
 import { useAuth } from '@/contexts/AuthContext';
-import { formatarRelogio, progressoDaSessao } from '@/utils/timer';
+import { progressoDaSessao } from '@/utils/timer';
+import { RelogioDeFoco } from '@/components/focus/RelogioDeFoco';
+import NumberFlow from '@number-flow/react';
 import { candidatasParaFoco, duracaoSugerida, falaDoBob } from '@/utils/focoCoach';
 import { SeletorDeTempo } from '@/components/focus/SeletorDeTempo';
 import { todayISO } from '@/utils/date';
@@ -39,6 +41,19 @@ const FocusPage: React.FC = () => {
   const hoje = todayISO();
   const [tarefaId, setTarefaId] = useState<string | null>(null);
   const [hojeStats, setHojeStats] = useState({ minutes: 0, sessions: 0 });
+
+  /*
+   * Baixa os Bobs que esta tela vai trocar, assim que ela abre.
+   *
+   * Sem isto, clicar em "25 min" mostrava o mascote decodificando de cima para
+   * baixo: o arquivo do estado novo (~110 KB) só começava a ser buscado no
+   * instante da troca. São os dois estados que a sessão provoca — começar
+   * (investigate) e terminar (celebrate). Os outros já estão na tela ou não
+   * dependem de clique.
+   */
+  useEffect(() => {
+    precarregarMascotes(['investigate', 'celebrate']);
+  }, []);
 
   const candidatas = useMemo(() => candidatasParaFoco(tasks, hoje), [tasks, hoje]);
   const tarefa = useMemo(
@@ -72,7 +87,11 @@ const FocusPage: React.FC = () => {
     <AppLayout title="Foco" subtitle="Uma tarefa, um tempo, sem o resto do mundo.">
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
         {/* O Bob e o que ele tem a dizer. Troca com o estado, sem saltar. */}
-        <AnimatePresence mode="wait">
+        {/* `mode="popLayout"` e não `"wait"`: com `wait`, a fala antiga
+            precisava terminar de sair (0,28s) para a nova começar a entrar —
+            mais meio segundo somado ao tempo da resposta do servidor, e a
+            troca parecia travada. Aqui as duas se cruzam. */}
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={bob.titulo}
             initial={{ opacity: 0, y: 8 }}
@@ -124,9 +143,10 @@ const FocusPage: React.FC = () => {
                   />
                 </svg>
                 <div className="flex flex-col items-center">
-                  <span className="text-5xl font-bold tabular-nums text-text-primary">
-                    {formatarRelogio(restante)}
-                  </span>
+                  <RelogioDeFoco
+                    segundos={restante}
+                    className="text-5xl font-bold text-text-primary"
+                  />
                   {sessao.kind === 'pausa' && (
                     <span className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-500">
                       <Coffee size={13} /> Pausa
@@ -261,16 +281,19 @@ const FocusPage: React.FC = () => {
             >
               <Card className="flex items-center justify-around py-4">
                 <span className="flex flex-col items-center">
-                  <span className="text-2xl font-bold text-primary-vibrant tabular-nums">
-                    {hojeStats.minutes}
-                  </span>
+                  {/* Sobe quando uma sessão fecha — é o número que a pessoa
+                      volta para conferir, e vê-lo mudar dá o retorno. */}
+                  <NumberFlow
+                    value={hojeStats.minutes}
+                    className="text-2xl font-bold text-primary-vibrant tabular-nums"
+                  />
                   <span className="text-xs text-text-secondary">minutos hoje</span>
                 </span>
                 <span className="h-8 w-px bg-border" />
                 <span className="flex flex-col items-center">
-                  <span className="flex items-center gap-1.5 text-2xl font-bold text-text-primary tabular-nums">
+                  <span className="flex items-center gap-1.5 text-2xl font-bold text-text-primary">
                     <Timer size={18} className="text-text-soft" />
-                    {hojeStats.sessions}
+                    <NumberFlow value={hojeStats.sessions} className="tabular-nums" />
                   </span>
                   <span className="text-xs text-text-secondary">
                     {hojeStats.sessions === 1 ? 'sessão' : 'sessões'}
