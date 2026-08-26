@@ -30,7 +30,12 @@ import {
 } from '@/utils/taskScope';
 import { whyHidden } from '@/utils/taskVisibility';
 import { tint, chipText } from '@/utils/color';
-import { combinaComProjeto, SEM_PROJETO, TODOS_PROJETOS } from '@/utils/taskFilters';
+import {
+  combinaComProjeto,
+  projetoParaEscopo,
+  SEM_PROJETO,
+  TODOS_PROJETOS,
+} from '@/utils/taskFilters';
 import { WorkspaceBar } from '@/components/tasks/WorkspaceBar';
 import { FiltrosDaArea } from '@/services/workspacesService';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
@@ -92,9 +97,14 @@ const TasksPage: React.FC = () => {
    * O `?project=ID` vindo de "Ver tarefas" continua vencendo: quem chegou
    * pedindo um projeto específico quer aquele, não o padrão.
    */
-  const [filterProject, setFilterProject] = useState<string>(
-    () => searchParams.get('project') ?? SEM_PROJETO,
-  );
+  const [filterProject, setFilterProject] = useState<string>(() => {
+    const pedido = searchParams.get('project');
+    if (pedido) return pedido;
+    // Chegando pelo lado Equipe, "Sem projeto" esconderia TUDO: tarefa de
+    // equipe sempre pertence a um projeto. Ver `projetoParaEscopo`.
+    const escopoPedido = searchParams.get('scope');
+    return projetoParaEscopo(SEM_PROJETO, escopoPedido === 'team' ? 'team' : 'solo');
+  });
   // --- Pessoal x Equipe ---
   // A API devolve as duas coisas juntas; a separação acontece aqui. Tudo abaixo
   // (abas de status, filtros, seleção em massa, quadro e lista) enxerga apenas
@@ -206,16 +216,19 @@ const TasksPage: React.FC = () => {
   /** Aplica um recorte na tela inteira, de uma vez. */
   const aplicarFiltros = useCallback(
     (f: FiltrosDaArea) => {
+      const lado: TaskScope = f.scope === 'team' ? 'team' : 'solo';
       setFilterStatus(f.filterStatus as TaskStatus | 'all');
       setFilterPriority(f.filterPriority as TaskPriority | 'all');
-      setFilterProject(f.filterProject);
+      // Áreas salvas ANTES da correção podem carregar o par impossível
+      // (Equipe + "Sem projeto"), que abriria a área vazia. Ver
+      // `projetoParaEscopo`.
+      setFilterProject(projetoParaEscopo(f.filterProject, lado));
       setFilterTags(f.filterTags);
       setView(f.view === 'list' ? 'list' : 'board');
       // `saveScope` junto do `setScope`: o lado Pessoal x Equipe também vive no
       // localStorage, e sem gravar aqui as duas fontes divergiriam — a tela
       // mostrando o lado da área e o navegador lembrando o anterior na próxima
       // visita.
-      const lado: TaskScope = f.scope === 'team' ? 'team' : 'solo';
       setScope(lado);
       saveScope(lado);
       // A busca NÃO é restaurada, mas é LIMPA: deixar um termo antigo em cima
@@ -366,6 +379,10 @@ const TasksPage: React.FC = () => {
   const changeScope = (next: TaskScope) => {
     setScope(next);
     saveScope(next);
+    // O filtro de projeto acompanha o lado: "Sem projeto" no lado Equipe
+    // deixaria a lista vazia por construção, e a pessoa veria um time sem
+    // tarefa nenhuma. Ver `projetoParaEscopo`.
+    setFilterProject(atual => projetoParaEscopo(atual, next));
     exitSelection();
   };
 
@@ -666,8 +683,15 @@ const TasksPage: React.FC = () => {
 
             {/* Pessoal x Equipe. Fica junto de "Selecionar", e não numa linha
                 própria: são todos controles do que a página mostra. Em telas
-                estreitas o rótulo some e ficam ícone + contagem. */}
-            <div className="flex items-center gap-2 ml-auto">
+                estreitas o rótulo some e ficam ícone + contagem.
+
+                `sm:ml-auto`, e não `ml-auto`: empurrar para a direita só faz
+                sentido enquanto tudo cabe na MESMA linha. No celular a barra
+                quebra, e o `ml-auto` jogava este grupo sozinho contra a borda
+                direita enquanto Quadro/Lista ficava na esquerda — as linhas
+                pareciam desalinhadas de propósito. Sem ele, tudo se alinha à
+                esquerda, como o resto da página. */}
+            <div className="flex items-center gap-2 sm:ml-auto">
               <div className="inline-flex h-10 p-1 rounded-xl bg-bg-secondary border border-border">
                 {([
                   { value: 'solo' as const, label: 'Minhas', icon: User, count: soloCount },

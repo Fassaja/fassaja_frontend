@@ -31,3 +31,23 @@ export function combinaComProjeto(
   if (filterProject === SEM_PROJETO) return !task.projectId;
   return task.projectId === filterProject;
 }
+
+/**
+ * Ajusta o filtro de projeto ao lado escolhido (Pessoal × Equipe).
+ *
+ * "Sem projeto" e o lado Equipe se excluem POR CONSTRUÇÃO: tarefa de equipe é
+ * definida como a que pertence a um projeto de equipe (ver `isTeamTask`), então
+ * o par nunca casa e a lista aparece vazia — com 17 tarefas ali, escondidas.
+ *
+ * Era o que acontecia ao clicar em "Ver todas as tarefas" na área de Equipe: o
+ * link trazia `?scope=team` corretamente, mas o filtro de projeto abria no
+ * padrão "Sem projeto" e apagava tudo. O mesmo valia ao trocar de lado no
+ * alternador.
+ *
+ * Só mexe nesse par impossível; qualquer outro filtro é escolha da pessoa e
+ * passa intacto.
+ */
+export function projetoParaEscopo(filterProject: string, scope: 'solo' | 'team'): string {
+  if (scope === 'team' && filterProject === SEM_PROJETO) return TODOS_PROJETOS;
+  return filterProject;
+}

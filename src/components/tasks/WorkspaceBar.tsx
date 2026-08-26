@@ -123,7 +123,7 @@ export const WorkspaceBar: React.FC<Props> = ({
             usa o tempo todo, e dois botões sólidos ali roubariam a atenção das
             próprias abas. */}
         {ativa && alterada && (
-          <span className="ml-auto flex items-center gap-3 pl-2 text-sm">
+          <span className="flex items-center gap-3 pl-2 text-sm sm:ml-auto">
             <button
               type="button"
               onClick={() => onSalvarFiltros(ativa.id)}
