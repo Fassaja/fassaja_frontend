@@ -11,6 +11,7 @@ import { ColumnKey } from '@/utils/taskColumns';
 import { TaskStatus } from '@/types/task';
 import { Panel, PanelLink, SectionEmpty, TeamNumbers } from '../TeamUI';
 import { TeamFlowBoard } from '../TeamFlowBoard';
+import { TeamTaskDialog } from '../TeamTaskDialog';
 import { memberColor } from '../TeamTaskRow';
 
 interface Props {
@@ -34,6 +35,7 @@ export const TeamOverview: React.FC<Props> = ({ detail, onIrPara }) => {
   const { createTask } = useTasks();
   const { team, report, tasks, members, projects, loading, abilities, addTask, patchTask } = detail;
   const [criando, setCriando] = useState<ColumnKey | null>(null);
+  const [aberta, setAberta] = useState<string | null>(null);
 
   /**
    * Status derivado ANTES do quadro: "atrasada" depende do fuso de quem olha,
@@ -94,6 +96,18 @@ export const TeamOverview: React.FC<Props> = ({ detail, onIrPara }) => {
           addTask(nova);
           return nova;
         }}
+      />
+
+      {/* A tarefa abre AQUI, não em outra tela: quem administra veio comparar
+          o que está travado, e sair do painel a cada olhada acaba com a
+          comparação. */}
+      <TeamTaskDialog
+        task={doQuadro.find(t => t.id === aberta) ?? null}
+        members={members}
+        teamId={team.id}
+        podeGerenciar={abilities.gerenciaTarefas}
+        onClose={() => setAberta(null)}
+        onAlterada={patchTask}
       />
 
       <TeamNumbers
@@ -253,7 +267,7 @@ export const TeamOverview: React.FC<Props> = ({ detail, onIrPara }) => {
             <TeamFlowBoard
               tasks={doQuadro}
               members={members}
-              onOpen={t => navigate(`${base}&task=${t.id}`)}
+              onOpen={t => setAberta(t.id)}
               // Só quem distribui trabalho cria tarefa aqui — a coluna sem o
               // botão é a forma honesta de dizer isso, em vez de oferecer e
               // deixar o servidor recusar.

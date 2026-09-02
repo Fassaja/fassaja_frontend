@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/common/Skeletons';
@@ -6,6 +6,7 @@ import { TeamDetail } from '@/hooks/useTeamDetail';
 import { deriveTaskStatus } from '@/utils/taskStatus';
 import { Panel, PanelLink, SectionEmpty, TeamNumbers } from '../TeamUI';
 import { TeamTaskRow } from '../TeamTaskRow';
+import { TeamTaskDialog } from '../TeamTaskDialog';
 
 interface Props {
   detail: TeamDetail;
@@ -25,7 +26,8 @@ interface Props {
  */
 export const TeamMyWork: React.FC<Props> = ({ detail, userId }) => {
   const navigate = useNavigate();
-  const { team, tasks, members, loading } = detail;
+  const { team, tasks, members, loading, abilities, patchTask } = detail;
+  const [aberta, setAberta] = useState<string | null>(null);
 
   const minhas = useMemo(() => {
     const derivadas = tasks.map(deriveTaskStatus);
@@ -51,7 +53,6 @@ export const TeamMyWork: React.FC<Props> = ({ detail, userId }) => {
 
   if (!team) return null;
   const base = `/tasks?scope=team&team=${team.id}&assignee=${userId}`;
-  const abrir = (id: string) => navigate(`/tasks?scope=team&team=${team.id}&task=${id}`);
 
   const secoes = [
     { titulo: 'Atrasadas', itens: separadas.atrasadas },
@@ -61,6 +62,17 @@ export const TeamMyWork: React.FC<Props> = ({ detail, userId }) => {
 
   return (
     <div className="max-w-4xl space-y-6 pb-20">
+      {/* Abre na própria aba: quem veio ver o que deve não pode ser jogado
+          para a lista geral a cada tarefa que abre. */}
+      <TeamTaskDialog
+        task={minhas.find(t => t.id === aberta) ?? null}
+        members={members}
+        teamId={team.id}
+        podeGerenciar={abilities.gerenciaTarefas}
+        onClose={() => setAberta(null)}
+        onAlterada={patchTask}
+      />
+
       <TeamNumbers
         loading={loading}
         items={[
@@ -108,7 +120,7 @@ export const TeamMyWork: React.FC<Props> = ({ detail, userId }) => {
                   task={t}
                   members={members}
                   mostrarResponsaveis={false}
-                  onOpen={task => abrir(task.id)}
+                  onOpen={task => setAberta(task.id)}
                 />
               ))}
             </div>

@@ -27,6 +27,16 @@ interface TaskDetailModalProps {
   project?: Project;
   onClose: () => void;
   onEdit: (task: Task) => void;
+  /**
+   * Controle para TROCAR os responsáveis, no lugar da lista só de leitura.
+   *
+   * Entra como espaço reservado, e não como lógica aqui dentro, porque só a
+   * área de Equipe sabe quem são os membros do time e quem tem permissão para
+   * redistribuir. Sem isto, ver que uma tarefa está sem responsável e delegá-la
+   * eram duas telas diferentes — na área que existe justamente para distribuir
+   * trabalho.
+   */
+  editorDeResponsaveis?: React.ReactNode;
 }
 
 const statusConfig: Record<Task['status'], { label: string; className: string; dot: string }> = {
@@ -66,6 +76,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   project,
   onClose,
   onEdit,
+  editorDeResponsaveis,
 }) => {
   if (!task) return null;
 
@@ -152,7 +163,23 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             )}
           </Field>
 
-          {(task.assignees ?? []).length > 0 && (
+          {/* Com editor, o bloco aparece SEMPRE — inclusive na tarefa que ainda
+              não tem ninguém, que é exatamente a que precisa de alguém. */}
+          {editorDeResponsaveis ? (
+            <Field
+              icon={<Users size={18} />}
+              label={
+                (task.assignees ?? []).length > 0
+                  ? `Responsáveis · ${(task.assignees ?? []).filter(a => a.done).length} de ${
+                      (task.assignees ?? []).length
+                    }`
+                  : 'Responsáveis'
+              }
+            >
+              {editorDeResponsaveis}
+            </Field>
+          ) : (
+            (task.assignees ?? []).length > 0 && (
             <Field
               icon={<Users size={18} />}
               label={`Responsáveis · ${(task.assignees ?? []).filter(a => a.done).length} de ${
@@ -179,6 +206,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 ))}
               </ul>
             </Field>
+            )
           )}
 
           {task.tags && task.tags.length > 0 && (
