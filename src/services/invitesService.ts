@@ -19,6 +19,16 @@ export const invitesService = {
     return api.post<{ status: 'pending' }>(`/invites/${token}/requests`, {});
   },
 
+  /** Convida um endereço de e-mail. O convite é nominal e entra direto. */
+  async inviteByEmail(teamId: string, email: string): Promise<void> {
+    await api.post<{ sent: true }>(`/teams/${teamId}/invites/email`, { email });
+  },
+
+  /** Aceita um convite nominal (link público usa requestJoin). */
+  async accept(token: string): Promise<void> {
+    await api.post<{ status: 'joined' }>(`/invites/${token}/accept`, {});
+  },
+
   listRequests(teamId: string): Promise<PendingRequest[]> {
     return api.get<PendingRequest[]>(`/teams/${teamId}/requests`);
   },

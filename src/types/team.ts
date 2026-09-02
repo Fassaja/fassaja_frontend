@@ -43,6 +43,10 @@ export interface InviteState {
   team: { id: string; name: string } | null;
   alreadyMember: boolean;
   myRequestStatus: 'pending' | 'approved' | 'rejected' | null;
+  /** Endereço convidado, quando o convite é NOMINAL. Nulo = link público. */
+  forEmail?: string | null;
+  /** O convite nominal é para quem está logado? Só então dá para aceitar. */
+  forMe?: boolean;
 }
 
 export interface PendingRequest {

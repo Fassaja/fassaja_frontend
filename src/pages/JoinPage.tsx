@@ -33,6 +33,26 @@ const JoinPage: React.FC = () => {
     load();
   }, [load]);
 
+  /**
+   * Aceita um convite NOMINAL: entra na equipe e vai direto para lá.
+   *
+   * Sem pedido nem aprovação — o convite foi enviado ao endereço desta pessoa
+   * por alguém que já podia aprovar. Pedir aprovação depois seria a mesma
+   * pessoa se autorizando duas vezes.
+   */
+  const handleAccept = async () => {
+    if (!account) return;
+    setRequesting(true);
+    setError('');
+    try {
+      await invitesService.accept(token);
+      navigate('/team');
+    } catch (err) {
+      setError((err as Error).message);
+      setRequesting(false);
+    }
+  };
+
   const handleRequest = async () => {
     if (!account) return;
     setRequesting(true);
@@ -93,6 +113,56 @@ const JoinPage: React.FC = () => {
         node: (
           <Button onClick={handleRequest} isLoading={requesting} className="rounded-xl">
             Pedir novamente
+          </Button>
+        ),
+      };
+    }
+
+    // --- Convite NOMINAL (enviado por e-mail a um endereço) ---
+    if (state.forEmail) {
+      if (isGuest) {
+        return {
+          mascot: 'strong',
+          title: `Você foi convidado para "${teamName}"`,
+          text: `O convite foi enviado para ${state.forEmail}. Entre com essa conta (ou crie uma) para aceitar.`,
+          node: (
+            <Button
+              onClick={() => navigate(`/login?redirect=/join/${token}`)}
+              icon={<LogIn size={18} />}
+              className="rounded-xl"
+            >
+              Entrar para aceitar
+            </Button>
+          ),
+        };
+      }
+      // Logado com OUTRA conta: o convite é daquele endereço, e repassar o
+      // link não pode transformá-lo num convite aberto. Dizer isso aqui evita
+      // o 403 seco depois do clique.
+      if (!state.forMe) {
+        return {
+          mascot: 'confused',
+          title: 'Este convite é de outra pessoa',
+          text: `Ele foi enviado para ${state.forEmail}, e você está em outra conta. Entre com a conta convidada para aceitar.`,
+          node: (
+            <Button onClick={() => navigate('/')} variant="secondary" className="rounded-xl">
+              Ir para o início
+            </Button>
+          ),
+        };
+      }
+      return {
+        mascot: 'strong',
+        title: `Você foi convidado para "${teamName}"`,
+        text: 'É só aceitar — você entra na equipe agora mesmo.',
+        node: (
+          <Button
+            onClick={handleAccept}
+            isLoading={requesting}
+            icon={<ArrowRight size={18} />}
+            className="rounded-xl"
+          >
+            Entrar na equipe
           </Button>
         ),
       };

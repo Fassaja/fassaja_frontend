@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Copy, Link2 } from 'lucide-react';
+import { Check, Copy, Link2, Mail, Send } from 'lucide-react';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
+import { Input } from '@/components/common/Input';
 import { useToast } from '@/contexts/ToastContext';
 import { invitesService } from '@/services/invitesService';
 
@@ -27,6 +28,9 @@ export const InviteDialog: React.FC<Props> = ({ isOpen, onClose, teamId }) => {
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [email, setEmail] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState('');
 
   const link = token ? `${window.location.origin}/join/${token}` : '';
 
@@ -67,6 +71,31 @@ export const InviteDialog: React.FC<Props> = ({ isOpen, onClose, teamId }) => {
     }
   };
 
+  /**
+   * Convite por e-mail — o caminho principal.
+   *
+   * Convidar alguém saía do produto: gerava-se um link e mandava-se por
+   * WhatsApp ou e-mail à mão. Aqui o Fassaja manda, dizendo quem convidou e
+   * para qual equipe, e quem aceita entra DIRETO: o convite é nominal, e exigir
+   * aprovação depois seria quem digitou o endereço se autorizando duas vezes.
+   */
+  const convidarPorEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const alvo = email.trim();
+    if (!alvo) return;
+    setEnviando(true);
+    try {
+      await invitesService.inviteByEmail(teamId, alvo);
+      setEnviado(alvo);
+      setEmail('');
+      setTimeout(() => setEnviado(''), 5000);
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível enviar o convite.');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(link);
@@ -79,10 +108,48 @@ export const InviteDialog: React.FC<Props> = ({ isOpen, onClose, teamId }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Convidar para a equipe" size="md">
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <form onSubmit={convidarPorEmail} className="space-y-3">
+          <Input
+            label="Convidar por e-mail"
+            type="email"
+            placeholder="pessoa@empresa.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            icon={<Mail size={16} />}
+          />
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-text-secondary">
+              Ela recebe o convite e entra direto ao aceitar — sem passar por aprovação, porque
+              você já escolheu o endereço. Começa como <strong>Membro</strong>.
+            </p>
+            <Button
+              type="submit"
+              size="sm"
+              isLoading={enviando}
+              disabled={!email.trim()}
+              icon={<Send size={15} />}
+              className="shrink-0 rounded-xl"
+            >
+              Enviar
+            </Button>
+          </div>
+          {enviado && (
+            <p className="flex items-center gap-1.5 text-sm font-medium text-success">
+              <Check size={15} /> Convite enviado para {enviado}.
+            </p>
+          )}
+        </form>
+
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-xs font-semibold uppercase tracking-wide text-text-soft">ou</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
         <p className="text-sm text-text-secondary">
-          Compartilhe este link. A pessoa abre, pede acesso, e alguém da gestão aprova em
-          "Gestão" — nada automático. Quem entra começa como <strong>Membro</strong>.
+          Compartilhe um <strong>link aberto</strong>. Serve para várias pessoas, e por isso quem
+          chega precisa pedir acesso e alguém da gestão aprovar em "Gestão".
         </p>
         <div className="flex items-center gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-border bg-bg-secondary px-3 py-2.5">
