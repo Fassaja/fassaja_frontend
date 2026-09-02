@@ -125,10 +125,19 @@ const Coluna: React.FC<{
       </header>
       <div
         ref={setNodeRef}
-        /* Altura máxima com rolagem própria: a coluna "Concluída" cresce sem
-           limite, e sem o teto ela esticaria o painel inteiro — as outras duas
-           ficariam com um vazio de vários palmos ao lado. */
-        className={`max-h-[30rem] flex-1 space-y-2.5 overflow-y-auto rounded-xl p-2 transition-colors ${
+        /*
+         * Teto com rolagem própria SÓ quando as colunas estão lado a lado.
+         *
+         * No desktop ele existe porque a coluna "Concluída" cresce sem limite e
+         * esticaria o painel inteiro — as outras duas ficariam com um vazio de
+         * vários palmos ao lado.
+         *
+         * No celular as colunas empilham, e aí o mesmo teto vira armadilha: um
+         * contêiner que rola DENTRO de uma página que já rola. O dedo tenta
+         * descer a página e desce a coluna. Empilhada, ela cresce à vontade e
+         * quem rola é a página, como o resto do app.
+         */
+        className={`flex-1 space-y-2.5 rounded-xl p-2 transition-colors sm:max-h-[30rem] sm:overflow-y-auto ${
           isOver ? 'bg-primary-light ring-2 ring-inset ring-primary-vibrant/50' : 'bg-bg-secondary/50'
         }`}
       >
