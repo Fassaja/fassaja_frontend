@@ -447,7 +447,7 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
         isOpen={!!transferindo}
         title="Tornar dono da equipe?"
         message={`${transferindo?.name ?? ''} passará a ser o dono de "${team.name}".`}
-        hint="Você continua na equipe como Administrador: mantém a gestão de pessoas e de tarefas, mas deixa de poder transferir a posse ou excluir a equipe."
+        hint="Você continua na equipe como Gerente: segue distribuindo o trabalho, mas deixa de administrar pessoas, renomear a equipe, transferir a posse ou excluí-la."
         confirmLabel="Transferir posse"
         cancelLabel="Cancelar"
         icon={<Crown size={22} />}
