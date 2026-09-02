@@ -11,7 +11,7 @@ interface AppLayoutProps {
   children: React.ReactNode;
   onNewTask?: () => void;
   actionLabel?: string;
-  title?: string;
+  title?: React.ReactNode;
   subtitle?: string;
 }
 

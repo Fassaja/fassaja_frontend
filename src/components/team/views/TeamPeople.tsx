@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/common/Skeletons';
 import { TeamDetail } from '@/hooks/useTeamDetail';
 import { normalizeRole } from '@/utils/teamPermissions';
 import { buscar } from '@/utils/buscaGlobal';
-import { SectionEmpty, SectionTitle } from '../TeamUI';
+import { Panel, SectionEmpty } from '../TeamUI';
 import { MemberRow } from '../MemberRow';
 
 interface Props {
@@ -42,7 +42,7 @@ export const TeamPeople: React.FC<Props> = ({ detail, userId }) => {
   const base = `/tasks?scope=team&team=${team.id}`;
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl space-y-6 pb-20">
       {/* O gargalo silencioso primeiro: tarefa sem dono não aparece na carga de
           ninguém e por isso não é cobrada de ninguém. */}
       {!loading && report.unassigned > 0 && (
@@ -61,32 +61,29 @@ export const TeamPeople: React.FC<Props> = ({ detail, userId }) => {
         </button>
       )}
 
-      <section>
-        <SectionTitle
-          action={
-            members.length > 6 ? (
-              <div className="relative">
-                <Search
-                  size={14}
-                  className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-soft"
-                />
-                <input
-                  value={termo}
-                  onChange={e => setTermo(e.target.value)}
-                  placeholder="Buscar pessoa"
-                  className="h-8 w-40 rounded-lg border border-border bg-surface pl-8 pr-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-soft focus:border-primary-vibrant/60 sm:w-56"
-                />
-              </div>
-            ) : (
-              <span className="text-xs font-semibold tabular-nums text-text-secondary">
-                {members.length}
-              </span>
-            )
-          }
-        >
-          Carga por pessoa
-        </SectionTitle>
-
+      <Panel
+        title="Carga por pessoa"
+        action={
+          members.length > 6 ? (
+            <div className="relative">
+              <Search
+                size={14}
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-soft"
+              />
+              <input
+                value={termo}
+                onChange={e => setTermo(e.target.value)}
+                placeholder="Buscar pessoa"
+                className="h-8 w-40 rounded-lg border border-border bg-surface pl-8 pr-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-soft focus:border-primary-vibrant/60 sm:w-56"
+              />
+            </div>
+          ) : (
+            <span className="text-xs font-semibold tabular-nums text-text-secondary">
+              {members.length}
+            </span>
+          )
+        }
+      >
         {loading ? (
           <div className="divide-y divide-border">
             {Array.from({ length: Math.min(team.memberCount, 6) }).map((_, i) => (
@@ -121,7 +118,7 @@ export const TeamPeople: React.FC<Props> = ({ detail, userId }) => {
             ))}
           </div>
         )}
-      </section>
+      </Panel>
     </div>
   );
 };

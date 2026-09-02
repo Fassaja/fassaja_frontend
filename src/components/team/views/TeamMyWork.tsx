@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/common/Skeletons';
 import { TeamDetail } from '@/hooks/useTeamDetail';
 import { deriveTaskStatus } from '@/utils/taskStatus';
-import { SectionEmpty, SectionTitle, TeamNumbers } from '../TeamUI';
+import { Panel, PanelLink, SectionEmpty, TeamNumbers } from '../TeamUI';
 import { TeamTaskRow } from '../TeamTaskRow';
 
 interface Props {
@@ -60,7 +60,7 @@ export const TeamMyWork: React.FC<Props> = ({ detail, userId }) => {
   ].filter(s => s.itens.length > 0);
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl space-y-6 pb-20">
       <TeamNumbers
         loading={loading}
         items={[
@@ -72,6 +72,7 @@ export const TeamMyWork: React.FC<Props> = ({ detail, userId }) => {
       />
 
       {loading ? (
+        <Panel title="Suas tarefas">
         <div className="divide-y divide-border">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 py-2.5">
@@ -81,40 +82,46 @@ export const TeamMyWork: React.FC<Props> = ({ detail, userId }) => {
             </div>
           ))}
         </div>
+        </Panel>
       ) : minhas.length === 0 ? (
-        <SectionEmpty>
-          Nada atribuído a você nesta equipe. Quando alguém da gestão delegar uma tarefa, ela
-          aparece aqui.
-        </SectionEmpty>
+        <Panel title="Suas tarefas">
+          <SectionEmpty>
+            Nada atribuído a você nesta equipe. Quando alguém da gestão delegar uma tarefa, ela
+            aparece aqui.
+          </SectionEmpty>
+        </Panel>
       ) : (
         secoes.map(secao => (
-          <section key={secao.titulo}>
-            <SectionTitle
-              action={
-                <span className="text-xs font-semibold tabular-nums text-text-secondary">
-                  {secao.itens.length}
-                </span>
-              }
-            >
-              {secao.titulo}
-            </SectionTitle>
+          <Panel
+            key={secao.titulo}
+            title={secao.titulo}
+            action={
+              <span className="text-xs font-semibold tabular-nums text-text-secondary">
+                {secao.itens.length}
+              </span>
+            }
+          >
             <div className="divide-y divide-border">
               {secao.itens.map(t => (
-                <TeamTaskRow key={t.id} task={t} members={members} onOpen={task => abrir(task.id)} />
+                <TeamTaskRow
+                  key={t.id}
+                  task={t}
+                  members={members}
+                  mostrarResponsaveis={false}
+                  onOpen={task => abrir(task.id)}
+                />
               ))}
             </div>
-          </section>
+          </Panel>
         ))
       )}
 
       {minhas.length > 0 && (
-        <button
-          type="button"
-          onClick={() => navigate(base)}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-primary-vibrant transition-colors hover:text-primary-hover"
-        >
-          Abrir em Minhas Tarefas <ArrowRight size={14} />
-        </button>
+        <div className="flex justify-center">
+          <PanelLink onClick={() => navigate(base)}>
+            Abrir em Minhas Tarefas <ArrowRight size={13} />
+          </PanelLink>
+        </div>
       )}
     </div>
   );

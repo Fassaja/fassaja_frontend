@@ -29,7 +29,7 @@ import {
   ROLE_LABEL,
 } from '@/utils/teamPermissions';
 import { formatDate } from '@/utils/date';
-import { SectionEmpty, SectionTitle, RoleBadge } from '../TeamUI';
+import { Panel, SectionEmpty, RoleBadge } from '../TeamUI';
 import { memberColor } from '../TeamTaskRow';
 import { TEAM_COLORS, TITLE_OPTIONS } from '../teamConstants';
 
@@ -178,25 +178,22 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 pb-20">
       {/* --- Pedidos: primeiro, porque é o único bloco com alguém esperando do
           outro lado. --- */}
       {abilities.convida && (
-        <section>
-          <SectionTitle
-            action={
-              <button
-                type="button"
-                onClick={onOpenInvite}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold normal-case tracking-normal text-primary-vibrant transition-colors hover:text-primary-hover"
-              >
-                <Link2 size={13} /> Link de convite
-              </button>
-            }
-          >
-            Pedidos para entrar
-          </SectionTitle>
-
+        <Panel
+          title="Pedidos para entrar"
+          action={
+            <button
+              type="button"
+              onClick={onOpenInvite}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-vibrant transition-colors hover:text-primary-hover"
+            >
+              <Link2 size={13} /> Link de convite
+            </button>
+          }
+        >
           {requests.length === 0 ? (
             <SectionEmpty>
               Nenhum pedido pendente. Compartilhe o link de convite para alguém entrar.
@@ -233,14 +230,13 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
               ))}
             </div>
           )}
-        </section>
+        </Panel>
       )}
 
       {/* --- Papéis e cargos --- */}
       {abilities.administra && (
-        <section>
-          <SectionTitle>Papéis e cargos</SectionTitle>
-          <p className="-mt-2 mb-4 text-sm text-text-secondary">
+        <Panel title="Papéis e cargos">
+          <p className="mb-4 text-sm text-text-secondary">
             O <strong className="font-semibold text-text-primary">papel</strong> define o que a
             pessoa pode fazer. O <strong className="font-semibold text-text-primary">cargo</strong>{' '}
             é só um rótulo da equipe — "Designer" não dá nem tira permissão nenhuma.
@@ -332,13 +328,12 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
               );
             })}
           </div>
-        </section>
+        </Panel>
       )}
 
       {/* --- Identidade da equipe --- */}
       {abilities.administra && (
-        <section>
-          <SectionTitle>Nome e cor</SectionTitle>
+        <Panel title="Nome e cor">
           <div className="flex flex-wrap items-end gap-4">
             <div className="min-w-0 flex-1 basis-64">
               <label
@@ -381,16 +376,11 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
               Salvar
             </Button>
           </div>
-        </section>
+        </Panel>
       )}
 
       {/* --- Histórico --- */}
-      <section>
-        <SectionTitle>
-          <span className="inline-flex items-center gap-1.5">
-            <History size={12} /> Histórico
-          </span>
-        </SectionTitle>
+      <Panel title="Histórico" action={<History size={13} className="text-text-soft" />}>
         {activity.length === 0 ? (
           <SectionEmpty>Nada registrado ainda.</SectionEmpty>
         ) : (
@@ -408,13 +398,17 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
             ))}
           </ol>
         )}
-      </section>
+      </Panel>
 
       {/* --- Saída e exclusão. Por último, com borda: é o único bloco desta
           tela que destrói algo, e ele precisa parecer diferente do resto. --- */}
-      <section>
-        <SectionTitle>Zona de risco</SectionTitle>
-        <div className="space-y-3 rounded-xl border border-danger/30 bg-danger/5 p-4">
+      <section className="rounded-2xl border border-danger/30 bg-danger/5">
+        <header className="px-5 pb-3 pt-4">
+          <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-danger">
+            Zona de risco
+          </h2>
+        </header>
+        <div className="space-y-3 px-5 pb-5">
           {/* Sair da equipe NÃO fica aqui: esta aba só existe para gerente e
               acima, e a saída precisa estar ao alcance do membro comum. Ela
               vive no cabeçalho da área, visível em todas as abas. */}

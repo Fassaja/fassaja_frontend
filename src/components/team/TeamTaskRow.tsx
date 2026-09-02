@@ -39,6 +39,12 @@ interface Props {
   members: TeamMember[];
   /** Abre a tarefa. Sem isto a linha é só leitura — e era esse o problema. */
   onOpen?: (task: Task) => void;
+  /**
+   * Mostra quem responde pela tarefa. Desligado em "Meu trabalho": ali TODAS
+   * as linhas são da mesma pessoa, e repetir o avatar dela em cada uma é
+   * ruído ocupando a coluna que o prazo poderia usar.
+   */
+  mostrarResponsaveis?: boolean;
 }
 
 /**
@@ -48,7 +54,12 @@ interface Props {
  * sem saída — dava para ver que algo estava atrasado e não havia como chegar
  * até aquilo. Toda linha agora leva à tarefa.
  */
-export const TeamTaskRow: React.FC<Props> = ({ task, members, onOpen }) => {
+export const TeamTaskRow: React.FC<Props> = ({
+  task,
+  members,
+  onOpen,
+  mostrarResponsaveis = true,
+}) => {
   const due = dueLabel(task);
   const responsaveis = task.assignees ?? [];
   const done = task.status === 'completed';
@@ -83,7 +94,7 @@ export const TeamTaskRow: React.FC<Props> = ({ task, members, onOpen }) => {
       {/* Uma bolinha por responsável, anel verde para quem já entregou. Pilha
           sobreposta porque a linha é estreita e o número de pessoas varia — o
           nome completo fica no title. */}
-      {responsaveis.length > 0 ? (
+      {!mostrarResponsaveis ? null : responsaveis.length > 0 ? (
         <div className="flex shrink-0 -space-x-1.5">
           {responsaveis.slice(0, 4).map(a => {
             const membro = members.find(m => m.userId === a.id);

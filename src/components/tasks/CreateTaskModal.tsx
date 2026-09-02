@@ -25,6 +25,14 @@ interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<Task>;
+  /**
+   * Status inicial do formulário. Usado por quem abre o modal a partir de uma
+   * COLUNA do quadro: clicar em "Adicionar tarefa" dentro de "Em andamento" e
+   * receber uma tarefa pendente seria ignorar o que a pessoa acabou de apontar.
+   */
+  initialStatus?: TaskStatus;
+  /** Projeto pré-selecionado (ex.: criar direto no painel de uma equipe). */
+  initialProjectId?: string;
 }
 
 const priorityOptions: SelectableOption[] = [
@@ -52,6 +60,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   isOpen,
   onClose,
   onCreateTask,
+  initialStatus,
+  initialProjectId,
 }) => {
   const { projects } = useProjects();
   const { assignTask } = useTasks();
@@ -61,6 +71,17 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState(emptyForm);
+
+  // Reaplica o ponto de partida a cada abertura: o modal não é desmontado ao
+  // fechar, então sem isto a segunda abertura carregaria o estado da primeira.
+  useEffect(() => {
+    if (!isOpen) return;
+    setFormData(prev => ({
+      ...prev,
+      ...(initialStatus ? { status: initialStatus } : {}),
+      ...(initialProjectId ? { projectId: initialProjectId } : {}),
+    }));
+  }, [isOpen, initialStatus, initialProjectId]);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   // Equipe para delegar uma tarefa que não vai para projeto de equipe.

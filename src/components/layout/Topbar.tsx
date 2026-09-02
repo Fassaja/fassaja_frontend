@@ -19,7 +19,13 @@ import { Kbd } from '@/components/common/Kbd';
 interface TopbarProps {
   onNewTask?: () => void;
   actionLabel?: string;
-  title?: string;
+  /**
+   * ReactNode, e não string: a área de Equipe põe o SELETOR de equipe no
+   * próprio título ("Equipe Inovação ⌄"), como a referência pede. Repetir o
+   * nome da equipe num cabeçalho logo abaixo do título da página era dizer a
+   * mesma coisa duas vezes, uma embaixo da outra.
+   */
+  title?: React.ReactNode;
   subtitle?: string;
 }
 
@@ -118,9 +124,9 @@ export const Topbar: React.FC<TopbarProps> = ({
       <div className="h-full px-4 lg:px-8 py-4 flex items-center justify-between gap-4">
         {/* Greeting */}
         <div className="min-w-0 pl-12 lg:pl-0 hidden sm:block">
-          <h1 className="text-base sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
-            {title}
-          </h1>
+          <div className="text-base sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
+            {typeof title === 'string' ? <h1 className="truncate">{title}</h1> : title}
+          </div>
           {subtitle && (
             <p className="text-sm text-text-secondary truncate hidden sm:block first-letter:uppercase">
               {subtitle}

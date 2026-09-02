@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { LayoutDashboard, ListChecks, LogOut, Plus, Settings2, UserPlus, Users } from 'lucide-react';
+import { LayoutDashboard, ListChecks, LogOut, Settings2, UserPlus, Users } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { Modal } from '@/components/common/Modal';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
-import { Dropdown } from '@/components/common/Dropdown';
 import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { TeamSkeleton } from '@/components/common/Skeletons';
@@ -18,6 +17,7 @@ import { useTeamDetail } from '@/hooks/useTeamDetail';
 import { teamsService } from '@/services/teamsService';
 import { TeamSummary } from '@/types/team';
 import { RoleBadge } from './TeamUI';
+import { TeamSwitcher } from './TeamSwitcher';
 import { InviteDialog } from './InviteDialog';
 import { TeamOverview } from './views/TeamOverview';
 import { TeamMyWork } from './views/TeamMyWork';
@@ -177,8 +177,23 @@ export const TeamShell: React.FC = () => {
     <AppLayout
       onNewTask={() => setShowCreate(true)}
       actionLabel="Criar equipe"
-      title="Equipe"
-      subtitle="Quem faz o quê, e como o trabalho está distribuído."
+      title={
+        team ? (
+          <TeamSwitcher
+            teams={teams}
+            atual={team}
+            onSelecionar={id => navigate(`/team/${id}${aba.slug ? `/${aba.slug}` : ''}`)}
+            onCriar={() => setShowCreate(true)}
+          />
+        ) : (
+          'Equipe'
+        )
+      }
+      subtitle={
+        team
+          ? 'Visão geral de produtividade, projetos e distribuição de trabalho.'
+          : 'Quem faz o quê, e como o trabalho está distribuído.'
+      }
     >
       <PageTour id="team" />
 
@@ -234,64 +249,50 @@ export const TeamShell: React.FC = () => {
       ) : (
         team && (
           <div>
-            {/* Cabeçalho de contexto: solto no fundo, sem caixa. A cor da
-                equipe entra como uma barra fina à esquerda do nome — identidade
-                sem pintar um bloco inteiro. */}
-            <header className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="min-w-0">
-                <div className="flex items-center gap-3">
-                  <span
-                    className="h-7 w-1 shrink-0 rounded-full"
-                    style={{ backgroundColor: team.color }}
-                    aria-hidden
-                  />
-                  <h1 className="min-w-0 truncate text-2xl font-extrabold tracking-tight text-text-primary">
-                    {team.name}
-                  </h1>
-                  <RoleBadge role={team.role} />
-                </div>
-                <p className="mt-1.5 pl-4 text-sm text-text-secondary">
-                  {team.memberCount} {team.memberCount === 1 ? 'pessoa' : 'pessoas'}
-                  {detail.projects.length > 0 && (
-                    <>
-                      {' · '}
-                      {detail.projects.length}{' '}
-                      {detail.projects.length === 1 ? 'projeto' : 'projetos'}
-                    </>
-                  )}
-                  {/* O papel aparece por extenso porque a escada é nova: só o
-                      selo não conta a quem não conhece os quatro níveis. */}
-                  {' · '}
-                  {abilities.gerenciaTarefas
-                    ? 'você distribui o trabalho aqui'
-                    : 'você entrega tarefas aqui'}
-                </p>
-              </div>
+            {/* Abas com sublinhado, e não pílulas: a navegação da área não pode
+                pesar mais que o conteúdo dela. */}
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-border">
+              <nav className="flex gap-1 overflow-x-auto">
+                {ABAS.filter(a => !a.gestao || abilities.veGestao).map(item => {
+                  const Icon = item.icon;
+                  const ativa = item.slug === aba.slug;
+                  const pendentes = item.slug === 'gestao' ? detail.requests.length : 0;
+                  return (
+                    <button
+                      key={item.slug || 'painel'}
+                      type="button"
+                      onClick={() => irPara(item.slug)}
+                      aria-current={ativa ? 'page' : undefined}
+                      className={`-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors ${
+                        ativa
+                          ? 'border-primary-vibrant text-primary-vibrant'
+                          : 'border-transparent text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      <Icon size={15} />
+                      {item.label}
+                      {pendentes > 0 && (
+                        <span className="rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                          {pendentes}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
 
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
-                {teams.length > 1 && (
-                  <Dropdown
-                    size="sm"
-                    menuAlign="right"
-                    value={team.id}
-                    onChange={id => navigate(`/team/${id}${aba.slug ? `/${aba.slug}` : ''}`)}
-                    options={teams.map(t => ({ value: t.id, label: t.name }))}
-                  />
-                )}
-                <Button
-                  onClick={() => setShowCreate(true)}
-                  variant="secondary"
-                  size="sm"
-                  icon={<Plus size={16} />}
-                  className="rounded-xl"
-                >
-                  Nova equipe
-                </Button>
+              {/* Ações da equipe, na mesma linha das abas: uma faixa a menos
+                  entre o título e o conteúdo. */}
+              <div className="flex shrink-0 items-center gap-2 pb-2">
+                <span className="hidden text-xs text-text-secondary sm:inline">
+                  {team.memberCount} {team.memberCount === 1 ? 'pessoa' : 'pessoas'}
+                </span>
+                <RoleBadge role={team.role} />
                 {abilities.convida && (
                   <Button
                     onClick={() => setShowInvite(true)}
                     size="sm"
-                    icon={<UserPlus size={16} />}
+                    icon={<UserPlus size={15} />}
                     className="rounded-xl"
                   >
                     Convidar
@@ -303,44 +304,13 @@ export const TeamShell: React.FC = () => {
                     onClick={() => setConfirmarSaida(true)}
                     title="Sair da equipe"
                     aria-label="Sair da equipe"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border text-text-secondary transition-colors hover:border-danger/40 hover:text-danger"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border text-text-secondary transition-colors hover:border-danger/40 hover:text-danger"
                   >
-                    <LogOut size={16} />
+                    <LogOut size={15} />
                   </button>
                 )}
               </div>
-            </header>
-
-            {/* Abas com sublinhado, e não pílulas: a navegação da área não pode
-                pesar mais que o conteúdo dela. */}
-            <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-border">
-              {ABAS.filter(a => !a.gestao || abilities.veGestao).map(item => {
-                const Icon = item.icon;
-                const ativa = item.slug === aba.slug;
-                const pendentes = item.slug === 'gestao' ? detail.requests.length : 0;
-                return (
-                  <button
-                    key={item.slug || 'painel'}
-                    type="button"
-                    onClick={() => irPara(item.slug)}
-                    aria-current={ativa ? 'page' : undefined}
-                    className={`-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors ${
-                      ativa
-                        ? 'border-primary-vibrant text-primary-vibrant'
-                        : 'border-transparent text-text-secondary hover:text-text-primary'
-                    }`}
-                  >
-                    <Icon size={15} />
-                    {item.label}
-                    {pendentes > 0 && (
-                      <span className="rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
-                        {pendentes}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
+            </div>
 
             {conteudo()}
 

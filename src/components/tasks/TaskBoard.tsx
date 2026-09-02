@@ -12,13 +12,16 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { Task, TaskStatus, TaskPriority } from '@/types/task';
+import { Task, TaskPriority } from '@/types/task';
 import { Project } from '@/types/project';
 import { TaskCard } from './TaskCard';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
 import { combinaComProjeto } from '@/utils/taskFilters';
+// As colunas moram em taskColumns: o painel da Equipe monta o mesmo fluxo, e
+// duas tabelas de status acabariam discordando sobre onde cada tarefa vive.
+import { BOARD_COLUMNS as COLUMNS, columnOf, type ColumnKey } from '@/utils/taskColumns';
 
 interface TaskBoardProps {
   tasks: Task[];
@@ -32,51 +35,6 @@ interface TaskBoardProps {
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   onToggleSelect?: (taskId: string) => void;
-}
-
-type ColumnKey = 'pending' | 'in_progress' | 'completed';
-
-// Colunas do quadro. "overdue" (calculado no servidor) entra em Pendente:
-// é uma tarefa não concluída, só que atrasada — o card já mostra o badge vermelho.
-const COLUMNS: {
-  key: ColumnKey;
-  label: string;
-  hint: string;
-  color: string;
-  tint: string;
-  statuses: TaskStatus[];
-}[] = [
-  {
-    key: 'pending',
-    label: 'Pendente',
-    hint: 'Ainda não começou',
-    color: '#64748B',
-    tint: 'bg-bg-secondary',
-    statuses: ['pending', 'overdue'],
-  },
-  {
-    key: 'in_progress',
-    label: 'Em andamento',
-    hint: 'Em execução agora',
-    color: '#2477FF',
-    tint: 'bg-primary-light/50',
-    statuses: ['in_progress'],
-  },
-  {
-    key: 'completed',
-    label: 'Concluída',
-    hint: 'Já finalizou',
-    color: '#22C55E',
-    tint: 'bg-emerald-50 dark:bg-emerald-500/10',
-    statuses: ['completed'],
-  },
-];
-
-// Coluna onde a tarefa vive hoje (pending e overdue caem na mesma).
-function columnOf(status: TaskStatus): ColumnKey {
-  if (status === 'completed') return 'completed';
-  if (status === 'in_progress') return 'in_progress';
-  return 'pending';
 }
 
 // Zona de soltar = corpo da coluna. Destaca quando há um card por cima.

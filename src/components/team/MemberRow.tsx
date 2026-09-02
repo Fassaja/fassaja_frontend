@@ -84,7 +84,10 @@ export const MemberRow: React.FC<Props> = ({
         {/* Cargo quando existe; senão o próprio estado de carga ocupa a linha,
             para não deixar um vazio que parece dado faltando. */}
         <p className="truncate text-xs text-text-secondary">
-          {membro.title || (semTarefas ? 'Sem tarefas atribuídas' : `${membro.completed} entregues`)}
+          {membro.title ||
+            (semTarefas
+              ? 'Sem tarefas atribuídas'
+              : `${membro.completed} entregue${membro.completed === 1 ? '' : 's'}`)}
         </p>
       </div>
 
