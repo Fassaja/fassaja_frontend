@@ -32,7 +32,7 @@ interface Props {
 export const TeamOverview: React.FC<Props> = ({ detail, onIrPara }) => {
   const navigate = useNavigate();
   const { createTask } = useTasks();
-  const { team, report, tasks, members, projects, loading, abilities, refresh } = detail;
+  const { team, report, tasks, members, projects, loading, abilities, addTask, patchTask } = detail;
   const [criando, setCriando] = useState<ColumnKey | null>(null);
 
   /**
@@ -88,9 +88,10 @@ export const TeamOverview: React.FC<Props> = ({ detail, onIrPara }) => {
         onCreateTask={async data => {
           const nova = await createTask(data);
           // O painel carrega o detalhe da equipe uma vez por seleção e não
-          // escuta o contexto de tarefas; sem recarregar, a tarefa recém-criada
-          // só apareceria na próxima visita.
-          await refresh();
+          // escuta o contexto de tarefas. Acrescentar a tarefa à lista local
+          // basta — e evita rebaixar as outras três chamadas da equipe por uma
+          // linha nova que já está na mão.
+          addTask(nova);
           return nova;
         }}
       />
@@ -257,7 +258,7 @@ export const TeamOverview: React.FC<Props> = ({ detail, onIrPara }) => {
               // botão é a forma honesta de dizer isso, em vez de oferecer e
               // deixar o servidor recusar.
               onAdd={abilities.gerenciaTarefas ? status => setCriando(status) : undefined}
-              onMoved={refresh}
+              onMoved={patchTask}
             />
           )}
         </Panel>

@@ -20,6 +20,17 @@ export interface TeamDetail {
   refresh: () => Promise<void>;
   /** Recarrega só o que a administração muda — mais barato que o detalhe todo. */
   refreshPeople: () => Promise<void>;
+  /**
+   * Troca UMA tarefa na lista, sem ir ao servidor.
+   *
+   * Arrastar um card no quadro chamava `refresh()`: as quatro chamadas de novo,
+   * 155 KB e 24 consultas por card movido — para uma mudança que o próprio
+   * `updateTask` já devolveu pronta. Uma tarefa que deixou de pertencer a esta
+   * equipe (mudou de projeto) sai da lista em vez de ficar como fantasma.
+   */
+  patchTask: (task: Task) => void;
+  /** Acrescenta uma tarefa recém-criada, se ela for mesmo desta equipe. */
+  addTask: (task: Task) => void;
 }
 
 const VAZIO: TeamReport = {
@@ -137,6 +148,29 @@ export function useTeamDetail(teams: TeamSummary[], teamId: string | null): Team
     setActivity(a);
   }, [teamId, abilities.convida, abilities.veGestao]);
 
+  const patchTask = useCallback(
+    (task: Task) => {
+      setTasks(prev => {
+        const daEquipe = !task.teamId || task.teamId === teamId;
+        return daEquipe
+          ? prev.map(t => (t.id === task.id ? task : t))
+          : prev.filter(t => t.id !== task.id);
+      });
+    },
+    [teamId],
+  );
+
+  const addTask = useCallback(
+    (task: Task) => {
+      // Tarefa criada sem projeto de equipe nasce pessoal e não pertence a este
+      // painel: acrescentá-la mostraria na equipe algo que a API não devolveria
+      // no próximo carregamento.
+      if (task.teamId !== teamId) return;
+      setTasks(prev => (prev.some(t => t.id === task.id) ? prev : [task, ...prev]));
+    },
+    [teamId],
+  );
+
   const report = useMemo(
     () =>
       teamId
@@ -161,5 +195,7 @@ export function useTeamDetail(teams: TeamSummary[], teamId: string | null): Team
     loading,
     refresh,
     refreshPeople,
+    patchTask,
+    addTask,
   };
 }

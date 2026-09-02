@@ -35,8 +35,11 @@ interface Props {
   onOpen: (task: Task) => void;
   /** Cria uma tarefa já naquela coluna. Ausente = quem olha não distribui. */
   onAdd?: (status: ColumnKey) => void;
-  /** Recarrega o painel depois de mover — o resumo não escuta o contexto. */
-  onMoved?: () => void;
+  /**
+   * A tarefa DEPOIS de mover. O painel troca a linha dele com isto, em vez de
+   * recarregar as quatro chamadas da equipe a cada card arrastado.
+   */
+  onMoved?: (task: Task) => void;
 }
 
 /** Card compacto: título, prioridade, quem responde e o prazo. Nada além. */
@@ -217,10 +220,12 @@ export const TeamFlowBoard: React.FC<Props> = ({ tasks, members, onOpen, onAdd, 
 
     const rotulo = BOARD_COLUMNS.find(c => c.key === destino)?.label ?? '';
     try {
-      if (destino === 'completed') await completeTask(id);
-      else await updateTask(id, { status: destino });
+      const atualizada =
+        destino === 'completed' ? await completeTask(id) : await updateTask(id, { status: destino });
       toast.success(`Movida para ${rotulo}`);
-      onMoved?.();
+      // A tarefa volta pronta da escrita; recarregar o painel inteiro só para
+      // descobrir o que já está na mão era 155 KB por arraste.
+      if (atualizada) onMoved?.(atualizada);
     } catch (err) {
       // A recusa mais provável aqui é de permissão: membro comum não move
       // tarefa de projeto de equipe. Mostrar a mensagem do servidor diz POR QUE
