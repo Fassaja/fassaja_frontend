@@ -82,3 +82,30 @@ export function saveScope(scope: TaskScope): void {
     // localStorage indisponível: a escolha vale só para esta sessão.
   }
 }
+
+/**
+ * O recorte de UMA equipe dentro do lado "Equipe".
+ *
+ * O lado Equipe mostra as tarefas de TODAS as equipes de que a pessoa
+ * participa. Quem chega pelo painel de uma equipe específica ("ver as tarefas
+ * daqui") não quer isso: quer aquele time. Sem este recorte, o link saía de uma
+ * equipe e aterrissava numa lista misturada, sem dizer que misturou.
+ *
+ * O caminho pelo projeto acompanha o `teamId` da tarefa pelo mesmo motivo de
+ * `isTeamTask`: cobre a resposta de uma versão anterior da API e a tarefa que
+ * entrou no projeto por um caminho que esqueceu de derivar o time.
+ */
+export function isOfTeam(task: Task, teamId: string, projectIdsDoTime: Set<string>): boolean {
+  if (task.teamId) return task.teamId === teamId;
+  return !!task.projectId && projectIdsDoTime.has(task.projectId);
+}
+
+/** IDs dos projetos de uma equipe específica. */
+export function projectIdsOfTeam(projects: Project[], teamId: string): Set<string> {
+  return new Set(projects.filter(p => p.type === 'team' && p.teamId === teamId).map(p => p.id));
+}
+
+/** A tarefa está na mão desta pessoa? Usado pelo recorte "?assignee=". */
+export function isAssignedTo(task: Task, userId: string): boolean {
+  return (task.assignees ?? []).some(a => a.id === userId);
+}

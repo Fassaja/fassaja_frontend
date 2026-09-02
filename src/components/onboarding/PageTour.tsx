@@ -174,18 +174,18 @@ export const PAGE_TOURS: Record<PageTourId, PageTourDef> = {
     steps: [
       {
         image: '/bobjoia.png',
-        title: 'Equipe',
-        text: 'As pessoas que tocam os projetos com você.',
+        title: 'Quatro abas, quatro perguntas',
+        text: 'Painel: como a equipe está. Meu trabalho: o que esperam de você. Pessoas: quem carrega o quê. Gestão: quem manda em quê.',
       },
       {
         image: '/bobapontando.png',
-        title: 'Convide e organize',
-        text: 'Crie equipes, convide pessoas e atribua responsáveis às tarefas.',
+        title: 'Cada pessoa tem um papel',
+        text: 'Membro entrega tarefas. Gerente distribui o trabalho e convida. Administrador cuida das pessoas. Dono responde pela equipe.',
       },
       {
         image: '/bobforte.png',
-        title: 'Juntos rende mais',
-        text: 'Acompanhe o pulso da equipe e as tarefas de cada integrante.',
+        title: 'Cargo é rótulo, papel é poder',
+        text: '"Designer" é como a equipe chama a pessoa. O papel é o que ela pode fazer aqui dentro — são coisas diferentes.',
       },
     ],
   },

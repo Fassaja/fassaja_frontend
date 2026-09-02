@@ -23,8 +23,11 @@ import {
   TaskScope,
   escopoDoProjeto,
   filterByScope,
+  isAssignedTo,
+  isOfTeam,
   isTeamTask,
   loadScope,
+  projectIdsOfTeam,
   saveScope,
   teamProjectIds,
 } from '@/utils/taskScope';
@@ -39,6 +42,7 @@ import {
 import { WorkspaceBar } from '@/components/tasks/WorkspaceBar';
 import { FiltrosDaArea } from '@/services/workspacesService';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
+import { teamsService } from '@/services/teamsService';
 
 const TasksPage: React.FC = () => {
   const { tasks: allTasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
@@ -84,7 +88,7 @@ const TasksPage: React.FC = () => {
     }
   };
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [view, setView] = useState<'board' | 'list'>('board');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
@@ -319,14 +323,80 @@ const TasksPage: React.FC = () => {
   const [showBulkDelete, setShowBulkDelete] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  // Pré-filtra por tag (corte transversal). O board/lista aplicam os demais
-  // filtros sobre este subconjunto, então não precisam conhecer tags.
+  /**
+   * Recorte vindo do link: uma equipe (`?team=`) e/ou uma pessoa
+   * (`?assignee=`).
+   *
+   * Vive na URL, e não no estado dos filtros, porque é a MOLDURA de onde a
+   * pessoa veio — o painel de uma equipe, a linha de carga de alguém — e não
+   * uma escolha feita nesta tela. Isso tem duas consequências boas: o link é
+   * compartilhável, e trocar de área de trabalho não apaga silenciosamente o
+   * recorte que trouxe a pessoa até aqui (ele é desfeito no X, à vista).
+   */
+  const teamDaUrl = searchParams.get('team');
+  const assigneeDaUrl = searchParams.get('assignee');
+  // `?unassigned=1`: o gargalo silencioso da equipe — tarefa que ninguém pegou
+  // e que, por isso, não aparece na carga de ninguém.
+  const semResponsavel = searchParams.get('unassigned') === '1';
+  const projetosDoTime = useMemo(
+    () => (teamDaUrl ? projectIdsOfTeam(projects, teamDaUrl) : new Set<string>()),
+    [projects, teamDaUrl],
+  );
+  /**
+   * Os nomes do recorte. Sem eles a faixa diria "vendo apenas esta equipe",
+   * que é justamente a informação que falta a quem chegou por um link.
+   *
+   * O nome da pessoa sai das próprias tarefas (o payload já traz os
+   * responsáveis); o da equipe exige uma chamada, feita só quando o parâmetro
+   * existe. Falhar aqui não é erro: a faixa cai para o texto genérico e a
+   * lista continua recortada do mesmo jeito.
+   */
+  const nomeDoRecorte = useMemo(() => {
+    if (!assigneeDaUrl) return null;
+    for (const t of tasks) {
+      const a = (t.assignees ?? []).find(x => x.id === assigneeDaUrl);
+      if (a) return a.name;
+    }
+    return null;
+  }, [tasks, assigneeDaUrl]);
+
+  const [nomeDaEquipeDoRecorte, setNomeDaEquipeDoRecorte] = useState<string | null>(null);
+  useEffect(() => {
+    if (!teamDaUrl) {
+      setNomeDaEquipeDoRecorte(null);
+      return;
+    }
+    let vivo = true;
+    teamsService
+      .listTeams()
+      .then(l => vivo && setNomeDaEquipeDoRecorte(l.find(t => t.id === teamDaUrl)?.name ?? null))
+      .catch(() => vivo && setNomeDaEquipeDoRecorte(null));
+    return () => {
+      vivo = false;
+    };
+  }, [teamDaUrl]);
+
+  const limparRecorte = useCallback(() => {
+    const proximo = new URLSearchParams(searchParams);
+    proximo.delete('team');
+    proximo.delete('assignee');
+    proximo.delete('unassigned');
+    setSearchParams(proximo, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  // Pré-filtra por tag (corte transversal) e pelo recorte do link. O
+  // board/lista aplicam os demais filtros sobre este subconjunto, então não
+  // precisam conhecer tags nem equipe.
   const tasksForView = useMemo(() => {
-    if (filterTags.length === 0) return tasks;
-    return tasks.filter(task =>
-      filterTags.some(id => (task.tags ?? []).some(t => t.id === id)),
-    );
-  }, [tasks, filterTags]);
+    let lista = tasks;
+    if (filterTags.length > 0) {
+      lista = lista.filter(task => filterTags.some(id => (task.tags ?? []).some(t => t.id === id)));
+    }
+    if (teamDaUrl) lista = lista.filter(task => isOfTeam(task, teamDaUrl, projetosDoTime));
+    if (assigneeDaUrl) lista = lista.filter(task => isAssignedTo(task, assigneeDaUrl));
+    if (semResponsavel) lista = lista.filter(task => (task.assignees ?? []).length === 0);
+    return lista;
+  }, [tasks, filterTags, teamDaUrl, projetosDoTime, assigneeDaUrl, semResponsavel]);
 
   // Tarefas que aparecem na visão atual (mesmos filtros do board/lista).
   // Usado pelo "Selecionar tudo" para mirar exatamente o que está visível.
@@ -741,6 +811,35 @@ const TasksPage: React.FC = () => {
                 </button>
               )}
             </div>
+          </div>
+        )}
+
+        {/* O recorte do link, à vista e com saída. Um filtro invisível que
+            some tarefas é a causa mais comum de "sumiu a minha tarefa". */}
+        {(teamDaUrl || assigneeDaUrl || semResponsavel) && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-primary-vibrant/30 bg-primary-light px-3 py-2">
+            <Users size={15} className="shrink-0 text-primary-vibrant" />
+            <p className="min-w-0 flex-1 text-sm text-text-primary">
+              Vendo apenas{' '}
+              <strong className="font-semibold">
+                {semResponsavel
+                ? 'o que está sem responsável'
+                : assigneeDaUrl
+                ? nomeDoRecorte ?? 'uma pessoa'
+                : nomeDaEquipeDoRecorte ?? 'esta equipe'}
+              </strong>
+              {(assigneeDaUrl || semResponsavel) && nomeDaEquipeDoRecorte
+                ? ` em ${nomeDaEquipeDoRecorte}`
+                : ''}
+              .
+            </p>
+            <button
+              type="button"
+              onClick={limparRecorte}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-primary-vibrant transition-colors hover:bg-surface"
+            >
+              <X size={13} /> Ver todas
+            </button>
           </div>
         )}
 

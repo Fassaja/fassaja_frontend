@@ -8,7 +8,7 @@ import AgendaPage from '@/pages/AgendaPage';
 import PrioritiesPage from '@/pages/PrioritiesPage';
 import FocusPage from '@/pages/FocusPage';
 import ReportsPage from '@/pages/ReportsPage';
-import TeamPage from '@/pages/TeamPage';
+import { TeamShell } from '@/components/team/TeamShell';
 import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
 import AiAssistantPage from '@/pages/AiAssistantPage';
@@ -48,7 +48,13 @@ export const AppRoutes: React.FC = () => {
       <Route path="/focus" element={<RequireAuth><FocusPage /></RequireAuth>} />
       <Route path="/priorities" element={<RequireAuth><PrioritiesPage /></RequireAuth>} />
       <Route path="/reports" element={<RequireAuth><ReportsPage /></RequireAuth>} />
-      <Route path="/team" element={<RequireAuth><TeamPage /></RequireAuth>} />
+      {/* A equipe e a aba vivem na URL: `/team/:teamId/:aba`. Antes tudo era
+          estado local — recarregar voltava para a primeira equipe e não havia
+          como mandar a alguém o link do painel de um time. `/team` sozinho
+          continua valendo e cai na primeira equipe. */}
+      <Route path="/team" element={<RequireAuth><TeamShell /></RequireAuth>} />
+      <Route path="/team/:teamId" element={<RequireAuth><TeamShell /></RequireAuth>} />
+      <Route path="/team/:teamId/:tab" element={<RequireAuth><TeamShell /></RequireAuth>} />
       <Route path="/ai" element={<RequireAuth><AiAssistantPage /></RequireAuth>} />
       <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
       <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />

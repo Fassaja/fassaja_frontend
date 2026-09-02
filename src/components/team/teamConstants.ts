@@ -13,8 +13,14 @@ export const TEAM_COLORS = [
   '#14B8A6',
 ];
 
-// Cargos sugeridos para os membros da equipe ('' = sem cargo).
-export const ROLE_OPTIONS = [
+/**
+ * CARGOS sugeridos ('' = sem cargo).
+ *
+ * Cargo é rótulo escrito pela equipe; papel é o que a pessoa pode fazer (ver
+ * utils/teamPermissions). O nome antigo desta lista era ROLE_OPTIONS, o que
+ * confundia as duas coisas justamente onde elas aparecem lado a lado na tela.
+ */
+export const TITLE_OPTIONS = [
   { value: '', label: 'Sem cargo' },
   { value: 'Gerente de Projeto', label: 'Gerente de Projeto' },
   { value: 'Desenvolvedor(a)', label: 'Desenvolvedor(a)' },

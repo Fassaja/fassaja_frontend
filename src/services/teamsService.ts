@@ -1,5 +1,11 @@
 import { api } from './api';
-import { TeamSummary, TeamMember, TeamProjectSummary } from '@/types/team';
+import {
+  AssignableRole,
+  TeamActivityEntry,
+  TeamMember,
+  TeamProjectSummary,
+  TeamSummary,
+} from '@/types/team';
 import { Task } from '@/types/task';
 
 export const teamsService = {
@@ -38,12 +44,18 @@ export const teamsService = {
     await api.patch<void>(`/teams/${teamId}/members/${userId}`, { title });
   },
 
-  async setMemberPermissions(
-    teamId: string,
-    userId: string,
-    canManageTasks: boolean,
-  ): Promise<void> {
-    await api.patch<void>(`/teams/${teamId}/members/${userId}/permissions`, { canManageTasks });
+  /**
+   * Move alguém na hierarquia. Substituiu o antigo `setMemberPermissions`, que
+   * ligava um booleano de "pode gerenciar tarefas" — poder real que a tela
+   * nunca conseguia nomear e, por isso, escondia de quem o tinha.
+   */
+  async setMemberRole(teamId: string, userId: string, role: AssignableRole): Promise<void> {
+    await api.patch<void>(`/teams/${teamId}/members/${userId}/role`, { role });
+  },
+
+  /** Histórico da equipe (gerente para cima). */
+  getActivity(teamId: string): Promise<TeamActivityEntry[]> {
+    return api.get<TeamActivityEntry[]>(`/teams/${teamId}/activity`);
   },
 
   async removeMember(teamId: string, userId: string): Promise<void> {
