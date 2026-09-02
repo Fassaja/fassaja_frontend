@@ -100,9 +100,28 @@ export const TeamShell: React.FC = () => {
   const { team, abilities } = detail;
 
   const abaAtual = ABAS.find(a => a.slug === (tab ?? '')) ?? ABAS[0];
-  // Gestão pedida por link direto por quem não pode: volta ao painel em vez de
-  // mostrar uma tela vazia (ou, pior, os controles inertes).
-  const aba = abaAtual.gestao && !abilities.veGestao ? ABAS[0] : abaAtual;
+  const abaNegada = abaAtual.gestao && !abilities.veGestao;
+  // Gestão pedida por link direto por quem não pode: cai no painel, em vez de
+  // uma tela vazia ou de controles inertes.
+  const aba = abaNegada ? ABAS[0] : abaAtual;
+
+  /**
+   * E o ENDEREÇO acompanha a queda.
+   *
+   * Sem isto a URL mentia: um membro comum abria `/team/:id/gestao`, via o
+   * Painel e continuava com "/gestao" na barra — nenhuma aba marcada como
+   * ativa, e um link que ele copiaria para alguém prometendo uma tela que não
+   * é a que aparece.
+   *
+   * A guarda de carregamento não é detalhe: enquanto a lista de equipes não
+   * chega, `team` é nulo e o papel presumido é o mais fraco (fail-closed). Sem
+   * esperar, um gerente que desse F5 em `/gestao` seria expulso da própria aba
+   * antes de o servidor dizer quem ele é.
+   */
+  useEffect(() => {
+    if (loadingTeams || !team || !abaNegada) return;
+    navigate(`/team/${team.id}`, { replace: true });
+  }, [loadingTeams, team, abaNegada, navigate]);
 
   const irPara = (slug: string) => navigate(`/team/${teamId}${slug ? `/${slug}` : ''}`);
 

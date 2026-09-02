@@ -405,19 +405,22 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
         )}
       </Panel>
 
-      {/* --- Saída e exclusão. Por último, com borda: é o único bloco desta
-          tela que destrói algo, e ele precisa parecer diferente do resto. --- */}
-      <section className="rounded-2xl border border-danger/30 bg-danger/5">
-        <header className="px-5 pb-3 pt-4">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-danger">
-            Zona de risco
-          </h2>
-        </header>
-        <div className="space-y-3 px-5 pb-5">
-          {/* Sair da equipe NÃO fica aqui: esta aba só existe para gerente e
-              acima, e a saída precisa estar ao alcance do membro comum. Ela
-              vive no cabeçalho da área, visível em todas as abas. */}
-          {abilities.ehDono ? (
+      {/* --- Exclusão. Por último, com borda: é o único bloco desta tela que
+          destrói algo, e ele precisa parecer diferente do resto.
+
+          Só para o DONO. Para gerente e admin a seção existia apenas para
+          dizer "você não pode" — uma caixa vermelha, com o peso visual de
+          perigo, cujo conteúdo inteiro era a ausência de uma ação. Sair da
+          equipe nunca esteve aqui: vive no topo da página, ao alcance também
+          do membro comum, que nem vê esta aba. --- */}
+      {abilities.ehDono && (
+        <section className="rounded-2xl border border-danger/30 bg-danger/5">
+          <header className="px-5 pb-3 pt-4">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.08em] text-danger">
+              Zona de risco
+            </h2>
+          </header>
+          <div className="px-5 pb-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-text-secondary">
                 Excluir a equipe apaga também os {projects.length}{' '}
@@ -434,13 +437,9 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
                 Excluir equipe
               </Button>
             </div>
-          ) : (
-            <p className="text-sm text-text-secondary">
-              Só o dono da equipe pode excluí-la. Para sair, use o botão no topo da página.
-            </p>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       <ConfirmDialog
         isOpen={!!transferindo}
