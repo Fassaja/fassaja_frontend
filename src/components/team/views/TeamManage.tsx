@@ -28,10 +28,11 @@ import {
   ROLE_DESCRIPTION,
   ROLE_LABEL,
 } from '@/utils/teamPermissions';
-import { formatDate } from '@/utils/date';
+import { formatDate, formatTime } from '@/utils/date';
 import { Panel, SectionEmpty, RoleBadge } from '../TeamUI';
 import { memberColor } from '../TeamTaskRow';
-import { TEAM_COLORS, TITLE_OPTIONS } from '../teamConstants';
+import { TEAM_COLORS } from '../teamConstants';
+import { CargoInput, CargosSugeridos } from '../CargoInput';
 
 interface Props {
   detail: TeamDetail;
@@ -118,6 +119,9 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
       await refreshPeople();
     } catch (err) {
       toast.error((err as Error).message || 'Não foi possível salvar o cargo.');
+      // Relança para o campo voltar ao valor do servidor: deixar na tela um
+      // cargo que não foi gravado é pior que o erro.
+      throw err;
     } finally {
       setOcupado(null);
     }
@@ -236,10 +240,11 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
       {/* --- Papéis e cargos --- */}
       {abilities.administra && (
         <Panel title="Papéis e cargos">
+          <CargosSugeridos />
           <p className="mb-4 text-sm text-text-secondary">
             O <strong className="font-semibold text-text-primary">papel</strong> define o que a
             pessoa pode fazer. O <strong className="font-semibold text-text-primary">cargo</strong>{' '}
-            é só um rótulo da equipe — "Designer" não dá nem tira permissão nenhuma.
+            é como a equipe chama a pessoa — escreva o que quiser, não dá nem tira permissão.
           </p>
 
           <div className="divide-y divide-border">
@@ -292,14 +297,11 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
                       um cargo era justamente quem responde por ela. O servidor
                       nunca proibiu isso. */}
                   <div className="w-44 shrink-0">
-                    <Dropdown
-                      size="sm"
-                      fullWidth
+                    <CargoInput
                       value={m.title ?? ''}
+                      pessoa={m.name}
                       disabled={ocupado === m.userId}
-                      onChange={v => mudarCargo(m, v)}
-                      options={TITLE_OPTIONS}
-                      placeholder="Sem cargo"
+                      onSave={cargo => mudarCargo(m, cargo)}
                     />
                   </div>
 
@@ -395,8 +397,11 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-border" aria-hidden />
                 <p className="min-w-0 flex-1 text-text-secondary">
                   <span className="text-text-primary">{e.text}</span>{' '}
+                  {/* Data E HORA. Um registro que existe para responder "quem
+                      fez isso e quando?" e que não consegue ordenar dois
+                      eventos do mesmo dia é meio registro. */}
                   <span className="whitespace-nowrap text-xs text-text-soft">
-                    {formatDate(e.createdAt)}
+                    {formatDate(e.createdAt)} às {formatTime(e.createdAt)}
                   </span>
                 </p>
               </li>

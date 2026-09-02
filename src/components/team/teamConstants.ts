@@ -14,20 +14,22 @@ export const TEAM_COLORS = [
 ];
 
 /**
- * CARGOS sugeridos ('' = sem cargo).
+ * SUGESTÕES de cargo — não uma lista fechada.
+ *
+ * O campo aceita qualquer texto de até 40 caracteres, igual ao servidor. Estas
+ * entradas só poupam digitação nos casos comuns; a versão anterior era um menu
+ * e, com ele, o produto decidia quais cargos uma empresa podia ter.
  *
  * Cargo é rótulo escrito pela equipe; papel é o que a pessoa pode fazer (ver
- * utils/teamPermissions). O nome antigo desta lista era ROLE_OPTIONS, o que
- * confundia as duas coisas justamente onde elas aparecem lado a lado na tela.
+ * utils/teamPermissions). São coisas diferentes e aparecem lado a lado na tela.
  */
-export const TITLE_OPTIONS = [
-  { value: '', label: 'Sem cargo' },
-  { value: 'Gerente de Projeto', label: 'Gerente de Projeto' },
-  { value: 'Desenvolvedor(a)', label: 'Desenvolvedor(a)' },
-  { value: 'Designer', label: 'Designer' },
-  { value: 'Produto', label: 'Produto' },
-  { value: 'Marketing', label: 'Marketing' },
-  { value: 'Analista', label: 'Analista' },
-  { value: 'QA / Testes', label: 'QA / Testes' },
-  { value: 'Suporte', label: 'Suporte' },
+export const TITLE_SUGGESTIONS = [
+  'Gerente de Projeto',
+  'Desenvolvedor(a)',
+  'Designer',
+  'Produto',
+  'Marketing',
+  'Analista',
+  'QA / Testes',
+  'Suporte',
 ];
