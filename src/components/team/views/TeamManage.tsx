@@ -286,12 +286,17 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
                     </div>
                   )}
 
+                  {/* Cargo vale para TODO mundo, dono inclusive. Ele estava
+                      desabilitado aqui por confusão minha entre papel e cargo:
+                      o resultado é que a única pessoa da equipe sem direito a
+                      um cargo era justamente quem responde por ela. O servidor
+                      nunca proibiu isso. */}
                   <div className="w-44 shrink-0">
                     <Dropdown
                       size="sm"
                       fullWidth
                       value={m.title ?? ''}
-                      disabled={ocupado === m.userId || papel === 'owner'}
+                      disabled={ocupado === m.userId}
                       onChange={v => mudarCargo(m, v)}
                       options={TITLE_OPTIONS}
                       placeholder="Sem cargo"
