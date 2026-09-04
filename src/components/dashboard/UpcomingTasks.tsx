@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card } from '@/components/common/Card';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Section } from '@/components/common/Section';
 import { CompleteCheck } from '@/components/common/CompleteCheck';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
@@ -24,12 +25,28 @@ function dueBadge(task: Task) {
   return { label: formatDate(task.dueDate), className: 'bg-bg-secondary text-text-secondary' };
 }
 
+/**
+ * Concluir uma tarefa aqui a TIRA da lista — e até agora ela sumia de um
+ * quadro para o outro, sem nada que ligasse o clique ao desaparecimento. A
+ * linha agora sai deslizando e as de baixo sobem para ocupar o lugar, que é o
+ * único jeito de a pessoa ver que foi ela quem causou aquilo.
+ *
+ * A animação é escrita aqui, e não com o <AnimatedList>, porque aquele
+ * componente monta <div>: isto é uma LISTA de tarefas, e trocar <ul>/<li> por
+ * divs custaria a contagem de itens que o leitor de tela anuncia.
+ *
+ * `mode="popLayout"` tira quem sai do fluxo para as outras subirem durante o
+ * sumiço, e `layout="position"` anima só a posição — animar a altura junto
+ * espremeria o texto da linha por alguns quadros.
+ */
 export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = [], onComplete }) => {
   return (
-    <Card className="h-full">
-      <h3 className="text-lg font-bold text-text-primary mb-4">Próximas Tarefas</h3>
-
-      <ul className="divide-y divide-border">
+    <Section title="Próximas tarefas" className="h-full">
+      {/* Sem linha entre as tarefas: cada uma já tem forma própria — a marca
+          de concluir à esquerda e as duas etiquetas à direita —, e o filete
+          só endurecia a lista, que é o bloco em que o olho mais desce. */}
+      <ul className="space-y-1">
+        <AnimatePresence mode="popLayout" initial={false}>
         {tasks.map(task => {
           const completed = task.status === 'completed';
           const due = dueBadge(task);
@@ -37,7 +54,15 @@ export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = 
           const project = projects.find(p => p.id === task.projectId);
 
           return (
-            <li key={task.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+            <motion.li
+              key={task.id}
+              layout="position"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              className="flex items-center gap-3 py-2 first:pt-0 last:pb-0"
+            >
               <CompleteCheck completed={completed} onToggle={() => onComplete?.(task.id)} />
 
               {project && (
@@ -69,10 +94,11 @@ export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = 
               >
                 {completed ? 'Concluída' : priority.label}
               </span>
-            </li>
+            </motion.li>
           );
         })}
+        </AnimatePresence>
       </ul>
-    </Card>
+    </Section>
   );
 };

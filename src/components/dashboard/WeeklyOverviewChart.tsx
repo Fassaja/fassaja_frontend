@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Card } from '@/components/common/Card';
+import { Section } from '@/components/common/Section';
 import { Dropdown } from '@/components/common/Dropdown';
 import { useTaskHistory } from '@/hooks/useTaskHistory';
 import { useChartTheme } from '@/utils/chartTheme';
@@ -47,9 +47,10 @@ export const WeeklyOverviewChart: React.FC = () => {
   );
 
   return (
-    <Card className="h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-text-primary">Visão Geral</h3>
+    <Section
+      title="Produtividade"
+      className="h-full"
+      action={
         <Dropdown
           options={[
             { value: 'week', label: 'Esta semana' },
@@ -60,6 +61,19 @@ export const WeeklyOverviewChart: React.FC = () => {
           size="sm"
           menuAlign="right"
         />
+      }
+    >
+      {/* Legenda ANTES do gráfico, encostada à esquerda, e não centralizada
+          embaixo: quem chega no gráfico já sabe o que é cada linha em vez de
+          descobrir depois de tentar adivinhar. Legenda centralizada no rodapé
+          é o padrão de biblioteca, não de painel. */}
+      <div className="-mt-2 mb-3 flex items-center gap-4">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-text-secondary">
+          <span className="h-2 w-2 rounded-full bg-primary-vibrant" /> Concluídas
+        </span>
+        <span className="flex items-center gap-1.5 text-xs font-medium text-text-secondary">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: chart.muted }} /> Criadas
+        </span>
       </div>
 
       <ResponsiveContainer width="100%" height={200}>
@@ -75,13 +89,13 @@ export const WeeklyOverviewChart: React.FC = () => {
             dataKey="day"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: chart.tick, fontSize: 12 }}
+            tick={{ fill: chart.tick, fontSize: 11 }}
             dy={8}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: chart.tick, fontSize: 12 }}
+            tick={{ fill: chart.tick, fontSize: 11 }}
             allowDecimals={false}
             width={36}
           />
@@ -120,15 +134,6 @@ export const WeeklyOverviewChart: React.FC = () => {
           />
         </AreaChart>
       </ResponsiveContainer>
-
-      <div className="flex items-center justify-center gap-6 mt-3">
-        <span className="flex items-center gap-2 text-sm text-text-secondary">
-          <span className="w-2.5 h-2.5 rounded-full bg-primary-vibrant" /> Concluídas
-        </span>
-        <span className="flex items-center gap-2 text-sm text-text-secondary">
-          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: chart.muted }} /> Criadas
-        </span>
-      </div>
-    </Card>
+    </Section>
   );
 };

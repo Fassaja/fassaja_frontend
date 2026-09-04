@@ -18,6 +18,12 @@ interface StatStripProps {
   stats: Stat[];
   /** Substitui os números por traços enquanto os dados não chegaram. */
   loading?: boolean;
+  /**
+   * `plain` tira a caixa e apoia os números direto no fundo da página,
+   * mantendo só os traços entre as colunas. É para telas que já se organizam
+   * por regiões, onde mais uma borda seria mais uma caixa sem função.
+   */
+  variant?: 'card' | 'plain';
   className?: string;
 }
 
@@ -45,19 +51,65 @@ const COLUNAS: Record<number, string> = {
   4: 'grid-cols-2 sm:grid-cols-4',
 };
 
-export const StatStrip: React.FC<StatStripProps> = ({ stats, loading = false, className = '' }) => {
+export const StatStrip: React.FC<StatStripProps> = ({
+  stats,
+  loading = false,
+  variant = 'card',
+  className = '',
+}) => {
   const colunas = COLUNAS[stats.length] ?? 'grid-cols-2 sm:grid-cols-4';
+  // Fora da caixa, as barras entre as colunas saem junto com ela: quatro
+  // números já se leem como quatro números, e o filete entre eles só
+  // acrescentava traço na parte da tela onde o olho passa mais vezes. Dentro
+  // do cartão elas ficam, porque ali há uma moldura e o espaço é apertado.
+  const grade =
+    variant === 'plain'
+      ? `grid ${colunas} gap-x-6 gap-y-5 ${className}`
+      : `grid ${colunas} divide-x divide-y sm:divide-y-0 divide-border ${className}`;
+  const celula = variant === 'plain' ? '' : 'px-4 py-3.5 sm:px-5';
+  // Quantas colunas o COLUNAS acima produz em cada largura — precisa ser
+  // sabido aqui para descobrir qual célula fecha cada fileira.
+  const colsMobile = stats.length === 4 ? 2 : stats.length;
 
-  return (
-    <Card
-      padding="none"
-      className={`grid ${colunas} divide-x divide-y sm:divide-y-0 divide-border ${className}`}
-    >
-      {stats.map(stat => (
-        <div key={stat.label} className="px-4 py-3.5 sm:px-5">
+  /**
+   * A célula que termina a fileira alinha o texto à direita.
+   *
+   * Sem isso a faixa fechava torta: os quatro rótulos começavam nas suas
+   * colunas, mas "Atrasadas 4" é curto e parava uns 300px antes da borda
+   * direita — a linha de números encostava na margem esquerda e morria no
+   * meio do caminho do outro lado, enquanto tudo em volta (a faixa de
+   * abertura, as linhas de tarefa) ia de ponta a ponta.
+   *
+   * Vale só para a última de cada fileira, e não para todas: alinhar os
+   * quatro à direita afastaria cada número do seu próprio rótulo.
+   *
+   * E só na variante sem caixa. Dentro do cartão quem fecha a fileira é a
+   * borda, então lá o alinhamento à direita seria um desencontro gratuito.
+   */
+  const fecharFileira = (i: number) =>
+    variant !== 'plain'
+      ? ''
+      : `${(i + 1) % colsMobile === 0 ? 'text-right' : ''} ${
+          i === stats.length - 1 ? 'sm:text-right' : 'sm:text-left'
+        }`;
+  // Os números são montados uma vez e o invólucro escolhido depois. Um
+  // componente de invólucro declarado aqui dentro seria um TIPO NOVO a cada
+  // render: o React remontaria as células, e a contagem animada recomeçaria
+  // do zero a cada atualização da tela.
+  const celulas = (
+    <>
+      {stats.map((stat, i) => (
+        <div
+          key={stat.label}
+          className={`${celula} ${fecharFileira(i)}`}
+        >
           <p className="text-xs font-medium text-text-secondary">{stat.label}</p>
           <p
-            className={`mt-1 text-2xl font-extrabold leading-none tracking-tight ${
+            // `tabular-nums`: sem isso cada dígito tem largura própria e o
+            // número TREME durante a contagem animada, empurrando o que está
+            // ao lado. Numa faixa de quatro números lado a lado, isso é a
+            // diferença entre um painel e um cartaz.
+            className={`mt-1 text-2xl font-extrabold leading-none tracking-tight tabular-nums ${
               !loading && stat.alert && stat.value > 0 ? 'text-danger' : 'text-text-primary'
             }`}
           >
@@ -80,6 +132,14 @@ export const StatStrip: React.FC<StatStripProps> = ({ stats, loading = false, cl
           )}
         </div>
       ))}
+    </>
+  );
+
+  return variant === 'plain' ? (
+    <div className={grade}>{celulas}</div>
+  ) : (
+    <Card padding="none" className={grade}>
+      {celulas}
     </Card>
   );
 };

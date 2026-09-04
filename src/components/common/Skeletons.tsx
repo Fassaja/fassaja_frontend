@@ -20,52 +20,58 @@ export const Skeleton: React.FC<{ className?: string; animate?: boolean }> = ({
   />
 );
 
+/**
+ * Espelha a estrutura do painel: abertura sobre o fundo, faixa de números,
+ * e três regiões separadas por linha. O esqueleto que existia aqui ainda
+ * desenhava cartões e uma terceira fileira de três colunas que a tela não
+ * tem mais — o que pisca no carregamento tem de ser o que aparece depois,
+ * senão o conteúdo entra pulando.
+ */
 export const DashboardSkeleton: React.FC = () => (
   <>
-    {/* Bloco de foco do dia */}
-    <Card className="mb-6 h-28 flex items-center gap-4">
-      <Skeleton className="w-16 h-16 rounded-full shrink-0" />
-      <div className="flex-1 space-y-2">
-        <Skeleton className="h-5 w-48" />
-        <Skeleton className="h-3 w-32" />
-      </div>
-    </Card>
+    {/* Faixa de abertura: mesma altura e mesmo raio da faixa dia/noite. */}
+    <Skeleton className="mb-8 h-[104px] w-full rounded-2xl sm:h-28" />
 
-    {/* Faixa de resumo das tarefas */}
-    <Card
-      padding="none"
-      className="mb-6 grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-border"
-    >
+    <div className="mb-12 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="px-4 py-3.5 sm:px-5 space-y-2">
+        <div key={i} className={`space-y-2 ${i % 2 ? 'flex flex-col items-end' : ''} ${i === 3 ? 'sm:items-end' : 'sm:items-start'}`}>
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-6 w-10" />
         </div>
       ))}
-    </Card>
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-      <Card className="lg:col-span-2 h-[290px] flex flex-col gap-4">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="flex-1 w-full rounded-xl" />
-      </Card>
-      <Card className="h-[290px] flex flex-col items-center justify-center gap-4">
-        <Skeleton className="w-28 h-28 rounded-full" />
-        <Skeleton className="h-3 w-32" />
-        <Skeleton className="h-2 w-full" />
-        <Skeleton className="h-2 w-full" />
-      </Card>
     </div>
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <Card className="lg:col-span-5 h-64 space-y-3">
-        <Skeleton className="h-4 w-36 mb-4" />
-        {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}
-      </Card>
-      <Card className="lg:col-span-4 h-64 flex items-center justify-center">
-        <Skeleton className="w-36 h-36 rounded-full" />
-      </Card>
-      <Card className="lg:col-span-3 h-64 grid grid-cols-2 gap-3">
-        {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="rounded-2xl" />)}
-      </Card>
+
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <Skeleton className="mb-4 h-3 w-32" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-7 w-full" />
+          ))}
+        </div>
+      </div>
+      <div>
+        <Skeleton className="mb-4 h-3 w-32" />
+        <div className="flex flex-col items-center gap-4">
+          <Skeleton className="h-28 w-28 rounded-full" />
+          <Skeleton className="h-2 w-full" />
+          <Skeleton className="h-2 w-full" />
+        </div>
+      </div>
+    </div>
+
+    <div className="mt-12">
+      <Skeleton className="mb-4 h-3 w-28" />
+      <Skeleton className="h-[232px] w-full rounded-xl" />
+    </div>
+
+    <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2">
+      {Array.from({ length: 2 }).map((_, i) => (
+        <div key={i}>
+          <Skeleton className="mb-4 h-3 w-36" />
+          <Skeleton className="h-20 w-full rounded-xl" />
+        </div>
+      ))}
     </div>
   </>
 );

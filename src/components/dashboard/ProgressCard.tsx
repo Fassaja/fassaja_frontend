@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Card } from '@/components/common/Card';
+import { Section } from '@/components/common/Section';
 import { CountUp } from '@/components/common/CountUp';
 
 interface GoalProgress {
@@ -58,10 +58,8 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
   const offset = circumference - (percentage / 100) * circumference;
 
   return (
-    <Card className="h-full flex flex-col">
-      <h3 className="text-lg font-bold text-text-primary mb-3">Progresso geral</h3>
-
-      <div className="flex-1 flex items-center justify-center">
+    <Section title="Progresso geral" className="flex h-full flex-col">
+      <div className="flex flex-1 items-center justify-center">
         {/* Donut. As cores saem de `currentColor`/classe para seguir o tema:
             os hex fixos de antes (#EAF2FF, #2477FF) eram do tema claro. */}
         <div className="relative shrink-0" style={{ width: size, height: size }}>
@@ -101,7 +99,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
       </div>
 
       {goals && (
-        <div className="mt-4 pt-4 border-t border-border space-y-3">
+        <div className="mt-5 space-y-3">
           <GoalBar
             label="Meta diária"
             done={goals.daily.done}
@@ -116,6 +114,6 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
           />
         </div>
       )}
-    </Card>
+    </Section>
   );
 };

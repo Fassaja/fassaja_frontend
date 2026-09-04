@@ -38,7 +38,9 @@ export const StreakContent: React.FC = () => {
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-text-primary">Sequência produtiva</h3>
+        <h2 className="text-xs font-bold uppercase tracking-wide text-text-soft">
+          Sequência produtiva
+        </h2>
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-300 font-bold text-sm">
           <motion.span
             className="inline-flex"
@@ -52,7 +54,7 @@ export const StreakContent: React.FC = () => {
         </span>
       </div>
 
-      <p className="text-sm text-text-secondary mb-4">
+      <p className="text-sm text-text-secondary mb-4 -mt-1">
         {streak === 0
           ? 'Conclua uma tarefa hoje para começar uma sequência.'
           : 'Dias seguidos concluindo pelo menos uma tarefa.'}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 
 interface TodayFocusProps {
@@ -10,16 +11,19 @@ interface TodayFocusProps {
 }
 
 /**
- * Bloco de abertura do painel.
+ * Faixa de abertura do painel: o que precisa da minha atenção hoje.
  *
- * Substitui o banner de saudação, que dizia "Bom dia!" logo abaixo do "Olá,
- * {nome}" da barra superior — duas saudações e uma frase motivacional
- * rotativa antes de qualquer informação. A cena dia/noite e o Bob continuam
- * (são da marca); o que mudou é o texto, que agora responde à única pergunta
- * que importa ao abrir o app: o que precisa da minha atenção hoje.
+ * A cena dia/noite fica — é a marca, e é o único momento de cor da tela agora
+ * que o resto do painel se apoia no fundo da página. Uma faixa colorida entre
+ * dez cartões coloridos é ruído; sozinha, entre regiões calmas, é assinatura.
  *
- * Os chips de nível/XP/sequência saíram daqui porque repetiam, no topo, o que
- * o card "Seu nível" já mostra mais abaixo na mesma tela.
+ * O que saiu foi a DUPLICAÇÃO: o `bg-gradient-to-br` que estava aqui repetia,
+ * em CSS, o mesmo degradê que já vem pintado dentro do PNG — e no celular, onde
+ * a imagem não entra, virava uma tarja de degradê sem nenhuma cena. No lugar
+ * dele, uma cor chapada da paleta, que é o fundo quando a imagem não aparece.
+ *
+ * O atraso ganhou ícone além da cor: sobre o azul não dá para tingir o texto
+ * de vermelho, então o sinal tem de ser uma forma.
  */
 export const TodayFocus: React.FC<TodayFocusProps> = ({
   overdue,
@@ -75,31 +79,54 @@ export const TodayFocus: React.FC<TodayFocusProps> = ({
 
   return (
     <div
-      className={`mb-6 flex items-center gap-4 rounded-2xl text-white p-5 sm:p-6 relative overflow-hidden bg-gradient-to-br ${
-        isDay ? 'from-primary-vibrant to-brand-deep' : 'from-[#243089] to-[#0a1640]'
+      className={`relative mb-8 flex items-center gap-4 overflow-hidden rounded-2xl p-5 text-white sm:p-6 ${
+        isDay ? 'bg-primary-vibrant' : 'bg-brand-deep'
       }`}
     >
-      {/* Cena decorativa: só no desktop. No mobile fica só o gradiente azul. */}
+      {/*
+        A cena vem RECORTADA (`-faixa`), e não do PNG original.
+        
+        O arquivo de origem é uma tela de 1920x1080 quase toda transparente,
+        com a faixa desenhada no meio — e com os cantos dela já arredondados
+        dentro da imagem. `object-cover` enquadra pela TELA INTEIRA, não pela
+        faixa: como o centro da faixa do dia está em y=528 e o da tela em
+        y=540, ela era desenhada uns 9px abaixo do centro, sobrava um fio de
+        azul chapado na borda de cima e o pé da paisagem entrava cortado. À
+        direita acontecia o mesmo, porque a faixa termina 14px antes da borda
+        da tela. Daí o desalinhamento com o resto do conteúdo.
+
+        Os arquivos `-faixa` são o mesmo desenho recortado no retângulo
+        opaco, sem canal alfa e sem canto arredondado embutido: agora o
+        enquadramento não tem nenhuma sobra para revelar, e o arredondamento
+        é o do invólucro, igual ao dos outros blocos. `scale-105` saiu junto,
+        que só existia para empurrar as bordas transparentes para fora.
+
+        Só no desktop: no celular a cena cairia atrás do texto justamente na
+        metade clara, onde o sol está — ali fica a cor chapada.
+      */}
       <img
-        src={isDay ? '/dia.png' : '/noite.png'}
+        src={isDay ? '/dia-faixa.png' : '/noite-faixa.png'}
         alt=""
         aria-hidden="true"
         draggable={false}
-        className="hidden md:block absolute inset-0 h-full w-full object-cover object-right scale-105 pointer-events-none select-none"
+        className="pointer-events-none absolute inset-0 hidden h-full w-full select-none object-cover object-right md:block"
       />
 
-      <div className="shrink-0 -my-2 relative z-10">
+      <div className="relative z-10 -my-2 shrink-0">
         <Mascot state={mascot} size="sm" animate />
       </div>
 
       <div className="relative z-10 min-w-0">
-        <p className="text-xl font-extrabold leading-tight">{headline}</p>
-        <p className="text-white/85 text-sm mt-0.5">{detail}</p>
+        <p className="flex items-center gap-2 text-xl font-extrabold leading-tight tracking-tight sm:text-2xl">
+          {overdue > 0 && <AlertTriangle size={20} className="shrink-0" aria-hidden="true" />}
+          {headline}
+        </p>
+        <p className="mt-1 text-sm text-white/85">{detail}</p>
         {totalTasks === 0 && (
           <button
             type="button"
             onClick={onNewTask}
-            className="mt-3 inline-flex items-center px-3.5 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-sm font-semibold backdrop-blur-sm transition-colors"
+            className="mt-3 inline-flex items-center rounded-lg bg-white/15 px-3.5 py-1.5 text-sm font-semibold backdrop-blur-sm transition-colors hover:bg-white/25"
           >
             Criar primeira tarefa
           </button>

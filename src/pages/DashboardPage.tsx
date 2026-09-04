@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { TodayFocus } from '@/components/dashboard/TodayFocus';
@@ -20,6 +21,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { isToday } from '@/utils/date';
 import { useTaskHistory } from '@/hooks/useTaskHistory';
 import { diaISO, inicioDaSemana, resumoSemanal } from '@/utils/produtividade';
+
+/**
+ * Entrada de cada região, em cascata de cima para baixo.
+ *
+ * Não é enfeite: a página foi reorganizada por prioridade — atenção de hoje,
+ * números, o que fazer agora, como a semana vai, constância — e a cascata
+ * ENCENA essa ordem, em vez de despejar tudo de uma vez e deixar o olho
+ * procurar por onde começar. Respeita "reduzir movimento" pelo MotionConfig
+ * do App.
+ */
+const REGIAO = {
+  hidden: { opacity: 0, y: 12 },
+  shown: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+};
 
 const DashboardPage: React.FC = () => {
   const { tasks, completeTask, createTask, loading } = useTasks();
@@ -95,7 +110,13 @@ const DashboardPage: React.FC = () => {
         subtitle={todayLabel}
       >
         <PageTour id="dashboard" />
-        {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : <>
+        {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : (
+        <motion.div
+          initial="hidden"
+          animate="shown"
+          variants={{ shown: { transition: { staggerChildren: 0.07 } } }}
+        >
+        <motion.div variants={REGIAO}>
         <TodayFocus
           overdue={stats.overdue}
           dueToday={dueToday}
@@ -103,9 +124,12 @@ const DashboardPage: React.FC = () => {
           totalTasks={stats.total}
           onNewTask={openNewTask}
         />
+        </motion.div>
 
+        <motion.div variants={REGIAO}>
         <StatStrip
-          className="mb-6"
+          variant="plain"
+          className="mb-12"
           stats={[
             { label: 'Total', value: stats.total, comparison: stats.comparisons.total },
             { label: 'Concluídas', value: stats.completed, comparison: stats.comparisons.completed },
@@ -113,11 +137,39 @@ const DashboardPage: React.FC = () => {
             { label: 'Atrasadas', value: stats.overdue, comparison: stats.comparisons.overdue, alert: true },
           ]}
         />
+        </motion.div>
 
-        {/* Overview + Progress */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/*
+          A ordem das regiões é a ordem das perguntas: primeiro O QUE FAZER
+          AGORA, depois COMO A SEMANA ESTÁ INDO, por último a CONSTÂNCIA.
+
+          A lista de tarefas ocupava a largura inteira, e isso a deixava OCA:
+          o título terminava a 180px da margem esquerda e as etiquetas de data
+          e prioridade eram empurradas para 1000px dali, com um vão morto de
+          uns 800px no meio de cada linha. Largura inteira só serve para quem
+          preenche a largura inteira — o gráfico, que é o caso. A lista voltou
+          para dois terços, com o progresso ocupando o terço restante, e o
+          conteúdo de cada linha voltou a ficar perto de si mesmo.
+
+          A separação entre elas é ESPAÇO, e não linha. Tinha um filete de
+          ponta a ponta antes de cada região, e ele dizia a mesma coisa que o
+          rótulo em caixa alta logo abaixo já dizia — duas marcas para uma
+          fronteira só. Somadas às barras entre os números e às linhas entre as
+          tarefas, a tela virava uma grade de filetes que o olho tinha de
+          atravessar. Espaço separa sem desenhar nada.
+        */}
+        <motion.div variants={REGIAO} className="grid grid-cols-1 gap-10 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <WeeklyOverviewChart />
+            {upcomingTasks.length > 0 ? (
+              <UpcomingTasks tasks={upcomingTasks} projects={projects} onComplete={completeTask} />
+            ) : (
+              <EmptyState
+                mascotState="happy"
+                title="Tudo em dia!"
+                description="Você não tem tarefas pendentes. Que tal criar uma nova?"
+                action={{ label: 'Nova tarefa', onClick: openNewTask }}
+              />
+            )}
           </div>
           <div className="lg:col-span-1">
             <ProgressCard
@@ -134,29 +186,25 @@ const DashboardPage: React.FC = () => {
               }}
             />
           </div>
-        </div>
+        </motion.div>
 
-        {/* Próximas tarefas (foco) + Prioridade */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            {upcomingTasks.length > 0 ? (
-              <UpcomingTasks tasks={upcomingTasks} projects={projects} onComplete={completeTask} />
-            ) : (
-              <EmptyState
-                mascotState="happy"
-                title="Tudo em dia!"
-                description="Você não tem tarefas pendentes. Que tal criar uma nova?"
-                action={{ label: 'Nova tarefa', onClick: openNewTask }}
-              />
-            )}
+        {/* O gráfico é o único bloco que de fato PREENCHE a largura inteira:
+            mais espaço nele é mais dias visíveis, não mais vão. */}
+        <motion.div variants={REGIAO} className="mt-12">
+          <WeeklyOverviewChart />
+        </motion.div>
+
+        <motion.div
+          variants={REGIAO}
+          className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2"
+        >
+          <XpCard />
+          <div>
+            <StreakContent />
           </div>
-          <div className="lg:col-span-1">
-            <XpCard>
-              <StreakContent />
-            </XpCard>
-          </div>
-        </div>
-        </>}
+        </motion.div>
+        </motion.div>
+        )}
       </AppLayout>
     </>
   );
