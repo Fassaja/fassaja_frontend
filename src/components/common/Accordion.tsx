@@ -8,6 +8,23 @@ export interface AccordionItem {
   title: React.ReactNode;
   /** Ícone opcional à esquerda do título. */
   icon?: React.ReactNode;
+  /**
+   * Valor atual, mostrado na linha FECHADA.
+   *
+   * É o que evita transformar a tela num jogo de abrir gavetas para descobrir
+   * como as coisas estão: "Metas" não diz nada, "5/dia · 25/semana" diz. Some
+   * quando o item abre, porque aí o próprio conteúdo mostra o valor.
+   */
+  summary?: React.ReactNode;
+  /**
+   * Grupo a que o item pertence. Quando muda de um item para o próximo, um
+   * rótulo é desenhado antes dele.
+   *
+   * É campo do ITEM, e não vários acordeões lado a lado, para preservar o "só
+   * um aberto por vez": acordeões separados teriam cada um o seu estado, e a
+   * tela poderia ficar com três painéis abertos ao mesmo tempo.
+   */
+  group?: string;
   content: React.ReactNode;
 }
 
@@ -77,6 +94,11 @@ const AccordionPanel: React.FC<{
         >
           {item.icon}
           <span className="flex-1 text-sm font-bold text-text-primary">{item.title}</span>
+          {item.summary && !isOpen && (
+            <span className="hidden truncate text-xs text-text-secondary sm:block sm:max-w-[45%]">
+              {item.summary}
+            </span>
+          )}
           <motion.span
             aria-hidden="true"
             initial={false}
@@ -121,15 +143,24 @@ export const Accordion: React.FC<AccordionProps> = ({
 
   return (
     <div className={className}>
-      {items.map(item => (
-        <AccordionPanel
-          key={item.id}
-          item={item}
-          isOpen={openId === item.id}
-          onToggle={() => setOpenId(prev => (prev === item.id ? null : item.id))}
-          baseId={baseId}
-        />
-      ))}
+      {items.map((item, i) => {
+        const abreGrupo = !!item.group && item.group !== items[i - 1]?.group;
+        return (
+          <React.Fragment key={item.id}>
+            {abreGrupo && (
+              <p className="px-1 pb-1 pt-6 text-xs font-bold uppercase tracking-wide text-text-soft first:pt-0">
+                {item.group}
+              </p>
+            )}
+            <AccordionPanel
+              item={item}
+              isOpen={openId === item.id}
+              onToggle={() => setOpenId(prev => (prev === item.id ? null : item.id))}
+              baseId={baseId}
+            />
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };

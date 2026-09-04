@@ -41,7 +41,6 @@ import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, ThemePreference } from '@/contexts/ThemeContext';
 import { deleteAccount } from '@/services/authService';
-import { tint, chipText } from '@/utils/color';
 
 const THEME_OPTIONS: {
   value: ThemePreference;
@@ -54,16 +53,23 @@ const THEME_OPTIONS: {
 ];
 
 /**
- * Ladrilho colorido da seção, agora dentro do gatilho do acordeão.
+ * Ladrilho do ícone da seção.
  *
- * Substitui o antigo `SectionHeader`: com as seções recolhidas o título e o
- * subtítulo mudaram de lugar — o título virou o rótulo do gatilho, e o
- * subtítulo desceu para a primeira linha do painel (ver `SectionHint`).
+ * Neutro por padrão. Antes cada seção tinha uma cor própria — sete cores num
+ * índice de nove linhas —, e o arco-íris dava à tela um ar de brinquedo: se
+ * tudo é destacado, nada é. A cor fica reservada para o que MUDA a leitura,
+ * hoje só a zona de perigo.
  */
-const SectionIcon: React.FC<{ icon: React.ReactNode; color: string }> = ({ icon, color }) => (
+const SectionIcon: React.FC<{ icon: React.ReactNode; tone?: 'neutro' | 'perigo' }> = ({
+  icon,
+  tone = 'neutro',
+}) => (
   <span
-    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-    style={{ backgroundColor: tint(color), color: chipText(color) }}
+    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+      tone === 'perigo'
+        ? 'bg-danger/10 text-danger'
+        : 'bg-bg-secondary text-text-secondary'
+    }`}
   >
     {icon}
   </span>
@@ -220,8 +226,15 @@ const SettingsPage: React.FC = () => {
           items={[
             {
               id: 'aparencia',
-              icon: <SectionIcon icon={<Palette size={18} />} color="#8B5CF6" />,
+              group: 'Preferências',
+              icon: <SectionIcon icon={<Palette size={18} />} />,
               title: 'Aparência',
+              summary:
+                preference === 'system'
+                  ? `Sistema · ${resolved === 'dark' ? 'escuro' : 'claro'}`
+                  : preference === 'dark'
+                  ? 'Escuro'
+                  : 'Claro',
               content: (
                 <>
                   <SectionHint>Vale para este navegador.</SectionHint>
@@ -256,8 +269,10 @@ const SettingsPage: React.FC = () => {
             },
             {
               id: 'metas',
-              icon: <SectionIcon icon={<Target size={18} />} color="#22C55E" />,
+              group: 'Preferências',
+              icon: <SectionIcon icon={<Target size={18} />} />,
               title: 'Metas',
+              summary: `${user.dailyGoal}/dia · ${user.weeklyGoal}/semana`,
               content: (
                 <>
                   <SectionHint>Elas guiam o progresso do Dashboard e as comemorações.</SectionHint>
@@ -305,8 +320,13 @@ const SettingsPage: React.FC = () => {
               // DENTRO do app; esta é a única que toca o celular da pessoa com
               // o app fechado. Juntá-las esconderia essa diferença.
               id: 'lembretes',
-              icon: <SectionIcon icon={<Bell size={18} />} color="#F43F5E" />,
+              group: 'Avisos',
+              icon: <SectionIcon icon={<Bell size={18} />} tone="perigo" />,
               title: 'Lembrete de prazo',
+              summary:
+                account?.taskReminder === false
+                  ? 'Desligado'
+                  : `Todo dia às ${account?.taskReminderTime ?? '09:00'}`,
               content: (
                 <>
                   <SectionHint>Vale para toda tarefa com prazo.</SectionHint>
@@ -316,7 +336,8 @@ const SettingsPage: React.FC = () => {
             },
             {
               id: 'calendario',
-              icon: <SectionIcon icon={<CalendarPlus size={18} />} color="#2DD4BF" />,
+              group: 'Avisos',
+              icon: <SectionIcon icon={<CalendarPlus size={18} />} />,
               title: 'Calendário externo',
               content: (
                 <>
@@ -327,8 +348,15 @@ const SettingsPage: React.FC = () => {
             },
             {
               id: 'notificacoes',
-              icon: <SectionIcon icon={<Bell size={18} />} color="#8B5CF6" />,
+              group: 'Avisos',
+              icon: <SectionIcon icon={<Bell size={18} />} />,
               title: 'Notificações',
+              summary: (() => {
+                const ativas = notifLabels.filter(i => user.notifications[i.key]).length;
+                if (ativas === 0) return 'Nenhuma ativa';
+                if (ativas === notifLabels.length) return 'Todas ativas';
+                return `${ativas} de ${notifLabels.length} ativas`;
+              })(),
               content: (
                 <>
                   <SectionHint>Escolha o que aparece no sino do topo.</SectionHint>
@@ -357,8 +385,10 @@ const SettingsPage: React.FC = () => {
               // acesso"), e como dois itens obrigavam a abrir um, fechar, abrir
               // o outro. Dentro, cada um tem seu próprio subtítulo.
               id: 'usuario',
-              icon: <SectionIcon icon={<UserCog size={18} />} color="#2477FF" />,
+              group: 'Conta',
+              icon: <SectionIcon icon={<UserCog size={18} />} />,
               title: 'Configurações do usuário',
+              summary: account?.email,
               content: (
                 <>
                   <SectionHint>
@@ -403,7 +433,8 @@ const SettingsPage: React.FC = () => {
             },
             {
               id: 'tutoriais',
-              icon: <SectionIcon icon={<PlayCircle size={18} />} color="#2477FF" />,
+              group: 'Ajuda',
+              icon: <SectionIcon icon={<PlayCircle size={18} />} />,
               title: 'Tutoriais',
               content: (
                 <>
@@ -417,6 +448,13 @@ const SettingsPage: React.FC = () => {
                       onClick={reopenPlatformTour}
                     />
                     <ActionRow
+                      icon={<ShieldCheck size={18} />}
+                      iconClass="bg-primary-light text-primary-vibrant"
+                      title="Ir para o Perfil"
+                      description="Sua foto, seus números e suas conquistas"
+                      onClick={() => navigate('/profile')}
+                    />
+                    <ActionRow
                       icon={<RotateCcw size={18} />}
                       iconClass="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
                       title="Reexibir dicas das áreas"
@@ -428,28 +466,27 @@ const SettingsPage: React.FC = () => {
               ),
             },
             {
+              // O atalho para o Perfil saiu daqui: ir ver a própria foto não é
+              // ação perigosa, e listá-la ao lado da exclusão da conta ensinava
+              // o dedo a clicar sem ler nesta seção. Ela agora vive em Ajuda.
               id: 'perigo',
-              icon: <SectionIcon icon={<AlertTriangle size={18} />} color="#F43F5E" />,
-              title: 'Zona de perigo',
+              group: 'Zona de perigo',
+              icon: <SectionIcon icon={<AlertTriangle size={18} />} tone="perigo" />,
+              title: 'Excluir minha conta',
+              summary: 'Sem volta',
               content: (
                 <>
-                  <SectionHint>Ações que não têm volta.</SectionHint>
-                  <div className="flex flex-col gap-3">
-                    <ActionRow
-                      icon={<ShieldCheck size={18} />}
-                      iconClass="bg-primary-light text-primary-vibrant"
-                      title="Ir para o Perfil"
-                      description="Trocar sua foto e ver suas conquistas"
-                      onClick={() => navigate('/profile')}
-                    />
-                    <ActionRow
-                      icon={<Trash2 size={18} />}
-                      iconClass="bg-rose-50 dark:bg-rose-500/10 text-danger"
-                      title="Excluir minha conta"
-                      description="Apaga sua conta e seus dados pessoais definitivamente"
-                      onClick={() => setConfirmDelete(true)}
-                    />
-                  </div>
+                  <SectionHint>
+                    Apaga a conta e seus dados pessoais definitivamente. Tarefas e projetos de
+                    equipes que você criou passam para quem ficar. Não dá para desfazer.
+                  </SectionHint>
+                  <ActionRow
+                    icon={<Trash2 size={18} />}
+                    iconClass="bg-rose-50 dark:bg-rose-500/10 text-danger"
+                    title="Excluir minha conta"
+                    description="Pede confirmação e sua senha antes de apagar"
+                    onClick={() => setConfirmDelete(true)}
+                  />
                 </>
               ),
             },
