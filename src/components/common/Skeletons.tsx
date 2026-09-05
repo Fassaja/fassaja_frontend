@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card } from './Card';
+import { SoftDivider } from './SoftDivider';
 
 /**
  * Bloco base de todo esqueleto. A cor e a varredura do brilho vivem na classe
@@ -32,7 +33,7 @@ export const DashboardSkeleton: React.FC = () => (
     {/* Faixa de abertura: mesma altura e mesmo raio da faixa dia/noite. */}
     <Skeleton className="mb-8 h-[104px] w-full rounded-2xl sm:h-28" />
 
-    <div className="mb-12 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+    <div className="mb-10 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className={`space-y-2 ${i % 2 ? 'flex flex-col items-end' : ''} ${i === 3 ? 'sm:items-end' : 'sm:items-start'}`}>
           <Skeleton className="h-3 w-16" />
@@ -41,6 +42,7 @@ export const DashboardSkeleton: React.FC = () => (
       ))}
     </div>
 
+    <SoftDivider className="mb-8" />
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
       <div className="lg:col-span-2">
         <Skeleton className="mb-4 h-3 w-32" />
@@ -60,12 +62,14 @@ export const DashboardSkeleton: React.FC = () => (
       </div>
     </div>
 
-    <div className="mt-12">
+    <div className="mt-10">
+      <SoftDivider className="mb-8" />
       <Skeleton className="mb-4 h-3 w-28" />
       <Skeleton className="h-[232px] w-full rounded-xl" />
     </div>
 
-    <div className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2">
+    <SoftDivider className="mb-8 mt-10" />
+    <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
       {Array.from({ length: 2 }).map((_, i) => (
         <div key={i}>
           <Skeleton className="mb-4 h-3 w-36" />

@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { TodayFocus } from '@/components/dashboard/TodayFocus';
 import { StatStrip } from '@/components/common/StatStrip';
+import { SoftDivider } from '@/components/common/SoftDivider';
 import { WeeklyOverviewChart } from '@/components/dashboard/WeeklyOverviewChart';
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
 import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
@@ -129,7 +130,7 @@ const DashboardPage: React.FC = () => {
         <motion.div variants={REGIAO}>
         <StatStrip
           variant="plain"
-          className="mb-12"
+          className="mb-10"
           stats={[
             { label: 'Total', value: stats.total, comparison: stats.comparisons.total },
             { label: 'Concluídas', value: stats.completed, comparison: stats.comparisons.completed },
@@ -151,14 +152,16 @@ const DashboardPage: React.FC = () => {
           para dois terços, com o progresso ocupando o terço restante, e o
           conteúdo de cada linha voltou a ficar perto de si mesmo.
 
-          A separação entre elas é ESPAÇO, e não linha. Tinha um filete de
-          ponta a ponta antes de cada região, e ele dizia a mesma coisa que o
-          rótulo em caixa alta logo abaixo já dizia — duas marcas para uma
-          fronteira só. Somadas às barras entre os números e às linhas entre as
-          tarefas, a tela virava uma grade de filetes que o olho tinha de
-          atravessar. Espaço separa sem desenhar nada.
+          A separação é espaço MAIS uma linha que se dissolve. Só espaço não
+          aguentou o teste real: com a página reduzida no navegador, as regiões
+          encostam e a fronteira some. Só filete de ponta a ponta era o
+          problema oposto, uma grade de traços para o olho atravessar. O
+          <SoftDivider> nasce cheio na margem esquerda, onde a leitura começa,
+          e se apaga antes de cruzar a tela.
         */}
-        <motion.div variants={REGIAO} className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+        <motion.div variants={REGIAO}>
+          <SoftDivider className="mb-8" />
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
           <div className="lg:col-span-2">
             {upcomingTasks.length > 0 ? (
               <UpcomingTasks tasks={upcomingTasks} projects={projects} onComplete={completeTask} />
@@ -186,21 +189,23 @@ const DashboardPage: React.FC = () => {
               }}
             />
           </div>
+          </div>
         </motion.div>
 
         {/* O gráfico é o único bloco que de fato PREENCHE a largura inteira:
             mais espaço nele é mais dias visíveis, não mais vão. */}
-        <motion.div variants={REGIAO} className="mt-12">
+        <motion.div variants={REGIAO} className="mt-10">
+          <SoftDivider className="mb-8" />
           <WeeklyOverviewChart />
         </motion.div>
 
-        <motion.div
-          variants={REGIAO}
-          className="mt-12 grid grid-cols-1 gap-10 sm:grid-cols-2"
-        >
-          <XpCard />
-          <div>
-            <StreakContent />
+        <motion.div variants={REGIAO} className="mt-10">
+          <SoftDivider className="mb-8" />
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
+            <XpCard />
+            <div>
+              <StreakContent />
+            </div>
           </div>
         </motion.div>
         </motion.div>
