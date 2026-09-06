@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   Trash2,
   AlertTriangle,
+  Mail,
   Palette,
   Pencil,
   UserCog,
@@ -40,7 +41,8 @@ import { CalendarSubscriptionSection } from '@/components/settings/CalendarSubsc
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme, ThemePreference } from '@/contexts/ThemeContext';
-import { deleteAccount } from '@/services/authService';
+import { deleteAccount, requestAccountDeletion } from '@/services/authService';
+import { provaDeExclusao } from '@/utils/exclusaoDeConta';
 
 const THEME_OPTIONS: {
   value: ThemePreference;
@@ -129,12 +131,26 @@ const SettingsPage: React.FC = () => {
   const [delConfirm, setDelConfirm] = useState('');
   const [delLoading, setDelLoading] = useState(false);
   const [delError, setDelError] = useState('');
+  // Conta sem senha: a confirmação vai por e-mail, então esta tela termina em
+  // "enviamos o link" em vez de excluir na hora.
+  const [delEmailEnviado, setDelEmailEnviado] = useState(false);
+
+  /**
+   * Esta conta confirma a exclusão com senha ou pelo e-mail?
+   *
+   * `hasPassword` vem do servidor porque só ele sabe: `passwordChangedAt` nulo
+   * não serve de pista — quem se cadastrou com senha e nunca a trocou também
+   * tem nulo ali. O `undefined` (sessão de cache antigo) tem tratamento
+   * próprio; ver utils/exclusaoDeConta.ts.
+   */
+  const confirmaPorEmail = provaDeExclusao(account?.hasPassword) === 'email';
 
   const closeDeleteForm = () => {
     setShowDeleteForm(false);
     setDelPassword('');
     setDelConfirm('');
     setDelError('');
+    setDelEmailEnviado(false);
   };
 
   const handleDeleteAccount = async (e: React.FormEvent) => {
@@ -143,14 +159,29 @@ const SettingsPage: React.FC = () => {
       setDelError('Digite EXCLUIR para confirmar.');
       return;
     }
-    if (!delPassword) {
-      setDelError('Informe sua senha.');
-      return;
-    }
     setDelError('');
     setDelLoading(true);
+
+    // Sem senha, este botão não exclui: ele PEDE o e-mail de confirmação. A
+    // exclusão acontece na página que o link abre, e é lá que o token viaja.
+    if (confirmaPorEmail) {
+      try {
+        await requestAccountDeletion();
+        setDelEmailEnviado(true);
+      } catch (err) {
+        setDelError((err as Error).message || 'Não foi possível enviar o e-mail.');
+      }
+      setDelLoading(false);
+      return;
+    }
+
+    if (!delPassword) {
+      setDelError('Informe sua senha.');
+      setDelLoading(false);
+      return;
+    }
     try {
-      await deleteAccount(delPassword);
+      await deleteAccount({ password: delPassword });
       // A conta não existe mais: logout() limpa a PII espelhada no navegador e
       // leva ao /login. A chamada a /auth/logout que ele dispara falha em
       // silêncio (é best-effort e não derruba nada).
@@ -517,25 +548,61 @@ const SettingsPage: React.FC = () => {
         onClose={() => setConfirmDelete(false)}
       />
 
-      {/* Etapa 2 — a confirmação de verdade: senha + digitar EXCLUIR. */}
+      {/* Etapa 2 — a confirmação de verdade: a prova de identidade + EXCLUIR. */}
       <Modal isOpen={showDeleteForm} onClose={closeDeleteForm} title="Excluir minha conta" size="md">
+        {delEmailEnviado ? (
+          /* Conta sem senha: o pedido saiu e a exclusão continua no e-mail.
+             Fim de caminho nesta tela — não há o que preencher aqui. */
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-2 rounded-xl border border-border bg-bg-secondary/60 px-4 py-3 text-sm text-text-secondary">
+              <Mail size={16} className="mt-0.5 shrink-0" />
+              <span>
+                Enviamos um e-mail para <strong className="text-text-primary">{account?.email}</strong>{' '}
+                com o link que conclui a exclusão. Ele vale por 30 minutos e só pode ser usado uma
+                vez.
+                <br />
+                <span className="text-xs">
+                  Sua conta continua intacta até você abrir esse link e confirmar.
+                </span>
+              </span>
+            </div>
+            <Button type="button" variant="secondary" className="rounded-xl" onClick={closeDeleteForm}>
+              Fechar
+            </Button>
+          </div>
+        ) : (
         <form onSubmit={handleDeleteAccount} className="flex flex-col gap-4">
           <div className="flex items-start gap-2 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
             <AlertTriangle size={16} className="mt-0.5 shrink-0" />
             <span>Último passo. Depois disso não há como recuperar a conta.</span>
           </div>
 
-          <PasswordInput
-            label="Sua senha"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            value={delPassword}
-            onChange={e => {
-              setDelPassword(e.target.value);
-              if (delError) setDelError('');
-            }}
-            autoFocus
-          />
+          {/* Quem entra pelo Google não tem senha para digitar. A prova de que é
+              a pessoa vem do e-mail — a mesma exigência do "esqueci minha
+              senha", e a única que funciona sem depender de um token que o modo
+              redirect do Google nunca entrega ao navegador. */}
+          {confirmaPorEmail ? (
+            <div className="flex items-start gap-2 rounded-xl border border-border bg-bg-secondary/60 px-4 py-3 text-sm text-text-secondary">
+              <Mail size={16} className="mt-0.5 shrink-0" />
+              <span>
+                Você entra com o Google e esta conta não tem senha. Vamos enviar um link de
+                confirmação para <strong className="text-text-primary">{account?.email}</strong> —
+                a exclusão só acontece quando você abrir esse link.
+              </span>
+            </div>
+          ) : (
+            <PasswordInput
+              label="Sua senha"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={delPassword}
+              onChange={e => {
+                setDelPassword(e.target.value);
+                if (delError) setDelError('');
+              }}
+              autoFocus
+            />
+          )}
 
           <Input
             label="Digite EXCLUIR para confirmar"
@@ -564,10 +631,11 @@ const SettingsPage: React.FC = () => {
               className="flex-1 rounded-xl"
               isLoading={delLoading}
             >
-              Excluir para sempre
+              {confirmaPorEmail ? 'Enviar link de confirmação' : 'Excluir para sempre'}
             </Button>
           </div>
         </form>
+        )}
       </Modal>
     </AppLayout>
   );

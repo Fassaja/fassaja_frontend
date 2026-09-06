@@ -36,6 +36,10 @@ check('/auth/resend-verification não encerra', !isSessionExpiry('/auth/resend-v
 check('/auth/profile encerra', isSessionExpiry('/auth/profile'));
 check('/auth/avatar encerra', isSessionExpiry('/auth/avatar'));
 check('/auth/account encerra', isSessionExpiry('/auth/account'));
+// Pedir o e-mail que confirma a exclusão é rota autenticada como as outras:
+// 401 ali é sessão morta mesmo. (O DELETE com token inválido responde 400, que
+// nem chega a este caminho.)
+check('/auth/account/delete-request encerra', isSessionExpiry('/auth/account/delete-request'));
 check('/tasks encerra', isSessionExpiry('/tasks'));
 check('/projects encerra', isSessionExpiry('/projects'));
 check('/teams encerra', isSessionExpiry('/teams'));

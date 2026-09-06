@@ -15,6 +15,7 @@ import AiAssistantPage from '@/pages/AiAssistantPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import AuthPage from '@/pages/AuthPage';
 import PasswordResetPage from '@/pages/PasswordResetPage';
+import AccountDeletionPage from '@/pages/AccountDeletionPage';
 import JoinPage from '@/pages/JoinPage';
 import ProPage from '@/pages/ProPage';
 import IdeasPage from '@/pages/IdeasPage';
@@ -58,6 +59,11 @@ export const AppRoutes: React.FC = () => {
       <Route path="/ai" element={<RequireAuth><AiAssistantPage /></RequireAuth>} />
       <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
       <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
+      {/* Confirmação da exclusão de conta, aberta pelo link do e-mail.
+          FORA do RequireAuth de propósito: quem chega sem sessão precisa ler
+          "entre para confirmar", e não ser jogado no /login sem explicação —
+          a própria página trata os três casos (sem token, sem sessão, ok). */}
+      <Route path="/excluir-conta" element={<AccountDeletionPage />} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

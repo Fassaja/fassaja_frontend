@@ -14,12 +14,39 @@ export interface PublicUser {
 }
 
 /**
- * Exclui a conta e os dados pessoais (LGPD). Irreversível — o servidor exige a
- * senha de novo, mesmo já havendo sessão. Projetos solo e tarefas pessoais são
- * apagados; o conteúdo de equipe permanece com a equipe.
+ * A prova de identidade que o servidor exige para excluir a conta.
+ *
+ * A exclusão é irreversível, então a sessão sozinha não basta — um cookie
+ * roubado não pode apagar a conta de ninguém. Qual prova vale depende da conta:
+ *
+ *   `password` — quem tem senha confirma com ela, num passo só.
+ *   `token`    — quem NÃO tem senha (entrou pelo Google e nunca definiu uma)
+ *                pede o e-mail em `requestAccountDeletion` e confirma pelo
+ *                link que chega na caixa.
+ *
+ * Por que não um ID token do Google, que seria o análogo direto: o login usa o
+ * GIS em modo REDIRECT (o Google faz um POST de navegação direto para a API),
+ * justamente porque o popup quebrava no celular e no PWA. Nesse modo este
+ * código nunca vê um token — não há o que enviar. O e-mail prova a mesma coisa
+ * e funciona em qualquer cliente.
  */
-export const deleteAccount = (password: string) =>
-  api.delete<void>('/auth/account', { password });
+export type ProvaDeExclusao = { password: string } | { token: string };
+
+/**
+ * Exclui a conta e os dados pessoais (LGPD). Projetos solo e tarefas pessoais
+ * são apagados; o conteúdo de equipe permanece com a equipe.
+ */
+export const deleteAccount = (prova: ProvaDeExclusao) =>
+  api.delete<void>('/auth/account', prova);
+
+/**
+ * Pede o e-mail que confirma a exclusão — só faz sentido para conta sem senha.
+ *
+ * A resposta é sempre a mesma e não diz se o e-mail saiu: a tela deve mostrar
+ * "se for necessário, enviamos" e parar por aí.
+ */
+export const requestAccountDeletion = () =>
+  api.post<{ message: string }>('/auth/account/delete-request', {});
 
 /**
  * Passo 1 do "esqueci minha senha": pede o e-mail com o link de redefinição.

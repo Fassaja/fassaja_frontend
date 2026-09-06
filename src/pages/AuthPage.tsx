@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, MailCheck, CheckSquare, CalendarDays, BarChart3, Sparkles, AlertTriangle } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
 import { Input } from '@/components/common/Input';
@@ -29,7 +29,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const verifiedParam = searchParams.get('verified'); // '1' ok | '0' inválido
   // Volta do login com Google quando algo deu errado. 'csrf' é separado porque
   // aponta para configuração/cookie, não para a conta de quem tentou entrar.
-  const googleParam = searchParams.get('google'); // 'erro' | 'csrf'
+  const googleParam = searchParams.get('google'); // 'erro' | 'csrf' | 'vinculo'
   const { login, register, resendVerification } = useAuth();
   const isLogin = mode === 'login';
 
@@ -241,12 +241,30 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             </div>
           )}
 
-          {googleParam && (
-            <div className="mb-6 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
-              {googleParam === 'csrf'
-                ? 'A verificação de segurança do login com Google falhou. Tente de novo; se persistir, entre com e-mail e senha.'
-                : 'Não foi possível entrar com o Google. Tente de novo ou use e-mail e senha.'}
+          {/* `vinculo` não é falha: é instrução, e por isso não usa o vermelho
+              dos outros dois. Já existe uma conta com aquele e-mail, e o Google
+              não é a autoridade daquela caixa (endereço de domínio próprio numa
+              conta Google comum) — então a API se recusa a entregar a conta só
+              porque os e-mails coincidem. Sem esta mensagem a pessoa tentaria o
+              mesmo botão para sempre, recebendo "não foi possível entrar". */}
+          {googleParam === 'vinculo' ? (
+            <div className="mb-6 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+              <strong className="block font-semibold mb-1">Já existe uma conta com esse e-mail</strong>
+              Entre com sua senha para continuar. Se não lembra dela — ou nunca definiu uma —, use{' '}
+              <Link to="/forgot-password" className="underline font-medium">
+                Esqueci minha senha
+              </Link>
+              : o link chega no seu e-mail e serve tanto para recuperar quanto para criar a primeira
+              senha.
             </div>
+          ) : (
+            googleParam && (
+              <div className="mb-6 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+                {googleParam === 'csrf'
+                  ? 'A verificação de segurança do login com Google falhou. Tente de novo; se persistir, entre com e-mail e senha.'
+                  : 'Não foi possível entrar com o Google. Tente de novo ou use e-mail e senha.'}
+              </div>
+            )
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">

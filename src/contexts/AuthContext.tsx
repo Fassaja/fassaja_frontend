@@ -89,7 +89,14 @@ interface AuthContextValue {
   changePassword: (current: string, next: string) => Promise<AuthResult>;
   updateName: (name: string) => Promise<AuthResult>;
   updateAvatar: (avatar: string | null) => Promise<AuthResult>;
-  logout: () => void;
+  /**
+   * Encerra a sessão e apaga a PII espelhada neste navegador.
+   *
+   * `redirect: false` faz a limpeza SEM navegar. Existe para a tela que conclui
+   * a exclusão de conta: ela precisa continuar visível para dizer o que
+   * aconteceu, e um `navigate('/login')` a arrancaria no meio da frase.
+   */
+  logout: (opts?: { redirect?: boolean }) => void;
   guestTaskLimit: number;
   guestTaskCount: number;
   noteGuestTask: () => void;
@@ -417,7 +424,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = (opts?: { redirect?: boolean }) => {
     // Limpa o cookie de sessão no servidor (best-effort).
     void api.post('/auth/logout', {}).catch(() => undefined);
     // Apaga toda a PII espelhada desta conta (sessão + perfil + notificações),
@@ -427,7 +434,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setScope(null);
     setAccount(null);
     updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
-    navigate('/login');
+    // A navegação é o padrão: sair de dentro do app tem de sair da tela também.
+    // Só quem já está numa tela terminal (a conclusão da exclusão) pede para
+    // ficar onde está.
+    if (opts?.redirect !== false) navigate('/login');
   };
 
   // Sessão expirada (401 num request autenticado): encerra e leva ao login.
