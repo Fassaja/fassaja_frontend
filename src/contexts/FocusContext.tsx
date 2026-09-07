@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { focusService, FocusSession } from '@/services/focusService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSessao } from '@/hooks/useSessao';
 import { useToast } from '@/contexts/ToastContext';
 import { segundosAte } from '@/utils/timer';
 import { SessaoConcluidaModal } from '@/components/focus/SessaoConcluidaModal';
@@ -48,6 +49,8 @@ export const useFocus = () => useContext(FocusContext);
  */
 export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status, isGuest } = useAuth();
+  // Identidade da sessão: a sessão de foco é dado de conta como outro qualquer.
+  const { identidade, carregar } = useSessao();
   const toast = useToast();
   const [sessao, setSessao] = useState<FocusSession | null>(null);
   const [concluida, setConcluida] = useState<FocusSession | null>(null);
@@ -57,19 +60,28 @@ export const FocusProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const sessaoRef = useRef<FocusSession | null>(null);
   sessaoRef.current = sessao;
 
-  // Ao entrar: o que está rodando? Convidado não tem servidor onde guardar.
+  /*
+   * Ao entrar: o que está rodando? Convidado não tem servidor onde guardar.
+   *
+   * Roda por IDENTIDADE, e a primeira coisa que faz é ZERAR. O cleanup antigo
+   * já descartava a resposta inicial atrasada — controle correto, agora feito
+   * pelo `carregar` —, mas a sessão JÁ CARREGADA sobrevivia ao logout: quem
+   * saísse com um foco em andamento continuava vendo o timer da conta anterior,
+   * e o modal de conclusão dela podia abrir sobre a sessão seguinte (FE-01).
+   */
   useEffect(() => {
+    setSessao(null);
+    setConcluida(null);
+    setRestante(0);
+    sessaoRef.current = null;
     if (status !== 'authed' || isGuest) return;
-    let vivo = true;
-    focusService
-      .current()
-      .then(s => vivo && setSessao(s))
+    void carregar({
+      buscar: () => focusService.current(),
+      aoReceber: setSessao,
       // Silencioso: sem sessão a tela funciona igual, só sem o timer.
-      .catch(() => vivo && setSessao(null));
-    return () => {
-      vivo = false;
-    };
-  }, [status, isGuest]);
+      aoFalhar: () => setSessao(null),
+    });
+  }, [identidade, status, isGuest, carregar]);
 
   /*
    * O intervalo só REDESENHA. O valor sai sempre de `endsAt - agora`, então

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTelaSensivel } from '@/hooks/useTelaSensivel';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, CheckCircle2, ShieldQuestion, Trash2 } from 'lucide-react';
 import { Mascot } from '@/components/mascot/Mascot';
@@ -30,7 +31,9 @@ import { useAuth } from '@/contexts/AuthContext';
 const AccountDeletionPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') ?? '';
+  // Lido uma vez: logo em seguida o token sai da barra de endereço.
+  const [token] = useState(() => searchParams.get('token') ?? '');
+  useTelaSensivel({ limparQuery: true });
   const { account, status, logout } = useAuth();
 
   const [confirm, setConfirm] = useState('');

@@ -5,6 +5,7 @@ import { PendingRequest, TeamActivityEntry, TeamMember, TeamProjectSummary, Team
 import { Task } from '@/types/task';
 import { abilitiesOf, TeamAbilities } from '@/utils/teamPermissions';
 import { buildTeamReport, TeamReport } from '@/utils/teamReport';
+import { useSessao } from '@/hooks/useSessao';
 
 export interface TeamDetail {
   team: TeamSummary | null;
@@ -68,6 +69,8 @@ export function useTeamDetail(teams: TeamSummary[], teamId: string | null): Team
   const [activity, setActivity] = useState<TeamActivityEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [geracao, setGeracao] = useState(0);
+  // Identidade da sessão: os dados de equipe são de uma conta (FE-01).
+  const { identidade, identidadeAtual } = useSessao();
 
   const team = useMemo(() => teams.find(t => t.id === teamId) ?? null, [teams, teamId]);
   const abilities = useMemo(() => abilitiesOf(team?.role), [team?.role]);
@@ -84,6 +87,9 @@ export function useTeamDetail(teams: TeamSummary[], teamId: string | null): Team
     }
 
     let cancelado = false;
+    // Carimbo do pedido: a resposta de uma equipe da conta anterior não pode
+    // preencher a tela da conta seguinte.
+    const marca = identidadeAtual();
     setLoading(true);
     setMembers([]);
     setProjects([]);
@@ -107,7 +113,7 @@ export function useTeamDetail(teams: TeamSummary[], teamId: string | null): Team
         ? teamsService.getActivity(teamId).catch(() => [] as TeamActivityEntry[])
         : Promise.resolve([] as TeamActivityEntry[]),
     ]).then(([m, p, t, r, a]) => {
-      if (cancelado) return;
+      if (cancelado || identidadeAtual() !== marca) return;
       setMembers(m);
       setProjects(p);
       setTasks(t);
@@ -119,7 +125,7 @@ export function useTeamDetail(teams: TeamSummary[], teamId: string | null): Team
     return () => {
       cancelado = true;
     };
-  }, [teamId, abilities.convida, abilities.veGestao, geracao]);
+  }, [teamId, abilities.convida, abilities.veGestao, geracao, identidade, identidadeAtual]);
 
   const refresh = useCallback(async () => {
     setGeracao(g => g + 1);

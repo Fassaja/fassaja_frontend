@@ -7,6 +7,7 @@ import {
 } from '@/services/workspacesService';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSessao } from '@/hooks/useSessao';
 import { TODOS_PROJETOS } from '@/utils/taskFilters';
 import { PedidoDoLink, areaParaOLink } from '@/utils/areaDoLink';
 import { Project } from '@/types/project';
@@ -48,18 +49,25 @@ export function useWorkspaces({
   pedidoDoLink = null,
 }: Params) {
   const { status } = useAuth();
+  // As áreas de trabalho são recorte salvo POR CONTA (FE-01).
+  const { identidade, carregar } = useSessao();
   const toast = useToast();
   const [lista, setLista] = useState<Workspace[]>([]);
   const [ativaId, setAtivaId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Zera antes de buscar: a lista da conta anterior não pode ficar na tela
+    // esperando a resposta da nova (nem sobreviver se ela falhar).
+    setLista([]);
+    setAtivaId(null);
     if (status !== 'authed') return;
-    workspacesService
-      .list()
-      .then(setLista)
+    void carregar({
+      buscar: () => workspacesService.list(),
+      aoReceber: setLista,
       // Silencioso: sem áreas a tela funciona igual, com os filtros soltos.
-      .catch(() => setLista([]));
-  }, [status]);
+      aoFalhar: () => setLista([]),
+    });
+  }, [identidade, status, carregar]);
 
   const ativa = useMemo(() => lista.find(a => a.id === ativaId) ?? null, [lista, ativaId]);
 

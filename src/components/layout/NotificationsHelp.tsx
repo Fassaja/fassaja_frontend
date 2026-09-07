@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, BellRing, Check, Smartphone, Monitor, Share } from 'lucide-react';
 import { Accordion } from '@/components/common/Accordion';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   pushService,
   pushSupported,
@@ -14,6 +15,9 @@ import {
 // notificação (Web Push). Cobre Android/computador e iPhone (PWA).
 export const NotificationsHelp: React.FC = () => {
   const toast = useToast();
+  // A inscrição de push é POR CONTA: o id entra na checagem para a conta B
+  // não ver "ativado" por causa de uma inscrição que é da conta A (FE-03).
+  const { account } = useAuth();
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [perm, setPerm] = useState<NotificationPermission | 'unsupported'>(notificationPermission());
@@ -25,13 +29,20 @@ export const NotificationsHelp: React.FC = () => {
   const iosNeedsInstall = iOS && !standalone;
 
   useEffect(() => {
-    pushService.isEnabled().then(setEnabled).catch(() => setEnabled(false));
-  }, []);
+    let vivo = true;
+    pushService
+      .isEnabled(account?.id)
+      .then(v => vivo && setEnabled(v))
+      .catch(() => vivo && setEnabled(false));
+    return () => {
+      vivo = false;
+    };
+  }, [account?.id]);
 
   const handleEnable = async () => {
     setBusy(true);
     try {
-      const ok = await pushService.enable();
+      const ok = await pushService.enable(account?.id);
       if (ok) {
         setEnabled(true);
         toast.success('Notificações ativadas neste dispositivo.');

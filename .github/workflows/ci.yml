@@ -1,6 +1,7 @@
 name: CI
 
-# Integração contínua do front-end: checagem de tipos, build e testes de unidade.
+# Integração contínua do front-end: lint, checagem de tipos, build, testes de
+# unidade e auditoria de dependências.
 on:
   push:
     branches: [main]
@@ -22,17 +23,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Ações fixadas por SHA, e não por tag: uma tag é um ponteiro móvel, e
+      # quem controla o repositório da ação pode reapontá-la para outro commit.
+      # O comentário guarda a versão legível.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
 
+      # `npm ci` roda os scripts de ciclo de vida das dependências. Não são
+      # dispensáveis aqui: o esbuild (via Vite) baixa o binário da plataforma no
+      # postinstall, e sem ele o build não acontece. A mitigação é o lockfile
+      # commitado (o que roda é sempre a mesma versão) mais o gate de auditoria
+      # abaixo — não `--ignore-scripts`, que apenas quebraria o build.
       - name: Install dependencies
         run: npm ci
+
+      # O lint só entrou no CI quando passou a existir de verdade: antes o
+      # comando falhava com "eslint: command not found".
+      - name: Lint
+        run: npm run lint
 
       # `npm run build` já roda o tsc, mas separar dá um erro mais direto
       # quando o problema é de tipos e não de bundling.
@@ -42,7 +56,20 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Suítes puras (datas, recorrência, streak, permissões de equipe…),
-      # rodadas pelo próprio Node via --experimental-strip-types.
+      # Suítes puras (datas, recorrência, streak, permissões de equipe, política
+      # de URL, identidade de sessão…), rodadas pelo próprio Node via
+      # --experimental-strip-types.
       - name: Unit tests
         run: npm test
+
+      # Gate de dependências. Só o que chega ao NAVEGADOR (--omit=dev) e só a
+      # partir de "high": ferramenta de build vulnerável é problema de CI, não
+      # do site publicado, e é tratada no passo seguinte, informativo.
+      - name: Audit (produção)
+        run: npm audit --omit=dev --audit-level=high
+
+      # Visão completa, incluindo desenvolvimento. Não derruba o CI: serve para
+      # a revisão ver o que existe sem transformar todo advisory de ferramenta
+      # em bloqueio de merge.
+      - name: Audit (completo, informativo)
+        run: npm audit || true

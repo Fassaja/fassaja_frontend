@@ -1,7 +1,7 @@
 // Relativo e com extensão, não '@/utils/url': os testes rodam em Node puro,
 // que não conhece o alias do Vite nem completa a extensão sozinho. O tsconfig
 // já liga `allowImportingTsExtensions`, então vale para tsc, Vite e Node.
-import { isInternalPath } from './url.ts';
+import { caminhoInternoSeguro } from './url.ts';
 
 /**
  * A ida ao Google: o que precisa sobreviver enquanto o app perde o controle.
@@ -25,7 +25,8 @@ import { isInternalPath } from './url.ts';
  * Duas travas, porque o destino é lido de um armazenamento que qualquer script
  * da própria origem pode escrever e vira uma NAVEGAÇÃO:
  *
- * - só caminho interno (`isInternalPath`), para não virar um open redirect;
+ * - só caminho interno, e na forma canônica de `caminhoInternoSeguro` — o que
+ *   é guardado é exatamente o que o navegador vai interpretar;
  * - prazo de validade, para um destino esquecido de semanas atrás não
  *   sequestrar um login futuro.
  */
@@ -62,7 +63,7 @@ function ler(): Registro | null {
  */
 export function marcarIdaAoGoogle(path: string): void {
   try {
-    const destino = isInternalPath(path) ? path : '/';
+    const destino = caminhoInternoSeguro(path) ?? '/';
     localStorage.setItem(KEY, JSON.stringify({ path: destino, ts: Date.now() }));
   } catch {
     /* localStorage indisponível: cai no destino padrão, sem quebrar o login */
@@ -99,6 +100,5 @@ export function consumirDestinoPosLogin(): string {
   if (!registro) return '/';
   // Revalida na LEITURA, não só na escrita: o cenário real de abuso é alguém
   // escrever direto no localStorage, sem passar pela nossa função.
-  if (!isInternalPath(registro.path)) return '/';
-  return registro.path;
+  return caminhoInternoSeguro(registro.path) ?? '/';
 }

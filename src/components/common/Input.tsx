@@ -7,12 +7,36 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode;
 }
 
+/**
+ * Campo de texto com rótulo, erro e texto de apoio.
+ *
+ * O rótulo é LIGADO ao campo por `htmlFor`/`id`. Sem esse par, o `<label>` é
+ * só um texto acima da caixa: quem usa leitor de tela ouve "campo de edição,
+ * em branco", sem saber o que digitar ali, e clicar no rótulo não leva o foco
+ * ao campo. O id vem do `useId` do React quando não é informado — assim dois
+ * campos na mesma tela nunca colidem.
+ *
+ * Erro e texto de apoio são anunciados junto pelo `aria-describedby`, e o erro
+ * marca `aria-invalid` — a cor vermelha sozinha não comunica nada a quem não a
+ * enxerga.
+ */
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, helperText, icon, className = '', ...props }, ref) => {
+  ({ label, error, helperText, icon, className = '', id, ...props }, ref) => {
+    const gerado = React.useId();
+    const inputId = id ?? gerado;
+    const erroId = `${inputId}-erro`;
+    const apoioId = `${inputId}-apoio`;
+    const descricao = [error ? erroId : null, !error && helperText ? apoioId : null]
+      .filter(Boolean)
+      .join(' ');
+
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-text-primary mb-2">
+          <label
+            htmlFor={inputId}
+            className="block text-sm font-medium text-text-primary mb-2"
+          >
             {label}
           </label>
         )}
@@ -24,6 +48,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
           <input
             ref={ref}
+            id={inputId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={descricao || undefined}
             className={`
               w-full px-4 py-2.5 border rounded-xl text-text-primary placeholder-text-soft bg-surface
               border-border focus:outline-none focus:border-primary-vibrant focus:ring-4 focus:ring-primary-light/60
@@ -36,10 +63,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && (
-          <p className="mt-1 text-xs text-danger">{error}</p>
+          <p id={erroId} className="mt-1 text-xs text-danger">
+            {error}
+          </p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-xs text-text-secondary">{helperText}</p>
+          <p id={apoioId} className="mt-1 text-xs text-text-secondary">
+            {helperText}
+          </p>
         )}
       </div>
     );

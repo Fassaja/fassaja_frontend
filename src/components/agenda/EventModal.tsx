@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useEvents } from '@/contexts/EventsContext';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { CalendarEvent } from '@/types/event';
 import { REMINDER_OPTIONS, reminderTriggerDate } from '@/utils/eventReminders';
 import { plusOneHour } from '@/utils/agendaTimeline';
@@ -58,6 +59,8 @@ export const EventModal: React.FC<EventModalProps> = ({
   const { createEvent, updateEvent, deleteEvent } = useEvents();
   const { tasks } = useTasks();
   const toast = useToast();
+  // A inscrição de push é vinculada à conta (ver services/pushService).
+  const { account } = useAuth();
 
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
@@ -140,7 +143,7 @@ export const EventModal: React.FC<EventModalProps> = ({
     setReminder(value);
     if (value && pushSupported() && Notification.permission !== 'denied') {
       pushService
-        .enable()
+        .enable(account?.id)
         .catch(() => {})
         .finally(() => setPermission(Notification.permission));
     }

@@ -4,6 +4,8 @@ import { Users, CheckCircle2, Clock, XCircle, ArrowRight, LogIn } from 'lucide-r
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { Button } from '@/components/common/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSessao } from '@/hooks/useSessao';
+import { useTelaSensivel } from '@/hooks/useTelaSensivel';
 import { invitesService } from '@/services/invitesService';
 import { InviteState } from '@/types/team';
 
@@ -11,27 +13,33 @@ const JoinPage: React.FC = () => {
   const { token = '' } = useParams();
   const navigate = useNavigate();
   const { account, isGuest } = useAuth();
+  // O estado do convite depende de QUEM está logado (já é membro? já pediu?).
+  // Por identidade, e não por `account?.id`: cobre também a sessão nova na
+  // mesma conta e descarta a resposta que chega depois de uma troca (FE-01).
+  const { identidade, carregar } = useSessao();
+  // O token do convite É o caminho desta rota: não dá para tirá-lo da URL sem
+  // tirar a página. O que dá é não deixá-lo sair no cabeçalho Referer.
+  useTelaSensivel();
 
   const [state, setState] = useState<InviteState | null>(null);
   const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(false);
   const [error, setError] = useState('');
 
-  const load = useCallback(async () => {
+  const load = useCallback(() => {
     setLoading(true);
-    try {
-      const s = await invitesService.getInviteState(token);
-      setState(s);
-    } catch {
-      setState({ valid: false, team: null, alreadyMember: false, myRequestStatus: null });
-    } finally {
-      setLoading(false);
-    }
-  }, [token, account?.id]);
+    return carregar({
+      buscar: () => invitesService.getInviteState(token),
+      aoReceber: setState,
+      aoFalhar: () =>
+        setState({ valid: false, team: null, alreadyMember: false, myRequestStatus: null }),
+      aoTerminar: () => setLoading(false),
+    });
+  }, [token, carregar]);
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [identidade, load]);
 
   /**
    * Aceita um convite NOMINAL: entra na equipe e vai direto para lá.

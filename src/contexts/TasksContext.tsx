@@ -13,6 +13,7 @@ import { guestTasksStore } from '@/services/guestTasksStore';
 import { useCelebration } from './CelebrationContext';
 import { useUser, computeStreak } from './UserContext';
 import { useAuth } from './AuthContext';
+import { useSessao } from '@/hooks/useSessao';
 import { isToday, todayISO, toISODate } from '@/utils/date';
 import { detectMilestone } from '@/utils/milestones';
 import { deriveTaskStatus } from '@/utils/taskStatus';
@@ -66,44 +67,71 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { celebrate } = useCelebration();
   const { user, recordProductiveDay } = useUser();
   const { isGuest, noteGuestTask } = useAuth();
+  // Identidade da sessão: diz de quem é cada resposta que volta (FE-01).
+  const { identidade, identidadeAtual, carregar, marcar } = useSessao();
 
-  const loadTasks = useCallback(async (silent = false) => {
-    try {
+  const loadTasks = useCallback(
+    (silent = false) => {
       if (!silent) setLoading(true);
-      // Visitante: tarefas só do navegador (sandbox local). Autenticado: API.
-      const data = isGuest ? guestTasksStore.getAll() : await tasksService.getTasks();
-      setRawTasks(data);
-      setError(null);
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [isGuest]);
+      return carregar({
+        // Visitante: tarefas só do navegador (sandbox local). Autenticado: API.
+        buscar: async () => (isGuest ? guestTasksStore.getAll() : await tasksService.getTasks()),
+        aoReceber: data => {
+          setRawTasks(data);
+          setError(null);
+        },
+        aoFalhar: err => setError(err),
+        aoTerminar: () => {
+          if (!silent) setLoading(false);
+        },
+      });
+    },
+    [isGuest, carregar],
+  );
 
-  // Recarrega ao montar e sempre que troca entre visitante/autenticado (login/logout).
+  /*
+   * Recarrega a cada troca de IDENTIDADE — login, logout, troca de conta,
+   * sessão nova na mesma conta.
+   *
+   * A dependência era só `isGuest`. Ir da conta A para a B não muda esse
+   * booleano: o efeito não rodava e a lista de A ficava na tela da B (FE-01).
+   * A limpeza vem antes da carga — o dado da conta anterior não pode esperar
+   * resposta de rede para sumir, nem sobreviver se a API falhar.
+   */
   useEffect(() => {
+    setRawTasks([]);
+    tasksRef.current = [];
+    setError(null);
     loadTasks();
-  }, [loadTasks]);
+  }, [identidade, loadTasks]);
 
   // Revalida sem sumir o conteúdo (mantém os dados atuais enquanto atualiza).
   const refresh = useCallback(() => loadTasks(true), [loadTasks]);
 
-  const createTask = useCallback(async (task: Omit<Task, 'id' | 'createdAt'>) => {
-    try {
-      const newTask = isGuest
-        ? guestTasksStore.create(task)
-        : await tasksService.createTask(task);
-      setRawTasks(prev => [...prev, newTask]);
-      if (isGuest) noteGuestTask();
-      return newTask;
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    }
-  }, [isGuest, noteGuestTask]);
+  const createTask = useCallback(
+    async (task: Omit<Task, 'id' | 'createdAt'>) => {
+      const aplicar = marcar();
+      try {
+        const newTask = isGuest
+          ? guestTasksStore.create(task)
+          : await tasksService.createTask(task);
+        // A resposta de uma mutação é dado de conta como qualquer outro: se a
+        // sessão trocou no caminho, ela não entra na tela de quem está agora.
+        aplicar(() => {
+          setRawTasks(prev => [...prev, newTask]);
+          if (isGuest) noteGuestTask();
+        });
+        return newTask;
+      } catch (err) {
+        aplicar(() => setError(err as Error));
+        throw err;
+      }
+    },
+    [isGuest, noteGuestTask, marcar],
+  );
 
   const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
+    const aplicar = marcar();
     const anterior = tasksRef.current.find(t => t.id === id);
 
     /**
@@ -124,17 +152,25 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ? guestTasksStore.update(id, updates)
         : await tasksService.updateTask(id, updates);
       if (updated) {
-        setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
+        aplicar(() => setRawTasks(prev => prev.map(t => (t.id === id ? updated : t))));
       }
       return updated;
     } catch (err) {
-      if (anterior) setRawTasks(prev => prev.map(t => (t.id === id ? anterior : t)));
-      setError(err as Error);
+      // O desfazimento carrega uma CÓPIA do estado da sessão anterior: aplicá-lo
+      // depois de uma troca de conta ressuscitaria a tarefa de A dentro da
+      // sessão de B. Um AbortController não cobriria este caminho — aqui o
+      // callback já resolveu (FE-01).
+      aplicar(() => {
+        if (anterior) setRawTasks(prev => prev.map(t => (t.id === id ? anterior : t)));
+        setError(err as Error);
+      });
       throw err;
     }
-  }, [isGuest]);
+  }, [isGuest, marcar]);
 
   const completeTask = useCallback(async (id: string) => {
+    const aplicar = marcar();
+    const marca = identidadeAtual();
     const anterior = tasksRef.current.find(t => t.id === id);
     const wasCompleted = anterior?.status === 'completed';
 
@@ -162,6 +198,10 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const updated = isGuest
         ? guestTasksStore.complete(id)
         : await tasksService.completeTask(id);
+      // A conclusão só vale para quem a pediu: se a sessão trocou enquanto o
+      // servidor respondia, nem o estado nem a comemoração/XP pertencem a
+      // quem está na tela agora (FE-01).
+      if (identidadeAtual() !== marca) return updated;
       if (updated) {
         setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
         if (!wasCompleted) {
@@ -197,31 +237,52 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch (err) {
       // Desfaz o palpite: sem isto o cartão fica riscado para sempre por uma
       // conclusão que o servidor nunca registrou — e a pessoa só descobre ao
-      // recarregar a página.
-      if (anterior) setRawTasks(prev => prev.map(t => (t.id === id ? anterior : t)));
-      setError(err as Error);
+      // recarregar a página. Só que o desfazimento vale para a sessão que fez
+      // o palpite; noutra, seria dado de conta alheia.
+      aplicar(() => {
+        if (anterior) setRawTasks(prev => prev.map(t => (t.id === id ? anterior : t)));
+        setError(err as Error);
+      });
       throw err;
     }
-  }, [tasks, celebrate, recordProductiveDay, user.dailyGoal, isGuest]);
+    // productiveDays/streakDays entram na lista porque a comemoração LÊ os dois
+    // para calcular a sequência: fora dela, o cálculo usaria o valor do render
+    // em que a função nasceu.
+  }, [
+    tasks,
+    celebrate,
+    recordProductiveDay,
+    user.dailyGoal,
+    user.productiveDays,
+    user.streakDays,
+    isGuest,
+    marcar,
+    identidadeAtual,
+  ]);
 
-  const deleteTask = useCallback(async (id: string) => {
-    try {
-      if (isGuest) guestTasksStore.remove(id);
-      else await tasksService.deleteTask(id);
-      setRawTasks(prev => prev.filter(t => t.id !== id));
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    }
-  }, [isGuest]);
+  const deleteTask = useCallback(
+    async (id: string) => {
+      const aplicar = marcar();
+      try {
+        if (isGuest) guestTasksStore.remove(id);
+        else await tasksService.deleteTask(id);
+        aplicar(() => setRawTasks(prev => prev.filter(t => t.id !== id)));
+      } catch (err) {
+        aplicar(() => setError(err as Error));
+        throw err;
+      }
+    },
+    [isGuest, marcar],
+  );
 
   const assignTask = useCallback(
     async (id: string, assigneeIds: string[], teamId?: string) => {
+      const aplicar = marcar();
       const updated = await tasksService.assignTask(id, assigneeIds, teamId);
-      setRawTasks(prev => prev.map(t => (t.id === id ? updated : t)));
+      aplicar(() => setRawTasks(prev => prev.map(t => (t.id === id ? updated : t))));
       return updated;
     },
-    [],
+    [marcar],
   );
 
 
@@ -232,60 +293,76 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // do visitante) e ela substitui a anterior no estado. Isso mantém uma fonte
   // de verdade só: nada aqui recalcula a lista de passos por conta própria.
 
-  /** Substitui a tarefa no estado; `undefined` (tarefa sumiu) não faz nada. */
-  const aplicar = useCallback((id: string, atualizada: Task | undefined) => {
-    if (!atualizada) return;
-    setRawTasks(prev => prev.map(t => (t.id === id ? atualizada : t)));
-  }, []);
+  /**
+   * Substitui a tarefa no estado; `undefined` (tarefa sumiu) não faz nada.
+   *
+   * `marca` é a identidade de quem PEDIU a mudança: a resposta que chega depois
+   * de uma troca de sessão é descartada em vez de virar estado (FE-01).
+   */
+  const aplicarNaTarefa = useCallback(
+    (id: string, atualizada: Task | undefined, marca: (efeito: () => void) => void) => {
+      if (!atualizada) return;
+      marca(() => setRawTasks(prev => prev.map(t => (t.id === id ? atualizada : t))));
+    },
+    [],
+  );
 
   const addSubtask = useCallback(
     async (taskId: string, title: string) => {
       const limpo = title.trim();
       if (!limpo) return;
-      aplicar(
+      const aplicar = marcar();
+      aplicarNaTarefa(
         taskId,
         isGuest
           ? guestTasksStore.addSubtask(taskId, limpo, MAX_SUBTASKS)
           : await tasksService.addSubtask(taskId, limpo),
+        aplicar,
       );
     },
-    [isGuest, aplicar],
+    [isGuest, aplicarNaTarefa, marcar],
   );
 
   const updateSubtask = useCallback(
     async (taskId: string, subtaskId: string, updates: { title?: string; done?: boolean }) => {
-      aplicar(
+      const aplicar = marcar();
+      aplicarNaTarefa(
         taskId,
         isGuest
           ? guestTasksStore.updateSubtask(taskId, subtaskId, updates)
           : await tasksService.updateSubtask(taskId, subtaskId, updates),
+        aplicar,
       );
     },
-    [isGuest, aplicar],
+    [isGuest, aplicarNaTarefa, marcar],
   );
 
   const removeSubtask = useCallback(
     async (taskId: string, subtaskId: string) => {
-      aplicar(
+      const aplicar = marcar();
+      aplicarNaTarefa(
         taskId,
         isGuest
           ? guestTasksStore.removeSubtask(taskId, subtaskId)
           : await tasksService.removeSubtask(taskId, subtaskId),
+        aplicar,
       );
     },
-    [isGuest, aplicar],
+    [isGuest, aplicarNaTarefa, marcar],
   );
 
   const reorderSubtasks = useCallback(
     async (taskId: string, ids: string[]) => {
-      aplicar(
+      const aplicar = marcar();
+      aplicarNaTarefa(
         taskId,
         isGuest
           ? guestTasksStore.reorderSubtasks(taskId, ids)
           : await tasksService.reorderSubtasks(taskId, ids),
+        aplicar,
       );
     },
-    [isGuest, aplicar],
+    [isGuest, aplicarNaTarefa, marcar],
   );
 
   return (

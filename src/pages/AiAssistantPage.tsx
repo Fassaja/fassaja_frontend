@@ -195,20 +195,44 @@ const AiAssistantPage: React.FC = () => {
       : !!draft.teamId
     : false;
 
+  /*
+   * Controle de concorrência da importação: o número da mais recente e como
+   * abortar a anterior. Refs porque isto não desenha nada — só decide qual
+   * resultado tem o direito de virar estado.
+   */
+  const importacaoRef = useRef(0);
+  const abortarImportacaoRef = useRef<AbortController | null>(null);
+
   const handlePickFile = () => {
     setImportError(null);
     fileInputRef.current?.click();
   };
 
-  // Lê um arquivo (PDF/DOCX/TXT/MD) e joga o texto no campo do documento.
+  /*
+   * Lê um arquivo (PDF/DOCX/TXT/MD) e joga o texto no campo do documento.
+   *
+   * Uma importação por vez, e a mais nova manda: sem isso, soltar dois
+   * arquivos seguidos punha duas extrações caras para rodar ao mesmo tempo e o
+   * resultado da PRIMEIRA podia sobrescrever o da segunda ao chegar depois
+   * (FE-06). O contador identifica a importação; o AbortController faz a
+   * anterior parar de trabalhar de verdade, e não só ser ignorada.
+   */
   const processFile = async (file: File) => {
+    const minhaImportacao = ++importacaoRef.current;
+    abortarImportacaoRef.current?.abort();
+    const controle = new AbortController();
+    abortarImportacaoRef.current = controle;
+
+    const aindaEhAMinha = () => importacaoRef.current === minhaImportacao;
+
     setExtracting(true);
     setImportError(null);
     try {
       // Carrega o extrator (e o pesado pdfjs) só na hora de importar.
       const { extractFileText } = await import('@/utils/extractFileText');
-      const text = await extractFileText(file);
-      if (!text.trim()) {
+      const resultado = await extractFileText(file, controle.signal);
+      if (!aindaEhAMinha()) return;
+      if (!resultado.texto.trim()) {
         setFileName(null);
         setImportError(
           'O arquivo foi lido, mas não encontrei texto. ' +
@@ -216,11 +240,23 @@ const AiAssistantPage: React.FC = () => {
         );
         return;
       }
-      setDocumentText(text);
+      setDocumentText(resultado.texto);
       setFileName(file.name);
+      if (resultado.truncado) {
+        const paginas = resultado.paginas;
+        setImportError(
+          paginas && paginas.lidas < paginas.total
+            ? `Documento longo: li as primeiras ${paginas.lidas} de ${paginas.total} páginas. Confira o texto antes de gerar.`
+            : 'Documento longo: o texto foi cortado no limite de leitura. Confira antes de gerar.',
+        );
+      }
     } catch (err) {
+      if (!aindaEhAMinha()) return;
       setFileName(null);
-      if (err instanceof Error && err.name === 'UnsupportedFileError') {
+      if (
+        err instanceof Error &&
+        (err.name === 'UnsupportedFileError' || err.name === 'ArquivoAcimaDoLimiteError')
+      ) {
         setImportError(err.message);
       } else {
         // O erro real ia para o lixo, deixando "não consegui ler" como única
@@ -234,7 +270,7 @@ const AiAssistantPage: React.FC = () => {
         );
       }
     } finally {
-      setExtracting(false);
+      if (aindaEhAMinha()) setExtracting(false);
     }
   };
 
