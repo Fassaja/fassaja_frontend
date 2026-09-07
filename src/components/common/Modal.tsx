@@ -21,6 +21,31 @@ const sizeClasses = {
   xl: 'max-w-4xl',
 };
 
+/**
+ * Pilha de modais abertos.
+ *
+ * Modal sobre modal existe no app (um diálogo de confirmação por cima de um
+ * formulário). Sem a pilha, o Escape fechava OS DOIS: cada instância tinha seu
+ * próprio ouvinte no window e todos disparavam no mesmo evento. Só o do topo
+ * responde.
+ */
+let pilha: symbol[] = [];
+
+const FOCAVEIS =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Diálogo modal.
+ *
+ * Semântica de diálogo de verdade: `role="dialog"` + `aria-modal` + nome
+ * acessível vindo do próprio título (`aria-labelledby`). Sem isso, o leitor de
+ * tela anuncia "grupo" e continua lendo a página inteira atrás do véu, como se
+ * nada tivesse aberto.
+ *
+ * O foco entra no painel ao abrir, fica preso nele enquanto está aberto (Tab e
+ * Shift+Tab circulam) e VOLTA para o elemento que abriu o modal ao fechar —
+ * senão quem navega por teclado é jogado para o começo do documento.
+ */
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
@@ -30,13 +55,62 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   useBodyScrollLock(isOpen);
 
+  const painelRef = React.useRef<HTMLDivElement>(null);
+  const tituloId = React.useId();
+  // Quem tinha o foco antes de abrir — é para lá que ele volta no fim.
+  const focoAnteriorRef = React.useRef<HTMLElement | null>(null);
+  const meuLugarRef = React.useRef<symbol>(Symbol('modal'));
+
   React.useEffect(() => {
     if (!isOpen) return;
+    const meuLugar = meuLugarRef.current;
+    pilha.push(meuLugar);
+    focoAnteriorRef.current = document.activeElement as HTMLElement | null;
+
+    // Foco inicial no painel, e não no primeiro campo: o leitor de tela começa
+    // pelo título do diálogo, que é o que diz onde a pessoa acabou de entrar.
+    const t = window.setTimeout(() => painelRef.current?.focus(), 0);
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      // Só o modal do topo responde.
+      if (pilha[pilha.length - 1] !== meuLugar) return;
+
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const painel = painelRef.current;
+      if (!painel) return;
+      const focaveis = Array.from(painel.querySelectorAll<HTMLElement>(FOCAVEIS)).filter(
+        el => el.offsetParent !== null || el === document.activeElement,
+      );
+      if (focaveis.length === 0) {
+        // Nada focável dentro: o Tab não pode escapar para a página atrás.
+        e.preventDefault();
+        painel.focus();
+        return;
+      }
+      const primeiro = focaveis[0];
+      const ultimo = focaveis[focaveis.length - 1];
+      const ativo = document.activeElement;
+      if (e.shiftKey && (ativo === primeiro || ativo === painel)) {
+        e.preventDefault();
+        ultimo.focus();
+      } else if (!e.shiftKey && ativo === ultimo) {
+        e.preventDefault();
+        primeiro.focus();
+      }
     };
+
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener('keydown', onKey);
+      pilha = pilha.filter(p => p !== meuLugar);
+      focoAnteriorRef.current?.focus?.();
+    };
   }, [isOpen, onClose]);
 
   return createPortal(
@@ -46,12 +120,16 @@ export const Modal: React.FC<ModalProps> = ({
           {/* Backdrop */}
           {/* Sem backdrop-blur: desfocar a viewport inteira a cada frame do fade
               derruba FPS em GPU integrada. O véu escuro sozinho dá o mesmo foco. */}
+          {/* aria-hidden: o véu é decoração. Fechar pelo clique fora continua
+              valendo para quem usa mouse; para o teclado, o caminho é o Escape
+              e o botão de fechar — por isso ele não precisa ser um controle. */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
+            aria-hidden="true"
             className="fixed inset-0 bg-scrim/75 z-[60]"
           />
 
@@ -72,23 +150,31 @@ export const Modal: React.FC<ModalProps> = ({
                 vh porque no celular a 100vh inclui a área da barra de
                 endereço. */}
             <motion.div
+              ref={painelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={tituloId}
+              tabIndex={-1}
               initial={{ scale: 0.96, y: 12 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.97, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
               transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-              className={`bg-surface rounded-2xl shadow-lg ${sizeClasses[size]} w-full max-h-[90dvh] flex flex-col`}
+              className={`bg-surface rounded-2xl shadow-lg ${sizeClasses[size]} w-full max-h-[90dvh] flex flex-col focus:outline-none`}
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}
               <div className="flex shrink-0 items-center justify-between p-6 border-b border-border">
-                <h2 className="text-xl font-bold text-text-primary">
+                <h2 id={tituloId} className="text-xl font-bold text-text-primary">
                   {title}
                 </h2>
                 <button
+                  type="button"
                   onClick={onClose}
+                  // Nome acessível: o botão só tem um ícone, e ícone não é texto.
+                  aria-label="Fechar"
                   className="p-2 hover:bg-bg-secondary rounded-lg transition-colors"
                 >
-                  <X size={20} className="text-text-secondary" />
+                  <X size={20} className="text-text-secondary" aria-hidden="true" />
                 </button>
               </div>
 

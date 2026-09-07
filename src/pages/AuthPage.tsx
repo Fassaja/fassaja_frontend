@@ -8,7 +8,7 @@ import { Button } from '@/components/common/Button';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLightOnlyScreen } from '@/contexts/ThemeContext';
-import { isInternalPath } from '@/utils/url';
+import { caminhoInternoSeguro } from '@/utils/url';
 import { marcarIdaAoGoogle } from '@/utils/postLoginRedirect';
 
 interface AuthPageProps {
@@ -23,8 +23,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   const [searchParams] = useSearchParams();
   // Só aceita caminho interno: blinda contra open redirect (mesmo que um dia
   // troquemos navigate() por window.location).
-  const rawRedirect = searchParams.get('redirect') || '/';
-  const redirectTo = isInternalPath(rawRedirect) ? rawRedirect : '/';
+  const rawRedirect = searchParams.get('redirect');
+  // Guarda a forma CANÔNICA — é ela que o navegador interpretaria. Guardar o
+  // texto cru e só "aprová-lo" deixaria a reinterpretação para depois.
+  const redirectTo = caminhoInternoSeguro(rawRedirect) ?? '/';
   const sessionExpired = searchParams.get('expired') === '1';
   const verifiedParam = searchParams.get('verified'); // '1' ok | '0' inválido
   // Volta do login com Google quando algo deu errado. 'csrf' é separado porque
@@ -97,7 +99,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
     if (isLogin) {
       const result = await login(form.email, form.password);
       setLoading(false);
-      if (result.ok) navigate(redirectTo);
+      // Revalida no ponto de uso: entre a leitura da query e o navigate existe
+      // um formulário inteiro, e o destino não pode entrar sem passar pela
+      // política de novo.
+      if (result.ok) navigate(caminhoInternoSeguro(redirectTo) ?? '/');
       else setError(result.error ?? 'Algo deu errado. Tente novamente.');
       return;
     }

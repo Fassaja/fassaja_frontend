@@ -8,6 +8,9 @@ import { api, setAuthenticated, SESSION_EXPIRED_EVENT } from '@/services/api';
 import { getProductiveDays } from '@/services/authService';
 import { guestTasksStore } from '@/services/guestTasksStore';
 import { clearAccountStorage } from '@/utils/accountStorage';
+import { identidadeDe, type Identidade } from '@/utils/identidadeDeSessao';
+import { aguardarRevogacaoPendente, revogarSessao } from '@/utils/revogacaoDeSessao';
+import { pushService } from '@/services/pushService';
 import { deveSugerirVoltarAoApp } from '@/utils/modoApp';
 import {
   consumirDestinoPosLogin,
@@ -110,6 +113,23 @@ interface AuthContextValue {
    * próximo /auth/me.
    */
   patchAccount: (campos: Partial<Account>) => void;
+  /**
+   * Identidade da sessão: conta + geração.
+   *
+   * Muda em TODA transição — login, logout, expiração, troca de conta, troca
+   * feita em outra aba — e é a chave que os provedores de dados usam para
+   * descartar a resposta de uma sessão que já não está na tela (FE-01).
+   * Ver utils/identidadeDeSessao.
+   */
+  identidade: Identidade;
+  /**
+   * A identidade vigente AGORA.
+   *
+   * Existe porque `identidade` capturada num callback congela no valor do
+   * render em que ele foi criado — e é justamente a resposta atrasada que
+   * precisa perguntar "isto ainda é da sessão que está na tela?".
+   */
+  identidadeAtual: () => Identidade;
 }
 
 const SESSION_KEY = 'fassaja_session';
@@ -146,6 +166,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // vez só e congelariam o valor do primeiro render se lessem o state direto.
   const accountRef = useRef(account);
   accountRef.current = account;
+
+  /**
+   * Geração da sessão. Cresce a cada transição, inclusive quando a conta é a
+   * MESMA: sair e entrar de novo não prova o mesmo cookie, e o que ficou em voo
+   * pertence à sessão anterior.
+   */
+  const geracaoRef = useRef(0);
+  const identidadeRef = useRef<Identidade>(identidadeDe(account?.id ?? null, 0));
+  const [identidade, setIdentidade] = useState<Identidade>(identidadeRef.current);
+
+  /**
+   * Troca a identidade AGORA (ref) e avisa a árvore (state).
+   *
+   * A ref é atualizada de forma síncrona de propósito: entre o `setAccount` e o
+   * render seguinte existe uma janela em que uma promessa pode resolver, e nessa
+   * janela a resposta antiga ainda passaria por válida.
+   */
+  const trocarIdentidade = (contaId: string | null) => {
+    geracaoRef.current += 1;
+    identidadeRef.current = identidadeDe(contaId, geracaoRef.current);
+    setIdentidade(identidadeRef.current);
+  };
+
+  /**
+   * Carimbo para uma ida ao servidor que começa agora.
+   *
+   * Guardado numa ref para ser ESTÁVEL entre renders: os provedores de dados o
+   * usam em listas de dependência, e uma função nova a cada render faria os
+   * efeitos deles recarregarem sem parar.
+   */
+  const carimbo = useRef((): Identidade => identidadeRef.current).current;
+  /** O que voltou ainda pertence à sessão que está na tela? */
+  const aindaEhAMinha = (marca: Identidade) => identidadeRef.current === marca;
 
   const [guest, setGuest] = useState<{ date: string; count: number }>(() => {
     const g = readJSON<{ date: string; count: number }>(GUEST_KEY, { date: todayISO(), count: 0 });
@@ -198,6 +251,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const adopt = (acc: Account) => {
+    // Primeiro a identidade: tudo que estava em voo pela sessão anterior morre
+    // aqui, antes de qualquer estado desta conta ser escrito.
+    trocarIdentidade(acc.id);
     setAuthenticated(true);
     // Descarta a sandbox local do visitante ao assumir uma conta real.
     guestTasksStore.clear();
@@ -222,9 +278,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fromGoogle = params.get('google') === '1';
 
     if (!account && fromGoogle) {
+      const marca = carimbo();
       api
         .get<Account>('/auth/me')
         .then(acc => {
+          // A pessoa pode ter saído (ou entrado em outra conta) enquanto o
+          // /auth/me viajava: a resposta antiga não regrava perfil nem sessão.
+          if (!aindaEhAMinha(marca)) return;
           adopt(acc);
           // Destino guardado antes de sair para o Google (ex.: veio de um link
           // protegido). Sem nada guardado, cai no Dashboard.
@@ -237,6 +297,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         })
         .catch(() => {
+          if (!aindaEhAMinha(marca)) return;
           // O cookie não chegou. Não dá para ficar no app como visitante depois
           // de a pessoa ter autorizado no Google — isso pareceria que o login
           // simplesmente não fez nada.
@@ -252,9 +313,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (account) {
       setScope(account.id); // recarga já logado: carrega os dados desta conta
+      const marca = carimbo();
       api
         .get<Account>('/auth/me')
         .then(acc => {
+          if (!aindaEhAMinha(marca)) return;
           syncAccount(acc);
           // Também no F5 estando logado — é o caminho mais percorrido, e é por
           // ele que a meta salva em outro aparelho chega até aqui.
@@ -262,16 +325,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           hydrateProductiveDays();
         })
         .catch((err: Error & { status?: number }) => {
+          if (!aindaEhAMinha(marca)) return;
           if (err.status === 401) window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
         });
     } else if (justVerified) {
+      const marca = carimbo();
       api
         .get<Account>('/auth/me')
         .then(acc => {
+          if (!aindaEhAMinha(marca)) return;
           adopt(acc);
           navigate('/', { replace: true }); // logado: entra no app e limpa o ?verified=1
         })
         .catch(() => {
+          if (!aindaEhAMinha(marca)) return;
           // O cookie de sessão não chegou (ex.: deploy cross-domain em que o link
           // de verificação não passou pelo proxy do front). Em vez de deixar a
           // pessoa presa como visitante, leva à tela de login já confirmado.
@@ -307,13 +374,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (accountRef.current) return;
       if (!idaAoGoogleEmAndamento()) return;
 
+      const marca = identidadeRef.current;
       api
         .get<Account>('/auth/me')
         .then(acc => {
+          if (identidadeRef.current !== marca) return;
           adopt(acc);
           navigate(consumirDestinoPosLogin(), { replace: true });
         })
         .catch((err: Error & { status?: number }) => {
+          if (identidadeRef.current !== marca) return;
           // 401 é resposta, não falha: o servidor afirmou que não há sessão.
           // Encerrar a espera aqui evita repetir a consulta a cada foco pelos
           // 10 minutos seguintes, sempre para ouvir a mesma coisa.
@@ -342,6 +412,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<AuthResult> => {
     try {
+      // Ordem no servidor: se há um logout ainda sem resposta, espera-se por
+      // ele. Sem isso, a revogação podia chegar DEPOIS deste login e apagar o
+      // cookie recém-criado (FE-07). Com prazo — rede pendurada não pode
+      // impedir alguém de entrar.
+      await aguardarRevogacaoPendente();
       const res = await api.post<AuthResponse>('/auth/login', { email: email.trim(), password });
       adopt(res.user);
       return { ok: true };
@@ -387,7 +462,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const changePassword = async (current: string, next: string): Promise<AuthResult> => {
     if (!account) return { ok: false, error: 'Faça login primeiro.' };
     try {
+      const marca = carimbo();
       const updated = await api.patch<Account>('/auth/password', { current, next });
+      // A resposta de uma mutação também é dado de conta: chegando depois da
+      // saída, regravaria o perfil de A por cima da sessão de B (FE-01).
+      if (!aindaEhAMinha(marca)) return { ok: false, error: 'Sessão encerrada.' };
       syncAccount(updated);
       return { ok: true };
     } catch (err) {
@@ -403,7 +482,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateName = async (name: string): Promise<AuthResult> => {
     if (!account) return { ok: false, error: 'Faça login primeiro.' };
     try {
+      const marca = carimbo();
       const updated = await api.patch<Account>('/auth/profile', { name: name.trim() });
+      // A resposta de uma mutação também é dado de conta: chegando depois da
+      // saída, regravaria o perfil de A por cima da sessão de B (FE-01).
+      if (!aindaEhAMinha(marca)) return { ok: false, error: 'Sessão encerrada.' };
       syncAccount(updated);
       return { ok: true };
     } catch (err) {
@@ -414,9 +497,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateAvatar = async (avatar: string | null): Promise<AuthResult> => {
     if (!account) return { ok: false, error: 'Faça login primeiro.' };
     try {
+      const marca = carimbo();
       const updated = avatar
         ? await api.patch<Account>('/auth/avatar', { avatar })
         : await api.delete<Account>('/auth/avatar');
+      if (!aindaEhAMinha(marca)) return { ok: false, error: 'Sessão encerrada.' };
       syncAccount(updated);
       return { ok: true };
     } catch (err) {
@@ -424,36 +509,150 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = (opts?: { redirect?: boolean }) => {
-    // Limpa o cookie de sessão no servidor (best-effort).
-    void api.post('/auth/logout', {}).catch(() => undefined);
+  /**
+   * Apaga o que é desta conta NESTE navegador. Não fala com o servidor.
+   *
+   * Separado do `logout` porque a saída local é incondicional e imediata — ela
+   * não pode ficar esperando (nem depender de) uma resposta de rede.
+   */
+  const encerrarLocalmente = (contaId?: string | null) => {
+    // A identidade primeiro: a partir daqui toda resposta em voo é descartada.
+    trocarIdentidade(null);
     // Apaga toda a PII espelhada desta conta (sessão + perfil + notificações),
     // não só o sinalizador de sessão — evita resíduo em dispositivo compartilhado.
-    clearAccountStorage(account?.id);
+    clearAccountStorage(contaId ?? accountRef.current?.id ?? null);
     setAuthenticated(false);
     setScope(null);
     setAccount(null);
     updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
+  };
+
+  const logout = (opts?: { redirect?: boolean }) => {
+    const conta = accountRef.current?.id ?? null;
+
+    /*
+     * A remoção do push começa ANTES da revogação: tirar a inscrição no
+     * servidor exige a credencial que o logout vai justamente derrubar. O
+     * desligamento local acontece de qualquer forma — inclusive se a rede
+     * falhar —, porque deixar um aparelho inscrito na conta de quem acabou de
+     * sair é o risco que se quer eliminar (FE-03).
+     */
+    const push = pushService.desligarNoLogout();
+
+    encerrarLocalmente(conta);
+
     // A navegação é o padrão: sair de dentro do app tem de sair da tela também.
     // Só quem já está numa tela terminal (a conclusão da exclusão) pede para
     // ficar onde está.
     if (opts?.redirect !== false) navigate('/login');
+
+    /*
+     * A revogação remota é uma tentativa só, em segundo plano, e o resultado
+     * não é fingido: quando ninguém confirma, a pessoa é avisada em vez de
+     * ouvir que "saiu de todos os lugares". O cookie é httpOnly — JavaScript
+     * não tem como apagá-lo daqui (FE-07).
+     */
+    void push
+      .catch(() => undefined)
+      .then(() => revogarSessao(() => api.post('/auth/logout', {})))
+      .then(resultado => {
+        if (resultado === 'sem-resposta') {
+          toast.info(
+            'Você saiu deste aparelho, mas não deu para confirmar com o servidor. ' +
+              'Se este computador for compartilhado, entre de novo mais tarde para encerrar a sessão.',
+          );
+        }
+      });
   };
 
   // Sessão expirada (401 num request autenticado): encerra e leva ao login.
   useEffect(() => {
     const handler = () => {
-      // Sem id no closure (efeito montado com []): clearAccountStorage deriva da
-      // sessão salva para apagar também o perfil/notificações espelhados.
-      clearAccountStorage();
-      setAuthenticated(false);
-      setScope(null);
-      setAccount(null);
-      updateUser({ name: 'Visitante', email: '', avatar: undefined, role: 'Conta visitante' });
+      // Sem id no closure (efeito montado com []): encerrarLocalmente deriva da
+      // ref/sessão salva para apagar também o perfil/notificações espelhados.
+      encerrarLocalmente();
+      // A sessão já morreu no servidor: não há credencial para remover a
+      // inscrição lá, mas o aparelho não pode continuar inscrito nem exibindo
+      // notificação da conta anterior.
+      void pushService.desligarNoLogout();
       navigate('/login?expired=1');
     };
     window.addEventListener(SESSION_EXPIRED_EVENT, handler);
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * A conta mudou em OUTRA aba.
+   *
+   * O cookie de sessão é compartilhado por todas as abas, mas o estado do React
+   * não: entrar como B numa aba deixava a outra mostrando os dados de A até
+   * alguém recarregar. O evento `storage` (que só dispara nas OUTRAS abas) é o
+   * SINAL — nenhuma credencial trafega por ele. Quem responde "quem está logado
+   * agora" continua sendo o servidor.
+   */
+  useEffect(() => {
+    /**
+     * A sessão desta aba ainda é a que vale neste navegador?
+     *
+     * Compara com o que está gravado — e, quando diverge, pergunta ao SERVIDOR.
+     * O localStorage é dado escrito por outra aba, não prova de identidade.
+     */
+    const conferirSessao = () => {
+      const salva = readJSON<Account | null>(SESSION_KEY, null);
+      const nestaAba = accountRef.current?.id ?? null;
+      const noArmazenamento = salva?.id ?? null;
+      if (nestaAba === noArmazenamento) return;
+
+      if (noArmazenamento === null) {
+        // A outra aba saiu. Some com os dados daqui também.
+        encerrarLocalmente(nestaAba);
+        void pushService.desligarNoLogout();
+        navigate('/login');
+        return;
+      }
+
+      const marca = carimbo();
+      api
+        .get<Account>('/auth/me')
+        .then(acc => {
+          if (aindaEhAMinha(marca)) adopt(acc);
+        })
+        .catch(() => {
+          if (aindaEhAMinha(marca)) encerrarLocalmente(nestaAba);
+        });
+    };
+
+    const aoMudarArmazenamento = (e: StorageEvent) => {
+      // key === null é um localStorage.clear() de outra aba.
+      if (e.key !== null && e.key !== SESSION_KEY) return;
+      conferirSessao();
+    };
+
+    /**
+     * Volta pelo cache de retrocesso (bfcache) ou do segundo plano no app
+     * instalado.
+     *
+     * A página é restaurada com o estado do React exatamente como estava — e é
+     * o caso em que o `storage` NÃO ajuda: ele dispara enquanto a aba está
+     * congelada e ninguém o ouve. Sem esta conferência, voltar para trás depois
+     * de sair (ou depois de entrar em outra conta noutra aba) traz a tela antiga,
+     * povoada, de volta.
+     */
+    const aoRestaurar = (e: Event) => {
+      if (e.type === 'pageshow' && !(e as PageTransitionEvent).persisted) return;
+      if (e.type === 'visibilitychange' && document.visibilityState !== 'visible') return;
+      conferirSessao();
+    };
+
+    window.addEventListener('storage', aoMudarArmazenamento);
+    window.addEventListener('pageshow', aoRestaurar);
+    document.addEventListener('visibilitychange', aoRestaurar);
+    return () => {
+      window.removeEventListener('storage', aoMudarArmazenamento);
+      window.removeEventListener('pageshow', aoRestaurar);
+      document.removeEventListener('visibilitychange', aoRestaurar);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -491,6 +690,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         noteGuestTask,
         requireAuth,
         patchAccount,
+        identidade,
+        identidadeAtual: carimbo,
       }}
     >
       {children}

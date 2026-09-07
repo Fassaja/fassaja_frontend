@@ -102,7 +102,8 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
         type="button"
         onClick={e => {
           e.stopPropagation();
-          open ? setOpen(false) : openMenu();
+          if (open) setOpen(false);
+          else openMenu();
         }}
         disabled={busy}
         aria-haspopup="menu"

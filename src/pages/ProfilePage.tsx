@@ -17,6 +17,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useTasks } from '@/hooks/useTasks';
 import { useXp } from '@/hooks/useXp';
 import { XP_PER_LEVEL } from '@/utils/xp';
+import { recusaDeDimensoes, recusaDeImagem } from '@/utils/limitesDeArquivo';
 
 // Geometria do anel de nível em volta do avatar.
 // Entrada de cada bloco da página, em cascata.
@@ -31,12 +32,27 @@ const RING_R = (RING - RING_W) / 2;
 const RING_C = 2 * Math.PI * RING_R;
 
 // Redimensiona a imagem no navegador (256x256, JPEG) para um data URL leve.
+//
+// O orçamento (bytes antes de ler, pixels antes de desenhar) vem de
+// utils/limitesDeArquivo: decodificar uma imagem de dimensões enormes aloca
+// ~4 bytes por pixel e derruba a aba antes de qualquer validação chegar (FE-06).
 function resizeImage(file: File, size = 256): Promise<string> {
   return new Promise((resolve, reject) => {
+    const recusa = recusaDeImagem(file);
+    if (recusa) {
+      reject(new Error(recusa));
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
+        const semEspaco = recusaDeDimensoes(img.width, img.height);
+        if (semEspaco) {
+          // Antes de qualquer canvas: o `drawImage` é que aloca a superfície.
+          reject(new Error(semEspaco));
+          return;
+        }
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
@@ -71,7 +87,13 @@ const ProfilePage: React.FC = () => {
   const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !file.type.startsWith('image/')) return;
+    if (!file) return;
+    const recusa = recusaDeImagem(file);
+    if (recusa) {
+      // Recusa ANTES de ler o arquivo: a mensagem já vem pronta do orçamento.
+      setAvatarMsg(recusa);
+      return;
+    }
     setAvatarMsg(null);
     setAvatarLoading(true);
     try {
@@ -79,8 +101,8 @@ const ProfilePage: React.FC = () => {
       const result = await updateAvatar(dataUrl);
       if (result.ok) toast.success('Foto atualizada!');
       else setAvatarMsg(result.error ?? 'Não foi possível enviar a foto.');
-    } catch {
-      setAvatarMsg('Não foi possível processar a imagem.');
+    } catch (err) {
+      setAvatarMsg(err instanceof Error ? err.message : 'Não foi possível processar a imagem.');
     } finally {
       setAvatarLoading(false);
     }

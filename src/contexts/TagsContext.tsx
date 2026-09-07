@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { Tag } from '@/types/tag';
 import { tagsService } from '@/services/tagsService';
 import { useAuth } from './AuthContext';
+import { useSessao } from '@/hooks/useSessao';
 
 interface TagsContextValue {
   tags: Tag[];
@@ -17,27 +18,36 @@ export const useTags = () => useContext(TagsContext);
 
 export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isGuest } = useAuth();
+  const { identidade, carregar, marcar } = useSessao();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const loadTags = useCallback(async (silent = false) => {
-    try {
+  const loadTags = useCallback(
+    (silent = false) => {
       if (!silent) setLoading(true);
-      // Tags são um recurso de conta — visitante não tem (igual a projetos).
-      const data = isGuest ? [] : await tagsService.getTags();
-      setTags(data);
-      setError(null);
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [isGuest]);
+      return carregar({
+        // Tags são um recurso de conta — visitante não tem (igual a projetos).
+        buscar: async () => (isGuest ? [] : await tagsService.getTags()),
+        aoReceber: data => {
+          setTags(data);
+          setError(null);
+        },
+        aoFalhar: err => setError(err),
+        aoTerminar: () => {
+          if (!silent) setLoading(false);
+        },
+      });
+    },
+    [isGuest, carregar],
+  );
 
+  // Por identidade, não por `isGuest`: ver ProjectsContext (FE-01).
   useEffect(() => {
+    setTags([]);
+    setError(null);
     loadTags();
-  }, [loadTags]);
+  }, [identidade, loadTags]);
 
   const refresh = useCallback(() => loadTags(true), [loadTags]);
 
@@ -45,18 +55,19 @@ export const TagsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isGuest) {
       throw new Error('Entre na sua conta para criar tags.');
     }
+    const aplicar = marcar();
     try {
       const created = await tagsService.createTag(input);
       // Mantém a lista ordenada por nome, como o backend devolve.
-      setTags(prev =>
-        [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
+      aplicar(() =>
+        setTags(prev => [...prev, created].sort((a, b) => a.name.localeCompare(b.name))),
       );
       return created;
     } catch (err) {
-      setError(err as Error);
+      aplicar(() => setError(err as Error));
       throw err;
     }
-  }, [isGuest]);
+  }, [isGuest, marcar]);
 
   return (
     <TagsContext.Provider value={{ tags, loading, error, createTag, refresh }}>

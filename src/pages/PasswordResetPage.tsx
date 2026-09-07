@@ -7,6 +7,7 @@ import { PasswordInput } from '@/components/common/PasswordInput';
 import { Button } from '@/components/common/Button';
 import { forgotPassword, resetPassword } from '@/services/authService';
 import { useLightOnlyScreen } from '@/contexts/ThemeContext';
+import { useTelaSensivel } from '@/hooks/useTelaSensivel';
 
 interface PasswordResetPageProps {
   /** 'request' = pede o e-mail; 'reset' = define a nova senha (via link). */
@@ -23,7 +24,13 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') ?? '';
+  // Lido UMA vez: logo abaixo o token sai da barra de endereço, e um segundo
+  // `searchParams.get` já não o encontraria.
+  const [token] = useState(() => searchParams.get('token') ?? '');
+  // Referrer no-referrer enquanto esta tela está aberta e, quando há token,
+  // limpeza da query depois de capturá-lo (histórico, captura de tela, link
+  // compartilhado por engano).
+  useTelaSensivel({ limparQuery: mode === 'reset' });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

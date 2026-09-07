@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, X } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   pushService,
   pushSupported,
@@ -17,6 +18,7 @@ import {
 export const AgendaNotificationBanner: React.FC = () => {
   const toast = useToast();
   const [permission, setPermission] = useState(notificationPermission());
+  const { account } = useAuth();
   const [dismissed, setDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -32,7 +34,7 @@ export const AgendaNotificationBanner: React.FC = () => {
   const handleEnable = async () => {
     setBusy(true);
     try {
-      const ok = await pushService.enable();
+      const ok = await pushService.enable(account?.id);
       if (ok) {
         setPermission('granted');
         toast.success('Notificações ativadas! Avisaremos quando um evento estiver chegando.');
