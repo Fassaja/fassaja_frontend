@@ -15,7 +15,7 @@ import {
 import { Task, TaskPriority } from '@/types/task';
 import { Project } from '@/types/project';
 import { TaskCard } from './TaskCard';
-import { EmptyState } from '@/components/common/EmptyState';
+import { TasksVazio } from './TasksVazio';
 import { useTasks } from '@/hooks/useTasks';
 import { useToast } from '@/contexts/ToastContext';
 import { combinaComProjeto } from '@/utils/taskFilters';
@@ -35,6 +35,10 @@ interface TaskBoardProps {
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   onToggleSelect?: (taskId: string) => void;
+  /** Vazio de PRIMEIRO USO: não há tarefa nenhuma para mostrar. */
+  onNewTask?: () => void;
+  /** Vazio POR FILTRO: há tarefas, mas o recorte atual esconde todas. */
+  onClearFilters?: () => void;
 }
 
 // Zona de soltar = corpo da coluna. Destaca quando há um card por cima.
@@ -104,6 +108,8 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
   selectionMode = false,
   selectedIds,
   onToggleSelect,
+  onNewTask,
+  onClearFilters,
 }) => {
   const { updateTask, completeTask } = useTasks();
   const toast = useToast();
@@ -172,13 +178,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
   };
 
   if (filtered.length === 0) {
-    return (
-      <EmptyState
-        mascotState="confused"
-        title="Nenhuma tarefa encontrada"
-        description="Ajuste seus filtros ou crie uma nova tarefa para começar"
-      />
-    );
+    return <TasksVazio total={tasks.length} onNewTask={onNewTask} onClearFilters={onClearFilters} />;
   }
 
   return (

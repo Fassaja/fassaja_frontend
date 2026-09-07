@@ -2,6 +2,7 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { PlatformTourModal } from './PlatformTourModal';
+import { AjudaDaAreaProvider } from '@/components/onboarding/AjudaDaArea';
 import { BobAssistant } from '@/components/ai/BobAssistant';
 import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +32,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const margem = collapsed ? SIDEBAR_LARGURA.conteudo.recolhida : SIDEBAR_LARGURA.conteudo.aberta;
 
   return (
+    <AjudaDaAreaProvider>
     <div className="flex min-h-screen bg-bg-main">
       <Sidebar />
       {/* A margem acompanha a barra na mesma duração e curva — se as duas
@@ -50,5 +52,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {/* Assistente flutuante — em portal, então não afeta o fluxo do layout. */}
       <BobAssistant />
     </div>
+    </AjudaDaAreaProvider>
   );
 };

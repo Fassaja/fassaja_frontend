@@ -39,23 +39,54 @@ import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 
 /**
- * Ordem do menu, em quatro blocos: o trabalho de hoje (painel, tarefas,
- * prioridades, projetos), o tempo (agenda e calendário), o que é exploratório
- * (assistente e ideias) e, por fim, o que é sobre o trabalho (equipe e
- * relatórios).
+ * O menu em quatro blocos, cada um respondendo a uma pergunta diferente: o que
+ * eu faço agora, quando as coisas acontecem, onde eu penso em voz alta e como
+ * o trabalho está indo.
+ *
+ * A divisão já estava escrita aqui em comentário e não aparecia na tela: eram
+ * onze itens seguidos, com o mesmo peso, e o olho tinha de percorrer a lista
+ * inteira toda vez. Um rótulo pequeno por bloco é barato — não acrescenta
+ * nível de navegação nem esconde nada — e transforma uma lista de onze numa
+ * escolha entre quatro.
+ *
+ * Recolhida, o rótulo não cabe em 80px e vira uma linha divisória: a mesma
+ * fronteira, dita com o que existe de espaço.
  */
-const navItems = [
-  { icon: Home, label: 'Dashboard', path: '/', free: true },
-  { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks', free: true },
-  { icon: Timer, label: 'Foco', path: '/focus', free: false },
-  { icon: Flag, label: 'Prioridades', path: '/priorities', free: false },
-  { icon: FolderOpen, label: 'Projetos', path: '/projects', free: false },
-  { icon: CalendarClock, label: 'Agenda', path: '/agenda', free: false },
-  { icon: Calendar, label: 'Calendário', path: '/calendar', free: false },
-  { icon: Sparkles, label: 'Assistente IA', path: '/ai', free: false },
-  { icon: Lightbulb, label: 'Ideias', path: '/ideas', free: false },
-  { icon: Users, label: 'Equipe', path: '/team', free: false },
-  { icon: BarChart3, label: 'Relatórios', path: '/reports', free: false },
+const navGroups: {
+  label: string;
+  items: { icon: typeof Home; label: string; path: string; free: boolean }[];
+}[] = [
+  {
+    label: 'Trabalho',
+    items: [
+      { icon: Home, label: 'Dashboard', path: '/', free: true },
+      { icon: CheckSquare, label: 'Minhas Tarefas', path: '/tasks', free: true },
+      { icon: Flag, label: 'Prioridades', path: '/priorities', free: false },
+      { icon: FolderOpen, label: 'Projetos', path: '/projects', free: false },
+      { icon: Timer, label: 'Foco', path: '/focus', free: false },
+    ],
+  },
+  {
+    label: 'Tempo',
+    items: [
+      { icon: CalendarClock, label: 'Agenda', path: '/agenda', free: false },
+      { icon: Calendar, label: 'Calendário', path: '/calendar', free: false },
+    ],
+  },
+  {
+    label: 'Explorar',
+    items: [
+      { icon: Sparkles, label: 'Assistente IA', path: '/ai', free: false },
+      { icon: Lightbulb, label: 'Ideias', path: '/ideas', free: false },
+    ],
+  },
+  {
+    label: 'Acompanhar',
+    items: [
+      { icon: Users, label: 'Equipe', path: '/team', free: false },
+      { icon: BarChart3, label: 'Relatórios', path: '/reports', free: false },
+    ],
+  },
 ];
 
 export const Sidebar: React.FC = () => {
@@ -174,7 +205,23 @@ export const Sidebar: React.FC = () => {
               rail ? 'px-3' : 'px-4'
             }`}
           >
-            {navItems.map(item => {
+            {navGroups.map((group, indiceDoGrupo) => (
+              <div
+                key={group.label}
+                className={`flex flex-col space-y-1 ${indiceDoGrupo > 0 ? 'pt-4' : ''}`}
+              >
+                {rail ? (
+                  /* Sem rótulo: só a fronteira. `aria-hidden` porque o leitor
+                     de tela já recebe o nome do grupo pelo aria-label do
+                     <div role="group"> abaixo — a linha é redundante para ele. */
+                  indiceDoGrupo > 0 && <hr aria-hidden="true" className="mx-2 mb-3 border-border" />
+                ) : (
+                  <p className="px-4 pb-1 text-[11px] font-bold uppercase tracking-wider text-text-soft">
+                    {group.label}
+                  </p>
+                )}
+                <div role="group" aria-label={group.label} className="flex flex-col space-y-1">
+            {group.items.map(item => {
               const Icon = item.icon;
               const active = isActive(item.path);
               const locked = isGuest && !item.free;
@@ -244,7 +291,9 @@ export const Sidebar: React.FC = () => {
                 <React.Fragment key={item.path}>{conteudo}</React.Fragment>
               );
             })}
-
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* Guest CTA. Recolhida vira só o botão de entrar: o cartão com duas

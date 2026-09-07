@@ -510,6 +510,23 @@ const TasksPage: React.FC = () => {
     { value: 'overdue', label: 'Atrasadas', count: tasks.filter(t => t.status === 'overdue').length, color: '#F43F5E' },
   ];
 
+  /**
+   * Desfaz TODO o recorte da tela de uma vez.
+   *
+   * Inclui o `?team=`/`?assignee=` da URL e o "Sem projeto" que vem ligado de
+   * fábrica — que é justamente o filtro que ninguém pensa em procurar, porque
+   * a pessoa não o ligou. Não mexe no lado Pessoal/Equipe: esse não é um
+   * filtro, é qual conjunto de tarefas a tela está mostrando.
+   */
+  const limparFiltros = useCallback(() => {
+    setSearchTerm('');
+    setFilterStatus('all');
+    setFilterPriority('all');
+    setFilterProject(TODOS_PROJETOS);
+    setFilterTags([]);
+    limparRecorte();
+  }, [limparRecorte]);
+
   // Só os filtros que moram no painel — a busca não entra na conta porque o
   // termo já fica visível dentro do próprio campo.
   const activeFilterCount =
@@ -942,6 +959,8 @@ const TasksPage: React.FC = () => {
               selectionMode={selectionMode}
               selectedIds={selectedIds}
               onToggleSelect={toggleSelect}
+              onNewTask={openNewTask}
+              onClearFilters={limparFiltros}
             />
           ) : (
             <TaskList
@@ -960,6 +979,8 @@ const TasksPage: React.FC = () => {
               selectionMode={selectionMode}
               selectedIds={selectedIds}
               onToggleSelect={toggleSelect}
+              onNewTask={openNewTask}
+              onClearFilters={limparFiltros}
             />
           )}
         </div>

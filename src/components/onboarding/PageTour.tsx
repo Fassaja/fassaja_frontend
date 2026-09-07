@@ -1,16 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { HelpCircle, X } from 'lucide-react';
 import { WalkthroughModal, WalkthroughStep } from '@/components/common/WalkthroughModal';
+import { useAjudaDaArea } from './AjudaDaArea';
 
 /**
- * Tutorial de boas-vindas por área.
+ * Tutorial por área — oferecido, não imposto.
  *
- * Abre automaticamente na PRIMEIRA visita de cada tela (Dashboard, Minhas
- * Tarefas, etc.), explicando "o que tem e o que faz" — no mesmo formato de
- * slideshow com mascote usado no tour da plataforma e no da IA.
+ * Antes, cada uma das oito áreas abria um slideshow de três telas por cima do
+ * conteúdo na primeira visita. Quem entrava e clicava em "Minhas Tarefas" já
+ * tinha fechado dois diálogos antes de ver a primeira tarefa, e percorrer o
+ * menu inteiro custava vinte e quatro slides — tudo antes de existir qualquer
+ * dado sobre o qual o tutorial pudesse falar. Um diálogo modal interrompe: ele
+ * rouba o foco, cobre justamente a tela que está sendo explicada e cobra uma
+ * decisão antes de a pessoa saber se quer aquilo.
  *
- * A "primeira visita" é marcada em localStorage (uma chave por área), então o
- * tutorial não reabre em F5 nem nas próximas vezes. O tour da IA continua com
- * a própria lógica (fassaja_ai_tour_seen) em AiAssistantPage.
+ * No lugar dele, uma faixa fina no topo da área, na primeira visita, que
+ * convida sem bloquear e sai com um clique. O slideshow continua existindo com
+ * o mesmo conteúdo — só passou a ser aberto por quem quer.
+ *
+ * E, principalmente, a ajuda deixou de ser de uso único: dispensada ou vista,
+ * ela continua a um clique no botão da barra superior, que é onde alguém
+ * procura ajuda no momento em que ela faz falta — e não no primeiro segundo.
+ *
+ * A marca do convite continua em `fassaja_tour_<id>_seen`, com o mesmo nome de
+ * antes de propósito: quem já tinha visto o tutorial antigo não recebe a faixa
+ * agora, como se fosse novidade.
  */
 
 export type PageTourId =
@@ -197,27 +211,72 @@ interface PageTourProps {
 
 export const PageTour: React.FC<PageTourProps> = ({ id }) => {
   const [open, setOpen] = useState(false);
+  const [convite, setConvite] = useState(false);
   const tour = PAGE_TOURS[id];
   const storageKey = `fassaja_tour_${id}_seen`;
+  const { registrar } = useAjudaDaArea();
 
-  // Abre o tutorial só na primeira visita desta área (não reabre em F5).
+  const marcarVisto = useCallback(() => {
+    try {
+      localStorage.setItem(storageKey, '1');
+    } catch {
+      /* localStorage indisponível: ignora */
+    }
+    setConvite(false);
+  }, [storageKey]);
+
+  // O convite aparece uma vez por área. Quem abrir o tutorial pelo botão da
+  // barra depois disso não faz a faixa voltar.
   useEffect(() => {
     try {
-      if (!localStorage.getItem(storageKey)) {
-        setOpen(true);
-        localStorage.setItem(storageKey, '1');
-      }
+      if (!localStorage.getItem(storageKey)) setConvite(true);
     } catch {
       /* localStorage indisponível: ignora */
     }
   }, [storageKey]);
 
+  // Enquanto esta área estiver na tela, o botão de ajuda da barra abre ESTE
+  // tutorial.
+  const abrir = useCallback(() => {
+    marcarVisto();
+    setOpen(true);
+  }, [marcarVisto]);
+
+  useEffect(() => registrar(abrir), [registrar, abrir]);
+
   return (
-    <WalkthroughModal
-      isOpen={open}
-      onClose={() => setOpen(false)}
-      title={tour.title}
-      steps={tour.steps}
-    />
+    <>
+      {convite && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-bg-secondary/60 px-3 py-2.5">
+          <HelpCircle size={18} className="shrink-0 text-text-secondary" aria-hidden="true" />
+          <p className="min-w-0 flex-1 text-sm text-text-secondary">
+            Primeira vez por aqui?{' '}
+            <button
+              type="button"
+              onClick={abrir}
+              className="font-semibold text-primary-vibrant underline underline-offset-2 transition-colors hover:text-primary-hover"
+            >
+              {tour.title.replace(/^Conhecendo /, 'Ver como funciona ')}
+            </button>
+            .
+          </p>
+          <button
+            type="button"
+            onClick={marcarVisto}
+            aria-label="Dispensar a dica desta área"
+            className="-mr-1 shrink-0 rounded-lg p-1.5 text-text-soft transition-colors hover:bg-surface hover:text-text-primary"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
+      <WalkthroughModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title={tour.title}
+        steps={tour.steps}
+      />
+    </>
   );
 };

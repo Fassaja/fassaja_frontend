@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, Plus, RefreshCw, Flame } from 'lucide-react';
+import { Search, Bell, Plus, RefreshCw, Flame, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
 import { SearchModal } from './SearchModal';
@@ -15,6 +15,7 @@ import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 import { usePageScrolled } from '@/hooks/usePageScrolled';
 import { partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
 import { Kbd } from '@/components/common/Kbd';
+import { useAjudaDaArea } from '@/components/onboarding/AjudaDaArea';
 
 interface TopbarProps {
   onNewTask?: () => void;
@@ -49,6 +50,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   const { refresh: refreshProjects } = useProjects();
   const [refreshing, setRefreshing] = useState(false);
   const { collapsed } = useSidebar();
+  // A ajuda da área atual, quando a página oferece uma. Ver <AjudaDaArea>.
+  const { disponivel: temAjuda, abrir: abrirAjuda } = useAjudaDaArea();
   const inicio = collapsed ? SIDEBAR_LARGURA.topo.recolhida : SIDEBAR_LARGURA.topo.aberta;
   const rolou = usePageScrolled();
 
@@ -211,6 +214,28 @@ export const Topbar: React.FC<TopbarProps> = ({
               onMarkAllRead={markAllRead}
             />
           </div>
+
+          {/* A ajuda da área fica aqui, e não escondida dentro de "Fale
+              conosco": o tutorial deixou de abrir sozinho na primeira visita,
+              então precisa de um lugar onde alguém o encontre no momento em
+              que a dúvida aparece. Só desenha quando a tela atual tem o que
+              explicar. */}
+          {temAjuda && (
+            <Tooltip
+              content="Como funciona esta área"
+              description="Abre o tutorial rápido da tela em que você está."
+              className="hidden sm:inline-flex"
+            >
+              <button
+                type="button"
+                aria-label="Como funciona esta área"
+                onClick={abrirAjuda}
+                className="flex w-9 h-9 sm:w-11 sm:h-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/50 hover:bg-primary-light/40 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
+              >
+                <HelpCircle size={20} />
+              </button>
+            </Tooltip>
+          )}
 
           {onNewTask && (
             <Button

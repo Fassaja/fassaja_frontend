@@ -4,9 +4,9 @@ import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { Project } from '@/types/project';
 import { TaskCard } from './TaskCard';
 import { AnimatedList } from '@/components/common/AnimatedList';
-import { EmptyState } from '@/components/common/EmptyState';
 import { isToday, isTomorrow } from '@/utils/date';
 import { combinaComProjeto } from '@/utils/taskFilters';
+import { TasksVazio } from './TasksVazio';
 
 interface TaskListProps {
   tasks: Task[];
@@ -21,6 +21,10 @@ interface TaskListProps {
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   onToggleSelect?: (taskId: string) => void;
+  /** Vazio de PRIMEIRO USO: não há tarefa nenhuma para mostrar. */
+  onNewTask?: () => void;
+  /** Vazio POR FILTRO: há tarefas, mas o recorte atual esconde todas. */
+  onClearFilters?: () => void;
 }
 
 type GroupKey = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later' | 'nodate' | 'completed';
@@ -64,6 +68,8 @@ export const TaskList: React.FC<TaskListProps> = ({
   selectionMode = false,
   selectedIds,
   onToggleSelect,
+  onNewTask,
+  onClearFilters,
 }) => {
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -91,13 +97,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   }, [filteredTasks]);
 
   if (filteredTasks.length === 0) {
-    return (
-      <EmptyState
-        mascotState="confused"
-        title="Nenhuma tarefa encontrada"
-        description="Ajuste seus filtros ou crie uma nova tarefa para começar"
-      />
-    );
+    return <TasksVazio total={tasks.length} onNewTask={onNewTask} onClearFilters={onClearFilters} />;
   }
 
   return (
