@@ -61,6 +61,33 @@ export const Modal: React.FC<ModalProps> = ({
   const focoAnteriorRef = React.useRef<HTMLElement | null>(null);
   const meuLugarRef = React.useRef<symbol>(Symbol('modal'));
 
+  /**
+   * `onClose` vive numa ref, e o efeito de foco abaixo depende SÓ de `isOpen`.
+   *
+   * Com `onClose` na lista de dependências, o efeito era desmontado e remontado
+   * sempre que o pai entregasse uma função nova — e quase todo chamador passa
+   * uma arrow inline (`onClose={() => setX(false)}`), que é nova a cada render
+   * do pai. Pior: o CreateTaskModal passa um `handleClose` declarado no corpo
+   * do componente, então ele nascia diferente A CADA TECLA digitada no título.
+   *
+   * O estrago não era desperdício de render, era o foco: a LIMPEZA do efeito
+   * devolve o foco a `focoAnteriorRef` (o botão que abriu o modal), e o efeito
+   * novo o manda para o painel. Resultado: digitava-se uma letra, o foco saía
+   * do campo, e não dava para digitar a segunda. Um formulário inteiro que
+   * aceitava exatamente um caractere.
+   *
+   * De quebra, o efeito novo gravava `focoAnteriorRef = document.activeElement`
+   * — que a essa altura já era o próprio painel —, então o "volta o foco para
+   * quem abriu" também tinha sido perdido no caminho.
+   *
+   * A ref é atualizada em todo render (efeito sem lista de dependências), então
+   * o Escape e o clique fora continuam chamando a versão mais recente.
+   */
+  const onCloseRef = React.useRef(onClose);
+  React.useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   React.useEffect(() => {
     if (!isOpen) return;
     const meuLugar = meuLugarRef.current;
@@ -76,7 +103,7 @@ export const Modal: React.FC<ModalProps> = ({
       if (pilha[pilha.length - 1] !== meuLugar) return;
 
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -111,7 +138,9 @@ export const Modal: React.FC<ModalProps> = ({
       pilha = pilha.filter(p => p !== meuLugar);
       focoAnteriorRef.current?.focus?.();
     };
-  }, [isOpen, onClose]);
+    // SÓ `isOpen`: ver a nota sobre `onCloseRef` acima. Acrescentar `onClose`
+    // aqui reintroduz o bug de "só dá para digitar uma letra".
+  }, [isOpen]);
 
   return createPortal(
     <AnimatePresence>
