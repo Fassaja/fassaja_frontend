@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   CheckSquare,
@@ -89,6 +89,26 @@ const navGroups: {
   },
 ];
 
+/**
+ * Onde o menu estava rolado, guardado FORA do React.
+ *
+ * Cada página renderiza o seu próprio <AppLayout>, então navegar troca o
+ * componente inteiro naquela posição da árvore: a Sidebar é destruída e
+ * recriada, e o `scrollTop` do <nav> volta a zero junto. O efeito para quem
+ * usa é o menu pulando para o topo toda vez que se escolhe um destino —
+ * justamente quando a pessoa acabou de rolar até ele.
+ *
+ * Uma variável de módulo sobrevive à remontagem (um `useRef` não: ele morre
+ * com o componente). Não é estado de render — ninguém precisa re-renderizar
+ * por causa dela —, então não tem por que ser `useState`.
+ *
+ * A correção de raiz é a Sidebar não remontar, o que pede <AppLayout> como
+ * rota de layout com <Outlet>. Isso mexe em todas as páginas, porque cada uma
+ * hoje passa título e ação pelo próprio AppLayout — fica para quando houver
+ * espaço para fazer direito.
+ */
+let rolagemDoMenu = 0;
+
 export const Sidebar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -111,6 +131,22 @@ export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const { account, isGuest, logout, requireAuth } = useAuth();
   const { user } = useUser();
+
+  const navRef = useRef<HTMLElement>(null);
+
+  // useLayoutEffect, e não useEffect: a posição é devolvida ANTES da pintura.
+  // Com o efeito comum dá para ver o menu no topo por um quadro antes de
+  // saltar para o lugar certo — troca um incômodo por outro.
+  useLayoutEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    el.scrollTop = rolagemDoMenu;
+    const aoRolar = () => {
+      rolagemDoMenu = el.scrollTop;
+    };
+    el.addEventListener('scroll', aoRolar, { passive: true });
+    return () => el.removeEventListener('scroll', aoRolar);
+  }, []);
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
@@ -201,6 +237,7 @@ export const Sidebar: React.FC = () => {
               modo expandido. Como filhos de uma coluna flex, os dois casos
               medem igual. */}
           <nav
+            ref={navRef}
             className={`flex flex-1 flex-col space-y-1 overflow-y-auto overflow-x-hidden ${
               rail ? 'px-3' : 'px-4'
             }`}
