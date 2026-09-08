@@ -69,13 +69,10 @@ const CalendarPage: React.FC = () => {
 
   return (
     <>
-      {/* O prazo já vem preenchido com o dia aberto na grade: quem clicou em 8
-          de outubro e pediu uma tarefa nova acabou de dizer a data. */}
       <CreateTaskModal
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
         onCreateTask={createTask}
-        initialDueDate={selectedDateStr}
       />
 
     <AppLayout
@@ -147,9 +144,13 @@ const CalendarPage: React.FC = () => {
                   <p className="text-sm text-text-secondary">
                     Nenhuma tarefa vence nesta data.
                   </p>
-                  {/* A ação que faltava. Estava a três telas de distância: sair
-                      do calendário, abrir Tarefas, criar e digitar a data que
-                      já estava selecionada aqui. */}
+                  {/* A ação que faltava: antes era preciso sair do calendário
+                      para criar qualquer coisa.
+
+                      O rótulo NÃO promete a data. O modal abre com o prazo em
+                      branco, então dizer "para este dia" seria prometer um
+                      preenchimento que não acontece — e a pessoa só descobriria
+                      depois de salvar, com a tarefa na data errada. */}
                   <Button
                     size="sm"
                     variant="secondary"
@@ -157,7 +158,7 @@ const CalendarPage: React.FC = () => {
                     onClick={() => setShowCreate(true)}
                     className="mt-4"
                   >
-                    Criar tarefa para este dia
+                    Criar uma tarefa
                   </Button>
                 </div>
               )
