@@ -33,6 +33,14 @@ interface CreateTaskModalProps {
   initialStatus?: TaskStatus;
   /** Projeto pré-selecionado (ex.: criar direto no painel de uma equipe). */
   initialProjectId?: string;
+  /**
+   * Prazo pré-preenchido, em ISO (`YYYY-MM-DD`).
+   *
+   * Quem cria uma tarefa a partir do Calendário já apontou a data ao clicar no
+   * dia; pedir que ela digite de novo o que acabou de escolher é desfazer a
+   * escolha. Continua editável no formulário — é ponto de partida, não trava.
+   */
+  initialDueDate?: string;
 }
 
 const priorityOptions: SelectableOption[] = [
@@ -62,6 +70,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   onCreateTask,
   initialStatus,
   initialProjectId,
+  initialDueDate,
 }) => {
   const { projects } = useProjects();
   const { assignTask } = useTasks();
@@ -80,8 +89,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       ...prev,
       ...(initialStatus ? { status: initialStatus } : {}),
       ...(initialProjectId ? { projectId: initialProjectId } : {}),
+      ...(initialDueDate ? { dueDate: initialDueDate } : {}),
     }));
-  }, [isOpen, initialStatus, initialProjectId]);
+  }, [isOpen, initialStatus, initialProjectId, initialDueDate]);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   // Equipe para delegar uma tarefa que não vai para projeto de equipe.

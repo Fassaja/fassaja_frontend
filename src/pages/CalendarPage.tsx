@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, FolderOpen, Plus } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { CalendarMonth } from '@/components/calendar/CalendarMonth';
 import { DayPanel } from '@/components/common/DayPanel';
 import { Mascot } from '@/components/mascot/Mascot';
 import { CalendarSkeleton } from '@/components/common/Skeletons';
+import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
+import { Button } from '@/components/common/Button';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
@@ -27,12 +29,13 @@ const PRIORITY: Record<Task['priority'], { label: string; dot: string }> = {
 const PRIORITY_ORDER: Record<Task['priority'], number> = { high: 0, medium: 1, low: 2 };
 
 const CalendarPage: React.FC = () => {
-  const { tasks, completeTask, loading } = useTasks();
+  const { tasks, completeTask, createTask, loading } = useTasks();
   const showSkeleton = useDeferredLoading(loading);
   const { projects } = useProjects();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [showCreate, setShowCreate] = useState(false);
 
   const matchesFilter = (projectId?: string) =>
     projectFilter === 'all' ||
@@ -52,8 +55,38 @@ const CalendarPage: React.FC = () => {
     .filter(t => t.dueDate === selectedDateStr)
     .sort((a, b) => rank(a) - rank(b) || PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
 
+  /**
+   * Quantas tarefas do dia o FILTRO DE PROJETO está escondendo.
+   *
+   * O painel dizia "Nenhuma tarefa vence nesta data" mesmo quando havia três,
+   * apagadas pelo chip de projeto ligado logo acima na mesma tela. As duas
+   * situações pedem coisas opostas: uma pede criar, a outra pede desfazer o
+   * filtro. Anunciar a primeira quando é a segunda manda a pessoa duplicar
+   * uma tarefa que ela já tem.
+   */
+  const escondidasPeloFiltro =
+    tasks.filter(t => t.dueDate === selectedDateStr).length - tasksForSelectedDate.length;
+
   return (
-    <AppLayout title="Calendário" subtitle="Os prazos das suas tarefas, mês a mês.">
+    <>
+      {/* O prazo já vem preenchido com o dia aberto na grade: quem clicou em 8
+          de outubro e pediu uma tarefa nova acabou de dizer a data. */}
+      <CreateTaskModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreateTask={createTask}
+        initialDueDate={selectedDateStr}
+      />
+
+    <AppLayout
+      title="Calendário"
+      subtitle="Os prazos das suas tarefas, mês a mês."
+      /* A tela não tinha ação nenhuma — era a única do app assim. Dava para
+         ver que o dia 8 estava livre e não havia o que fazer a respeito sem
+         sair daqui, voltar para Tarefas e digitar a data à mão. */
+      onNewTask={() => setShowCreate(true)}
+      actionLabel="Nova tarefa"
+    >
       <PageTour id="calendar" />
       {loading ? (showSkeleton ? <CalendarSkeleton /> : null) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -83,13 +116,51 @@ const CalendarPage: React.FC = () => {
               setSelectedDate(now);
             }}
             empty={
-              <div className="flex flex-col items-center text-center py-6">
-                <Mascot state="happy" size="sm" animate />
-                <p className="text-text-primary font-semibold mt-3">Sem prazos</p>
-                <p className="text-text-secondary text-sm">
-                  Nenhuma tarefa vence nesta data.
-                </p>
-              </div>
+              escondidasPeloFiltro > 0 ? (
+                /* Sem mascote: não é o vazio de quem está começando, é um aviso
+                   de que a própria tela escondeu o que a pessoa procura. */
+                <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-bg-secondary/50 px-4 py-6 text-center">
+                  <FolderOpen size={22} className="text-text-secondary" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm font-semibold text-text-primary">
+                      {escondidasPeloFiltro === 1
+                        ? '1 tarefa vence nesta data'
+                        : `${escondidasPeloFiltro} tarefas vencem nesta data`}
+                    </p>
+                    <p className="mt-0.5 text-sm text-text-secondary">
+                      O filtro de projeto está escondendo{' '}
+                      {escondidasPeloFiltro === 1 ? 'ela' : 'todas'}.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setProjectFilter('all')}
+                    className="text-sm font-semibold text-primary-vibrant underline underline-offset-2 transition-colors hover:text-primary-hover"
+                  >
+                    Ver todos os projetos
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center py-6 text-center">
+                  <Mascot state="happy" size="sm" animate />
+                  <p className="mt-3 font-semibold text-text-primary">Sem prazos</p>
+                  <p className="text-sm text-text-secondary">
+                    Nenhuma tarefa vence nesta data.
+                  </p>
+                  {/* A ação que faltava. Estava a três telas de distância: sair
+                      do calendário, abrir Tarefas, criar e digitar a data que
+                      já estava selecionada aqui. */}
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    icon={<Plus size={15} />}
+                    onClick={() => setShowCreate(true)}
+                    className="mt-4"
+                  >
+                    Criar tarefa para este dia
+                  </Button>
+                </div>
+              )
             }
           >
               <ul className="space-y-3">
@@ -166,6 +237,7 @@ const CalendarPage: React.FC = () => {
       </div>
       )}
     </AppLayout>
+    </>
   );
 };
 

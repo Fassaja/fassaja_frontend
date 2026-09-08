@@ -80,6 +80,12 @@ const ROW = 'grid grid-cols-7 gap-1 sm:gap-1.5';
  *
  * Sem animação de entrada nas células: 42 elementos animando a cada troca de
  * mês faziam a grade tremer em vez de assentar.
+ *
+ * - Os dias do mês VIZINHO recuam por cor, não por opacidade. `opacity-40`
+ *   sobre o número dava 1,74:1 no tema claro e 2,52:1 no escuro — e são
+ *   botões, que precisam de 4,5:1. Subir a opacidade não salvava (2,40 e
+ *   3,98); o `text-soft` cheio dá 5,18:1 e 8,57:1 e continua recuando diante
+ *   do `text-primary` dos dias do mês.
  */
 export const MonthGrid: React.FC<MonthGridProps> = ({
   month,
@@ -234,6 +240,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
               const isToday = iso === todayISO;
               const isSelected = iso === selectedISO;
               const hasAlert = markers.some(m => m.alert);
+              const alertCount = markers.filter(m => m.alert).length;
               const extra = markers.length - MAX_DOTS;
 
               return (
@@ -250,12 +257,28 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                   onFocus={() => setFocusISO(iso)}
                   aria-current={isToday ? 'date' : undefined}
                   aria-selected={isSelected}
+                  /*
+                   * O atraso entra no RÓTULO, e não só na cor da célula.
+                   *
+                   * A célula vencida ganhava borda e fundo avermelhados e
+                   * pontos vermelhos — três sinais, todos a mesma cor. Quem usa
+                   * leitor de tela ouvia "8 de outubro, 3 tarefas" e perdia
+                   * exatamente a informação que faz esta tela existir; quem não
+                   * distingue vermelho via um dia igual aos outros.
+                   *
+                   * Só o Calendário marca `alert` (a Agenda não tem prazo a
+                   * vencer), por isso a palavra pode ser fixa aqui.
+                   */
                   aria-label={`${date.toLocaleDateString('pt-BR', {
                     day: 'numeric',
                     month: 'long',
                   })}${isToday ? ', hoje' : ''}${
                     markers.length
                       ? `, ${markers.length} ${noun}${markers.length === 1 ? '' : 's'}`
+                      : ''
+                  }${
+                    alertCount
+                      ? `, ${alertCount} atrasada${alertCount === 1 ? '' : 's'}`
                       : ''
                   }`}
                   className={`h-14 sm:h-16 px-1 pt-1.5 pb-1 rounded-xl border flex flex-col items-center justify-start gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-vibrant focus-visible:ring-offset-1 focus-visible:ring-offset-surface ${
@@ -264,7 +287,7 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                       : hasAlert && !outside
                       ? 'border-danger/25 bg-danger/5 hover:bg-danger/10'
                       : 'border-transparent hover:bg-bg-secondary hover:border-border'
-                  } ${outside ? 'opacity-40' : ''}`}
+                  }`}
                 >
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm tabular-nums transition-colors ${
@@ -281,7 +304,15 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
                   </span>
 
                   {markers.length > 0 && (
-                    <span className="flex items-center gap-0.5 leading-none">
+                    /* A atenuação do mês vizinho ficou SÓ nos pontos, que são
+                       enfeite de contexto. O número do dia é conteúdo e é
+                       clicável — ele agora se apoia no token `text-soft`, que
+                       recua sozinho sem cair abaixo do contraste mínimo. */
+                    <span
+                      className={`flex items-center gap-0.5 leading-none ${
+                        outside ? 'opacity-60' : ''
+                      }`}
+                    >
                       {markers.slice(0, MAX_DOTS).map((m, i) => (
                         <span
                           key={i}
