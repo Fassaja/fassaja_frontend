@@ -268,6 +268,19 @@ export const TeamShell: React.FC = () => {
       ) : (
         team && (
           <div>
+            {/* No celular o Topbar esconde o título inteiro (`hidden sm:block`)
+                — e o seletor de equipe mora no título. Sem esta linha, quem
+                está em mais de uma equipe não tinha como trocar de equipe no
+                telefone: via sempre a primeira, sem sinal de que havia outras. */}
+            <div className="mb-4 text-lg font-bold text-text-primary sm:hidden">
+              <TeamSwitcher
+                teams={teams}
+                atual={team}
+                onSelecionar={id => navigate(`/team/${id}${aba.slug ? `/${aba.slug}` : ''}`)}
+                onCriar={() => setShowCreate(true)}
+              />
+            </div>
+
             {/* Abas com sublinhado, e não pílulas: a navegação da área não pode
                 pesar mais que o conteúdo dela. */}
             <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-border">
