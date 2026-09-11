@@ -32,7 +32,7 @@ export function todayISO(): string {
   return toISODate(new Date());
 }
 
-const MESES_ABREV = [
+export const MESES_ABREV = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
   'jul', 'ago', 'set', 'out', 'nov', 'dez',
 ];

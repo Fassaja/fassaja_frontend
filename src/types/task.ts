@@ -46,6 +46,13 @@ export interface Task {
    */
   teamId?: string;
   dueDate?: string;
+  /** Dia local em que a tarefa começa. Só o cronograma da equipe pede por ele. */
+  startDate?: string;
+  /**
+   * A tarefa desta equipe que precisa fechar antes desta. Só o id: se ela
+   * ainda bloqueia é derivado aqui, da lista da equipe (ver utils/teamSchedule).
+   */
+  dependsOnId?: string;
   createdAt: string;
   completedAt?: string;
   /**
