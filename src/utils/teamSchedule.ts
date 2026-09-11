@@ -202,19 +202,27 @@ export function rotuloDaLinha(row: Pick<ScheduleRow, 'start' | 'end' | 'marco' |
   return rotuloDoIntervalo(row.start, row.end);
 }
 
-/**
- * Marcas do cabeçalho compacto: o primeiro dia de cada semana, pulando
- * semanas até caberem no máximo `max` rótulos numa trilha estreita.
- */
-export function marcasDe(days: string[], weeks: ScheduleWeek[], max = 5): { col: number; label: string }[] {
+/** As colunas onde começa uma semana inteira (segundas). A semana cortada do início fica de fora. */
+export function segundasDe(weeks: ScheduleWeek[]): number[] {
   const inicios: number[] = [];
   let col = 0;
   for (const w of weeks) {
     inicios.push(col);
     col += w.span;
   }
-  const passo = Math.max(1, Math.ceil(inicios.length / max));
-  return inicios
+  // A primeira coluna só é segunda se a semana for inteira; sem isso o
+  // rótulo "4 set" de uma sexta colidia com o "7 set" da segunda seguinte.
+  return weeks[0]?.span === 7 ? inicios : inicios.slice(1);
+}
+
+/**
+ * Rótulos do cabeçalho compacto: as segundas, pulando semanas até caberem
+ * no máximo `max` numa trilha estreita.
+ */
+export function marcasDe(days: string[], weeks: ScheduleWeek[], max = 5): { col: number; label: string }[] {
+  const segundas = segundasDe(weeks);
+  const passo = Math.max(1, Math.ceil(segundas.length / max));
+  return segundas
     .filter((_, i) => i % passo === 0)
     .map(c => ({ col: c, label: rotuloDoIntervalo(days[c], days[c]) }));
 }
