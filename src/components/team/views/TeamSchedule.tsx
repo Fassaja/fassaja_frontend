@@ -8,6 +8,7 @@ import { deriveTaskStatus } from '@/utils/taskStatus';
 import { buildTeamSchedule } from '@/utils/teamSchedule';
 import { Panel } from '../TeamUI';
 import { TeamGantt } from '../TeamGantt';
+import { TeamGanttCompacto } from '../TeamGanttCompacto';
 import { TeamTaskDialog } from '../TeamTaskDialog';
 
 interface Props {
@@ -96,7 +97,15 @@ export const TeamSchedule: React.FC<Props> = ({ detail }) => {
           title="Linha do tempo"
           action={semData && <span className="text-xs text-text-secondary">{semData}</span>}
         >
-          <TeamGantt schedule={schedule} members={members} onOpen={t => setAberta(t.id)} />
+          {/* Dois desenhos da mesma projeção. No celular o grid vira "cinco
+              dias e uma rolagem"; o compacto põe o tempo embaixo do título,
+              na largura toda. */}
+          <div className="hidden sm:block">
+            <TeamGantt schedule={schedule} members={members} onOpen={t => setAberta(t.id)} />
+          </div>
+          <div className="sm:hidden">
+            <TeamGanttCompacto schedule={schedule} members={members} onOpen={t => setAberta(t.id)} />
+          </div>
         </Panel>
       )}
     </div>

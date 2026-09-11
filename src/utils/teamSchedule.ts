@@ -102,14 +102,15 @@ export function semanasDe(days: string[]): ScheduleWeek[] {
     const [y, m, d] = (days[i] ?? '').split('-').map(Number);
     const segunda = i < days.length && new Date(y, m - 1, d).getDay() === 1;
     if ((segunda && i > inicio) || i === days.length) {
-      if (i > inicio) semanas.push({ label: rotuloDaSemana(days[inicio], days[i - 1]), span: i - inicio });
+      if (i > inicio) semanas.push({ label: rotuloDoIntervalo(days[inicio], days[i - 1]), span: i - inicio });
       inicio = i;
     }
   }
   return semanas;
 }
 
-function rotuloDaSemana(de: string, ate: string): string {
+/** "8 – 12 set", "29 set – 5 out", ou só "11 set" quando é um dia. */
+export function rotuloDoIntervalo(de: string, ate: string): string {
   const [, dm, dd] = de.split('-').map(Number);
   const [, am, ad] = ate.split('-').map(Number);
   if (de === ate) return `${dd} ${MESES_ABREV[dm - 1]}`;
@@ -189,6 +190,33 @@ export function buildTeamSchedule(
     todayCol: days.indexOf(today),
     semData: tasks.length - comData.length,
   };
+}
+
+/**
+ * As datas de uma linha, escritas — para onde a barra não cabe (o celular).
+ * Marco é só o dia; barra aberta diz desde quando.
+ */
+export function rotuloDaLinha(row: Pick<ScheduleRow, 'start' | 'end' | 'marco' | 'abertoNoFim'>): string {
+  if (row.marco) return rotuloDoIntervalo(row.start, row.start);
+  if (row.abertoNoFim) return `desde ${rotuloDoIntervalo(row.start, row.start)}`;
+  return rotuloDoIntervalo(row.start, row.end);
+}
+
+/**
+ * Marcas do cabeçalho compacto: o primeiro dia de cada semana, pulando
+ * semanas até caberem no máximo `max` rótulos numa trilha estreita.
+ */
+export function marcasDe(days: string[], weeks: ScheduleWeek[], max = 5): { col: number; label: string }[] {
+  const inicios: number[] = [];
+  let col = 0;
+  for (const w of weeks) {
+    inicios.push(col);
+    col += w.span;
+  }
+  const passo = Math.max(1, Math.ceil(inicios.length / max));
+  return inicios
+    .filter((_, i) => i % passo === 0)
+    .map(c => ({ col: c, label: rotuloDoIntervalo(days[c], days[c]) }));
 }
 
 /** A cor da barra: a do projeto, ou o cinza das soltas. */
