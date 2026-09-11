@@ -77,3 +77,10 @@ export interface Task {
   /** IDs das tags a aplicar — usado só no create/update (não vem da API). */
   tagIds?: string[];
 }
+
+/**
+ * O que o PATCH aceita além dos campos da tarefa: `dependsOnId: null` desfaz
+ * a dependência. Na leitura o campo nunca é nulo — vem omitido — e é por isso
+ * que `Task` não o declara assim.
+ */
+export type TaskUpdate = Omit<Partial<Task>, 'dependsOnId'> & { dependsOnId?: string | null };

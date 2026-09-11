@@ -1,4 +1,4 @@
-import { Task } from '@/types/task';
+import { Task, TaskUpdate } from '@/types/task';
 import { api } from './api';
 
 export const tasksService = {
@@ -14,7 +14,7 @@ export const tasksService = {
     return api.post<Task>('/tasks', task);
   },
 
-  async updateTask(id: string, updates: Partial<Task>): Promise<Task | undefined> {
+  async updateTask(id: string, updates: TaskUpdate): Promise<Task | undefined> {
     return api.patch<Task>(`/tasks/${id}`, updates);
   },
 
