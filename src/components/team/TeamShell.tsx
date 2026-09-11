@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { LayoutDashboard, ListChecks, LogOut, Settings2, UserPlus, Users } from 'lucide-react';
+import { GanttChart, LayoutDashboard, ListChecks, LogOut, Settings2, UserPlus, Users } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { Modal } from '@/components/common/Modal';
@@ -20,6 +20,7 @@ import { RoleBadge } from './TeamUI';
 import { TeamSwitcher } from './TeamSwitcher';
 import { InviteDialog } from './InviteDialog';
 import { TeamOverview } from './views/TeamOverview';
+import { TeamSchedule } from './views/TeamSchedule';
 import { TeamMyWork } from './views/TeamMyWork';
 import { TeamPeople } from './views/TeamPeople';
 import { TeamManage } from './views/TeamManage';
@@ -27,6 +28,9 @@ import { TeamManage } from './views/TeamManage';
 /** As abas da área, na ordem em que a pergunta aparece na cabeça de quem entra. */
 const ABAS = [
   { slug: '', label: 'Painel', icon: LayoutDashboard, gestao: false },
+  // Logo depois de "onde" vem "quando". Todo membro vê; editar é decidido
+  // pela tarefa, não pela aba.
+  { slug: 'cronograma', label: 'Cronograma', icon: GanttChart, gestao: false },
   { slug: 'meu-trabalho', label: 'Meu trabalho', icon: ListChecks, gestao: false },
   { slug: 'pessoas', label: 'Pessoas', icon: Users, gestao: false },
   { slug: 'gestao', label: 'Gestão', icon: Settings2, gestao: true },
@@ -174,6 +178,8 @@ export const TeamShell: React.FC = () => {
   const conteudo = () => {
     if (!team) return null;
     switch (aba.slug) {
+      case 'cronograma':
+        return <TeamSchedule detail={detail} />;
       case 'meu-trabalho':
         return <TeamMyWork detail={detail} userId={userId ?? ''} />;
       case 'pessoas':

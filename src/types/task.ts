@@ -46,6 +46,13 @@ export interface Task {
    */
   teamId?: string;
   dueDate?: string;
+  /** Dia local em que a tarefa começa. Só o cronograma da equipe pede por ele. */
+  startDate?: string;
+  /**
+   * A tarefa desta equipe que precisa fechar antes desta. Só o id: se ela
+   * ainda bloqueia é derivado aqui, da lista da equipe (ver utils/teamSchedule).
+   */
+  dependsOnId?: string;
   createdAt: string;
   completedAt?: string;
   /**
@@ -70,3 +77,10 @@ export interface Task {
   /** IDs das tags a aplicar — usado só no create/update (não vem da API). */
   tagIds?: string[];
 }
+
+/**
+ * O que o PATCH aceita além dos campos da tarefa: `dependsOnId: null` desfaz
+ * a dependência. Na leitura o campo nunca é nulo — vem omitido — e é por isso
+ * que `Task` não o declara assim.
+ */
+export type TaskUpdate = Omit<Partial<Task>, 'dependsOnId'> & { dependsOnId?: string | null };

@@ -1,4 +1,5 @@
-import { Task } from '@/types/task';
+import type { Task, TaskUpdate } from '@/types/task';
+import { aplicarAtualizacao } from '@/utils/taskUpdate';
 
 // Sandbox local do visitante: tarefas vivem só no navegador (não tocam o backend).
 // Isolamento total — visitante nunca vê dados de ninguém.
@@ -46,14 +47,14 @@ export const guestTasksStore = {
     return task;
   },
 
-  update(id: string, updates: Partial<Task>): Task | undefined {
+  update(id: string, updates: TaskUpdate): Task | undefined {
     const tasks = readRaw();
     const idx = tasks.findIndex(t => t.id === id);
     if (idx === -1) return undefined;
     let completedAt = tasks[idx].completedAt;
     if (updates.status === 'completed') completedAt = new Date().toISOString();
     else if (updates.status) completedAt = undefined;
-    const merged: Task = { ...tasks[idx], ...updates, completedAt };
+    const merged: Task = { ...aplicarAtualizacao(tasks[idx], updates), completedAt };
     tasks[idx] = merged;
     write(tasks);
     return merged;

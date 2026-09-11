@@ -7,7 +7,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Task } from '@/types/task';
+import { Task, TaskUpdate } from '@/types/task';
+import { aplicarAtualizacao } from '@/utils/taskUpdate';
 import { tasksService } from '@/services/tasksService';
 import { guestTasksStore } from '@/services/guestTasksStore';
 import { useCelebration } from './CelebrationContext';
@@ -24,7 +25,7 @@ interface TasksContextValue {
   loading: boolean;
   error: Error | null;
   createTask: (task: Omit<Task, 'id' | 'createdAt'>) => Promise<Task>;
-  updateTask: (id: string, updates: Partial<Task>) => Promise<Task | undefined>;
+  updateTask: (id: string, updates: TaskUpdate) => Promise<Task | undefined>;
   completeTask: (id: string) => Promise<Task | undefined>;
   deleteTask: (id: string) => Promise<void>;
   assignTask: (id: string, assigneeIds: string[], teamId?: string) => Promise<Task>;
@@ -130,7 +131,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [isGuest, noteGuestTask, marcar],
   );
 
-  const updateTask = useCallback(async (id: string, updates: Partial<Task>) => {
+  const updateTask = useCallback(async (id: string, updates: TaskUpdate) => {
     const aplicar = marcar();
     const anterior = tasksRef.current.find(t => t.id === id);
 
@@ -144,7 +145,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
      * prazo), e substituir a tarefa inteira apagaria o resto.
      */
     if (anterior) {
-      setRawTasks(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+      setRawTasks(prev => prev.map(t => (t.id === id ? aplicarAtualizacao(t, updates) : t)));
     }
 
     try {

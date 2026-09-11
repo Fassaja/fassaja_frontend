@@ -54,6 +54,7 @@ const emptyForm = {
   status: 'pending' as TaskStatus,
   projectId: '',
   dueDate: '',
+  startDate: '',
 };
 
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
@@ -147,6 +148,13 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       setError('Você não tem permissão para criar tarefas neste projeto de equipe.');
       return;
     }
+    // A mesma regra do servidor, antes de ir até ele — contra o prazo que vai
+    // valer, que pode ter vindo do texto ("sexta").
+    const prazo = interpretado.dueDate ?? formData.dueDate;
+    if (teamProject && formData.startDate && prazo && formData.startDate > prazo) {
+      setError('O início não pode ser depois do prazo.');
+      return;
+    }
 
     try {
       setLoading(true);
@@ -165,6 +173,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         status: formData.status,
         projectId: formData.projectId || undefined,
         dueDate: interpretado.dueDate ?? formData.dueDate ?? undefined,
+        // Só com projeto de equipe: é o cronograma que lê o início.
+        startDate: teamProject && formData.startDate ? formData.startDate : undefined,
         tagIds: tagsFinais.length ? tagsFinais : undefined,
       });
       // Em projeto de equipe, já nasce com os responsáveis escolhidos.
@@ -243,6 +253,16 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             três que a pessoa realmente responde ao criar — como controles do
             tamanho da resposta, não como três campos de formulário. */}
         <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border">
+          {/* Início, só em projeto de equipe — é o cronograma que o lê. */}
+          {teamProject && (
+            <DatePicker
+              value={formData.startDate}
+              onChange={v => set('startDate', v)}
+              placeholder="Sem início"
+              disabled={loading}
+              size="sm"
+            />
+          )}
           <DatePicker
             value={formData.dueDate}
             onChange={v => set('dueDate', v)}

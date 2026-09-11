@@ -119,6 +119,7 @@ export const TeamTaskDialog: React.FC<Props> = ({
       <EditTaskModal
         isOpen={!!editando}
         task={editando ?? undefined}
+        podeEncadear={podeGerenciar}
         onClose={() => setEditando(null)}
         onUpdateTask={async (id, updates) => {
           const atualizada = await updateTask(id, updates);
