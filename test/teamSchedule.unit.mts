@@ -9,6 +9,7 @@ import {
   marcasDe,
   MAX_DIAS,
   rotuloDaLinha,
+  segundasDe,
   semanasDe,
   somarDias,
 } from '../src/utils/teamSchedule.ts';
@@ -162,7 +163,8 @@ check('diferencaDias conta dias de calendário', diferencaDias('2026-09-01', '20
 {
   const s = buildTeamSchedule([], projetos, HOJE);
   const m = marcasDe(s.days, s.weeks);
-  check('marcas: uma por semana quando cabem', m.length === 5 && m[0].col === 0 && m[1].col === 3 && m[1].label === '7 set');
+  check('marcas: só as segundas, sem a semana cortada do início', m.length === 4 && m[0].col === 3 && m[0].label === '7 set' && m[3].label === '28 set');
+  check('segundas: uma por semana inteira', segundasDe(s.weeks).join() === '3,10,17,24');
   const longo = buildTeamSchedule([t({ projectId: 'p1', startDate: '2026-09-01', dueDate: '2027-06-01' })], projetos, HOJE);
   const ml = marcasDe(longo.days, longo.weeks);
   check('marcas: com 120 dias, pula semanas para caber em 5', ml.length <= 5 && ml.length >= 3);
