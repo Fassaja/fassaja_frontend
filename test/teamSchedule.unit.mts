@@ -6,7 +6,9 @@
 import {
   buildTeamSchedule,
   diferencaDias,
+  marcasDe,
   MAX_DIAS,
+  rotuloDaLinha,
   semanasDe,
   somarDias,
 } from '../src/utils/teamSchedule.ts';
@@ -154,6 +156,19 @@ check('diferencaDias conta dias de calendário', diferencaDias('2026-09-01', '20
   check('semana inteira começa na segunda', w[1].span === 7 && w[1].label === '7 – 13 set');
   check('semana que cruza o mês diz os dois meses (e a última é cortada na janela)', w[4].label === '28 set – 2 out' && w[4].span === 5);
   check('semanasDe de um dia só', semanasDe(['2026-09-11'])[0].label === '11 set');
+}
+
+// --- o compacto: rótulos e marcas ------------------------------------------
+{
+  const s = buildTeamSchedule([], projetos, HOJE);
+  const m = marcasDe(s.days, s.weeks);
+  check('marcas: uma por semana quando cabem', m.length === 5 && m[0].col === 0 && m[1].col === 3 && m[1].label === '7 set');
+  const longo = buildTeamSchedule([t({ projectId: 'p1', startDate: '2026-09-01', dueDate: '2027-06-01' })], projetos, HOJE);
+  const ml = marcasDe(longo.days, longo.weeks);
+  check('marcas: com 120 dias, pula semanas para caber em 5', ml.length <= 5 && ml.length >= 3);
+  check('rótulo da linha: barra', rotuloDaLinha({ start: '2026-09-08', end: '2026-09-12', marco: false, abertoNoFim: false }) === '8 – 12 set');
+  check('rótulo da linha: marco é só o dia', rotuloDaLinha({ start: '2026-09-20', end: '2026-09-20', marco: true, abertoNoFim: false }) === '20 set');
+  check('rótulo da linha: aberta diz desde quando', rotuloDaLinha({ start: '2026-09-09', end: HOJE, marco: false, abertoNoFim: true }) === 'desde 9 set');
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

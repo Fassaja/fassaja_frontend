@@ -42,12 +42,29 @@ export const TeamGantt: React.FC<Props> = ({ schedule, members, onOpen }) => {
   const { days, weeks, groups, todayCol } = schedule;
   const rolagem = useRef<HTMLDivElement>(null);
 
-  // Cai em "hoje", não em janeiro: a janela abre uma semana antes, e com um
-  // plano longo a coluna de hoje ficaria fora da tela à primeira vista.
+  /**
+   * Cai em "hoje", não em janeiro: a janela abre uma semana antes, e com um
+   * plano longo a coluna de hoje ficaria fora da tela à primeira vista.
+   *
+   * Pelo ResizeObserver, e não só no mount: a página entra animada, e no
+   * primeiro `useEffect` o contêiner ainda não tem largura — `scrollLeft`
+   * num elemento sem largura vira zero e a tela abria no começo da janela.
+   * Aplica até pegar; depois que a pessoa rolou, não mexe mais.
+   */
   useEffect(() => {
     const el = rolagem.current;
     if (!el || todayCol < 0) return;
-    el.scrollLeft = Math.max(0, (todayCol - 3) * DIA);
+    const alvo = Math.max(0, (todayCol - 3) * DIA);
+    let feito = alvo === 0;
+    const aplicar = () => {
+      if (feito || el.clientWidth === 0) return;
+      el.scrollLeft = alvo;
+      feito = el.scrollLeft > 0;
+    };
+    aplicar();
+    const obs = new ResizeObserver(aplicar);
+    obs.observe(el);
+    return () => obs.disconnect();
   }, [todayCol, days.length]);
 
   const colunas = `${ROTULO} repeat(${days.length}, ${DIA}px)`;
@@ -80,7 +97,7 @@ export const TeamGantt: React.FC<Props> = ({ schedule, members, onOpen }) => {
           <div
             key={i}
             style={{ gridColumn: `span ${w.span}` }}
-            className="truncate border-l border-border px-1.5 pb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-soft"
+            className="relative z-[2] truncate border-l border-border bg-surface px-1.5 pb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-text-soft"
           >
             {w.label}
           </div>
@@ -90,7 +107,7 @@ export const TeamGantt: React.FC<Props> = ({ schedule, members, onOpen }) => {
         {days.map((d, i) => (
           <div
             key={d}
-            className={`border-b border-border pb-1.5 text-center text-[11px] tabular-nums ${
+            className={`relative z-[2] border-b border-border bg-surface pb-1.5 text-center text-[11px] tabular-nums ${
               i === todayCol ? 'font-bold text-primary-vibrant' : 'text-text-soft'
             }`}
           >
