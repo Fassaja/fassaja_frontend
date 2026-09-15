@@ -1,6 +1,6 @@
 # Política de Privacidade do Fassaja
 
-**Versão 1.0 — vigente a partir de [DATA DE PUBLICAÇÃO]**
+**Versão 1.0 — vigente a partir de 15 de setembro de 2026**
 
 Esta Política explica **quais dados o Fassaja coleta, por que, com quem
 compartilha, por quanto tempo guarda e o que você pode fazer a respeito**. Ela
@@ -13,11 +13,11 @@ para ser entendida.
 
 ## 1. Quem é responsável pelos seus dados
 
-**Controlador:** Magnum de Abreu, pessoa física, CPF [CPF], [CIDADE/UF],
+**Controlador:** Magnum de Abreu, pessoa física, CPF 166.632.407-81, Campo Grande/MS,
 Brasil.
 
 **Encarregado pelo tratamento de dados (DPO):** o próprio controlador.
-**Contato para assuntos de privacidade:** [E-MAIL DE PRIVACIDADE]. É o canal
+**Contato para assuntos de privacidade:** magnumjabreuu@gmail.com. É o canal
 para exercer os direitos da seção 8 e para qualquer dúvida sobre esta
 Política. Respondemos em até **15 dias**.
 
@@ -117,8 +117,8 @@ próprios de terceiros.** Compartilhamos apenas com:
 
 | Fornecedor | O que faz | Onde ficam os dados | Base da transferência internacional |
 |---|---|---|---|
-| **Neon** | Banco de dados | Brasil (região AWS São Paulo) | Não há transferência |
-| **Render** | Servidor da aplicação (API) | Estados Unidos | Cláusulas contratuais (LGPD, art. 33, II) |
+| **Neon** | Banco de dados | Estados Unidos (Oregon) | Cláusulas contratuais (LGPD, art. 33, II) |
+| **Render** | Servidor da aplicação (API) | Estados Unidos (Oregon) | Cláusulas contratuais (art. 33, II) |
 | **Vercel** | Hospedagem do site e estatística de visitas | Estados Unidos (rede global) | Cláusulas contratuais (art. 33, II) |
 | **Anthropic** | Modelo de IA do assistente | Estados Unidos | Cláusulas contratuais (art. 33, II); só o texto que você envia |
 | **Brevo** | Envio de e-mails transacionais | União Europeia (França) | País com grau de proteção reconhecido / cláusulas contratuais (art. 33, I e II) |
@@ -128,6 +128,13 @@ próprios de terceiros.** Compartilhamos apenas com:
 Cada fornecedor trata os dados **apenas sob nossas instruções**, para a
 finalidade indicada, e está vinculado por contrato a padrões de segurança e
 confidencialidade. Esta lista é atualizada aqui quando mudar.
+
+**Seus dados ficam fora do Brasil.** O banco de dados e o servidor da
+aplicação rodam nos Estados Unidos (Oregon). A LGPD permite isso quando o
+fornecedor se compromete, por contrato, a dar aos dados a mesma proteção que
+a lei brasileira exige (art. 33, II) — é o caso de todos os listados acima.
+Você continua com todos os direitos da seção 8, e a autoridade competente
+continua sendo a ANPD.
 
 ### 5.2 Membros das suas equipes
 
@@ -182,7 +189,7 @@ Você pode, a qualquer momento e sem custo:
 
 | Direito | Como |
 |---|---|
-| **Confirmar** se tratamos seus dados e **acessá-los** | Boa parte está no próprio aplicativo (Perfil, Configurações). Para uma cópia completa, escreva para [E-MAIL DE PRIVACIDADE]; enviamos em formato legível por máquina (JSON) em até 15 dias. |
+| **Confirmar** se tratamos seus dados e **acessá-los** | Boa parte está no próprio aplicativo (Perfil, Configurações). Para uma cópia completa, escreva para magnumjabreuu@gmail.com; enviamos em formato legível por máquina (JSON) em até 15 dias. |
 | **Corrigir** dados incompletos ou desatualizados | Perfil e Configurações, ou pelo e-mail |
 | **Portar** seus dados para outro serviço | A mesma cópia em JSON do item acima; a agenda também pode ser exportada em formato iCalendar (`.ics`) pelo aplicativo |
 | **Apagar** | *Configurações → Excluir conta*: imediato e irreversível. Ou pelo e-mail. |
@@ -222,7 +229,7 @@ dizendo o que aconteceu, quais dados foram afetados e o que fazer.
 O Fassaja não se destina a menores de 13 anos e não coletamos seus dados
 conscientemente. Adolescentes de 13 a 17 anos podem usar com autorização do
 responsável (Termos, seção 2). Se você é responsável e acredita que uma
-criança criou uma conta, escreva para [E-MAIL DE PRIVACIDADE] e apagaremos os
+criança criou uma conta, escreva para magnumjabreuu@gmail.com e apagaremos os
 dados.
 
 ## 11. Alterações desta Política
@@ -235,5 +242,5 @@ anteriores ficam disponíveis a pedido.
 
 ## 12. Contato
 
-**Assuntos de privacidade e exercício de direitos:** [E-MAIL DE PRIVACIDADE]
-**Controlador e encarregado:** Magnum de Abreu — CPF [CPF] — [CIDADE/UF], Brasil
+**Assuntos de privacidade e exercício de direitos:** magnumjabreuu@gmail.com
+**Controlador e encarregado:** Magnum de Abreu — CPF 166.632.407-81 — Campo Grande/MS, Brasil

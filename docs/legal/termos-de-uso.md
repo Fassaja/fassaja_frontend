@@ -1,14 +1,14 @@
 # Termos de Uso do Fassaja
 
-**Versão 1.0 — vigente a partir de [DATA DE PUBLICAÇÃO]**
+**Versão 1.0 — vigente a partir de 15 de setembro de 2026**
 
 Estes Termos regulam o uso do Fassaja — o site `www.fassaja.com`, o aplicativo
 para Android distribuído pela Google Play e qualquer outro meio pelo qual o
 serviço seja oferecido (juntos, o **"Fassaja"** ou o **"Serviço"**).
 
 O Fassaja é oferecido por **Magnum de Abreu**, pessoa física, inscrito no CPF
-sob o nº [CPF], com endereço em [CIDADE/UF], Brasil (**"nós"**). Contato:
-[E-MAIL DE CONTATO].
+sob o nº 166.632.407-81, com endereço em Campo Grande/MS, Brasil (**"nós"**). Contato:
+magnumjabreuu@gmail.com.
 
 Ao criar uma conta ou usar o Fassaja, você declara que leu, entendeu e
 concorda com estes Termos e com a [Política de Privacidade](politica-de-privacidade.md),
@@ -274,7 +274,7 @@ especial o Código de Defesa do Consumidor (Lei 8.078/1990), o Marco Civil da
 Internet (Lei 12.965/2014) e a Lei Geral de Proteção de Dados (Lei
 13.709/2018).
 
-Antes de qualquer medida, fale conosco: [E-MAIL DE CONTATO]. Respondemos em
+Antes de qualquer medida, fale conosco: magnumjabreuu@gmail.com. Respondemos em
 até 5 dias úteis. Você também pode usar a plataforma pública
 [consumidor.gov.br](https://www.consumidor.gov.br).
 
@@ -295,5 +295,5 @@ o art. 101, I, do Código de Defesa do Consumidor.
 
 ---
 
-**Contato:** [E-MAIL DE CONTATO]
-**Responsável:** Magnum de Abreu — CPF [CPF] — [CIDADE/UF], Brasil
+**Contato:** magnumjabreuu@gmail.com
+**Responsável:** Magnum de Abreu — CPF 166.632.407-81 — Campo Grande/MS, Brasil
