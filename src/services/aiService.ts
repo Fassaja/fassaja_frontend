@@ -69,6 +69,8 @@ export interface AiStatus {
   limit: number;
   used: number;
   remaining: number;
+  /** A conta é Pro? Decide se o rodapé oferece o plano ou não. */
+  pro: boolean;
 }
 
 /** Origem comum às respostas do assistente. */

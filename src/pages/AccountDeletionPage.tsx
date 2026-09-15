@@ -174,6 +174,10 @@ const AccountDeletionPage: React.FC = () => {
               para o membro mais antigo — e, se você for o único integrante, a equipe é excluída
               junto.
             </p>
+            <p className="text-text-secondary mt-2 text-sm">
+              Assina o Pro pelo Google Play? Excluir a conta <strong>não cancela a assinatura</strong>{' '}
+              — cancele na Play Store também, senão a cobrança continua.
+            </p>
 
             <form onSubmit={handleDelete} className="space-y-4 mt-6">
               <Input

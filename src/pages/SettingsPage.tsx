@@ -8,6 +8,7 @@ import {
   ChevronRight,
   PlayCircle,
   RotateCcw,
+  ScrollText,
   ShieldCheck,
   Trash2,
   AlertTriangle,
@@ -492,6 +493,20 @@ const SettingsPage: React.FC = () => {
                       description="As boas-vindas de cada tela voltam a aparecer uma vez"
                       onClick={resetAreaTours}
                     />
+                    <ActionRow
+                      icon={<ScrollText size={18} />}
+                      iconClass="bg-bg-secondary text-text-secondary"
+                      title="Termos de Uso"
+                      description="O combinado entre você e o Fassaja"
+                      onClick={() => navigate('/termos')}
+                    />
+                    <ActionRow
+                      icon={<ShieldCheck size={18} />}
+                      iconClass="bg-bg-secondary text-text-secondary"
+                      title="Política de Privacidade"
+                      description="Quais dados guardamos, por quê, e seus direitos"
+                      onClick={() => navigate('/privacidade')}
+                    />
                   </div>
                 </>
               ),
@@ -538,6 +553,9 @@ const SettingsPage: React.FC = () => {
             O que você criou em equipes fica com a equipe, para não apagar o trabalho de outras
             pessoas. Equipes das quais você é dono passam para o membro mais antigo — e, se você for
             o único integrante, a equipe é excluída junto.
+            <strong className="block text-text-primary mt-3 mb-1">Assinatura do Pro</strong>
+            Excluir a conta não cancela uma assinatura feita pelo Google Play. Cancele na Play
+            Store também, senão a cobrança continua.
           </>
         }
         confirmLabel="Sim, quero excluir"

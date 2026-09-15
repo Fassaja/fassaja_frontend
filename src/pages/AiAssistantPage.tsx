@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle, Lightbulb, Loader2, Send, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ondeAssinarAgora, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -496,6 +498,16 @@ const AiAssistantPage: React.FC = () => {
                 {status.remaining} de {status.limit}
               </strong>{' '}
               usos disponíveis esta semana
+              {/* Só oferece o Pro onde ele existe (app publicado) e para quem
+                  não é Pro. Antes disso, a frase termina aqui. */}
+              {!status.pro && ondeAssinarAgora() && (
+                <>
+                  {' · '}
+                  <Link to="/apoiar" className="font-medium text-primary-vibrant hover:text-primary-hover">
+                    o Pro tem {PRO_WEEKLY_LIMIT}
+                  </Link>
+                </>
+              )}
             </span>
           ) : (
             <span className="text-text-soft">Carregando usos disponíveis…</span>

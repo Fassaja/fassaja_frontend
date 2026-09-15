@@ -19,6 +19,8 @@ import AccountDeletionPage from '@/pages/AccountDeletionPage';
 import JoinPage from '@/pages/JoinPage';
 import ProPage from '@/pages/ProPage';
 import IdeasPage from '@/pages/IdeasPage';
+import LegalPage from '@/pages/LegalPage';
+import { PlayBillingSync } from '@/components/pro/PlayBillingSync';
 import { useAuth } from '@/contexts/AuthContext';
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -28,6 +30,8 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 export const AppRoutes: React.FC = () => {
   return (
+    <>
+    <PlayBillingSync />
     <Routes>
       {/* Públicas (visitante) */}
       <Route path="/login" element={<AuthPage mode="login" />} />
@@ -64,8 +68,13 @@ export const AppRoutes: React.FC = () => {
           "entre para confirmar", e não ser jogado no /login sem explicação —
           a própria página trata os três casos (sem token, sem sessão, ok). */}
       <Route path="/excluir-conta" element={<AccountDeletionPage />} />
+      {/* Públicas: quem lê é o visitante decidindo se cria conta, ou o revisor
+          da Play Store conferindo a URL da política. */}
+      <Route path="/termos" element={<LegalPage kind="termos" />} />
+      <Route path="/privacidade" element={<LegalPage kind="privacidade" />} />
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </>
   );
 };
