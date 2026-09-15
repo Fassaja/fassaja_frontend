@@ -288,9 +288,16 @@ export const TeamShell: React.FC = () => {
             </div>
 
             {/* Abas com sublinhado, e não pílulas: a navegação da área não pode
-                pesar mais que o conteúdo dela. */}
+                pesar mais que o conteúdo dela.
+
+                A rolagem horizontal é só do celular. No desktop a faixa
+                aparecia com barra de rolagem mesmo com espaço de sobra: as abas
+                dividiam a linha com as ações e, sem `min-w-0`, a nav encolhia
+                antes de as ações quebrarem para a linha de baixo. Agora ela
+                cresce para ocupar o que sobra e, quando ainda não cabe, as
+                abas quebram de linha em vez de rolar. */}
             <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-border">
-              <nav className="flex gap-1 overflow-x-auto">
+              <nav className="flex min-w-0 grow gap-1 overflow-x-auto sm:flex-wrap sm:overflow-visible">
                 {ABAS.filter(a => !a.gestao || abilities.veGestao).map(item => {
                   const Icon = item.icon;
                   const ativa = item.slug === aba.slug;
