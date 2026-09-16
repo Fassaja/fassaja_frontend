@@ -75,7 +75,7 @@ const AccountDeletionPage: React.FC = () => {
             <img
               src="/logofassaja.png"
               data-logo
-              alt="Fassaja"
+              alt="Fassajá"
               className="max-w-none w-56 h-auto object-contain select-none"
               draggable={false}
             />
@@ -93,7 +93,7 @@ const AccountDeletionPage: React.FC = () => {
               Seus dados pessoais foram apagados. O que você criou dentro de equipes continua com
               elas, para não apagar o trabalho de outras pessoas.
             </p>
-            <p className="text-text-secondary mt-2 text-sm">Obrigado por ter usado o Fassaja.</p>
+            <p className="text-text-secondary mt-2 text-sm">Obrigado por ter usado o Fassajá.</p>
             <Button
               onClick={() => navigate('/login')}
               variant="secondary"
@@ -116,7 +116,7 @@ const AccountDeletionPage: React.FC = () => {
             </div>
             <h2 className="text-2xl font-bold text-text-primary">Excluir sua conta</h2>
             <p className="text-text-secondary mt-2">
-              Entre no Fassaja e vá em <strong className="text-text-primary">Configurações →
+              Entre no Fassajá e vá em <strong className="text-text-primary">Configurações →
               Excluir minha conta</strong>. A exclusão é imediata e irreversível: perfil, tarefas,
               projetos pessoais, etiquetas, eventos e estatísticas são apagados. O que você criou
               em equipes fica com a equipe.

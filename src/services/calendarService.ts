@@ -52,7 +52,7 @@ export function urlWebcal(token: string): string {
  * continua à mostra na tela: quando um link quebrar, o caminho de baixo ainda
  * funciona, e é ele que a pessoa usa para resolver sozinha.
  */
-export function linksDeAssinatura(token: string, nome = 'Fassaja') {
+export function linksDeAssinatura(token: string, nome = 'Fassajá') {
   const feed = urlDoFeed(token);
   const webcal = urlWebcal(token);
   return {

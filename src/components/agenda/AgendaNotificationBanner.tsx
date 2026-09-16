@@ -59,7 +59,7 @@ export const AgendaNotificationBanner: React.FC = () => {
         <p className="text-sm font-semibold text-text-primary">Ative os lembretes da Agenda</p>
         {needsInstall ? (
           <p className="text-xs text-text-secondary mt-0.5">
-            No iPhone, instale o Fassaja na tela de início para receber os avisos. Passo a passo em
+            No iPhone, instale o Fassajá na tela de início para receber os avisos. Passo a passo em
             Ajuda → Fale conosco.
           </p>
         ) : permission === 'denied' ? (

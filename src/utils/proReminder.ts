@@ -79,7 +79,7 @@ export const MIN_TASKS_TO_ASK = 5;
 export const MIN_DAYS_TO_ASK = 3;
 
 /**
- * A pessoa já usou o Fassaja o bastante para opinar sobre preço?
+ * A pessoa já usou o Fassajá o bastante para opinar sobre preço?
  *
  * Perguntar quanto vale um produto para quem abriu o app há dois minutos
  * produz resposta ruim — e resposta ruim contamina exatamente a medição que

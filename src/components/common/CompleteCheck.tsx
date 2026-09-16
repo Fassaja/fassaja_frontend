@@ -9,7 +9,7 @@ interface CompleteCheckProps {
 }
 
 /**
- * Botão circular de concluir tarefa — o gesto central do Fassaja.
+ * Botão circular de concluir tarefa — o gesto central do Fassajá.
  * No hover mostra um check "fantasma" (prévia do que vai acontecer);
  * ao concluir, o check entra com um pop de mola. A área clicável é
  * maior que o círculo (pseudo-elemento) para toque confortável.

@@ -1,5 +1,5 @@
 /**
- * Detecta se a pessoa usa o Fassaja INSTALADO (na tela de início) ou pelo
+ * Detecta se a pessoa usa o Fassajá INSTALADO (na tela de início) ou pelo
  * navegador.
  *
  * Serve para um problema específico do login com Google. O login sai do escopo

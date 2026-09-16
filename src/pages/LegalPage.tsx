@@ -46,7 +46,7 @@ const LegalPage: React.FC<{ kind: keyof typeof DOCS }> = ({ kind }) => {
             to="/"
             className="inline-flex items-center gap-1.5 text-text-secondary hover:text-primary-vibrant"
           >
-            <ArrowLeft size={16} /> Voltar ao Fassaja
+            <ArrowLeft size={16} /> Voltar ao Fassajá
           </Link>
           <Link
             to={kind === 'termos' ? '/privacidade' : '/termos'}

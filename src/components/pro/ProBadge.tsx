@@ -8,7 +8,7 @@ export const ProBadge: React.FC<{ className?: string }> = ({ className = '' }) =
   if (!pro) return null;
   return (
     <span
-      title="Assinante do Fassaja Pro"
+      title="Assinante do Fassajá Pro"
       className={`inline-flex items-center gap-1 rounded-full bg-primary-vibrant px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white ${className}`}
     >
       <Sparkles size={11} /> Pro

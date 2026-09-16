@@ -14,7 +14,7 @@ function dispensado(): boolean {
 }
 
 /**
- * "O Fassaja está na Play Store" — para quem usa o site num Android.
+ * "O Fassajá está na Play Store" — para quem usa o site num Android.
  *
  * É o único lugar em que o app é EMPURRADO; o resto (rodapé da IA, sino,
  * /apoiar) só responde a quem perguntou. Dispensar guarda em localStorage e
@@ -54,7 +54,7 @@ export const AvisoPlayStore: React.FC = () => {
     >
       <Smartphone size={18} className="shrink-0 text-primary-vibrant" />
       <p className="flex-1 text-text-primary">
-        <strong>O Fassaja está na Play Store.</strong>{' '}
+        <strong>O Fassajá está na Play Store.</strong>{' '}
         <span className="text-text-secondary">
           Mesma conta, e é por lá que se assina o Pro.
         </span>

@@ -81,7 +81,7 @@ const BotaoCalendario: React.FC<{
 
 /**
  * O endereço é local? O Google busca o arquivo dos servidores DELE, então
- * `localhost` ali é a máquina do próprio Google — onde não há Fassaja nenhum.
+ * `localhost` ali é a máquina do próprio Google — onde não há Fassajá nenhum.
  * Oferecer o botão em desenvolvimento só entrega um erro sem explicação.
  * (Apple e Outlook web também não alcançam; só o webcal local funciona, porque
  * quem busca é o aplicativo na mesma máquina.)

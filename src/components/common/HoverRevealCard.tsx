@@ -16,7 +16,7 @@ interface HoverRevealCardProps {
  * Duas adaptações em relação ao efeito original, que valem registro:
  *
  * 1. PONTEIRO GROSSO (celular/tablet) NÃO TEM HOVER. Um painel que só aparece
- *    no hover simplesmente não existiria no celular — e o Fassaja é instalável
+ *    no hover simplesmente não existiria no celular — e o Fassajá é instalável
  *    como app. Onde não há hover, a síntese fica sempre visível; a animação é
  *    um bônus de desktop, não o único caminho para a informação.
  *

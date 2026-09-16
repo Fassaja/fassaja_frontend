@@ -35,7 +35,7 @@ export const Topbar: React.FC<TopbarProps> = ({
   actionLabel = 'Nova tarefa',
   // Rótulo neutro: toda página passa o próprio título, e a saudação genérica
   // que ficava aqui competia com a que a Home já mostra logo abaixo.
-  title = 'Fassaja',
+  title = 'Fassajá',
   subtitle = '',
 }) => {
   const [showSearch, setShowSearch] = useState(false);

@@ -14,7 +14,7 @@ interface SelectProps {
 }
 
 /**
- * Select padrão do Fassaja. Renderiza o Dropdown estilizado (não o <select>
+ * Select padrão do Fassajá. Renderiza o Dropdown estilizado (não o <select>
  * nativo), então qualquer novo uso já vem com o visual da marca.
  */
 export const Select: React.FC<SelectProps> = ({

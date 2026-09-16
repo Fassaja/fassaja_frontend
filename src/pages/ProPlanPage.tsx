@@ -150,7 +150,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
     }
   };
 
-  const titulo = 'Fassaja Pro';
+  const titulo = 'Fassajá Pro';
 
   if (pro?.pro) {
     return (
@@ -205,17 +205,17 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
   const precoTexto = modo === 'app' ? preco ?? precoWeb : precoWeb;
 
   return (
-    <AppLayout title={titulo} subtitle="Para quem já faz do Fassaja parte do dia">
+    <AppLayout title={titulo} subtitle="Para quem já faz do Fassajá parte do dia">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Abertura: o Bob e a promessa. O Pro não é "mais recursos", é o
-            Fassaja sem teto para quem já o usa todo dia — a página fala com
+            Fassajá sem teto para quem já o usa todo dia — a página fala com
             essa pessoa, não com quem chegou ontem. */}
         <section className="relative overflow-hidden rounded-3xl border border-primary-vibrant/20 bg-gradient-to-br from-primary-light via-surface to-surface p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <Mascot state="strong" size="lg" animate />
             <div className="text-center sm:text-left">
               <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-vibrant/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-vibrant">
-                <Sparkles size={13} /> Fassaja Pro
+                <Sparkles size={13} /> Fassajá Pro
               </p>
               <h2 className="mt-3 text-2xl sm:text-3xl font-bold leading-tight text-text-primary">
                 Você já organiza o seu dia aqui.

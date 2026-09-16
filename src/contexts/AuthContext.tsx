@@ -293,7 +293,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // app ficou para trás. Sem este aviso, a pessoa vê o Dashboard na
           // aba e não tem como saber que basta voltar para o app.
           if (deveSugerirVoltarAoApp()) {
-            toast.success('Pronto! Já pode voltar para o app Fassaja.');
+            toast.success('Pronto! Já pode voltar para o app Fassajá.');
           }
         })
         .catch(() => {

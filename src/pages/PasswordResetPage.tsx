@@ -95,7 +95,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
             <img
               src="/logofassaja.png"
                 data-logo
-              alt="Fassaja"
+              alt="Fassajá"
               className="max-w-none w-56 h-auto object-contain select-none"
               draggable={false}
             />

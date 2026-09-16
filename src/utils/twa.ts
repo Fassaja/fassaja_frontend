@@ -1,5 +1,5 @@
 /**
- * O Fassaja dentro do app da Play Store (Trusted Web Activity).
+ * O Fassajá dentro do app da Play Store (Trusted Web Activity).
  *
  * A TWA é o site inteiro rodando no Chrome, sem barra de endereço. Para o
  * código é o mesmo site — a única pista de que estamos DENTRO DO APP é o
@@ -76,7 +76,7 @@ export function ondeAssinar(noApp: boolean, pacote: string, webAtiva = false): O
 }
 
 /**
- * Vale avisar "o Fassaja está na Play Store" a esta pessoa?
+ * Vale avisar "o Fassajá está na Play Store" a esta pessoa?
  *
  * Só para quem pode fazer algo com o aviso: está num Android, NÃO está
  * dentro do app (senão já instalou), o app existe na loja e ela ainda não

@@ -213,7 +213,7 @@ export const Sidebar: React.FC = () => {
                    fundo para arredondar. */
                 <img
                   src="/icon-192.png"
-                  alt="Fassaja"
+                  alt="Fassajá"
                   className="w-16 h-16 object-contain select-none"
                   draggable={false}
                 />
@@ -221,7 +221,7 @@ export const Sidebar: React.FC = () => {
                 <img
                   src="/logofassaja.png"
                   data-logo
-                  alt="Fassaja"
+                  alt="Fassajá"
                   className="max-w-none w-72 h-auto object-contain select-none"
                   draggable={false}
                 />
@@ -437,7 +437,7 @@ export const Sidebar: React.FC = () => {
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
                     >
                       <HeartHandshake size={18} className="text-text-secondary" />
-                      Apoiar o Fassaja
+                      Apoiar o Fassajá
                     </button>
                     {!isGuest && (
                       <button
@@ -517,7 +517,7 @@ export const Sidebar: React.FC = () => {
           <Modal isOpen={showHelp} onClose={() => setShowHelp(false)} title="Fale conosco" size="md">
             <div className="space-y-4">
               <p className="text-sm text-text-secondary">
-                Tem alguma dúvida ou sugestão? A equipe Fassaja adora ouvir você.
+                Tem alguma dúvida ou sugestão? A equipe Fassajá adora ouvir você.
               </p>
 
               <NotificationsHelp />
@@ -534,7 +534,7 @@ export const Sidebar: React.FC = () => {
                 </span>
                 <span>
                   <span className="block text-sm font-semibold text-text-primary">
-                    Ver tutorial do Fassaja
+                    Ver tutorial do Fassajá
                   </span>
                   <span className="block text-xs text-text-secondary">
                     Um tour rápido pelos principais recursos

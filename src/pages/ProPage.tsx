@@ -31,7 +31,7 @@ const PRICE_OPTIONS: SelectableOption[] = [
  * Página "Apoiar" (/apoiar) — lista de espera do plano Pro.
  *
  * Não é uma página de doação, e a diferença é o ponto: doação ensina que o
- * Fassaja é gratuito e vive de ajuda, o que contradiz a assinatura que vem
+ * Fassajá é gratuito e vive de ajuda, o que contradiz a assinatura que vem
  * depois. Aqui a pessoa responde se pagaria e quanto — o dado que falta para
  * definir preço — e quem responde vira o primeiro público do lançamento.
  */
@@ -84,7 +84,7 @@ const ProSurveyPage: React.FC = () => {
   if (sentAs) {
     const wouldPay = sentAs !== 'nao-pagaria';
     return (
-      <AppLayout title="Apoiar o Fassaja" subtitle="Obrigado por responder">
+      <AppLayout title="Apoiar o Fassajá" subtitle="Obrigado por responder">
         <div className="max-w-2xl mx-auto">
           <Card padding="lg" className="text-center">
             <div className="flex justify-center mb-4">
@@ -102,7 +102,7 @@ const ProSurveyPage: React.FC = () => {
               ) : (
                 <>
                   Saber que o preço não cabe no seu bolso é tão útil quanto o contrário: é isso
-                  que evita lançarmos um plano que ninguém consegue assinar. O Fassaja continua
+                  que evita lançarmos um plano que ninguém consegue assinar. O Fassajá continua
                   gratuito para você.
                 </>
               )}
@@ -119,7 +119,7 @@ const ProSurveyPage: React.FC = () => {
 
   return (
     <AppLayout
-      title="Apoiar o Fassaja"
+      title="Apoiar o Fassajá"
       subtitle="O plano Pro está a caminho — sua resposta decide o preço"
     >
       <div className="max-w-2xl mx-auto space-y-6">
@@ -130,14 +130,14 @@ const ProSurveyPage: React.FC = () => {
             </span>
             <div>
               <h2 className="text-lg font-bold text-text-primary">
-                O Fassaja terá um plano Pro em breve
+                O Fassajá terá um plano Pro em breve
               </h2>
               <p className="mt-2 text-sm text-text-secondary leading-relaxed">
                 Hoje o app é mantido por conta própria — servidor, banco de dados e o assistente
-                de IA têm custo todo mês, e é isso que limita o quanto o Fassaja consegue
+                de IA têm custo todo mês, e é isso que limita o quanto o Fassajá consegue
                 crescer. Em vez de pedir doação, preferimos perguntar direto:{' '}
                 <strong className="text-text-primary">
-                  o Fassaja vale uma assinatura para você, e de quanto?
+                  o Fassajá vale uma assinatura para você, e de quanto?
                 </strong>
               </p>
               <p className="mt-3 text-sm text-text-secondary leading-relaxed">
@@ -167,7 +167,7 @@ const ProSurveyPage: React.FC = () => {
             />
 
             <OptionSelector
-              label="Quanto você pagaria por mês pelo Fassaja Pro?"
+              label="Quanto você pagaria por mês pelo Fassajá Pro?"
               options={PRICE_OPTIONS}
               value={priceBand}
               onChange={value => setPriceBand(value as PriceBand)}
@@ -196,7 +196,7 @@ const ProSurveyPage: React.FC = () => {
         <div className="flex items-start gap-3 px-1 text-xs text-text-soft">
           <ServerCog size={16} className="shrink-0 mt-0.5" />
           <p>
-            Enquanto o plano não existe, o Fassaja segue inteiro e gratuito — nenhum recurso vai
+            Enquanto o plano não existe, o Fassajá segue inteiro e gratuito — nenhum recurso vai
             ser trancado no que você já usa hoje.
           </p>
         </div>

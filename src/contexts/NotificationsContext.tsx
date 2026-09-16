@@ -339,7 +339,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         icon: <HeartHandshake size={18} />,
         // Antes da loja, a pergunta de preço; depois, o convite. A mesma
         // rota (/apoiar) muda de página sozinha.
-        title: proExiste ? 'Conheça o Fassaja Pro' : 'Ajude a definir o Fassaja Pro',
+        title: proExiste ? 'Conheça o Fassajá Pro' : 'Ajude a definir o Fassajá Pro',
         detail: proExiste
           ? `${PRO_WEEKLY_LIMIT} usos do assistente por semana`
           : 'Conte em 30 segundos quanto você pagaria',
