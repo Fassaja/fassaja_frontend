@@ -1,7 +1,10 @@
 {
+  "id": "/",
   "name": "Fassaja - Gerenciador de Tarefas",
   "short_name": "Fassaja",
-  "description": "Organize tarefas, projetos e sua agenda com lembretes.",
+  "description": "Organize tarefas, projetos, equipes e sua agenda — com foco, metas e um assistente de IA que transforma texto em plano.",
+  "lang": "pt-BR",
+  "categories": ["productivity"],
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
