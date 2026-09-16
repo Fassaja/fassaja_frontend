@@ -1,3 +1,6 @@
+import { AssinaturaAtual } from '@/components/pro/AssinaturaAtual';
+import { useProStatus } from '@/contexts/ProContext';
+import { ondeAssinarAgora, FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -9,6 +12,7 @@ import {
   PlayCircle,
   RotateCcw,
   ScrollText,
+  Sparkles,
   ShieldCheck,
   Trash2,
   AlertTriangle,
@@ -121,6 +125,8 @@ const SettingsPage: React.FC = () => {
   const { preference, resolved, setPreference } = useTheme();
   const toast = useToast();
   const navigate = useNavigate();
+  const proStatus = useProStatus();
+  const proExiste = ondeAssinarAgora() !== null;
   const { account, logout } = useAuth();
 
   // Exclusão de conta (LGPD) em duas etapas: primeiro o aviso "tem certeza?",
@@ -412,6 +418,44 @@ const SettingsPage: React.FC = () => {
                 </>
               ),
             },
+            // O plano só aparece quando o Pro existe (loja ligada) ou a pessoa
+            // já é Pro — antes disso, uma seção "Plano: gratuito" seria um
+            // anúncio de algo que não dá para comprar.
+            ...(proExiste || proStatus.pro
+              ? [
+                  {
+                    id: 'plano',
+                    group: 'Conta',
+                    icon: <SectionIcon icon={<Sparkles size={18} />} />,
+                    title: 'Plano',
+                    summary: proStatus.pro ? 'Fassaja Pro' : 'Gratuito',
+                    content: proStatus.pro ? (
+                      <>
+                        <SectionHint>
+                          Você é <strong className="text-text-primary">Pro</strong>: projetos
+                          ilimitados, equipes, ideias, agenda, foco e {PRO_WEEKLY_LIMIT} usos do
+                          assistente por semana.
+                        </SectionHint>
+                        <AssinaturaAtual />
+                      </>
+                    ) : (
+                      <>
+                        <SectionHint>
+                          Conta gratuita: até {FREE_PROJECT_LIMIT} projetos em andamento e 5 usos
+                          do assistente por semana.
+                        </SectionHint>
+                        <ActionRow
+                          icon={<Sparkles size={18} />}
+                          iconClass="bg-primary-light text-primary-vibrant"
+                          title="Conhecer o Fassaja Pro"
+                          description="Projetos ilimitados, equipes, ideias, agenda, foco e mais IA"
+                          onClick={() => navigate('/apoiar')}
+                        />
+                      </>
+                    ),
+                  },
+                ]
+              : []),
             {
               // Nome e senha num item só: são a mesma pergunta ("meus dados de
               // acesso"), e como dois itens obrigavam a abrir um, fechar, abrir
