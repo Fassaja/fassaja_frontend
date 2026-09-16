@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageSquare, Trash2, Pencil, Send, X } from 'lucide-react';
+import { MessageSquare, Trash2, Pencil, Send, X, Flag } from 'lucide-react';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { commentsService, TaskComment } from '@/services/commentsService';
 import { useToast } from '@/contexts/ToastContext';
 import { initialsOf } from '@/contexts/UserContext';
@@ -24,6 +25,8 @@ export const TaskComments: React.FC<{ taskId: string }> = ({ taskId }) => {
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [editando, setEditando] = useState<string | null>(null);
+  /** Id do comentário com o diálogo de denúncia aberto. */
+  const [denunciando, setDenunciando] = useState<string | null>(null);
   const [textoEditado, setTextoEditado] = useState('');
   const fimRef = useRef<HTMLDivElement>(null);
 
@@ -91,8 +94,34 @@ export const TaskComments: React.FC<{ taskId: string }> = ({ taskId }) => {
     }
   };
 
+  const denunciar = async () => {
+    const id = denunciando;
+    setDenunciando(null);
+    if (!id) return;
+    try {
+      await commentsService.report(taskId, id);
+      toast.success('Denúncia enviada. Obrigado por avisar.');
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível enviar a denúncia.');
+    }
+  };
+
   return (
     <section className="pt-4 border-t border-border">
+      {/* Denunciar: exigência da loja para app com conversa entre pessoas, e
+          o certo. Não apaga nada — avisa o responsável, que decide. */}
+      <ConfirmDialog
+        isOpen={denunciando !== null}
+        title="Denunciar este comentário?"
+        message="Ele será revisado pelo responsável pelo Fassaja. Nada é apagado automaticamente, e o autor não é avisado de quem denunciou."
+        hint="Use para conteúdo ofensivo, assédio, spam ou algo que não deveria estar aqui. Se for só uma discordância, fale com a pessoa."
+        confirmLabel="Denunciar"
+        cancelLabel="Cancelar"
+        tone="danger"
+        mascotState="investigate"
+        onConfirm={denunciar}
+        onClose={() => setDenunciando(null)}
+      />
       <h4 className="flex items-center gap-2 text-sm font-bold text-text-primary mb-3">
         <MessageSquare size={16} className="text-primary-vibrant" />
         Conversa
@@ -182,6 +211,18 @@ export const TaskComments: React.FC<{ taskId: string }> = ({ taskId }) => {
                         className="p-1 rounded text-text-soft hover:text-danger opacity-0 group-hover:opacity-100 focus:opacity-100"
                       >
                         <Trash2 size={13} />
+                      </button>
+                    )}
+                    {/* Só o que não é meu: denunciar o próprio comentário não faz sentido (e o servidor recusa). */}
+                    {!c.canEdit && (
+                      <button
+                        type="button"
+                        aria-label="Denunciar comentário"
+                        title="Denunciar"
+                        onClick={() => setDenunciando(c.id)}
+                        className="p-1 rounded text-text-soft hover:text-danger opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      >
+                        <Flag size={13} />
                       </button>
                     )}
                   </div>

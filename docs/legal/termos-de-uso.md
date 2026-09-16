@@ -151,6 +151,11 @@ Você não pode usar o Fassaja para:
 - usar o Fassaja para desenvolver um produto concorrente com base nos nossos
   dados ou na nossa interface.
 
+**Viu algo que não deveria estar aqui?** Todo comentário de equipe tem um
+botão **Denunciar**; a denúncia chega a nós e é revisada. Você também pode
+escrever para o e-mail de contato. Quem denuncia não é identificado para o
+autor.
+
 ## 8. Plano Pro
 
 **8.1 O que é.** Tarefas, calendário, metas e relatórios são gratuitos para

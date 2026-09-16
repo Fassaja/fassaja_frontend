@@ -20,4 +20,7 @@ export const commentsService = {
     api.patch<TaskComment>(`/tasks/${taskId}/comments/${commentId}`, { body }),
   remove: (taskId: string, commentId: string) =>
     api.delete<void>(`/tasks/${taskId}/comments/${commentId}`),
+  /** Denuncia ao controlador. Não apaga: quem decide é quem pode apagar. */
+  report: (taskId: string, commentId: string, reason?: string) =>
+    api.post<void>(`/tasks/${taskId}/comments/${commentId}/report`, { reason }),
 };
