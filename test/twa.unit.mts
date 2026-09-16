@@ -13,6 +13,7 @@ import {
   linkLoja,
   linkGerenciarAssinatura,
   ondeAssinar,
+  deveAvisarDaLoja,
 } from '../src/utils/twa.ts';
 
 let passed = 0;
@@ -57,6 +58,18 @@ check('dentro do app → compra aqui', ondeAssinar(true, PACOTE) === 'app');
 check('no site, app publicado → manda para a loja', ondeAssinar(false, PACOTE) === 'loja');
 check('app não publicado → o Pro não existe, nem no app', ondeAssinar(true, '') === null);
 check('app não publicado → nem no site', ondeAssinar(false, '') === null);
+
+console.log('\ndeveAvisarDaLoja');
+const ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/128 Mobile Safari/537.36';
+const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1';
+const MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 Chrome/128 Safari/537.36';
+const base = { userAgent: ANDROID, noApp: false, pacote: PACOTE, dispensado: false };
+check('Android no navegador, app publicado → avisa', deveAvisarDaLoja(base));
+check('dentro do app → não avisa (já instalou)', !deveAvisarDaLoja({ ...base, noApp: true }));
+check('app não publicado → não avisa', !deveAvisarDaLoja({ ...base, pacote: '' }));
+check('já dispensou → não avisa', !deveAvisarDaLoja({ ...base, dispensado: true }));
+check('iPhone → não avisa (não tem como instalar)', !deveAvisarDaLoja({ ...base, userAgent: IPHONE }));
+check('computador → não avisa', !deveAvisarDaLoja({ ...base, userAgent: MAC }));
 
 console.log(`\n${passed} ok, ${failed} falha(s)`);
 if (failed > 0) process.exit(1);

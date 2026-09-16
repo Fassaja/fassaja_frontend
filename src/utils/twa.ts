@@ -67,3 +67,22 @@ export function ondeAssinar(noApp: boolean, pacote: string): 'app' | 'loja' | nu
   if (!pacote) return null;
   return noApp ? 'app' : 'loja';
 }
+
+/**
+ * Vale avisar "o Fassaja está na Play Store" a esta pessoa?
+ *
+ * Só para quem pode fazer algo com o aviso: está num Android, NÃO está
+ * dentro do app (senão já instalou), o app existe na loja e ela ainda não
+ * dispensou o aviso. Para iPhone e computador o aviso seria um convite que
+ * não dá para aceitar — o Pro para essas pessoas é explicado em /apoiar, não
+ * empurrado num banner.
+ */
+export function deveAvisarDaLoja(opts: {
+  userAgent: string;
+  noApp: boolean;
+  pacote: string;
+  dispensado: boolean;
+}): boolean {
+  if (!opts.pacote || opts.noApp || opts.dispensado) return false;
+  return /android/i.test(opts.userAgent);
+}
