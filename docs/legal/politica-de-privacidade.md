@@ -63,15 +63,17 @@ senha e exclusão de conta também são guardados só como hash.
 | **Estatísticas de produtividade**: tarefas concluídas por dia, pontos (XP), sequência de dias, projetos concluídos | Os relatórios e a gamificação que o aplicativo mostra a você | Execução de contrato (V) |
 | **Participação em equipes**: de quais equipes você faz parte, com qual papel, tarefas atribuídas | O trabalho compartilhado funcionar | Execução de contrato (V) |
 | **Registro de uso da IA**: qual ação, quando, quantos tokens custou — **não o texto** | Aplicar a cota semanal e controlar o custo do serviço | Execução de contrato (V) e legítimo interesse (IX) |
-| **Assinatura do plano Pro**: identificador da compra na Google Play, produto, estado, validade | Saber que você é Pro e até quando | Execução de contrato (V) |
+| **Assinatura do plano Pro**: identificador da compra (Google Play ou Mercado Pago), produto, estado, validade | Saber que você é Pro e até quando | Execução de contrato (V) |
 | **Endereço IP e cabeçalhos da requisição** | Limitar tentativas de login e abusos (rate limiting); segurança | Legítimo interesse (IX) |
 | **Inscrição de notificações push** (endereço técnico do navegador e chaves), se você ativar | Enviar lembretes de tarefas ao seu dispositivo | Consentimento (I) — você ativa e desativa |
 
 ### 3.3 O que **não** coletamos
 
-- Dados de pagamento (número de cartão, Pix, endereço de cobrança): quem
-  cobra é a Google Play. **Nunca vemos** esses dados; recebemos apenas a
-  confirmação de que a assinatura existe e está válida.
+- Dados de pagamento (número de cartão, endereço de cobrança): quem cobra é
+  a Google Play ou o Mercado Pago. **Nunca vemos** esses dados; recebemos
+  apenas a confirmação de que a assinatura existe e está válida. Ao assinar
+  pelo site, enviamos ao Mercado Pago o seu e-mail e um identificador da sua
+  conta, para vincular o pagamento a ela.
 - Localização, contatos, arquivos do dispositivo, microfone, câmera.
 - Dados de navegação em outros sites.
 - Dados sensíveis (saúde, religião, orientação sexual, opinião política,
@@ -123,6 +125,7 @@ próprios de terceiros.** Compartilhamos apenas com:
 | **Anthropic** | Modelo de IA do assistente | Estados Unidos | Cláusulas contratuais (art. 33, II); só o texto que você envia |
 | **Brevo** | Envio de e-mails transacionais | União Europeia (França) | País com grau de proteção reconhecido / cláusulas contratuais (art. 33, I e II) |
 | **Google** | Login com Google (se você usar); Google Play (assinatura) | Estados Unidos e rede global | Cláusulas contratuais (art. 33, II) |
+| **Mercado Pago** | Processar a assinatura feita pelo site (cartão, cobrança recorrente) | Brasil | Não há transferência |
 | **Serviço de push do seu navegador** (Google, Mozilla ou Apple, conforme o navegador), se você ativar notificações | Entregar os lembretes ao dispositivo; recebe só o conteúdo do lembrete, cifrado | Estados Unidos | Cláusulas contratuais (art. 33, II) |
 
 Cada fornecedor trata os dados **apenas sob nossas instruções**, para a
@@ -180,7 +183,7 @@ mas porque não há o que pedir.
 | Registro de uso da IA (sem o texto) | Enquanto a conta existir — é a base da cota semanal e do controle de custo |
 | Registros de segurança (IP em tentativas de login e no limite de requisições) | Só em memória, durante a janela do limite (minutos). Os registros técnicos de acesso do provedor de hospedagem (data, hora, IP) são mantidos por ele por prazo curto, de dias |
 | Resposta à pesquisa do Pro | Até a decisão de preço ser tomada; apagada a pedido a qualquer momento |
-| Assinatura do Pro (identificador da compra, estado, validade) | Enquanto a conta existir. Os registros financeiros da compra (recibos, valores, meio de pagamento) ficam com a Google Play, pelas regras dela |
+| Assinatura do Pro (identificador da compra, estado, validade) | Enquanto a conta existir. Os registros financeiros da compra (recibos, valores, meio de pagamento) ficam com a Google Play ou o Mercado Pago, pelas regras deles |
 | Cópias de segurança do banco | Restauração pontual mantida pelo provedor por até **7 dias**; dados apagados desaparecem das cópias nesse prazo |
 
 ## 8. Seus direitos (LGPD, art. 18)

@@ -58,6 +58,10 @@ check('dentro do app → compra aqui', ondeAssinar(true, PACOTE) === 'app');
 check('no site, app publicado → manda para a loja', ondeAssinar(false, PACOTE) === 'loja');
 check('app não publicado → o Pro não existe, nem no app', ondeAssinar(true, '') === null);
 check('app não publicado → nem no site', ondeAssinar(false, '') === null);
+check('no site com web ativa → compra pela web', ondeAssinar(false, PACOTE, true) === 'web');
+check('no site com web ativa e sem app → web mesmo assim', ondeAssinar(false, '', true) === 'web');
+check('dentro do app NUNCA é web, mesmo com web ativa', ondeAssinar(true, PACOTE, true) === 'app');
+check('dentro do app sem pacote (impossível, mas fail-closed) → null', ondeAssinar(true, '', true) === null);
 
 console.log('\ndeveAvisarDaLoja');
 const ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/128 Mobile Safari/537.36';

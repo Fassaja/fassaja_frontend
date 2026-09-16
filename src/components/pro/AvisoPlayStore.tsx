@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Smartphone, X, ExternalLink } from 'lucide-react';
-import { ANDROID_PACKAGE } from '@/utils/playConfig';
+import { ANDROID_PACKAGE, PRO_WEB } from '@/utils/playConfig';
 import { deveAvisarDaLoja, dentroDoApp, linkLoja } from '@/utils/twa';
 
 const KEY = 'fassaja_aviso_play';
@@ -24,8 +24,12 @@ function dispensado(): boolean {
  */
 export const AvisoPlayStore: React.FC = () => {
   const [fechado, setFechado] = useState(false);
+  // Com a assinatura pela web ligada, o site vende sozinho e a frase "é por
+  // lá que se assina" deixaria de ser verdade. O app continua na loja para
+  // quem procurar; só não é empurrado.
   const mostrar =
     !fechado &&
+    !PRO_WEB &&
     deveAvisarDaLoja({
       userAgent: navigator.userAgent,
       noApp: dentroDoApp(),

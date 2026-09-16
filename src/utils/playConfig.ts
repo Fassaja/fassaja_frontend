@@ -1,4 +1,4 @@
-import { dentroDoApp, ondeAssinar } from './twa';
+import { dentroDoApp, ondeAssinar, OndeAssinar } from './twa';
 
 /** Nome do pacote Android; vazio até o app ser publicado. */
 export const ANDROID_PACKAGE = import.meta.env.VITE_ANDROID_PACKAGE ?? '';
@@ -14,10 +14,18 @@ export const PRO_WEEKLY_LIMIT = 15;
  * recusa; este número só serve para a tela avisar antes.
  */
 export const FREE_PROJECT_LIMIT = 5;
+/**
+ * Preço mensal, só para a tela do site (na Play, o preço vem da loja).
+ * Espelha PRO_PRECO_BRL do back-end.
+ */
+export const PRO_PRECO = 'R$ 14,90';
 /** Produto de assinatura no Play Console. */
 export const PLAY_SKU = import.meta.env.VITE_PLAY_SKU || 'pro_mensal';
 
-/** Onde ESTA pessoa pode assinar o Pro agora ('app' | 'loja' | null). */
-export function ondeAssinarAgora(): 'app' | 'loja' | null {
-  return ondeAssinar(dentroDoApp(), ANDROID_PACKAGE);
+/** A assinatura pela web (Mercado Pago) está ligada? '1' quando o servidor tem o token. */
+export const PRO_WEB = import.meta.env.VITE_PRO_WEB === '1';
+
+/** Onde ESTA pessoa pode assinar o Pro agora ('app' | 'web' | 'loja' | null). */
+export function ondeAssinarAgora(): OndeAssinar {
+  return ondeAssinar(dentroDoApp(), ANDROID_PACKAGE, PRO_WEB);
 }

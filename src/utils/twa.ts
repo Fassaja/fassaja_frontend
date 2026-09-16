@@ -55,17 +55,24 @@ export function linkGerenciarAssinatura(pacote: string, sku: string): string {
   );
 }
 
+export type OndeAssinar = 'app' | 'web' | 'loja' | null;
+
 /**
  * Onde esta pessoa pode assinar o Pro, se em algum lugar.
  *
  * - `'app'`: está dentro do app → compra pelo Play Billing, aqui mesmo.
- * - `'loja'`: está no site e o app existe na loja → mandar para a ficha.
- * - `null`: o app ainda não foi publicado (pacote vazio) → o Pro não existe
- *   para esta pessoa, e nenhuma tela deve falar dele como se existisse.
+ *   Dentro do app NUNCA é `'web'`: oferecer pagamento por fora ali é motivo
+ *   de rejeição na Play Store, mesmo que a web exista.
+ * - `'web'`: está no site e a assinatura pela web (Mercado Pago) está ligada
+ *   → compra aqui, no cartão.
+ * - `'loja'`: está no site, sem web, mas o app existe → mandar para a ficha.
+ * - `null`: nada publicado → o Pro não existe para esta pessoa, e nenhuma
+ *   tela deve falar dele como se existisse.
  */
-export function ondeAssinar(noApp: boolean, pacote: string): 'app' | 'loja' | null {
-  if (!pacote) return null;
-  return noApp ? 'app' : 'loja';
+export function ondeAssinar(noApp: boolean, pacote: string, webAtiva = false): OndeAssinar {
+  if (noApp) return pacote ? 'app' : null;
+  if (webAtiva) return 'web';
+  return pacote ? 'loja' : null;
 }
 
 /**

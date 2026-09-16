@@ -169,11 +169,17 @@ sessões e equipes que já existem continuam visíveis e podem ser apagados;
 apenas criar e editar passa a exigir a assinatura. O que está descrito na
 página no momento da compra é o que vale para aquela assinatura.
 
-**8.2 Onde se compra.** A assinatura é vendida **pela Google Play**, dentro do
-aplicativo Android. O Google é o vendedor da assinatura; a cobrança, os
-recibos, a renovação e o cancelamento seguem as regras da Google Play, além
-destas. Quando oferecermos assinatura pelo site, as condições específicas
-estarão na página de compra.
+**8.2 Onde se compra.** Há dois caminhos, e a assinatura vale igual nos dois:
+
+- **Pela Google Play**, dentro do aplicativo Android. O Google é o vendedor;
+  cobrança, recibos, renovação e cancelamento seguem as regras da Google
+  Play, além destas.
+- **Pelo site**, no cartão de crédito, com pagamento processado pelo
+  **Mercado Pago**. Nesse caso o vendedor somos nós; o Mercado Pago apenas
+  processa o pagamento e guarda os dados do cartão — nós nunca os vemos.
+
+Uma conta tem uma assinatura só: quem já é Pro por um caminho não consegue
+assinar pelo outro.
 
 **8.3 Preço e renovação.** O preço é o exibido na loja no momento da compra,
 em reais, com impostos incluídos. A assinatura **renova automaticamente** ao
@@ -183,10 +189,11 @@ fim de cada período (mensal ou anual) pelo mesmo preço, até que você cancele
 vez por pessoa. Ao fim do teste, a assinatura é cobrada automaticamente, a
 menos que você cancele antes.
 
-**8.5 Cancelamento.** Você cancela a qualquer momento em *Google Play →
-Pagamentos e assinaturas → Assinaturas*. O cancelamento **não é retroativo**:
-você mantém o Pro até o fim do período já pago e não é cobrado de novo. Não
-exigimos motivo, ligação ou nenhuma etapa além dessa.
+**8.5 Cancelamento.** Você cancela a qualquer momento: assinatura pela Google
+Play, em *Google Play → Pagamentos e assinaturas → Assinaturas*; assinatura
+pelo site, na própria página do Pro no Fassaja, em um clique. O cancelamento
+**não é retroativo**: você mantém o Pro até o fim do período já pago e não é
+cobrado de novo. Não exigimos motivo, ligação ou nenhuma etapa além dessa.
 
 **8.6 Mudanças de preço ou de benefícios.** Se aumentarmos o preço ou
 reduzirmos o que o Pro inclui, avisaremos por e-mail e no aplicativo com **pelo
@@ -195,20 +202,26 @@ seguinte ao aviso, e você pode cancelar antes dela sem custo.
 
 **8.7 Reembolso.** Você tem o direito de arrependimento em **7 dias** a partir
 da contratação (Código de Defesa do Consumidor, art. 49), com devolução
-integral. O pedido é feito pela Google Play, que também tem as suas próprias
-regras de reembolso, aplicáveis além destas. Fora desse prazo, avaliamos
+integral. Assinatura pela Google Play: o pedido é feito pela Google Play, que
+também tem as suas próprias regras de reembolso, aplicáveis além destas.
+Assinatura pelo site: escreva para o e-mail de contato e devolvemos pelo
+mesmo cartão em até 10 dias úteis. Fora desse prazo, avaliamos
 pedidos de reembolso caso a caso, especialmente quando o Serviço ficou
 indisponível por falha nossa.
 
-**8.8 Falha de pagamento.** Se a renovação falhar, a Google Play tenta de novo
-por um período de carência, durante o qual o Pro continua ativo. Se a cobrança
+**8.8 Falha de pagamento.** Se a renovação falhar, a Google Play ou o Mercado
+Pago tentam de novo por um período de carência, durante o qual o Pro continua
+ativo. Se a cobrança
 não for concluída, a conta volta ao plano gratuito — **sem perda de nenhum
 dado**. Só a cota da IA muda.
 
-**8.9 Exclusão de conta não cancela a assinatura.** A assinatura é um
-contrato seu com a Google Play. Se você excluir a conta do Fassaja, **cancele a
-assinatura na Google Play também**; caso contrário a cobrança pode continuar.
-A tela de exclusão avisa isso antes de você confirmar.
+**8.9 Exclusão de conta e assinatura.** A assinatura **pelo site** é
+cancelada automaticamente quando você exclui a conta — se o cancelamento
+falhar, a exclusão não é concluída, para que você nunca pague por uma conta
+que não existe. A assinatura **pela Google Play** é um contrato seu com a
+Google Play e **não** é cancelada por nós: **cancele-a na Google Play também**;
+caso contrário a cobrança pode continuar. A tela de exclusão avisa isso antes
+de você confirmar.
 
 ## 9. Disponibilidade, mudanças e encerramento
 

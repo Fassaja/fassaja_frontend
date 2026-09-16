@@ -7,7 +7,9 @@ export interface ProStatus {
   until: string | null;
   /** Renova sozinha? false quando cancelada (ainda vale até `until`). */
   autoRenewing: boolean;
-  provider: 'google_play' | string | null;
+  provider: 'google_play' | 'mercado_pago' | string | null;
+  /** Caminhos ligados no servidor. */
+  lojas?: { googlePlay: boolean; mercadoPago: boolean };
 }
 
 // Assinatura do Pro. O app só entrega o COMPROVANTE (purchaseToken) da compra
@@ -17,4 +19,9 @@ export const billingService = {
   status: () => api.get<ProStatus>('/billing/status'),
   verifyGoogle: (purchaseToken: string) =>
     api.post<ProStatus>('/billing/google/verify', { purchaseToken }),
+  /** Abre o checkout do Mercado Pago; devolve a URL para onde ir. */
+  checkoutMercadoPago: () => api.post<{ url: string }>('/billing/mercado-pago/checkout', {}),
+  /** Ao voltar do checkout: o webhook pode ainda não ter chegado. */
+  syncMercadoPago: () => api.post<ProStatus>('/billing/mercado-pago/sync', {}),
+  cancelMercadoPago: () => api.post<ProStatus>('/billing/mercado-pago/cancel', {}),
 };

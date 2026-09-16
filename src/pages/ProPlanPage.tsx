@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Sparkles, Check, ExternalLink, ShieldCheck } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Sparkles, Check, ExternalLink, ShieldCheck, CreditCard } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { billingService } from '@/services/billingService';
 import { useProStatus } from '@/contexts/ProContext';
-import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT } from '@/utils/playConfig';
+import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_PRECO } from '@/utils/playConfig';
 import { linkGerenciarAssinatura, linkLoja } from '@/utils/twa';
 import * as play from '@/utils/playBilling';
 
@@ -20,7 +20,7 @@ const BENEFICIOS = [
   { titulo: '15 usos do assistente por semana', detalhe: 'no lugar dos 5 da conta gratuita' },
   { titulo: 'Projetos ilimitados', detalhe: `a conta gratuita tem ${FREE_PROJECT_LIMIT} em andamento` },
   { titulo: 'Tarefas, calendário e metas', detalhe: 'continuam grátis para todo mundo, sem limite' },
-  { titulo: 'Cancela quando quiser', detalhe: 'na Play Store, sem ligar nem explicar' },
+  { titulo: 'Cancela quando quiser', detalhe: 'sem ligar nem explicar' },
 ];
 
 function formatarData(iso: string): string {
@@ -28,17 +28,19 @@ function formatarData(iso: string): string {
 }
 
 /**
- * A página do Pro quando o Pro EXISTE — isto é, quando o app está na loja.
+ * A página do Pro quando o Pro EXISTE.
  *
- * `modo='app'`: estamos dentro do app da Play Store; a compra acontece aqui,
- * pelo Play Billing. `modo='loja'`: estamos no site; a compra é no app, e a
- * página manda para a ficha na loja. Nos dois casos, quem já é Pro vê o
- * estado e o link de gerenciar.
+ * `modo='app'`: dentro do app da Play Store; a compra é pelo Play Billing.
+ * `modo='web'`: no site, com o Mercado Pago ligado; a compra é no cartão,
+ * na página do Mercado Pago, e a pessoa volta para cá (`?retorno=mp`).
+ * `modo='loja'`: no site, sem web; manda para a ficha do app na loja.
+ * Em todos, quem já é Pro vê o estado e como gerenciar.
  *
- * Nada aqui aponta para pagar FORA da Play Store — dentro do app, isso é
- * motivo de rejeição; no site, seria mentir que existe outro jeito.
+ * Dentro do app nada aponta para pagar FORA da Play Store — é motivo de
+ * rejeição. O `modo` já chega decidido (`ondeAssinar`); esta página não
+ * escolhe.
  */
-const ProPlanPage: React.FC<{ modo: 'app' | 'loja' }> = ({ modo }) => {
+const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
   const { status: auth } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -50,6 +52,62 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'loja' }> = ({ modo }) => {
   const [preco, setPreco] = useState<string | null>(null);
   const [comprando, setComprando] = useState(false);
   const podeComprarAqui = modo === 'app' && play.disponivel();
+  const [params, setParams] = useSearchParams();
+
+  // Voltou do checkout do Mercado Pago: o webhook pode ainda não ter
+  // chegado, então pedimos ao servidor para conferir agora. O parâmetro sai
+  // da URL para um F5 não repetir o sync (inofensivo, mas inútil).
+  useEffect(() => {
+    if (params.get('retorno') !== 'mp') return;
+    setParams((p) => {
+      p.delete('retorno');
+      return p;
+    }, { replace: true });
+    void (async () => {
+      try {
+        const novo = await billingService.syncMercadoPago();
+        await recarregar();
+        toast.success(
+          novo.pro
+            ? 'Bem-vindo ao Pro!'
+            : 'Ainda não recebemos a confirmação do Mercado Pago. Se você concluiu o pagamento, ela chega em instantes.',
+        );
+      } catch {
+        /* o status do contexto continua valendo; o webhook resolve */
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const assinarWeb = async () => {
+    if (!logado) {
+      navigate('/login?redirect=%2Fapoiar');
+      return;
+    }
+    setComprando(true);
+    try {
+      const { url } = await billingService.checkoutMercadoPago();
+      window.location.assign(url);
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível abrir o pagamento.');
+      setComprando(false);
+    }
+  };
+
+  const [cancelando, setCancelando] = useState(false);
+  const cancelarWeb = async () => {
+    if (!window.confirm('Cancelar a assinatura? O Pro continua até o fim do período já pago.')) return;
+    setCancelando(true);
+    try {
+      await billingService.cancelMercadoPago();
+      await recarregar();
+      toast.success('Assinatura cancelada. O Pro vale até o fim do período pago.');
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível cancelar agora.');
+    } finally {
+      setCancelando(false);
+    }
+  };
 
   useEffect(() => {
     if (!podeComprarAqui) return;
@@ -108,14 +166,27 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'loja' }> = ({ modo }) => {
                 </>
               )}
             </p>
-            <a
-              href={linkGerenciarAssinatura(ANDROID_PACKAGE, PLAY_SKU)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary-vibrant hover:text-primary-hover"
-            >
-              Gerenciar na Play Store <ExternalLink size={14} />
-            </a>
+            {pro.provider === 'mercado_pago' ? (
+              pro.autoRenewing ? (
+                <button
+                  type="button"
+                  onClick={cancelarWeb}
+                  disabled={cancelando}
+                  className="mt-5 text-sm font-medium text-text-secondary underline underline-offset-2 hover:text-danger disabled:opacity-60"
+                >
+                  {cancelando ? 'Cancelando…' : 'Cancelar assinatura'}
+                </button>
+              ) : null
+            ) : (
+              <a
+                href={linkGerenciarAssinatura(ANDROID_PACKAGE, PLAY_SKU)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary-vibrant hover:text-primary-hover"
+              >
+                Gerenciar na Play Store <ExternalLink size={14} />
+              </a>
+            )}
           </Card>
         </div>
       </AppLayout>
@@ -170,6 +241,40 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'loja' }> = ({ modo }) => {
                 <p className="mt-3 text-sm text-danger">
                   A loja não respondeu. Feche e abra o app de novo; se continuar, atualize o Google
                   Play.
+                </p>
+              )}
+            </>
+          ) : modo === 'web' ? (
+            <>
+              <p className="text-2xl font-bold text-text-primary tabular-nums">
+                {PRO_PRECO}
+                <span className="text-base font-normal text-text-secondary"> / mês</span>
+              </p>
+              <p className="mt-1 text-sm text-text-soft">
+                No cartão de crédito, pelo Mercado Pago. Renova todo mês até você cancelar — aqui
+                mesmo, em um clique.
+              </p>
+              <Button
+                size="lg"
+                className="mt-5 w-full sm:w-auto rounded-xl"
+                onClick={assinarWeb}
+                isLoading={comprando}
+              >
+                <CreditCard size={18} className="mr-2" />
+                {logado ? 'Assinar o Pro' : 'Entrar para assinar'}
+              </Button>
+              {ANDROID_PACKAGE && (
+                <p className="mt-3 text-xs text-text-soft">
+                  Prefere pela Play Store?{' '}
+                  <a
+                    href={linkLoja(ANDROID_PACKAGE)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2"
+                  >
+                    Instale o app Android
+                  </a>{' '}
+                  e assine por lá — vale na mesma conta.
                 </p>
               )}
             </>
