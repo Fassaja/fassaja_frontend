@@ -15,10 +15,15 @@ export const PRO_WEEKLY_LIMIT = 15;
  */
 export const FREE_PROJECT_LIMIT = 5;
 /**
- * Preço mensal, só para a tela do site (na Play, o preço vem da loja).
- * Espelha PRO_PRECO_BRL do back-end.
+ * Preço mensal mostrado ENQUANTO o servidor não respondeu (GET
+ * /billing/plano é quem manda). Mantido perto do real para a tela não
+ * "pular" de valor; o número que vale é sempre o do servidor.
  */
-export const PRO_PRECO = 'R$ 14,90';
+export const PRO_PRECO_FALLBACK = 'R$ 12,90';
+
+export function formatarPreco(brl: number): string {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(brl);
+}
 /** Produto de assinatura no Play Console. */
 export const PLAY_SKU = import.meta.env.VITE_PLAY_SKU || 'pro_mensal';
 

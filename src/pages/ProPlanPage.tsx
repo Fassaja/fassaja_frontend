@@ -21,7 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { billingService } from '@/services/billingService';
 import { useProStatus } from '@/contexts/ProContext';
-import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_PRECO, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
+import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
 import { linkLoja } from '@/utils/twa';
 import { AssinaturaAtual } from '@/components/pro/AssinaturaAtual';
 import * as play from '@/utils/playBilling';
@@ -64,7 +64,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
 
   // O status vem do ProContext, que o app inteiro lê: comprar aqui destrava
   // as outras áreas sem recarregar a página.
-  const { status: pro, recarregar } = useProStatus();
+  const { status: pro, recarregar, preco: precoWeb } = useProStatus();
   const [preco, setPreco] = useState<string | null>(null);
   const [comprando, setComprando] = useState(false);
   const podeComprarAqui = modo === 'app' && play.disponivel();
@@ -197,7 +197,8 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
       </a>
     );
 
-  const precoTexto = modo === 'app' ? preco ?? PRO_PRECO : PRO_PRECO;
+  // Na Play, o preço vem da loja (getDetails); no site, do servidor.
+  const precoTexto = modo === 'app' ? preco ?? precoWeb : precoWeb;
 
   return (
     <AppLayout title={titulo} subtitle="Para quem já faz do Fassaja parte do dia">

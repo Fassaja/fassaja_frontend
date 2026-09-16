@@ -7,7 +7,7 @@ import { Mascot } from '@/components/mascot/Mascot';
 import { useAuth } from '@/contexts/AuthContext';
 import { billingService, ProStatus } from '@/services/billingService';
 import { PRO_REQUIRED_EVENT } from '@/services/api';
-import { ondeAssinarAgora, PRO_WEEKLY_LIMIT, FREE_PROJECT_LIMIT } from '@/utils/playConfig';
+import { ondeAssinarAgora, PRO_WEEKLY_LIMIT, FREE_PROJECT_LIMIT, PRO_PRECO_FALLBACK, formatarPreco } from '@/utils/playConfig';
 
 /** As áreas que o Pro destrava. O rótulo aparece no aviso e no convite. */
 export type AreaPro = 'equipe' | 'ideias' | 'agenda' | 'foco';
@@ -31,6 +31,8 @@ interface ProContextValue {
   recarregar: () => Promise<void>;
   /** Abre o convite ao Pro. As telas chamam antes de uma ação trancada. */
   convidar: (area?: AreaPro) => void;
+  /** Preço mensal formatado ("R$ 12,90"), vindo do servidor. */
+  preco: string;
 }
 
 const ProContext = createContext<ProContextValue>({
@@ -39,6 +41,7 @@ const ProContext = createContext<ProContextValue>({
   trancado: false,
   recarregar: async () => undefined,
   convidar: () => undefined,
+  preco: PRO_PRECO_FALLBACK,
 });
 
 export const useProStatus = () => useContext(ProContext);
@@ -54,6 +57,7 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { status: auth } = useAuth();
   const navigate = useNavigate();
   const [status, setStatus] = useState<ProStatus | null>(null);
+  const [preco, setPreco] = useState(PRO_PRECO_FALLBACK);
   const [convite, setConvite] = useState<AreaPro | 'geral' | null>(null);
   /** Motivo vindo do servidor (402), quando o convite nasce de uma recusa. */
   const [motivo, setMotivo] = useState<string | null>(null);
@@ -73,6 +77,15 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     void recarregar();
   }, [recarregar]);
+
+  // O preço é público e não depende de sessão: só quando o Pro existe.
+  useEffect(() => {
+    if (!ondeAssinarAgora()) return;
+    billingService
+      .plano()
+      .then((p) => setPreco(formatarPreco(p.precoBrl)))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const abrir = (e: Event) => {
@@ -97,12 +110,13 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       pro,
       trancado,
       recarregar,
+      preco,
       convidar: (a) => {
         setMotivo(null);
         setConvite(a ?? 'geral');
       },
     }),
-    [status, pro, trancado, recarregar],
+    [status, pro, trancado, recarregar, preco],
   );
 
   const area = convite && convite !== 'geral' ? AREAS_PRO[convite] : null;

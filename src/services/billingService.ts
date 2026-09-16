@@ -15,7 +15,14 @@ export interface ProStatus {
 // Assinatura do Pro. O app só entrega o COMPROVANTE (purchaseToken) da compra
 // feita no Google Play; produto, estado e validade vêm do servidor, que
 // pergunta ao Google. Nunca há um "sou Pro" decidido aqui.
+/** GET /billing/plano — público: o que está à venda e por onde. */
+export interface Plano {
+  precoBrl: number;
+  lojas: { googlePlay: boolean; mercadoPago: boolean };
+}
+
 export const billingService = {
+  plano: () => api.get<Plano>('/billing/plano'),
   status: () => api.get<ProStatus>('/billing/status'),
   verifyGoogle: (purchaseToken: string) =>
     api.post<ProStatus>('/billing/google/verify', { purchaseToken }),
