@@ -30,7 +30,7 @@ const STEPS: WalkthroughStep[] = [
   {
     image: '/bobheroi.png',
     title: '4. Aprove e pronto',
-    text: 'Aprove e os cards viram tarefas. São 5 usos de IA por semana. Bora!',
+    text: 'Aprove e os cards viram tarefas. A cota de IA é semanal — veja quantos restam no topo. Bora!',
   },
 ];
 

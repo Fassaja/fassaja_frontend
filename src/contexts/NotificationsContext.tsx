@@ -34,7 +34,8 @@ import {
 import { formatDate, isToday } from '@/utils/date';
 import { CalendarEvent } from '@/types/event';
 import { reminderTriggerDate, eventEndDate } from '@/utils/eventReminders';
-import { ondeAssinarAgora, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
+import { PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
+import { useProStatus } from '@/contexts/ProContext';
 
 // Texto de quando o evento acontece (reaproveitado no sino e no push).
 function whenLabel(e: CalendarEvent): string {
@@ -91,6 +92,8 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   const { events } = useEvents();
   const { ideas } = useIdeas();
   const { account } = useAuth();
+  const { onde: proOnde } = useProStatus();
+  const proExiste = proOnde !== null;
   const { user } = useUser();
   const prefs = user.notifications;
   const userId = account?.id;
@@ -330,7 +333,6 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     // é outro e o item reaparece não-lido. Some de vez quando a pessoa responde.
     // `hasUsedEnoughToAsk` também é quem inicia a contagem de tempo de casa,
     // então precisa ser chamado sempre — inclusive quando ainda barra.
-    const proExiste = ondeAssinarAgora() !== null;
     if (hasUsedEnoughToAsk(tasks.length) && proResponded === false) {
       raw.push({
         id: `pro-${reminderWindowIndex()}`,
@@ -350,7 +352,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     // `tick` força a reavaliação periódica dos lembretes baseados em horário —
     // é ele também que faz a janela de 7 dias virar sem precisar recarregar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasks, events, ideas, account, joinRequests, readIds, prefs, tick, proResponded]);
+  }, [tasks, events, ideas, account, joinRequests, readIds, prefs, tick, proResponded, proExiste]);
 
   const unreadCount = useMemo(() => items.filter(i => !i.read).length, [items]);
 

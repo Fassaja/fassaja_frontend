@@ -1,4 +1,4 @@
-import { ondeAssinarAgora } from '@/utils/playConfig';
+import { useProStatus } from '@/contexts/ProContext';
 import React, { useState } from 'react';
 import { useTelaSensivel } from '@/hooks/useTelaSensivel';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -31,6 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
  */
 const AccountDeletionPage: React.FC = () => {
   const navigate = useNavigate();
+  const { onde: proOnde } = useProStatus();
   const [searchParams] = useSearchParams();
   // Lido uma vez: logo em seguida o token sai da barra de endereço.
   const [token] = useState(() => searchParams.get('token') ?? '');
@@ -126,7 +127,7 @@ const AccountDeletionPage: React.FC = () => {
                 magnumjabreuu@gmail.com
               </a>{' '}
               e a exclusão é feita em até 15 dias.
-              {ondeAssinarAgora() &&
+              {proOnde &&
                 ' Assinatura do Pro pelo Google Play precisa ser cancelada na Play Store — excluir a conta não cancela a cobrança.'}
             </p>
             <p className="text-text-soft mt-3 text-xs">
@@ -193,7 +194,7 @@ const AccountDeletionPage: React.FC = () => {
               para o membro mais antigo — e, se você for o único integrante, a equipe é excluída
               junto.
             </p>
-            {ondeAssinarAgora() && (
+            {proOnde && (
               <p className="text-text-secondary mt-2 text-sm">
                 Assina o Pro pelo Google Play? Excluir a conta <strong>não cancela a assinatura</strong>{' '}
                 — cancele na Play Store também, senão a cobrança continua.

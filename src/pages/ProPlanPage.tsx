@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, Check, ExternalLink, ShieldCheck, CreditCard } from 'lucide-react';
+import {
+  Sparkles,
+  Check,
+  ExternalLink,
+  ShieldCheck,
+  CreditCard,
+  Users,
+  FolderKanban,
+  Lightbulb,
+  CalendarDays,
+  Timer,
+  ChevronDown,
+} from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -9,19 +21,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { billingService } from '@/services/billingService';
 import { useProStatus } from '@/contexts/ProContext';
-import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_PRECO } from '@/utils/playConfig';
+import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT, FREE_WEEKLY_LIMIT } from '@/utils/playConfig';
 import { linkLoja } from '@/utils/twa';
 import { AssinaturaAtual } from '@/components/pro/AssinaturaAtual';
 import * as play from '@/utils/playBilling';
 
-/** O que o Pro inclui. Espelha docs/google-play.md (fatia 5) e os Termos (6.4). */
-const BENEFICIOS = [
-  { titulo: 'Equipes', detalhe: 'crie equipes; quem você convida entra de graça' },
-  { titulo: 'Ideias, agenda e foco', detalhe: 'registre, marque compromissos e faça sessões de foco' },
-  { titulo: '15 usos do assistente por semana', detalhe: 'no lugar dos 5 da conta gratuita' },
-  { titulo: 'Projetos ilimitados', detalhe: `a conta gratuita tem ${FREE_PROJECT_LIMIT} em andamento` },
-  { titulo: 'Tarefas, calendário e metas', detalhe: 'continuam grátis para todo mundo, sem limite' },
-  { titulo: 'Cancela quando quiser', detalhe: 'sem ligar nem explicar' },
+/** O que o Pro destrava. Espelha docs/google-play.md (fatia 5) e os Termos (8.1). */
+const DESTRAVA = [
+  { icone: <Users size={20} />, titulo: 'Equipes', detalhe: 'Crie equipes e distribua o trabalho. Quem você convida entra de graça.' },
+  { icone: <FolderKanban size={20} />, titulo: 'Projetos sem teto', detalhe: `Quantos quiser em andamento — a conta gratuita para em ${FREE_PROJECT_LIMIT}.` },
+  { icone: <Lightbulb size={20} />, titulo: 'Ideias', detalhe: 'Registre agora, transforme em projeto quando for a hora.' },
+  { icone: <CalendarDays size={20} />, titulo: 'Agenda', detalhe: 'Compromissos com hora marcada, separados das tarefas.' },
+  { icone: <Timer size={20} />, titulo: 'Foco', detalhe: 'Uma tarefa, um tempo, o Bob de olho. Sem o resto do mundo.' },
+  { icone: <Sparkles size={20} />, titulo: `${PRO_WEEKLY_LIMIT} usos do assistente por semana`, detalhe: `Quatro vezes a conta gratuita (${FREE_WEEKLY_LIMIT}) para transformar texto em plano.` },
+];
+
+const FAQ = [
+  { p: 'Posso cancelar quando quiser?', r: 'Sim, em um clique, aqui mesmo ou nas Configurações. Você mantém o Pro até o fim do mês já pago e não é cobrado de novo. Sem ligação, sem motivo.' },
+  { p: 'E se eu me arrepender?', r: 'Você tem 7 dias para pedir o dinheiro de volta, integral, sem perguntas.' },
+  { p: 'Perco algo se deixar de ser Pro?', r: 'Não. Tudo o que você criou continua visível e é seu. Só criar e editar nas áreas do Pro passa a pedir a assinatura de novo.' },
+  { p: 'Vale no celular e no computador?', r: 'Sim. A assinatura é da sua conta, não do aparelho: assinou num, vale em todos.' },
 ];
 
 /**
@@ -45,7 +64,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
 
   // O status vem do ProContext, que o app inteiro lê: comprar aqui destrava
   // as outras áreas sem recarregar a página.
-  const { status: pro, recarregar } = useProStatus();
+  const { status: pro, recarregar, preco: precoWeb } = useProStatus();
   const [preco, setPreco] = useState<string | null>(null);
   const [comprando, setComprando] = useState(false);
   const podeComprarAqui = modo === 'app' && play.disponivel();
@@ -56,13 +75,17 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
   // da URL para um F5 não repetir o sync (inofensivo, mas inútil).
   useEffect(() => {
     if (params.get('retorno') !== 'mp') return;
+    // O Mercado Pago volta com o id da assinatura recém-criada; é ele que o
+    // servidor vai buscar e vincular a esta conta.
+    const preapprovalId = params.get('preapproval_id') ?? undefined;
     setParams((p) => {
       p.delete('retorno');
+      p.delete('preapproval_id');
       return p;
     }, { replace: true });
     void (async () => {
       try {
-        const novo = await billingService.syncMercadoPago();
+        const novo = await billingService.syncMercadoPago(preapprovalId);
         await recarregar();
         toast.success(
           novo.pro
@@ -147,114 +170,140 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
     );
   }
 
+  const cta = logado ? 'Assinar o Pro' : 'Entrar para assinar';
+
+  // O botão de cada caminho. Fica num lugar só para o bloco de preço não
+  // repetir três vezes o mesmo par botão + ressalva.
+  const botao =
+    modo === 'app' ? (
+      <>
+        <Button size="lg" className="w-full sm:w-72 rounded-xl" onClick={assinar} isLoading={comprando} disabled={!podeComprarAqui}>
+          <Sparkles size={18} /> {cta}
+        </Button>
+        {!podeComprarAqui && (
+          <p className="text-sm text-danger">
+            A loja não respondeu. Feche e abra o app de novo; se continuar, atualize o Google Play.
+          </p>
+        )}
+      </>
+    ) : modo === 'web' ? (
+      <Button size="lg" className="w-full sm:w-72 rounded-xl" onClick={assinarWeb} isLoading={comprando}>
+        <CreditCard size={18} /> {cta}
+      </Button>
+    ) : (
+      <a
+        href={linkLoja(ANDROID_PACKAGE)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex w-full sm:w-72 items-center justify-center gap-2 rounded-xl bg-primary-vibrant px-6 py-3 text-lg font-semibold text-white hover:bg-primary-hover"
+      >
+        Abrir na Play Store <ExternalLink size={16} />
+      </a>
+    );
+
+  // Na Play, o preço vem da loja (getDetails); no site, do servidor.
+  const precoTexto = modo === 'app' ? preco ?? precoWeb : precoWeb;
+
   return (
-    <AppLayout title={titulo} subtitle="Mais assistente, mesmo Fassaja">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <Card padding="lg">
-          <div className="flex items-start gap-4">
-            <span className="w-12 h-12 shrink-0 rounded-2xl bg-primary-light text-primary-vibrant flex items-center justify-center">
-              <Sparkles size={22} />
-            </span>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold text-text-primary">O que o Pro inclui</h2>
-              <ul className="mt-3 space-y-2.5">
-                {BENEFICIOS.map((b) => (
-                  <li key={b.titulo} className="flex items-start gap-2.5 text-sm">
-                    <Check size={16} className="mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-300" />
-                    <span>
-                      <strong className="text-text-primary">{b.titulo}</strong>{' '}
-                      <span className="text-text-secondary">— {b.detalhe}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
+    <AppLayout title={titulo} subtitle="Para quem já faz do Fassaja parte do dia">
+      <div className="max-w-3xl mx-auto space-y-6">
+        {/* Abertura: o Bob e a promessa. O Pro não é "mais recursos", é o
+            Fassaja sem teto para quem já o usa todo dia — a página fala com
+            essa pessoa, não com quem chegou ontem. */}
+        <section className="relative overflow-hidden rounded-3xl border border-primary-vibrant/20 bg-gradient-to-br from-primary-light via-surface to-surface p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <Mascot state="strong" size="lg" animate />
+            <div className="text-center sm:text-left">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-vibrant/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-vibrant">
+                <Sparkles size={13} /> Fassaja Pro
+              </p>
+              <h2 className="mt-3 text-2xl sm:text-3xl font-bold leading-tight text-text-primary">
+                Você já organiza o seu dia aqui.
+                <br />
+                Agora organize o resto.
+              </h2>
+              <p className="mt-3 text-text-secondary leading-relaxed">
+                Equipes para trabalhar junto, ideias para não perder nada, agenda e foco para
+                o tempo render — e o assistente quatro vezes mais presente. Por menos de{' '}
+                <strong className="text-text-primary">R$ 0,50 por dia</strong>.
+              </p>
             </div>
+          </div>
+        </section>
+
+        {/* O que destrava, um cartão por coisa: dá para bater o olho e achar
+            a que a pessoa já sentiu falta. */}
+        <section className="grid gap-3 sm:grid-cols-2">
+          {DESTRAVA.map((b) => (
+            <Card key={b.titulo} padding="md" className="flex items-start gap-3">
+              <span className="mt-0.5 w-10 h-10 shrink-0 rounded-xl bg-primary-light text-primary-vibrant flex items-center justify-center">
+                {b.icone}
+              </span>
+              <div>
+                <h3 className="font-semibold text-text-primary">{b.titulo}</h3>
+                <p className="mt-0.5 text-sm text-text-secondary leading-relaxed">{b.detalhe}</p>
+              </div>
+            </Card>
+          ))}
+        </section>
+
+        {/* Preço e o botão — tudo centralizado num eixo só. */}
+        <Card padding="lg" className="border-primary-vibrant/30">
+          <div className="flex flex-col items-center text-center gap-4">
+            <div>
+              <p className="text-4xl font-bold tabular-nums text-text-primary">
+                {precoTexto}
+                <span className="text-lg font-normal text-text-secondary"> / mês</span>
+              </p>
+              <p className="mt-1 text-sm text-text-soft">
+                {modo === 'web'
+                  ? 'No cartão, na página segura do Mercado Pago — você volta para cá já Pro.'
+                  : 'Cobrado pela Google Play.'}{' '}
+                Renova todo mês até você cancelar.
+              </p>
+            </div>
+            {botao}
+            <ul className="flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-xs text-text-soft">
+              <li className="inline-flex items-center gap-1.5"><ShieldCheck size={14} /> 7 dias para se arrepender</li>
+              <li className="inline-flex items-center gap-1.5"><Check size={14} /> Cancela em um clique</li>
+              <li className="inline-flex items-center gap-1.5"><Check size={14} /> Vale no site e no app</li>
+            </ul>
+            {modo === 'web' && ANDROID_PACKAGE && (
+              <p className="text-xs text-text-soft">
+                Prefere pela Play Store?{' '}
+                <a href={linkLoja(ANDROID_PACKAGE)} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                  Instale o app Android
+                </a>{' '}
+                e assine por lá — mesma conta.
+              </p>
+            )}
           </div>
         </Card>
 
-        <Card padding="lg" className="text-center">
-          {modo === 'app' ? (
-            <>
-              <p className="text-2xl font-bold text-text-primary tabular-nums">
-                {preco ?? 'Assinatura mensal'}
-                {preco && <span className="text-base font-normal text-text-secondary"> / mês</span>}
-              </p>
-              <p className="mt-1 text-sm text-text-soft">
-                Cobrado pelo Google Play. Renova todo mês até você cancelar.
-              </p>
-              <Button
-                size="lg"
-                className="mt-5 w-full sm:w-auto rounded-xl"
-                onClick={assinar}
-                isLoading={comprando}
-                disabled={!podeComprarAqui}
-              >
-                {logado ? 'Assinar o Pro' : 'Entrar para assinar'}
-              </Button>
-              {!podeComprarAqui && (
-                <p className="mt-3 text-sm text-danger">
-                  A loja não respondeu. Feche e abra o app de novo; se continuar, atualize o Google
-                  Play.
-                </p>
-              )}
-            </>
-          ) : modo === 'web' ? (
-            <>
-              <p className="text-2xl font-bold text-text-primary tabular-nums">
-                {PRO_PRECO}
-                <span className="text-base font-normal text-text-secondary"> / mês</span>
-              </p>
-              <p className="mt-1 text-sm text-text-soft">
-                No cartão de crédito, pelo Mercado Pago. Renova todo mês até você cancelar — aqui
-                mesmo, em um clique.
-              </p>
-              <Button
-                size="lg"
-                className="mt-5 w-full sm:w-auto rounded-xl"
-                onClick={assinarWeb}
-                isLoading={comprando}
-              >
-                <CreditCard size={18} className="mr-2" />
-                {logado ? 'Assinar o Pro' : 'Entrar para assinar'}
-              </Button>
-              {ANDROID_PACKAGE && (
-                <p className="mt-3 text-xs text-text-soft">
-                  Prefere pela Play Store?{' '}
-                  <a
-                    href={linkLoja(ANDROID_PACKAGE)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline underline-offset-2"
-                  >
-                    Instale o app Android
-                  </a>{' '}
-                  e assine por lá — vale na mesma conta.
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="text-lg font-bold text-text-primary">O Pro é assinado pelo app Android</p>
-              <p className="mt-1 text-sm text-text-secondary">
-                Instale o Fassaja pela Play Store, assine por lá e o Pro vale aqui no site também —
-                é a mesma conta.
-              </p>
-              <a
-                href={linkLoja(ANDROID_PACKAGE)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary-vibrant px-6 py-3 text-lg font-medium text-white hover:bg-primary-hover"
-              >
-                Abrir na Play Store <ExternalLink size={16} />
-              </a>
-            </>
-          )}
-          <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-text-soft">
-            <ShieldCheck size={14} />
-            7 dias para se arrepender, sem perguntas. Ver os{' '}
-            <a href="/termos" className="underline underline-offset-2">Termos</a>.
+        {/* O que NÃO muda. Dizer isso é o que faz o resto ser crível: ninguém
+            está sendo trancado para fora do que já usa. */}
+        <section className="rounded-2xl border border-border bg-bg-secondary px-5 py-4 text-sm text-text-secondary">
+          <strong className="text-text-primary">O que continua grátis, para sempre:</strong> tarefas,
+          calendário, metas e relatórios, sem limite. Até {FREE_PROJECT_LIMIT} projetos em andamento e
+          {FREE_WEEKLY_LIMIT} usos do assistente por semana. E o que você já criou em ideias, agenda ou equipes
+          continua seu, com ou sem Pro.
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="font-semibold text-text-primary">Perguntas rápidas</h3>
+          {FAQ.map((f) => (
+            <details key={f.p} className="group rounded-xl border border-border bg-surface px-4 py-3">
+              <summary className="cursor-pointer list-none font-medium text-text-primary flex items-center justify-between gap-3">
+                {f.p}
+                <ChevronDown size={16} className="shrink-0 text-text-soft transition-transform group-open:rotate-180" />
+              </summary>
+              <p className="mt-2 text-sm text-text-secondary leading-relaxed">{f.r}</p>
+            </details>
+          ))}
+          <p className="text-xs text-text-soft">
+            Detalhes nos <a href="/termos" className="underline underline-offset-2">Termos de Uso</a>.
           </p>
-        </Card>
+        </section>
       </div>
     </AppLayout>
   );

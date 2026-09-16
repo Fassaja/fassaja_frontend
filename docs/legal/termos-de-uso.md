@@ -126,8 +126,8 @@ transmitido a um provedor de IA (hoje, a Anthropic, nos Estados Unidos) apenas
 para gerar a resposta. Ele **não é usado para treinar modelos**. Detalhes na
 Política de Privacidade.
 
-**6.4 Limites de uso.** O assistente tem uma cota semanal de usos: **5 na
-conta gratuita e 15 no plano Pro**, em janela móvel de 7 dias. Uso que falha
+**6.4 Limites de uso.** O assistente tem uma cota semanal de usos: **3 na
+conta gratuita e 12 no plano Pro**, em janela móvel de 7 dias. Uso que falha
 por erro nosso não é descontado. Os números podem mudar; se mudarem para
 menos no plano pago, avisaremos com antecedência (seção 8.6).
 

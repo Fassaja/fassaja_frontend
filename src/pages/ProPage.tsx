@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { proService, PriceBand } from '@/services/proService';
 import { markRespondedLocally } from '@/utils/proReminder';
-import { ondeAssinarAgora } from '@/utils/playConfig';
+import { useProStatus } from '@/contexts/ProContext';
 import ProPlanPage from './ProPlanPage';
 
 const MAX_MESSAGE = 500;
@@ -39,7 +39,7 @@ const ProPage: React.FC = () => {
   // Quando o app está na loja, /apoiar deixa de ser pesquisa e vira o Pro de
   // verdade — dentro do app, comprável; no site, apontando para a loja. A
   // pesquisa continua sendo a página até lá (VITE_ANDROID_PACKAGE vazio).
-  const onde = ondeAssinarAgora();
+  const { onde } = useProStatus();
   if (onde) return <ProPlanPage modo={onde} />;
   return <ProSurveyPage />;
 };
