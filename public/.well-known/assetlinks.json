@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.fassaja.app",
+      "sha256_cert_fingerprints": [
+        "FD:2E:6E:5E:D3:23:15:31:EA:7B:57:87:9C:01:61:21:4E:68:39:E4:8C:CA:7D:89:54:29:A6:F2:A2:B4:1F:43"
+      ]
+    }
+  }
+]
