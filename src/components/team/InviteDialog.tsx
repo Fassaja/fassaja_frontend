@@ -75,7 +75,7 @@ export const InviteDialog: React.FC<Props> = ({ isOpen, onClose, teamId }) => {
    * Convite por e-mail — o caminho principal.
    *
    * Convidar alguém saía do produto: gerava-se um link e mandava-se por
-   * WhatsApp ou e-mail à mão. Aqui o Fassaja manda, dizendo quem convidou e
+   * WhatsApp ou e-mail à mão. Aqui o Fassajá manda, dizendo quem convidou e
    * para qual equipe, e quem aceita entra DIRETO: o convite é nominal, e exigir
    * aprovação depois seria quem digitou o endereço se autorizando duas vezes.
    */

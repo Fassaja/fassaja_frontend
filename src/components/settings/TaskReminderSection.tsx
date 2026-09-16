@@ -125,7 +125,7 @@ export const TaskReminderSection: React.FC = () => {
           {semPermissao && (
             <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
               Este navegador ainda não autorizou notificações — sem isso o aviso não
-              chega. Ative as notificações do Fassaja para valer.
+              chega. Ative as notificações do Fassajá para valer.
             </p>
           )}
         </>

@@ -12,7 +12,7 @@ export const OPEN_TOUR_EVENT = 'fassaja:open-tour';
 const STEPS: WalkthroughStep[] = [
   {
     image: '/bobOla.png',
-    title: 'Bem-vindo ao Fassaja',
+    title: 'Bem-vindo ao Fassajá',
     text: 'Seu painel para organizar tarefas e projetos. Veja os principais espaços em 1 minuto.',
   },
   {
@@ -74,7 +74,7 @@ export const PlatformTourModal: React.FC = () => {
     <WalkthroughModal
       isOpen={open}
       onClose={() => setOpen(false)}
-      title="Conheça o Fassaja"
+      title="Conheça o Fassajá"
       steps={STEPS}
     />
   );

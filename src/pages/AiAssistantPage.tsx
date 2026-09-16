@@ -267,7 +267,7 @@ const AiAssistantPage: React.FC = () => {
         // pista — insuficiente para distinguir PDF corrompido de falha ao
         // carregar o worker do PDF.js. Registrar no console é o que permite
         // diagnosticar sem adivinhação.
-        console.error('[Fassaja] Falha ao importar arquivo:', file.name, err);
+        console.error('[Fassajá] Falha ao importar arquivo:', file.name, err);
         const detail = err instanceof Error ? err.message : String(err);
         setImportError(
           `Não consegui ler este arquivo. Tente colar o conteúdo manualmente. (${detail})`,

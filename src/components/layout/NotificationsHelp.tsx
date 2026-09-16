@@ -117,7 +117,7 @@ export const NotificationsHelp: React.FC = () => {
           )}
           {perm === 'denied' && (
             <p className="text-xs text-danger">
-              As notificações estão bloqueadas para o Fassaja. Libere nas configurações do navegador
+              As notificações estão bloqueadas para o Fassajá. Libere nas configurações do navegador
               (cadeado na barra de endereço) e tente de novo.
             </p>
           )}
@@ -158,7 +158,7 @@ export const NotificationsHelp: React.FC = () => {
                   <li>
                     Escolha <span className="font-semibold">Adicionar à Tela de Início</span>.
                   </li>
-                  <li>Abra o Fassaja por esse novo ícone.</li>
+                  <li>Abra o Fassajá por esse novo ícone.</li>
                   <li>
                     Toque em <span className="font-semibold">Ativar notificações</span> aqui dentro.
                   </li>

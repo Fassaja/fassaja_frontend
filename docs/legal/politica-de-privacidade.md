@@ -1,8 +1,8 @@
-# Política de Privacidade do Fassaja
+# Política de Privacidade do Fassajá
 
 **Versão 1.0 — vigente a partir de 15 de setembro de 2026**
 
-Esta Política explica **quais dados o Fassaja coleta, por que, com quem
+Esta Política explica **quais dados o Fassajá coleta, por que, com quem
 compartilha, por quanto tempo guarda e o que você pode fazer a respeito**. Ela
 vale para o site `www.fassaja.com`, o aplicativo Android distribuído pela
 Google Play e os e-mails que enviamos.
@@ -27,7 +27,7 @@ Política. Respondemos em até **15 dias**.
 |---|---|
 | O que vocês coletam? | O que você digita (conta, tarefas, equipes) e o mínimo técnico para o serviço funcionar. |
 | Vendem meus dados? | **Não.** Nunca. |
-| Usam para anúncios? | **Não.** Não há anúncios no Fassaja. |
+| Usam para anúncios? | **Não.** Não há anúncios no Fassajá. |
 | Usam meu conteúdo para treinar IA? | **Não** — nem nós, nem nossos fornecedores. |
 | Quem mais vê meus dados? | Só os fornecedores que hospedam e operam o serviço (seção 5), sob contrato, e os membros das suas equipes, para o que é da equipe. |
 | Por quanto tempo? | Enquanto a conta existir. Tarefas concluídas somem em 4 dias. Excluiu a conta, apagou tudo. |
@@ -100,7 +100,7 @@ tarefas não é transmitido.
 Pela política da API da Anthropic aplicável a este tipo de uso, o conteúdo
 **não é usado para treinar modelos** e é retido pelo provedor apenas pelo
 tempo necessário para processar o pedido e para fins de segurança, conforme
-a política deles. Nós guardamos, do lado do Fassaja, **apenas o registro de
+a política deles. Nós guardamos, do lado do Fassajá, **apenas o registro de
 que houve um uso e quanto custou** (3.2) — não o texto enviado nem a resposta
 bruta. O que você aprovar vira tarefa e projeto seus, como qualquer outro
 conteúdo.
@@ -155,7 +155,7 @@ proibição legal, avisamos você.
 
 ### 5.4 Sucessão
 
-Se o Fassaja passar a ser operado por uma pessoa jurídica (por exemplo, uma
+Se o Fassajá passar a ser operado por uma pessoa jurídica (por exemplo, uma
 empresa constituída para isso) ou for transferido, seus dados seguem
 protegidos por esta Política; você será avisado.
 
@@ -207,7 +207,7 @@ Para proteger sua conta, podemos pedir confirmação de identidade antes de
 atender um pedido feito por e-mail (por exemplo, responder a partir do e-mail
 cadastrado).
 
-**Decisões automatizadas.** O Fassaja não toma decisões automatizadas que
+**Decisões automatizadas.** O Fassajá não toma decisões automatizadas que
 afetem seus direitos. As sugestões do assistente com IA são propostas que
 você aprova ou descarta; a cota da IA e o limite de tentativas de login são
 regras fixas e iguais para todos.
@@ -230,7 +230,7 @@ dizendo o que aconteceu, quais dados foram afetados e o que fazer.
 
 ## 10. Crianças e adolescentes
 
-O Fassaja não se destina a menores de 13 anos e não coletamos seus dados
+O Fassajá não se destina a menores de 13 anos e não coletamos seus dados
 conscientemente. Adolescentes de 13 a 17 anos podem usar com autorização do
 responsável (Termos, seção 2). Se você é responsável e acredita que uma
 criança criou uma conta, escreva para magnumjabreuu@gmail.com e apagaremos os

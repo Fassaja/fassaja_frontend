@@ -80,7 +80,7 @@ export async function comprar(sku: string): Promise<Compra> {
     [{ supportedMethods: METODO, data: { sku } }],
     // O total é ignorado pelo Play Billing (o preço vem do produto na loja),
     // mas a API exige o campo.
-    { total: { label: 'Fassaja Pro', amount: { currency: 'BRL', value: '0' } } },
+    { total: { label: 'Fassajá Pro', amount: { currency: 'BRL', value: '0' } } },
   );
   const resposta = await pedido.show();
   const detalhes = resposta.details as { purchaseToken?: string };

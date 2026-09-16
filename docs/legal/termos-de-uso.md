@@ -1,16 +1,16 @@
-# Termos de Uso do Fassaja
+# Termos de Uso do Fassajá
 
 **Versão 1.0 — vigente a partir de 15 de setembro de 2026**
 
-Estes Termos regulam o uso do Fassaja — o site `www.fassaja.com`, o aplicativo
+Estes Termos regulam o uso do Fassajá — o site `www.fassaja.com`, o aplicativo
 para Android distribuído pela Google Play e qualquer outro meio pelo qual o
-serviço seja oferecido (juntos, o **"Fassaja"** ou o **"Serviço"**).
+serviço seja oferecido (juntos, o **"Fassajá"** ou o **"Serviço"**).
 
-O Fassaja é oferecido por **Magnum de Abreu**, pessoa física, inscrito no CPF
+O Fassajá é oferecido por **Magnum de Abreu**, pessoa física, inscrito no CPF
 sob o nº 166.632.407-81, com endereço em Campo Grande/MS, Brasil (**"nós"**). Contato:
 magnumjabreuu@gmail.com.
 
-Ao criar uma conta ou usar o Fassaja, você declara que leu, entendeu e
+Ao criar uma conta ou usar o Fassajá, você declara que leu, entendeu e
 concorda com estes Termos e com a [Política de Privacidade](politica-de-privacidade.md),
 que faz parte deles. Se não concordar, não use o Serviço.
 
@@ -21,9 +21,9 @@ determina o Código de Defesa do Consumidor (art. 47).
 
 ---
 
-## 1. O que é o Fassaja
+## 1. O que é o Fassajá
 
-O Fassaja é uma ferramenta de organização pessoal e de equipes: tarefas,
+O Fassajá é uma ferramenta de organização pessoal e de equipes: tarefas,
 projetos, agenda, metas, ideias, sessões de foco, relatórios de produtividade
 e um assistente com inteligência artificial que ajuda a transformar textos em
 planos de trabalho.
@@ -35,13 +35,13 @@ substituto para o seu próprio julgamento sobre o que fazer e quando.
 ## 2. Quem pode usar
 
 - Você precisa ter **18 anos ou mais**.
-- Entre **13 e 17 anos**, você pode usar o Fassaja apenas com autorização de
+- Entre **13 e 17 anos**, você pode usar o Fassajá apenas com autorização de
   um dos pais ou responsável legal, que responde por este contrato. Ao
   cadastrar uma pessoa nessa faixa, o responsável declara que autoriza.
-- O Fassaja **não se destina a menores de 13 anos** e não coletamos dados
+- O Fassajá **não se destina a menores de 13 anos** e não coletamos dados
   dessas pessoas conscientemente. Se soubermos de uma conta nessa situação,
   ela será encerrada e os dados apagados.
-- Se você usa o Fassaja em nome de uma empresa ou organização, declara que
+- Se você usa o Fassajá em nome de uma empresa ou organização, declara que
   tem poderes para vinculá-la a estes Termos.
 
 ## 3. Sua conta
@@ -59,7 +59,7 @@ pedido.
 **3.3 Uma pessoa, uma conta.** Contas são pessoais. Não crie contas para
 terceiros sem autorização nem use contas automatizadas.
 
-**3.4 Modo visitante.** É possível experimentar o Fassaja sem conta. Nesse
+**3.4 Modo visitante.** É possível experimentar o Fassajá sem conta. Nesse
 modo, os dados ficam **apenas no seu navegador** e podem ser perdidos ao
 limpar o histórico ou trocar de dispositivo. Não temos como recuperá-los.
 
@@ -73,7 +73,7 @@ e tarefas da equipe; uma equipe só sua é apagada junto.
 
 ## 4. Seu conteúdo
 
-**4.1 É seu.** Tudo o que você cria no Fassaja — tarefas, projetos, notas,
+**4.1 É seu.** Tudo o que você cria no Fassajá — tarefas, projetos, notas,
 comentários, ideias, metas, textos enviados ao assistente — continua sendo seu.
 Não reivindicamos nenhuma propriedade sobre ele.
 
@@ -89,7 +89,7 @@ o usamos em publicidade e **não o usamos para treinar modelos de inteligência
 artificial** — nem os nossos, nem os de terceiros.
 
 **4.4 Responsabilidade.** Você é responsável pelo que publica. Não insira no
-Fassaja conteúdo que viole a lei, direitos de terceiros ou estes Termos.
+Fassajá conteúdo que viole a lei, direitos de terceiros ou estes Termos.
 
 ## 5. Equipes
 
@@ -106,7 +106,7 @@ Administradores podem remover membros. O conteúdo que você criou **em projetos
 da equipe** permanece com a equipe, porque é trabalho compartilhado; suas
 tarefas pessoais vão com você.
 
-**5.4 O responsável pela equipe** responde pelo uso que ela faz do Fassaja e
+**5.4 O responsável pela equipe** responde pelo uso que ela faz do Fassajá e
 por garantir que os membros conhecem estes Termos.
 
 ## 6. Assistente com inteligência artificial
@@ -137,7 +137,7 @@ teria autorização para transmitir a um provedor de tecnologia.
 
 ## 7. O que não é permitido
 
-Você não pode usar o Fassaja para:
+Você não pode usar o Fassajá para:
 
 - violar leis, direitos de terceiros ou a privacidade de alguém;
 - assediar, ameaçar, discriminar ou enganar outras pessoas, inclusive dentro
@@ -148,7 +148,7 @@ Você não pode usar o Fassaja para:
 - burlar limites técnicos (cotas, limites de requisições, restrições de plano)
   ou interferir no funcionamento do Serviço;
 - copiar, extrair em massa, fazer engenharia reversa ou revender o Serviço;
-- usar o Fassaja para desenvolver um produto concorrente com base nos nossos
+- usar o Fassajá para desenvolver um produto concorrente com base nos nossos
   dados ou na nossa interface.
 
 **Viu algo que não deveria estar aqui?** Todo comentário de equipe tem um
@@ -196,7 +196,7 @@ menos que você cancele antes.
 
 **8.5 Cancelamento.** Você cancela a qualquer momento: assinatura pela Google
 Play, em *Google Play → Pagamentos e assinaturas → Assinaturas*; assinatura
-pelo site, na própria página do Pro no Fassaja, em um clique. O cancelamento
+pelo site, na própria página do Pro no Fassajá, em um clique. O cancelamento
 **não é retroativo**: você mantém o Pro até o fim do período já pago e não é
 cobrado de novo. Não exigimos motivo, ligação ou nenhuma etapa além dessa.
 
@@ -230,7 +230,7 @@ de você confirmar.
 
 ## 9. Disponibilidade, mudanças e encerramento
 
-**9.1 Disponibilidade.** Trabalhamos para manter o Fassaja no ar, mas ele é
+**9.1 Disponibilidade.** Trabalhamos para manter o Fassajá no ar, mas ele é
 um produto em desenvolvimento, mantido por uma pessoa, e pode ficar
 indisponível por manutenção, falhas de terceiros (hospedagem, provedores) ou
 força maior. Não prometemos disponibilidade ininterrupta.
@@ -253,16 +253,16 @@ legal, **avisaremos antes** e daremos oportunidade de resposta e de exportar
 o que for seu. Se a suspensão for injustificada, o período do Pro não usado
 é devolvido.
 
-**9.5 Fim do Serviço.** Se decidirmos encerrar o Fassaja, avisaremos com pelo
+**9.5 Fim do Serviço.** Se decidirmos encerrar o Fassajá, avisaremos com pelo
 menos **60 dias** de antecedência e ofereceremos um meio de você levar seus
 dados. Assinaturas em vigor serão reembolsadas proporcionalmente.
 
 ## 10. Propriedade intelectual
 
-O Fassaja — nome, marca, logotipo, mascote, interface, código e textos — é
+O Fassajá — nome, marca, logotipo, mascote, interface, código e textos — é
 nosso ou licenciado para nós. Estes Termos lhe dão uma licença **pessoal,
 limitada, não exclusiva e revogável** para usar o Serviço conforme ele é
-oferecido. Nada aqui transfere a você direitos sobre o Fassaja, nem a nós
+oferecido. Nada aqui transfere a você direitos sobre o Fassajá, nem a nós
 direitos sobre o seu conteúdo (seção 4).
 
 ## 11. Responsabilidade
@@ -272,7 +272,7 @@ Termos e no aplicativo, e que tratamos seus dados como diz a Política de
 Privacidade. Defeitos são corrigidos conforme o Código de Defesa do
 Consumidor.
 
-**11.2 O que não garantimos.** Que o Fassaja atende a uma necessidade
+**11.2 O que não garantimos.** Que o Fassajá atende a uma necessidade
 específica sua, que sugestões de IA estão corretas (seção 6.2) ou que ele
 funciona em todo dispositivo ou navegador.
 
@@ -292,7 +292,7 @@ Podemos alterar estes Termos. Mudanças relevantes serão comunicadas por e-mail
 e/ou por aviso no aplicativo com **pelo menos 15 dias de antecedência** (30
 dias quando afetarem preço ou benefícios do Pro). A versão vigente e a data
 ficam sempre no topo desta página; versões anteriores ficam disponíveis a
-pedido. Continuar usando o Fassaja após a vigência significa que você aceitou
+pedido. Continuar usando o Fassajá após a vigência significa que você aceitou
 a nova versão; se não aceitar, você pode encerrar a conta antes dela.
 
 ## 13. Lei aplicável, foro e resolução de conflitos
@@ -315,9 +315,9 @@ o art. 101, I, do Código de Defesa do Consumidor.
 - A tolerância com o descumprimento de uma cláusula não significa renúncia a
   ela.
 - Estes Termos, com a Política de Privacidade, são o acordo completo entre
-  você e nós sobre o uso do Fassaja.
+  você e nós sobre o uso do Fassajá.
 - Você não pode transferir sua conta ou este contrato a terceiros. Nós
-  podemos transferi-lo a uma pessoa jurídica que venha a assumir o Fassaja
+  podemos transferi-lo a uma pessoa jurídica que venha a assumir o Fassajá
   (por exemplo, uma empresa constituída para operá-lo), avisando você; seus
   direitos não mudam com isso.
 

@@ -113,7 +113,7 @@ export const TaskComments: React.FC<{ taskId: string }> = ({ taskId }) => {
       <ConfirmDialog
         isOpen={denunciando !== null}
         title="Denunciar este comentário?"
-        message="Ele será revisado pelo responsável pelo Fassaja. Nada é apagado automaticamente, e o autor não é avisado de quem denunciou."
+        message="Ele será revisado pelo responsável pelo Fassajá. Nada é apagado automaticamente, e o autor não é avisado de quem denunciou."
         hint="Use para conteúdo ofensivo, assédio, spam ou algo que não deveria estar aqui. Se for só uma discordância, fale com a pessoa."
         confirmLabel="Denunciar"
         cancelLabel="Cancelar"

@@ -258,7 +258,7 @@ body {
  *
  * `100vh` é a altura da janela IGNORANDO a barra de endereço e a barra de
  * navegação do navegador móvel — elas ficam POR CIMA. O resultado é que o fim
- * de um painel de tela cheia (o menu lateral) some atrás delas, e no Fassaja
+ * de um painel de tela cheia (o menu lateral) some atrás delas, e no Fassajá
  * era justamente o último item que sumia.
  *
  * `100dvh` é a altura realmente visível, e acompanha as barras aparecendo e

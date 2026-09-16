@@ -254,7 +254,7 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <AppLayout title="Configurações" subtitle="Personalize sua experiência no Fassaja.">
+    <AppLayout title="Configurações" subtitle="Personalize sua experiência no Fassajá.">
       {/* Coluna centralizada, e cada ajuste num item do acordeão — o mesmo
           do Fale conosco. Configurações é onde se entra para mexer em UMA
           coisa; com tudo aberto, era preciso rolar sete blocos para achá-la.
@@ -428,7 +428,7 @@ const SettingsPage: React.FC = () => {
                     group: 'Conta',
                     icon: <SectionIcon icon={<Sparkles size={18} />} />,
                     title: 'Plano',
-                    summary: proStatus.pro ? 'Fassaja Pro' : 'Gratuito',
+                    summary: proStatus.pro ? 'Fassajá Pro' : 'Gratuito',
                     content: proStatus.pro ? (
                       <>
                         <SectionHint>
@@ -447,7 +447,7 @@ const SettingsPage: React.FC = () => {
                         <ActionRow
                           icon={<Sparkles size={18} />}
                           iconClass="bg-primary-light text-primary-vibrant"
-                          title="Conhecer o Fassaja Pro"
+                          title="Conhecer o Fassajá Pro"
                           description="Projetos ilimitados, equipes, ideias, agenda, foco e mais IA"
                           onClick={() => navigate('/apoiar')}
                         />
@@ -496,7 +496,7 @@ const SettingsPage: React.FC = () => {
                           title: 'Redefinição de senha',
                           content: (
                             <>
-                              <SectionHint>Sua senha de acesso ao Fassaja.</SectionHint>
+                              <SectionHint>Sua senha de acesso ao Fassajá.</SectionHint>
                               <AccountPasswordSection />
                             </>
                           ),
@@ -519,7 +519,7 @@ const SettingsPage: React.FC = () => {
                     <ActionRow
                       icon={<PlayCircle size={18} />}
                       iconClass="bg-primary-light text-primary-vibrant"
-                      title="Ver tour do Fassaja"
+                      title="Ver tour do Fassajá"
                       description="O passeio pelos principais espaços, com o Bob"
                       onClick={reopenPlatformTour}
                     />
@@ -541,7 +541,7 @@ const SettingsPage: React.FC = () => {
                       icon={<ScrollText size={18} />}
                       iconClass="bg-bg-secondary text-text-secondary"
                       title="Termos de Uso"
-                      description="O combinado entre você e o Fassaja"
+                      description="O combinado entre você e o Fassajá"
                       onClick={() => navigate('/termos')}
                     />
                     <ActionRow
