@@ -7,7 +7,7 @@ export const ANDROID_PACKAGE = import.meta.env.VITE_ANDROID_PACKAGE ?? '';
  * (ai-core.service.ts); o número de verdade é o do servidor — este é só o
  * que a tela promete, e os dois precisam andar juntos.
  */
-export const PRO_WEEKLY_LIMIT = 15;
+export const PRO_WEEKLY_LIMIT = 12;
 /**
  * Projetos pessoais em andamento na conta gratuita. Espelha
  * FREE_PROJECT_LIMIT do back-end (projects.service.ts) — o servidor é quem

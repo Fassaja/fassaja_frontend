@@ -33,7 +33,7 @@ const DESTRAVA = [
   { icone: <Lightbulb size={20} />, titulo: 'Ideias', detalhe: 'Registre agora, transforme em projeto quando for a hora.' },
   { icone: <CalendarDays size={20} />, titulo: 'Agenda', detalhe: 'Compromissos com hora marcada, separados das tarefas.' },
   { icone: <Timer size={20} />, titulo: 'Foco', detalhe: 'Uma tarefa, um tempo, o Bob de olho. Sem o resto do mundo.' },
-  { icone: <Sparkles size={20} />, titulo: `${PRO_WEEKLY_LIMIT} usos do assistente por semana`, detalhe: 'Três vezes mais que a conta gratuita para transformar texto em plano.' },
+  { icone: <Sparkles size={20} />, titulo: `${PRO_WEEKLY_LIMIT} usos do assistente por semana`, detalhe: 'Mais que o dobro da conta gratuita para transformar texto em plano.' },
 ];
 
 const FAQ = [
@@ -220,7 +220,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
               </h2>
               <p className="mt-3 text-text-secondary leading-relaxed">
                 Equipes para trabalhar junto, ideias para não perder nada, agenda e foco para
-                o tempo render — e o assistente três vezes mais presente. Por menos de{' '}
+                o tempo render — e o assistente mais que o dobro das vezes. Por menos de{' '}
                 <strong className="text-text-primary">R$ 0,50 por dia</strong>.
               </p>
             </div>
