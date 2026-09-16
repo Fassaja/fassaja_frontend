@@ -1,3 +1,4 @@
+import { AvisoPro } from '@/components/pro/AvisoPro';
 import React, { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Clock, MapPin, Link2, Bell } from 'lucide-react';
@@ -126,6 +127,7 @@ const AgendaPage: React.FC = () => {
       onNewTask={openCreate}
       actionLabel="Novo evento"
     >
+      <AvisoPro area="agenda" />
       <PageTour id="agenda" />
       {loading ? (
         showSkeleton ? <CalendarSkeleton /> : null

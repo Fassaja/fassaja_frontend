@@ -153,11 +153,18 @@ Você não pode usar o Fassaja para:
 
 ## 8. Plano Pro
 
-**8.1 O que é.** O Fassaja é gratuito. O **Plano Pro** é uma assinatura
-opcional que amplia a cota do assistente com IA (seção 6.4) e pode incluir
-outros benefícios descritos na página de assinatura no momento da compra. O
-que está descrito na página no momento da compra é o que vale para aquela
-assinatura.
+**8.1 O que é.** Tarefas, projetos, calendário, metas e relatórios são
+gratuitos para todos. O **Plano Pro** é uma assinatura opcional que inclui:
+
+- **criar equipes** — quem você convida participa sem precisar do Pro;
+- **ideias, agenda e sessões de foco** — criar e editar;
+- a cota ampliada do assistente com IA (seção 6.4);
+- o que mais estiver descrito na página de assinatura no momento da compra.
+
+**O que você já criou nunca fica trancado.** Sem o Pro, ideias, compromissos,
+sessões e equipes que já existem continuam visíveis e podem ser apagados;
+apenas criar e editar passa a exigir a assinatura. O que está descrito na
+página no momento da compra é o que vale para aquela assinatura.
 
 **8.2 Onde se compra.** A assinatura é vendida **pela Google Play**, dentro do
 aplicativo Android. O Google é o vendedor da assinatura; a cobrança, os

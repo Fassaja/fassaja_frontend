@@ -25,6 +25,11 @@ export function setAuthenticated(value: boolean): void {
 // O AuthContext escuta para encerrar a sessão e levar ao /login.
 export const SESSION_EXPIRED_EVENT = 'fassaja:session-expired';
 
+// Disparado quando o servidor responde 402 com `code: PRO_REQUIRED`: a ação
+// existe, mas é do plano Pro. O ProContext escuta e abre o convite — em vez
+// de cada tela tratar o mesmo erro do seu jeito.
+export const PRO_REQUIRED_EVENT = 'fassaja:pro-required';
+
 // A regra de quais rotas podem expirar sessão vive em utils/authPaths, que é
 // testável fora do Vite (este módulo lê import.meta.env).
 
@@ -58,13 +63,18 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (!response.ok) {
     let message = `Erro ${response.status}`;
+    let code: string | undefined;
     try {
       const data = await response.json();
       if (data?.message) {
         message = Array.isArray(data.message) ? data.message.join(', ') : data.message;
       }
+      if (typeof data?.code === 'string') code = data.code;
     } catch {
       // resposta sem corpo JSON
+    }
+    if (response.status === 402 && code === 'PRO_REQUIRED' && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(PRO_REQUIRED_EVENT));
     }
     const error = new Error(message) as Error & { status?: number };
     error.status = response.status;

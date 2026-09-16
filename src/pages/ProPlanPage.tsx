@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Check, ExternalLink, ShieldCheck } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -7,15 +7,18 @@ import { Button } from '@/components/common/Button';
 import { Mascot } from '@/components/mascot/Mascot';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { billingService, ProStatus } from '@/services/billingService';
+import { billingService } from '@/services/billingService';
+import { useProStatus } from '@/contexts/ProContext';
 import { ANDROID_PACKAGE, PLAY_SKU } from '@/utils/playConfig';
 import { linkGerenciarAssinatura, linkLoja } from '@/utils/twa';
 import * as play from '@/utils/playBilling';
 
 /** O que o Pro inclui. Espelha docs/google-play.md (fatia 5) e os Termos (6.4). */
 const BENEFICIOS = [
+  { titulo: 'Equipes', detalhe: 'crie equipes; quem você convida entra de graça' },
+  { titulo: 'Ideias, agenda e foco', detalhe: 'registre, marque compromissos e faça sessões de foco' },
   { titulo: '15 usos do assistente por semana', detalhe: 'no lugar dos 5 da conta gratuita' },
-  { titulo: 'Tudo o que já é grátis continua grátis', detalhe: 'tarefas, equipes, agenda, foco, metas' },
+  { titulo: 'Tarefas, projetos, calendário e metas', detalhe: 'continuam grátis para todo mundo' },
   { titulo: 'Cancela quando quiser', detalhe: 'na Play Store, sem ligar nem explicar' },
 ];
 
@@ -40,23 +43,12 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'loja' }> = ({ modo }) => {
   const navigate = useNavigate();
   const logado = auth === 'authed';
 
-  const [pro, setPro] = useState<ProStatus | null>(null);
+  // O status vem do ProContext, que o app inteiro lê: comprar aqui destrava
+  // as outras áreas sem recarregar a página.
+  const { status: pro, recarregar } = useProStatus();
   const [preco, setPreco] = useState<string | null>(null);
   const [comprando, setComprando] = useState(false);
   const podeComprarAqui = modo === 'app' && play.disponivel();
-
-  const carregar = useCallback(async () => {
-    if (!logado) return;
-    try {
-      setPro(await billingService.status());
-    } catch {
-      /* sem status, a página mostra a oferta — o servidor decide de verdade */
-    }
-  }, [logado]);
-
-  useEffect(() => {
-    void carregar();
-  }, [carregar]);
 
   useEffect(() => {
     if (!podeComprarAqui) return;
@@ -80,7 +72,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'loja' }> = ({ modo }) => {
       // dinheiro volta em 3 dias.
       const novo = await billingService.verifyGoogle(compra.purchaseToken);
       await compra.concluir(true);
-      setPro(novo);
+      await recarregar();
       toast.success(novo.pro ? 'Bem-vindo ao Pro!' : 'Compra registrada. O Google ainda está confirmando o pagamento.');
     } catch (err) {
       // Folha fechada pela pessoa (AbortError) não é erro nosso.

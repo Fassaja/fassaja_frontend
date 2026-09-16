@@ -1,3 +1,4 @@
+import { AvisoPro } from '@/components/pro/AvisoPro';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { GanttChart, LayoutDashboard, ListChecks, LogOut, Settings2, UserPlus, Users } from 'lucide-react';
@@ -220,6 +221,7 @@ export const TeamShell: React.FC = () => {
           : 'Quem faz o quê, e como o trabalho está distribuído.'
       }
     >
+      <AvisoPro area="equipe" />
       <PageTour id="team" />
 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Criar equipe" size="md">

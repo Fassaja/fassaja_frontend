@@ -1,3 +1,4 @@
+import { AvisoPro } from '@/components/pro/AvisoPro';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
@@ -149,6 +150,7 @@ const IdeasPage: React.FC = () => {
         title="Ideias"
         subtitle="Registre possibilidades agora e decida quando transformá-las em projetos."
       >
+        <AvisoPro area="ideias" />
         {loading ? (
           showSkeleton ? <ProjectsSkeleton /> : null
         ) : ideas.length === 0 ? (
