@@ -7,7 +7,7 @@ import { Mascot } from '@/components/mascot/Mascot';
 import { useAuth } from '@/contexts/AuthContext';
 import { billingService, ProStatus } from '@/services/billingService';
 import { PRO_REQUIRED_EVENT } from '@/services/api';
-import { ondeAssinarAgora, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
+import { ondeAssinarAgora, PRO_WEEKLY_LIMIT, FREE_PROJECT_LIMIT } from '@/utils/playConfig';
 
 /** As áreas que o Pro destrava. O rótulo aparece no aviso e no convite. */
 export type AreaPro = 'equipe' | 'ideias' | 'agenda' | 'foco';
@@ -55,6 +55,8 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const navigate = useNavigate();
   const [status, setStatus] = useState<ProStatus | null>(null);
   const [convite, setConvite] = useState<AreaPro | 'geral' | null>(null);
+  /** Motivo vindo do servidor (402), quando o convite nasce de uma recusa. */
+  const [motivo, setMotivo] = useState<string | null>(null);
 
   const recarregar = useCallback(async () => {
     if (auth !== 'authed' || !ondeAssinarAgora()) {
@@ -73,7 +75,11 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [recarregar]);
 
   useEffect(() => {
-    const abrir = () => setConvite('geral');
+    const abrir = (e: Event) => {
+      const detail = (e as CustomEvent<unknown>).detail;
+      setMotivo(typeof detail === 'string' && detail ? detail : null);
+      setConvite('geral');
+    };
     window.addEventListener(PRO_REQUIRED_EVENT, abrir);
     return () => window.removeEventListener(PRO_REQUIRED_EVENT, abrir);
   }, []);
@@ -86,7 +92,16 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const trancado = proExiste && status !== null && !pro;
 
   const value = useMemo<ProContextValue>(
-    () => ({ status, pro, trancado, recarregar, convidar: (a) => setConvite(a ?? 'geral') }),
+    () => ({
+      status,
+      pro,
+      trancado,
+      recarregar,
+      convidar: (a) => {
+        setMotivo(null);
+        setConvite(a ?? 'geral');
+      },
+    }),
     [status, pro, trancado, recarregar],
   );
 
@@ -106,11 +121,14 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 <strong className="text-text-primary">{area.oQue[0].toUpperCase() + area.oQue.slice(1)}</strong>{' '}
                 é do plano Pro. O que você já tem continua aqui, como sempre.
               </>
+            ) : motivo ? (
+              <>{motivo}</>
             ) : (
               <>Esta ação é do plano Pro. O que você já tem continua aqui, como sempre.</>
             )}
           </p>
           <ul className="mt-4 text-left text-sm text-text-secondary space-y-1.5">
+            <li className="flex gap-2"><Sparkles size={16} className="mt-0.5 shrink-0 text-primary-vibrant" />Projetos ilimitados (a conta gratuita tem {FREE_PROJECT_LIMIT} em andamento)</li>
             <li className="flex gap-2"><Sparkles size={16} className="mt-0.5 shrink-0 text-primary-vibrant" />Equipes, ideias, agenda e foco</li>
             <li className="flex gap-2"><Sparkles size={16} className="mt-0.5 shrink-0 text-primary-vibrant" />{PRO_WEEKLY_LIMIT} usos do assistente por semana</li>
           </ul>

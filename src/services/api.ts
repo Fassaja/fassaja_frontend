@@ -74,7 +74,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       // resposta sem corpo JSON
     }
     if (response.status === 402 && code === 'PRO_REQUIRED' && typeof window !== 'undefined') {
-      window.dispatchEvent(new Event(PRO_REQUIRED_EVENT));
+      // A mensagem do servidor diz o motivo exato ("5 projetos em andamento");
+      // o convite a mostra em vez de um texto genérico.
+      window.dispatchEvent(new CustomEvent(PRO_REQUIRED_EVENT, { detail: message }));
     }
     const error = new Error(message) as Error & { status?: number };
     error.status = response.status;

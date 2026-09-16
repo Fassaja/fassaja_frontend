@@ -153,9 +153,12 @@ Você não pode usar o Fassaja para:
 
 ## 8. Plano Pro
 
-**8.1 O que é.** Tarefas, projetos, calendário, metas e relatórios são
-gratuitos para todos. O **Plano Pro** é uma assinatura opcional que inclui:
+**8.1 O que é.** Tarefas, calendário, metas e relatórios são gratuitos para
+todos, sem limite. A conta gratuita pode manter **até 5 projetos pessoais em
+andamento** ao mesmo tempo (projetos concluídos e projetos de equipe não
+contam). O **Plano Pro** é uma assinatura opcional que inclui:
 
+- **projetos ilimitados**;
 - **criar equipes** — quem você convida participa sem precisar do Pro;
 - **ideias, agenda e sessões de foco** — criar e editar;
 - a cota ampliada do assistente com IA (seção 6.4);

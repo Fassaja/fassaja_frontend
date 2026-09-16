@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { billingService } from '@/services/billingService';
 import { useProStatus } from '@/contexts/ProContext';
-import { ANDROID_PACKAGE, PLAY_SKU } from '@/utils/playConfig';
+import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT } from '@/utils/playConfig';
 import { linkGerenciarAssinatura, linkLoja } from '@/utils/twa';
 import * as play from '@/utils/playBilling';
 
@@ -18,7 +18,8 @@ const BENEFICIOS = [
   { titulo: 'Equipes', detalhe: 'crie equipes; quem você convida entra de graça' },
   { titulo: 'Ideias, agenda e foco', detalhe: 'registre, marque compromissos e faça sessões de foco' },
   { titulo: '15 usos do assistente por semana', detalhe: 'no lugar dos 5 da conta gratuita' },
-  { titulo: 'Tarefas, projetos, calendário e metas', detalhe: 'continuam grátis para todo mundo' },
+  { titulo: 'Projetos ilimitados', detalhe: `a conta gratuita tem ${FREE_PROJECT_LIMIT} em andamento` },
+  { titulo: 'Tarefas, calendário e metas', detalhe: 'continuam grátis para todo mundo, sem limite' },
   { titulo: 'Cancela quando quiser', detalhe: 'na Play Store, sem ligar nem explicar' },
 ];
 
