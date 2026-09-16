@@ -11,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { proService, PriceBand } from '@/services/proService';
 import { markRespondedLocally } from '@/utils/proReminder';
+import { ondeAssinarAgora } from '@/utils/playConfig';
+import ProPlanPage from './ProPlanPage';
 
 const MAX_MESSAGE = 500;
 
@@ -34,6 +36,15 @@ const PRICE_OPTIONS: SelectableOption[] = [
  * definir preço — e quem responde vira o primeiro público do lançamento.
  */
 const ProPage: React.FC = () => {
+  // Quando o app está na loja, /apoiar deixa de ser pesquisa e vira o Pro de
+  // verdade — dentro do app, comprável; no site, apontando para a loja. A
+  // pesquisa continua sendo a página até lá (VITE_ANDROID_PACKAGE vazio).
+  const onde = ondeAssinarAgora();
+  if (onde) return <ProPlanPage modo={onde} />;
+  return <ProSurveyPage />;
+};
+
+const ProSurveyPage: React.FC = () => {
   const { account, isGuest } = useAuth();
   const toast = useToast();
 

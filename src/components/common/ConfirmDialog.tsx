@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './Button';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
@@ -35,7 +36,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 }) => {
   useBodyScrollLock(isOpen);
 
-  return (
+  // Portal, como o Modal. Renderizado no lugar, o diálogo ficava dentro do
+  // conteúdo da página — que sai do `animate-page-in` com um `transform`
+  // residual e, por isso, vira o bloco de contenção de tudo que é `fixed`
+  // abaixo dele. O resultado no celular: o escurecimento cobria só a página
+  // (a barra do topo ficava clara) e o painel se centralizava na altura da
+  // PÁGINA inteira, não da tela — em uma aba longa como Gestão, "Excluir
+  // equipe" escurecia tudo e nenhum diálogo aparecia.
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -116,6 +124,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 };

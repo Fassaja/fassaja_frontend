@@ -322,6 +322,23 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             <Button type="submit" isLoading={loading} className="w-full rounded-xl" size="lg">
               {isLogin ? 'Entrar' : 'Criar conta'}
             </Button>
+
+            {/* O aceite é por conduta (criar a conta), como os Termos dizem —
+                sem caixa de marcar, que ninguém lê e só encurta o formulário
+                para quem está no celular. O link é o que importa. */}
+            {!isLogin && (
+              <p className="text-xs text-text-soft text-center leading-relaxed">
+                Ao criar a conta, você concorda com os{' '}
+                <Link to="/termos" className="underline underline-offset-2 hover:text-text-primary">
+                  Termos de Uso
+                </Link>{' '}
+                e a{' '}
+                <Link to="/privacidade" className="underline underline-offset-2 hover:text-text-primary">
+                  Política de Privacidade
+                </Link>
+                .
+              </p>
+            )}
           </form>
 
           <p className="text-sm text-text-secondary text-center mt-6">

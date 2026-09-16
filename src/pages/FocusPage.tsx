@@ -1,3 +1,4 @@
+import { AvisoPro } from '@/components/pro/AvisoPro';
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Timer, Square, Check, Coffee, Search, X } from 'lucide-react';
@@ -111,6 +112,7 @@ const FocusPage: React.FC = () => {
 
   return (
     <AppLayout title="Foco" subtitle="Uma tarefa, um tempo, sem o resto do mundo.">
+      <AvisoPro area="foco" />
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
         {/* O Bob e o que ele tem a dizer. Troca com o estado, sem saltar. */}
         {/* `mode="popLayout"` e não `"wait"`: com `wait`, a fala antiga

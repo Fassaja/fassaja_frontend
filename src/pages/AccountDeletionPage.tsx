@@ -103,16 +103,33 @@ const AccountDeletionPage: React.FC = () => {
           </div>
         )}
 
-        {/* Link sem token: e-mail truncado, ou alguém chegou aqui por engano. */}
+        {/* Sem token: e-mail truncado, alguém que chegou por engano — ou o
+            revisor da Play Store, que exige uma URL pública explicando como
+            excluir a conta. A página tem de dizer o caminho, não só "link
+            incompleto". */}
         {!done && !token && (
           <div className="text-center">
             <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
               <ShieldQuestion size={28} className="text-amber-600 dark:text-amber-300" />
             </div>
-            <h2 className="text-2xl font-bold text-text-primary">Link incompleto</h2>
+            <h2 className="text-2xl font-bold text-text-primary">Excluir sua conta</h2>
             <p className="text-text-secondary mt-2">
-              Este endereço não traz o código de confirmação. Copie o link do e-mail inteiro, ou
-              peça outro nas Configurações.
+              Entre no Fassaja e vá em <strong className="text-text-primary">Configurações →
+              Excluir minha conta</strong>. A exclusão é imediata e irreversível: perfil, tarefas,
+              projetos pessoais, etiquetas, eventos e estatísticas são apagados. O que você criou
+              em equipes fica com a equipe.
+            </p>
+            <p className="text-text-secondary mt-3 text-sm">
+              Sem acesso à conta? Escreva de seu e-mail cadastrado para{' '}
+              <a href="mailto:magnumjabreuu@gmail.com" className="underline underline-offset-2">
+                magnumjabreuu@gmail.com
+              </a>{' '}
+              e a exclusão é feita em até 15 dias. Assinatura do Pro pelo Google Play precisa ser
+              cancelada na Play Store — excluir a conta não cancela a cobrança.
+            </p>
+            <p className="text-text-soft mt-3 text-xs">
+              Chegou aqui por um link de e-mail? Ele veio sem o código de confirmação — copie o
+              endereço inteiro ou peça outro nas Configurações.
             </p>
             <Button
               onClick={() => navigate('/settings')}
@@ -173,6 +190,10 @@ const AccountDeletionPage: React.FC = () => {
               O que você criou em equipes fica com a equipe. Equipes das quais você é dono passam
               para o membro mais antigo — e, se você for o único integrante, a equipe é excluída
               junto.
+            </p>
+            <p className="text-text-secondary mt-2 text-sm">
+              Assina o Pro pelo Google Play? Excluir a conta <strong>não cancela a assinatura</strong>{' '}
+              — cancele na Play Store também, senão a cobrança continua.
             </p>
 
             <form onSubmit={handleDelete} className="space-y-4 mt-6">

@@ -17,6 +17,7 @@ import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { AppRoutes } from '@/routes/AppRoutes';
 import { TopProgressBar } from '@/components/layout/TopProgressBar';
 import { Analytics } from '@vercel/analytics/react';
+import { ProProvider } from '@/contexts/ProContext';
 import { sanitizeUrl } from '@/utils/analyticsPath';
 
 function App() {
@@ -33,6 +34,9 @@ function App() {
         <CelebrationProvider>
           <BrowserRouter>
             <AuthProvider>
+            {/* Depois do AuthProvider (lê a sessão) e dentro do Router (navega
+                ao convite). Antes das áreas, que perguntam "está trancado?". */}
+            <ProProvider>
               <ProjectsProvider>
                 <TagsProvider>
                   <TasksProvider>
@@ -68,6 +72,7 @@ function App() {
                   </TasksProvider>
                 </TagsProvider>
               </ProjectsProvider>
+            </ProProvider>
             </AuthProvider>
           </BrowserRouter>
         </CelebrationProvider>

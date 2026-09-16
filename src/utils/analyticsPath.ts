@@ -58,6 +58,8 @@ const ROTAS: Rota[] = [
   { padrao: '/join/:token', rotulo: '/join/[token]' },
   { padrao: '/tasks' },
   { padrao: '/apoiar' },
+  { padrao: '/termos' },
+  { padrao: '/privacidade' },
   { padrao: '/ideas' },
   { padrao: '/projects' },
   { padrao: '/calendar' },

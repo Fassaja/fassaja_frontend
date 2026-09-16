@@ -34,6 +34,7 @@ import {
 import { formatDate, isToday } from '@/utils/date';
 import { CalendarEvent } from '@/types/event';
 import { reminderTriggerDate, eventEndDate } from '@/utils/eventReminders';
+import { ondeAssinarAgora, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
 
 // Texto de quando o evento acontece (reaproveitado no sino e no push).
 function whenLabel(e: CalendarEvent): string {
@@ -329,12 +330,17 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     // é outro e o item reaparece não-lido. Some de vez quando a pessoa responde.
     // `hasUsedEnoughToAsk` também é quem inicia a contagem de tempo de casa,
     // então precisa ser chamado sempre — inclusive quando ainda barra.
+    const proExiste = ondeAssinarAgora() !== null;
     if (hasUsedEnoughToAsk(tasks.length) && proResponded === false) {
       raw.push({
         id: `pro-${reminderWindowIndex()}`,
         icon: <HeartHandshake size={18} />,
-        title: 'Ajude a definir o Fassaja Pro',
-        detail: 'Conte em 30 segundos quanto você pagaria',
+        // Antes da loja, a pergunta de preço; depois, o convite. A mesma
+        // rota (/apoiar) muda de página sozinha.
+        title: proExiste ? 'Conheça o Fassaja Pro' : 'Ajude a definir o Fassaja Pro',
+        detail: proExiste
+          ? `${PRO_WEEKLY_LIMIT} usos do assistente por semana`
+          : 'Conte em 30 segundos quanto você pagaria',
         tone: '#8B5CF6',
         link: '/apoiar',
       });

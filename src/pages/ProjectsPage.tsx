@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { AvisoLimiteProjetos } from '@/components/pro/AvisoLimiteProjetos';
 import { useNavigate } from 'react-router-dom';
 import { Archive, ChevronDown } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -178,6 +179,9 @@ const ProjectsPage: React.FC = () => {
         subtitle="Organize suas tarefas por projetos."
       >
         <PageTour id="projects" />
+        <AvisoLimiteProjetos
+          emAndamento={projects.filter(p => !p.teamId && !p.completedAt).length}
+        />
         {loading ? (
           showSkeleton ? <ProjectsSkeleton /> : null
         ) : projects.length > 0 ? (
