@@ -1,3 +1,4 @@
+import { ondeAssinarAgora } from '@/utils/playConfig';
 import React, { useState } from 'react';
 import { useTelaSensivel } from '@/hooks/useTelaSensivel';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -124,8 +125,9 @@ const AccountDeletionPage: React.FC = () => {
               <a href="mailto:magnumjabreuu@gmail.com" className="underline underline-offset-2">
                 magnumjabreuu@gmail.com
               </a>{' '}
-              e a exclusão é feita em até 15 dias. Assinatura do Pro pelo Google Play precisa ser
-              cancelada na Play Store — excluir a conta não cancela a cobrança.
+              e a exclusão é feita em até 15 dias.
+              {ondeAssinarAgora() &&
+                ' Assinatura do Pro pelo Google Play precisa ser cancelada na Play Store — excluir a conta não cancela a cobrança.'}
             </p>
             <p className="text-text-soft mt-3 text-xs">
               Chegou aqui por um link de e-mail? Ele veio sem o código de confirmação — copie o
@@ -191,10 +193,12 @@ const AccountDeletionPage: React.FC = () => {
               para o membro mais antigo — e, se você for o único integrante, a equipe é excluída
               junto.
             </p>
-            <p className="text-text-secondary mt-2 text-sm">
-              Assina o Pro pelo Google Play? Excluir a conta <strong>não cancela a assinatura</strong>{' '}
-              — cancele na Play Store também, senão a cobrança continua.
-            </p>
+            {ondeAssinarAgora() && (
+              <p className="text-text-secondary mt-2 text-sm">
+                Assina o Pro pelo Google Play? Excluir a conta <strong>não cancela a assinatura</strong>{' '}
+                — cancele na Play Store também, senão a cobrança continua.
+              </p>
+            )}
 
             <form onSubmit={handleDelete} className="space-y-4 mt-6">
               <Input
