@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ProBadge } from '@/components/pro/ProBadge';
 import { Tooltip } from '@/components/common/Tooltip';
 import { StatStrip } from '@/components/common/StatStrip';
 import { StreakCard } from '@/components/dashboard/StreakCard';
@@ -221,8 +222,9 @@ const ProfilePage: React.FC = () => {
           </Tooltip>
 
           <div className="min-w-0 flex-1">
-            <h2 className="text-2xl font-bold text-text-primary truncate">
-              {user.name || 'Seu nome'}
+            <h2 className="flex items-center gap-2 text-2xl font-bold text-text-primary">
+              <span className="truncate">{user.name || 'Seu nome'}</span>
+              <ProBadge className="shrink-0" />
             </h2>
             <p className="text-sm text-text-secondary truncate">{account?.email}</p>
             {avatarSrc && (

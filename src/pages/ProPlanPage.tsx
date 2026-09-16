@@ -10,7 +10,8 @@ import { useToast } from '@/contexts/ToastContext';
 import { billingService } from '@/services/billingService';
 import { useProStatus } from '@/contexts/ProContext';
 import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_PRECO } from '@/utils/playConfig';
-import { linkGerenciarAssinatura, linkLoja } from '@/utils/twa';
+import { linkLoja } from '@/utils/twa';
+import { AssinaturaAtual } from '@/components/pro/AssinaturaAtual';
 import * as play from '@/utils/playBilling';
 
 /** O que o Pro inclui. Espelha docs/google-play.md (fatia 5) e os Termos (6.4). */
@@ -22,10 +23,6 @@ const BENEFICIOS = [
   { titulo: 'Tarefas, calendário e metas', detalhe: 'continuam grátis para todo mundo, sem limite' },
   { titulo: 'Cancela quando quiser', detalhe: 'sem ligar nem explicar' },
 ];
-
-function formatarData(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-}
 
 /**
  * A página do Pro quando o Pro EXISTE.
@@ -94,21 +91,6 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
     }
   };
 
-  const [cancelando, setCancelando] = useState(false);
-  const cancelarWeb = async () => {
-    if (!window.confirm('Cancelar a assinatura? O Pro continua até o fim do período já pago.')) return;
-    setCancelando(true);
-    try {
-      await billingService.cancelMercadoPago();
-      await recarregar();
-      toast.success('Assinatura cancelada. O Pro vale até o fim do período pago.');
-    } catch (err) {
-      toast.error((err as Error).message || 'Não foi possível cancelar agora.');
-    } finally {
-      setCancelando(false);
-    }
-  };
-
   useEffect(() => {
     if (!podeComprarAqui) return;
     play
@@ -156,37 +138,9 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
               <Mascot state="celebrate" size="md" animate />
             </div>
             <h2 className="text-xl font-bold text-text-primary">Você é Pro</h2>
-            <p className="mt-2 text-text-secondary">
-              {pro.autoRenewing ? (
-                <>Renova em <strong className="text-text-primary">{pro.until && formatarData(pro.until)}</strong>.</>
-              ) : (
-                <>
-                  Renovação cancelada — o Pro continua até{' '}
-                  <strong className="text-text-primary">{pro.until && formatarData(pro.until)}</strong>.
-                </>
-              )}
-            </p>
-            {pro.provider === 'mercado_pago' ? (
-              pro.autoRenewing ? (
-                <button
-                  type="button"
-                  onClick={cancelarWeb}
-                  disabled={cancelando}
-                  className="mt-5 text-sm font-medium text-text-secondary underline underline-offset-2 hover:text-danger disabled:opacity-60"
-                >
-                  {cancelando ? 'Cancelando…' : 'Cancelar assinatura'}
-                </button>
-              ) : null
-            ) : (
-              <a
-                href={linkGerenciarAssinatura(ANDROID_PACKAGE, PLAY_SKU)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary-vibrant hover:text-primary-hover"
-              >
-                Gerenciar na Play Store <ExternalLink size={14} />
-              </a>
-            )}
+            <div className="mt-2">
+              <AssinaturaAtual align="center" />
+            </div>
           </Card>
         </div>
       </AppLayout>
