@@ -597,9 +597,13 @@ const SettingsPage: React.FC = () => {
             O que você criou em equipes fica com a equipe, para não apagar o trabalho de outras
             pessoas. Equipes das quais você é dono passam para o membro mais antigo — e, se você for
             o único integrante, a equipe é excluída junto.
-            <strong className="block text-text-primary mt-3 mb-1">Assinatura do Pro</strong>
-            Excluir a conta não cancela uma assinatura feita pelo Google Play. Cancele na Play
-            Store também, senão a cobrança continua.
+            {proExiste && (
+              <>
+                <strong className="block text-text-primary mt-3 mb-1">Assinatura do Pro</strong>
+                Excluir a conta não cancela uma assinatura feita pelo Google Play. Cancele na
+                Play Store também, senão a cobrança continua.
+              </>
+            )}
           </>
         }
         confirmLabel="Sim, quero excluir"
