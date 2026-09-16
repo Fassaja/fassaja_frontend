@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Smartphone, X, ExternalLink } from 'lucide-react';
-import { ANDROID_PACKAGE, PRO_WEB } from '@/utils/playConfig';
+import { ANDROID_PACKAGE, ondeAssinarAgora } from '@/utils/playConfig';
 import { deveAvisarDaLoja, dentroDoApp, linkLoja } from '@/utils/twa';
 
 const KEY = 'fassaja_aviso_play';
@@ -29,7 +29,7 @@ export const AvisoPlayStore: React.FC = () => {
   // quem procurar; só não é empurrado.
   const mostrar =
     !fechado &&
-    !PRO_WEB &&
+    ondeAssinarAgora() !== 'web' &&
     deveAvisarDaLoja({
       userAgent: navigator.userAgent,
       noApp: dentroDoApp(),

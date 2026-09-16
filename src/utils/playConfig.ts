@@ -29,10 +29,19 @@ export function formatarPreco(brl: number): string {
 /** Produto de assinatura no Play Console. */
 export const PLAY_SKU = import.meta.env.VITE_PLAY_SKU || 'pro_mensal';
 
-/** A assinatura pela web (Mercado Pago) está ligada? '1' quando o servidor tem o token. */
-export const PRO_WEB = import.meta.env.VITE_PRO_WEB === '1';
+/**
+ * A assinatura pela web está ligada? Quem sabe é o SERVIDOR (GET
+ * /billing/plano → `lojas.mercadoPago`): é ele que tem o token e o plano, e
+ * uma variável no front que precisasse andar junto seria a primeira coisa a
+ * ficar dessincronizada. `ProContext` preenche isto na subida; até lá, é
+ * "não" — a tela nunca oferece o que o servidor não confirmou.
+ */
+let webAtiva = false;
+export function definirWebAtiva(v: boolean): void {
+  webAtiva = v;
+}
 
 /** Onde ESTA pessoa pode assinar o Pro agora ('app' | 'web' | 'loja' | null). */
 export function ondeAssinarAgora(): OndeAssinar {
-  return ondeAssinar(dentroDoApp(), ANDROID_PACKAGE, PRO_WEB);
+  return ondeAssinar(dentroDoApp(), ANDROID_PACKAGE, webAtiva);
 }

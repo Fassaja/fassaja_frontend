@@ -1,6 +1,6 @@
 import { AssinaturaAtual } from '@/components/pro/AssinaturaAtual';
 import { useProStatus } from '@/contexts/ProContext';
-import { ondeAssinarAgora, FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT, FREE_WEEKLY_LIMIT } from '@/utils/playConfig';
+import { FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT, FREE_WEEKLY_LIMIT } from '@/utils/playConfig';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -126,7 +126,7 @@ const SettingsPage: React.FC = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const proStatus = useProStatus();
-  const proExiste = ondeAssinarAgora() !== null;
+  const proExiste = proStatus.onde !== null;
   const { account, logout } = useAuth();
 
   // Exclusão de conta (LGPD) em duas etapas: primeiro o aviso "tem certeza?",

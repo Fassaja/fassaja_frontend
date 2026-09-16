@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle, Lightbulb, Loader2, Send, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { ondeAssinarAgora, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
+import { PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
+import { useProStatus } from '@/contexts/ProContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
 import { Badge } from '@/components/common/Badge';
@@ -90,6 +91,7 @@ const MAX_DOC_CHARS = 50000;
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 const AiAssistantPage: React.FC = () => {
+  const { onde: ondeAssinar } = useProStatus();
   const navigate = useNavigate();
   const { projects, refresh: refreshProjects } = useProjects();
   const { refresh: refreshTasks } = useTasks();
@@ -500,7 +502,7 @@ const AiAssistantPage: React.FC = () => {
               usos disponíveis esta semana
               {/* Só oferece o Pro onde ele existe (app publicado) e para quem
                   não é Pro. Antes disso, a frase termina aqui. */}
-              {!status.pro && ondeAssinarAgora() && (
+              {!status.pro && ondeAssinar && (
                 <>
                   {' · '}
                   <Link to="/apoiar" className="font-medium text-primary-vibrant hover:text-primary-hover">

@@ -7,7 +7,15 @@ import { Mascot } from '@/components/mascot/Mascot';
 import { useAuth } from '@/contexts/AuthContext';
 import { billingService, ProStatus } from '@/services/billingService';
 import { PRO_REQUIRED_EVENT } from '@/services/api';
-import { ondeAssinarAgora, PRO_WEEKLY_LIMIT, FREE_PROJECT_LIMIT, PRO_PRECO_FALLBACK, formatarPreco } from '@/utils/playConfig';
+import {
+  ondeAssinarAgora,
+  definirWebAtiva,
+  PRO_WEEKLY_LIMIT,
+  FREE_PROJECT_LIMIT,
+  PRO_PRECO_FALLBACK,
+  formatarPreco,
+} from '@/utils/playConfig';
+import type { OndeAssinar } from '@/utils/twa';
 
 /** As áreas que o Pro destrava. O rótulo aparece no aviso e no convite. */
 export type AreaPro = 'equipe' | 'ideias' | 'agenda' | 'foco';
@@ -33,6 +41,12 @@ interface ProContextValue {
   convidar: (area?: AreaPro) => void;
   /** Preço mensal formatado ("R$ 12,90"), vindo do servidor. */
   preco: string;
+  /**
+   * Onde esta pessoa pode assinar agora — reativo: muda quando o servidor
+   * responde qual loja está ligada. Use este em componentes, e não
+   * `ondeAssinarAgora()`, que é a foto do momento.
+   */
+  onde: OndeAssinar;
 }
 
 const ProContext = createContext<ProContextValue>({
@@ -42,6 +56,7 @@ const ProContext = createContext<ProContextValue>({
   recarregar: async () => undefined,
   convidar: () => undefined,
   preco: PRO_PRECO_FALLBACK,
+  onde: null,
 });
 
 export const useProStatus = () => useContext(ProContext);
@@ -58,12 +73,13 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const navigate = useNavigate();
   const [status, setStatus] = useState<ProStatus | null>(null);
   const [preco, setPreco] = useState(PRO_PRECO_FALLBACK);
+  const [onde, setOnde] = useState<OndeAssinar>(() => ondeAssinarAgora());
   const [convite, setConvite] = useState<AreaPro | 'geral' | null>(null);
   /** Motivo vindo do servidor (402), quando o convite nasce de uma recusa. */
   const [motivo, setMotivo] = useState<string | null>(null);
 
   const recarregar = useCallback(async () => {
-    if (auth !== 'authed' || !ondeAssinarAgora()) {
+    if (auth !== 'authed' || !onde) {
       setStatus(null);
       return;
     }
@@ -72,18 +88,22 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       /* sem resposta, a tela não tranca nada; o servidor tranca se precisar */
     }
-  }, [auth]);
+  }, [auth, onde]);
 
   useEffect(() => {
     void recarregar();
   }, [recarregar]);
 
-  // O preço é público e não depende de sessão: só quando o Pro existe.
+  // Público e sem sessão, na subida: é o servidor quem diz se a web está
+  // à venda (e por quanto). Sem resposta, fica como estava — desligada.
   useEffect(() => {
-    if (!ondeAssinarAgora()) return;
     billingService
       .plano()
-      .then((p) => setPreco(formatarPreco(p.precoBrl)))
+      .then((p) => {
+        definirWebAtiva(p.lojas.mercadoPago);
+        setPreco(formatarPreco(p.precoBrl));
+        setOnde(ondeAssinarAgora());
+      })
       .catch(() => undefined);
   }, []);
 
@@ -98,7 +118,7 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const pro = status?.pro === true;
-  const proExiste = ondeAssinarAgora() !== null;
+  const proExiste = onde !== null;
   // Enquanto o status não chegou, NÃO tranca: um aviso de "isto é do Pro"
   // piscando para quem é Pro seria pior do que um clique que o servidor
   // responde com o convite.
@@ -111,12 +131,13 @@ export const ProProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       trancado,
       recarregar,
       preco,
+      onde,
       convidar: (a) => {
         setMotivo(null);
         setConvite(a ?? 'geral');
       },
     }),
-    [status, pro, trancado, recarregar, preco],
+    [status, pro, trancado, recarregar, preco, onde],
   );
 
   const area = convite && convite !== 'geral' ? AREAS_PRO[convite] : null;
