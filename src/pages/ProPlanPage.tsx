@@ -21,7 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { billingService } from '@/services/billingService';
 import { useProStatus } from '@/contexts/ProContext';
-import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
+import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT, FREE_WEEKLY_LIMIT } from '@/utils/playConfig';
 import { linkLoja } from '@/utils/twa';
 import { AssinaturaAtual } from '@/components/pro/AssinaturaAtual';
 import * as play from '@/utils/playBilling';
@@ -33,7 +33,7 @@ const DESTRAVA = [
   { icone: <Lightbulb size={20} />, titulo: 'Ideias', detalhe: 'Registre agora, transforme em projeto quando for a hora.' },
   { icone: <CalendarDays size={20} />, titulo: 'Agenda', detalhe: 'Compromissos com hora marcada, separados das tarefas.' },
   { icone: <Timer size={20} />, titulo: 'Foco', detalhe: 'Uma tarefa, um tempo, o Bob de olho. Sem o resto do mundo.' },
-  { icone: <Sparkles size={20} />, titulo: `${PRO_WEEKLY_LIMIT} usos do assistente por semana`, detalhe: 'Mais que o dobro da conta gratuita para transformar texto em plano.' },
+  { icone: <Sparkles size={20} />, titulo: `${PRO_WEEKLY_LIMIT} usos do assistente por semana`, detalhe: `Quatro vezes a conta gratuita (${FREE_WEEKLY_LIMIT}) para transformar texto em plano.` },
 ];
 
 const FAQ = [
@@ -75,13 +75,17 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
   // da URL para um F5 não repetir o sync (inofensivo, mas inútil).
   useEffect(() => {
     if (params.get('retorno') !== 'mp') return;
+    // O Mercado Pago volta com o id da assinatura recém-criada; é ele que o
+    // servidor vai buscar e vincular a esta conta.
+    const preapprovalId = params.get('preapproval_id') ?? undefined;
     setParams((p) => {
       p.delete('retorno');
+      p.delete('preapproval_id');
       return p;
     }, { replace: true });
     void (async () => {
       try {
-        const novo = await billingService.syncMercadoPago();
+        const novo = await billingService.syncMercadoPago(preapprovalId);
         await recarregar();
         toast.success(
           novo.pro
@@ -220,7 +224,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
               </h2>
               <p className="mt-3 text-text-secondary leading-relaxed">
                 Equipes para trabalhar junto, ideias para não perder nada, agenda e foco para
-                o tempo render — e o assistente mais que o dobro das vezes. Por menos de{' '}
+                o tempo render — e o assistente quatro vezes mais presente. Por menos de{' '}
                 <strong className="text-text-primary">R$ 0,50 por dia</strong>.
               </p>
             </div>
@@ -253,7 +257,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
               </p>
               <p className="mt-1 text-sm text-text-soft">
                 {modo === 'web'
-                  ? 'No cartão de crédito, pelo Mercado Pago.'
+                  ? 'No cartão, na página segura do Mercado Pago — você volta para cá já Pro.'
                   : 'Cobrado pela Google Play.'}{' '}
                 Renova todo mês até você cancelar.
               </p>
@@ -281,7 +285,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
         <section className="rounded-2xl border border-border bg-bg-secondary px-5 py-4 text-sm text-text-secondary">
           <strong className="text-text-primary">O que continua grátis, para sempre:</strong> tarefas,
           calendário, metas e relatórios, sem limite. Até {FREE_PROJECT_LIMIT} projetos em andamento e
-          5 usos do assistente por semana. E o que você já criou em ideias, agenda ou equipes
+          {FREE_WEEKLY_LIMIT} usos do assistente por semana. E o que você já criou em ideias, agenda ou equipes
           continua seu, com ou sem Pro.
         </section>
 

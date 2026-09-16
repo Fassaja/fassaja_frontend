@@ -8,6 +8,8 @@ export const ANDROID_PACKAGE = import.meta.env.VITE_ANDROID_PACKAGE ?? '';
  * que a tela promete, e os dois precisam andar juntos.
  */
 export const PRO_WEEKLY_LIMIT = 12;
+/** Cota grátis. Espelha FREE_WEEKLY_LIMIT do back-end. */
+export const FREE_WEEKLY_LIMIT = 3;
 /**
  * Projetos pessoais em andamento na conta gratuita. Espelha
  * FREE_PROJECT_LIMIT do back-end (projects.service.ts) — o servidor é quem

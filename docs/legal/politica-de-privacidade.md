@@ -72,8 +72,9 @@ senha e exclusão de conta também são guardados só como hash.
 - Dados de pagamento (número de cartão, endereço de cobrança): quem cobra é
   a Google Play ou o Mercado Pago. **Nunca vemos** esses dados; recebemos
   apenas a confirmação de que a assinatura existe e está válida. Ao assinar
-  pelo site, enviamos ao Mercado Pago o seu e-mail e um identificador da sua
-  conta, para vincular o pagamento a ela.
+  pelo site, enviamos ao Mercado Pago um identificador da sua conta, para
+  vincular o pagamento a ela; o e-mail usado no Mercado Pago é o da sua conta
+  lá, que pode ser outro.
 - Localização, contatos, arquivos do dispositivo, microfone, câmera.
 - Dados de navegação em outros sites.
 - Dados sensíveis (saúde, religião, orientação sexual, opinião política,

@@ -28,7 +28,8 @@ export const billingService = {
     api.post<ProStatus>('/billing/google/verify', { purchaseToken }),
   /** Abre o checkout do Mercado Pago; devolve a URL para onde ir. */
   checkoutMercadoPago: () => api.post<{ url: string }>('/billing/mercado-pago/checkout', {}),
-  /** Ao voltar do checkout: o webhook pode ainda não ter chegado. */
-  syncMercadoPago: () => api.post<ProStatus>('/billing/mercado-pago/sync', {}),
+  /** Ao voltar do checkout: a assinatura recém-criada vem em `preapprovalId`. */
+  syncMercadoPago: (preapprovalId?: string) =>
+    api.post<ProStatus>('/billing/mercado-pago/sync', { preapprovalId }),
   cancelMercadoPago: () => api.post<ProStatus>('/billing/mercado-pago/cancel', {}),
 };
