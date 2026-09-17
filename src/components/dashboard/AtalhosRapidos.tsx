@@ -9,8 +9,9 @@ import { vibrar } from '@/components/layout/MobileDock';
  * Atalhos do Dashboard no celular: as quatro coisas que alguém abre o app
  * para fazer, a um toque, antes de qualquer número.
  *
- * Cada um é um cartão com gradiente próprio — cor é o que o olho usa para
- * achar um botão sem ler. Entram em cascata na abertura e afundam ao tocar.
+ * Na paleta do app (superfície, borda, azul da marca no ícone), do mesmo
+ * jeito que os cartões do resto da tela — atalho não é banner. Entram em
+ * cascata na abertura e afundam ao tocar.
  *
  * Só no celular (`lg:hidden`): no desktop o topo e a barra lateral já dão
  * tudo isso a um clique, e uma fileira de botões duplicaria.
@@ -18,16 +19,14 @@ import { vibrar } from '@/components/layout/MobileDock';
 interface Atalho {
   rotulo: string;
   Icone: LucideIcon;
-  /** Gradiente e sombra na mesma família de cor. */
-  cor: string;
   path: string;
 }
 
 const ATALHOS: Atalho[] = [
-  { rotulo: 'Foco', Icone: Timer, cor: 'from-emerald-400 to-teal-600 shadow-emerald-500/30', path: '/focus' },
-  { rotulo: 'Agenda', Icone: CalendarClock, cor: 'from-sky-400 to-indigo-600 shadow-indigo-500/30', path: '/agenda' },
-  { rotulo: 'Calendário', Icone: CalendarDays, cor: 'from-orange-400 to-rose-500 shadow-rose-500/30', path: '/calendar' },
-  { rotulo: 'IA', Icone: Sparkles, cor: 'from-violet-500 to-fuchsia-600 shadow-fuchsia-500/30', path: '/ai' },
+  { rotulo: 'Foco', Icone: Timer, path: '/focus' },
+  { rotulo: 'Agenda', Icone: CalendarClock, path: '/agenda' },
+  { rotulo: 'Calendário', Icone: CalendarDays, path: '/calendar' },
+  { rotulo: 'IA', Icone: Sparkles, path: '/ai' },
 ];
 
 export const AtalhosRapidos: React.FC = () => {
@@ -37,7 +36,7 @@ export const AtalhosRapidos: React.FC = () => {
 
   return (
     <motion.ul
-      className="lg:hidden mb-5 grid grid-cols-4 gap-2.5"
+      className="lg:hidden mb-4 grid grid-cols-4 gap-2"
       initial="fora"
       animate="dentro"
       variants={{ dentro: { transition: { staggerChildren: 0.05 } } }}
@@ -52,20 +51,18 @@ export const AtalhosRapidos: React.FC = () => {
         >
           <motion.button
             type="button"
-            whileTap={{ scale: 0.93, y: 1 }}
+            whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 600, damping: 30 }}
             onClick={() => {
               vibrar(8);
               navigate(logado ? a.path : '/login');
             }}
-            className={`relative flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-br ${a.cor} text-white shadow-lg select-none focus:outline-none focus-visible:ring-4 focus-visible:ring-white/50`}
+            className="flex w-full flex-col items-center gap-1.5 rounded-xl border border-border bg-surface py-2.5 text-[11px] font-semibold text-text-secondary shadow-sm select-none active:border-primary-vibrant/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-vibrant/50"
           >
-            {/* Brilho no canto superior: dá volume ao cartão sem imagem. */}
-            <span className="pointer-events-none absolute -top-6 -right-6 h-16 w-16 rounded-full bg-white/25 blur-xl" />
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30 backdrop-blur-sm">
-              <a.Icone size={22} strokeWidth={2.4} />
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-light text-primary-vibrant">
+              <a.Icone size={18} strokeWidth={2.2} />
             </span>
-            <span className="text-[11px] font-bold tracking-wide drop-shadow-sm">{a.rotulo}</span>
+            {a.rotulo}
           </motion.button>
         </motion.li>
       ))}
