@@ -114,8 +114,11 @@ export const Sidebar: React.FC = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
 
-  // A gaveta do celular vive no contexto: quem a abre é o "Mais" da dock.
-  const { collapsed, toggleCollapsed, mobileOpen: isOpen, setMobileOpen: setIsOpen } = useSidebar();
+  // No celular a navegação é a dock (MobileDock) e o painel "Mais"; a
+  // gaveta lateral não abre mais ali. `mobileOpen` do contexto é do painel.
+  const { collapsed, toggleCollapsed } = useSidebar();
+  const isOpen = false;
+  const setIsOpen = (_open: boolean) => undefined;
   // Trava o scroll da página atrás enquanto o menu (drawer mobile) está aberto.
   useBodyScrollLock(isOpen);
   /**
