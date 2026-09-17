@@ -9,7 +9,6 @@ import {
   Settings,
   Menu,
   User,
-  X,
   Home,
   Flag,
   Users,
@@ -110,7 +109,6 @@ const navGroups: {
 let rolagemDoMenu = 0;
 
 export const Sidebar: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -118,7 +116,8 @@ export const Sidebar: React.FC = () => {
 
   // Trava o scroll da página atrás enquanto o menu (drawer mobile) está aberto.
   useBodyScrollLock(isOpen);
-  const { collapsed, toggleCollapsed } = useSidebar();
+  // A gaveta do celular vive no contexto: quem a abre é o "Mais" da dock.
+  const { collapsed, toggleCollapsed, mobileOpen: isOpen, setMobileOpen: setIsOpen } = useSidebar();
   /**
    * "Recolhida" vale só no desktop. No celular a barra é uma gaveta que abre
    * por cima do conteúdo, e ali ela precisa aparecer inteira — recolhida em
@@ -159,14 +158,10 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={isOpen ? 'Fechar menu' : 'Abrir menu'}
-        className="fixed top-4 left-2 z-50 lg:hidden bg-surface p-2 rounded-xl border border-border shadow-sm"
-      >
-        {isOpen ? <X size={22} /> : <Menu size={22} />}
-      </button>
+      {/* No celular, quem abre a gaveta é o "Mais" da dock de baixo
+          (MobileDock). O botão flutuante de hambúrguer saiu: era a única
+          coisa na tela com cara de site. Fechar continua sendo tocar fora
+          (overlay) ou escolher um destino. */}
 
       {/* Sidebar */}
       <aside

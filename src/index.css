@@ -130,6 +130,18 @@ html {
 
 body {
   @apply bg-bg-main text-text-primary;
+  /* Dois tiques de "site" que o dedo percebe: o flash cinza ao tocar em
+     qualquer coisa (Android) e o elástico da página inteira ao puxar além do
+     fim. App não faz nenhum dos dois. */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Toque responde na hora: sem a espera de 300 ms por um possível duplo-toque. */
+button,
+a,
+[role='button'] {
+  touch-action: manipulation;
 }
 
 /* Seleção de texto com a cor da marca (em vez do azul padrão do sistema). */

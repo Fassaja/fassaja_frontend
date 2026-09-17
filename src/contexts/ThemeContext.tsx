@@ -57,6 +57,13 @@ function readStored(): ThemePreference {
  */
 export function applyTheme(resolved: ResolvedTheme): void {
   document.documentElement.classList.toggle('dark', resolved === 'dark');
+  // A barra de status do Android (e do app da Play Store) é pintada com a
+  // `theme-color` da página. Com a cor da marca, ela vira uma faixa azul em
+  // cima da tela; com a cor do FUNDO, some — a tela parece inteira. Os
+  // valores são os de --c-bg-main em src/index.css.
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', resolved === 'dark' ? '#0A101C' : '#F7FAFF');
 }
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

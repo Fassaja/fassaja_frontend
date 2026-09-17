@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { MobileDock } from './MobileDock';
 import { PlatformTourModal } from './PlatformTourModal';
 import { AjudaDaAreaProvider } from '@/components/onboarding/AjudaDaArea';
 import { BobAssistant } from '@/components/ai/BobAssistant';
@@ -43,7 +44,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         <Topbar onNewTask={onNewTask} actionLabel={actionLabel} title={title} subtitle={subtitle} />
         <main className="flex-1 pt-20">
           {/* Entrada suave do conteúdo a cada navegação (o layout remonta por página). */}
-          <div className="p-4 lg:p-8 animate-page-in">
+          {/* Embaixo, no celular, o conteúdo precisa passar por trás da dock
+              sem o último item ficar escondido atrás dela. */}
+          <div className="p-4 pb-28 lg:p-8 animate-page-in">
             {children}
           </div>
         </main>
@@ -51,6 +54,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <PlatformTourModal />
       {/* Assistente flutuante — em portal, então não afeta o fluxo do layout. */}
       <BobAssistant />
+      <MobileDock />
     </div>
     </AjudaDaAreaProvider>
   );
