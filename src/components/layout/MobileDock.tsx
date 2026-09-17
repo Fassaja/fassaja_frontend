@@ -26,7 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 
 /**
- * A dock do celular: quatro destinos e um "+" no meio, como todo app.
+ * A dock do celular: Início · Tarefas · [+] · Agenda · Mais.
  *
  * É o sinal mais forte de "isto é um app, não um site": a navegação
  * principal está no polegar, e a ação principal (nova tarefa) é o botão
@@ -51,11 +51,11 @@ const ESQUERDA: Destino[] = [
   { path: '/', rotulo: 'Início', Icone: Home },
   { path: '/tasks', rotulo: 'Tarefas', Icone: CheckSquare },
 ];
-const DIREITA: Destino[] = [{ path: '/focus', rotulo: 'Foco', Icone: Timer, exigeConta: true }];
+const DIREITA: Destino[] = [{ path: '/agenda', rotulo: 'Agenda', Icone: CalendarClock, exigeConta: true }];
 
 /** O que fica no "Mais": tudo o que não coube na dock, em blocos. */
 const MAIS: Destino[] = [
-  { path: '/agenda', rotulo: 'Agenda', Icone: CalendarClock, exigeConta: true },
+  { path: '/focus', rotulo: 'Foco', Icone: Timer, exigeConta: true },
   { path: '/calendar', rotulo: 'Calendário', Icone: CalendarDays, exigeConta: true },
   { path: '/projects', rotulo: 'Projetos', Icone: FolderKanban, exigeConta: true },
   { path: '/priorities', rotulo: 'Prioridades', Icone: Flag, exigeConta: true },

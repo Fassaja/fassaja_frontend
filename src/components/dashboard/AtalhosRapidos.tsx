@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Timer, Sparkles, Lightbulb, type LucideIcon } from 'lucide-react';
+import { Plus, FolderKanban, CalendarDays, Sparkles, type LucideIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { vibrar } from '@/components/layout/MobileDock';
 
@@ -27,9 +27,9 @@ export const AtalhosRapidos: React.FC<{ onNovaTarefa: () => void }> = ({ onNovaT
 
   const atalhos: Atalho[] = [
     { rotulo: 'Nova tarefa', Icone: Plus, cor: 'bg-primary-vibrant text-white', acao: onNovaTarefa },
-    { rotulo: 'Foco', Icone: Timer, cor: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300', acao: () => irLogado('/focus') },
-    { rotulo: 'Ideia', Icone: Lightbulb, cor: 'bg-amber-500/15 text-amber-600 dark:text-amber-300', acao: () => irLogado('/ideas') },
-    { rotulo: 'Assistente', Icone: Sparkles, cor: 'bg-violet-500/15 text-violet-600 dark:text-violet-300', acao: () => irLogado('/ai') },
+    { rotulo: 'Projetos', Icone: FolderKanban, cor: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300', acao: () => irLogado('/projects') },
+    { rotulo: 'Calendário', Icone: CalendarDays, cor: 'bg-amber-500/15 text-amber-600 dark:text-amber-300', acao: () => irLogado('/calendar') },
+    { rotulo: 'IA', Icone: Sparkles, cor: 'bg-violet-500/15 text-violet-600 dark:text-violet-300', acao: () => irLogado('/ai') },
   ];
 
   return (
