@@ -32,7 +32,12 @@
       pref === 'dark' ||
       ((pref === 'system' || !pref) &&
         window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (dark) document.documentElement.classList.add('dark');
+    if (dark) {
+      document.documentElement.classList.add('dark');
+      // Mesma regra de applyTheme: a barra de status segue o fundo.
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', '#0A101C');
+    }
   } catch (e) {
     /* localStorage bloqueado (modo privado): segue no tema claro */
   }
