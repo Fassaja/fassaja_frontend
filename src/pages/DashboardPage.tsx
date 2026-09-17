@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { AvisoPlayStore } from '@/components/pro/AvisoPlayStore';
+import { AtalhosRapidos } from '@/components/dashboard/AtalhosRapidos';
 import { TodayFocus } from '@/components/dashboard/TodayFocus';
 import { StatStrip } from '@/components/common/StatStrip';
 import { SoftDivider } from '@/components/common/SoftDivider';
@@ -129,10 +130,29 @@ const DashboardPage: React.FC = () => {
         />
         </motion.div>
 
+        {/* Logo abaixo do banner do dia, antes dos números: é o que se faz, não o que se lê. */}
+        <motion.div variants={REGIAO} className="mt-4">
+          <AtalhosRapidos />
+        </motion.div>
+
         <motion.div variants={REGIAO}>
+        {/* No celular os números vão numa caixa 2×2 (tudo alinhado à esquerda
+            da própria célula); solto no fundo, o par da direita ia parar na
+            borda da tela, longe do rótulo. No desktop a versão sem caixa
+            continua. */}
+        <StatStrip
+          variant="card"
+          className="mb-8 lg:hidden"
+          stats={[
+            { label: 'Total', value: stats.total, comparison: stats.comparisons.total },
+            { label: 'Concluídas', value: stats.completed, comparison: stats.comparisons.completed },
+            { label: 'Em andamento', value: stats.inProgress, comparison: stats.comparisons.inProgress },
+            { label: 'Atrasadas', value: stats.overdue, comparison: stats.comparisons.overdue, alert: true },
+          ]}
+        />
         <StatStrip
           variant="plain"
-          className="mb-10"
+          className="mb-10 hidden lg:grid"
           stats={[
             { label: 'Total', value: stats.total, comparison: stats.comparisons.total },
             { label: 'Concluídas', value: stats.completed, comparison: stats.comparisons.completed },

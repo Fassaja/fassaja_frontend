@@ -54,7 +54,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <PlatformTourModal />
       {/* Assistente flutuante — em portal, então não afeta o fluxo do layout. */}
       <BobAssistant />
-      <MobileDock />
+      <MobileDock onNewTask={onNewTask} />
     </div>
     </AjudaDaAreaProvider>
   );
