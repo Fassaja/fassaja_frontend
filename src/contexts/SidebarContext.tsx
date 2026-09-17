@@ -17,6 +17,9 @@ const STORAGE_KEY = 'fassaja_sidebar_collapsed';
 interface SidebarContextValue {
   collapsed: boolean;
   toggleCollapsed: () => void;
+  /** A gaveta do celular está aberta? Vive aqui porque quem abre é a dock, e quem fecha é a própria gaveta. */
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextValue>({} as SidebarContextValue);
@@ -51,6 +54,7 @@ export const SIDEBAR_LARGURA = {
 
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [collapsed, setCollapsed] = useState<boolean>(readStored);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed(v => {
@@ -65,7 +69,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   return (
-    <SidebarContext.Provider value={{ collapsed, toggleCollapsed }}>
+    <SidebarContext.Provider value={{ collapsed, toggleCollapsed, mobileOpen, setMobileOpen }}>
       {children}
     </SidebarContext.Provider>
   );

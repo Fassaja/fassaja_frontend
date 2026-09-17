@@ -160,7 +160,7 @@ export const BobAssistant: React.FC = () => {
             exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.12 } }}
             transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
             whileTap={{ scale: 0.92 }}
-            className="fixed bottom-6 right-6 z-40 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-light"
+            className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 flex h-16 w-16 lg:h-[72px] lg:w-[72px] items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-light"
           >
             <Sparkles size={28} />
           </motion.button>
@@ -181,7 +181,7 @@ export const BobAssistant: React.FC = () => {
             tabIndex={-1}
             // bottom-6 (e não bottom-24): como o lançador some ao abrir, o
             // painel encosta onde ele estava em vez de deixar um vão vazio.
-            className="fixed inset-x-4 bottom-6 z-50 flex max-h-[75dvh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl sm:left-auto sm:right-6 sm:w-[380px]"
+            className="fixed inset-x-4 bottom-24 lg:bottom-6 z-50 flex max-h-[70dvh] lg:max-h-[75dvh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl sm:left-auto sm:right-6 sm:w-[380px]"
           >
             {/* Cabeçalho. Sem faixa própria: o Bob é recortado (PNG com fundo
                 transparente) e a faixa cinza atrás dele desenhava um retângulo

@@ -126,7 +126,7 @@ export const Topbar: React.FC<TopbarProps> = ({
 
       <div className="h-full px-4 lg:px-8 py-4 flex items-center justify-between gap-4">
         {/* Greeting */}
-        <div className="min-w-0 pl-12 lg:pl-0 hidden sm:block">
+        <div className="min-w-0 hidden sm:block">
           <div className="text-base sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
             {typeof title === 'string' ? <h1 className="truncate">{title}</h1> : title}
           </div>
