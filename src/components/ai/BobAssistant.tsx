@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { aiService, AiStatus } from '@/services/aiService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSidebar } from '@/contexts/SidebarContext';
 import { bobGreeting } from '@/utils/aiAssistant';
 import { Notice } from './assistantUi';
 import { ReplanPanel } from './ReplanPanel';
@@ -65,6 +66,9 @@ const actions: {
  * abaixo do z-index dos modais — abrir uma tarefa continua cobrindo o Bob.
  */
 export const BobAssistant: React.FC = () => {
+  // Com o painel "Mais" da dock aberto, o lançador sai de cena (animado):
+  // dois botões flutuantes disputando o polegar é bagunça.
+  const { mobileOpen: maisAberto } = useSidebar();
   const navigate = useNavigate();
   const { isGuest, status: authStatus } = useAuth();
   const [open, setOpen] = useState(false);
@@ -149,16 +153,16 @@ export const BobAssistant: React.FC = () => {
           embaixo do painel, então mantê-lo só duplicaria o botão de fechar que
           já existe no cabeçalho. Fechar continua por ali, Esc ou clique fora. */}
       <AnimatePresence>
-        {!open && (
+        {!open && !maisAberto && (
           <motion.button
             ref={launcherRef}
             type="button"
             onClick={() => setOpen(true)}
             aria-label="Abrir o assistente"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.12 } }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.6, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.6, y: 24, transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }}
+            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
             whileTap={{ scale: 0.92 }}
             className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 flex h-16 w-16 lg:h-[72px] lg:w-[72px] items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-light"
           >

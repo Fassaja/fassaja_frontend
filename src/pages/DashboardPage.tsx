@@ -113,7 +113,7 @@ const DashboardPage: React.FC = () => {
         subtitle={todayLabel}
       >
         <PageTour id="dashboard" />
-        <AtalhosRapidos onNovaTarefa={openNewTask} />
+        <AtalhosRapidos />
         <AvisoPlayStore />
         {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : (
         <motion.div
