@@ -114,10 +114,10 @@ export const Sidebar: React.FC = () => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
 
-  // Trava o scroll da página atrás enquanto o menu (drawer mobile) está aberto.
-  useBodyScrollLock(isOpen);
   // A gaveta do celular vive no contexto: quem a abre é o "Mais" da dock.
   const { collapsed, toggleCollapsed, mobileOpen: isOpen, setMobileOpen: setIsOpen } = useSidebar();
+  // Trava o scroll da página atrás enquanto o menu (drawer mobile) está aberto.
+  useBodyScrollLock(isOpen);
   /**
    * "Recolhida" vale só no desktop. No celular a barra é uma gaveta que abre
    * por cima do conteúdo, e ali ela precisa aparecer inteira — recolhida em
