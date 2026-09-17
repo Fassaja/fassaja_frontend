@@ -36,7 +36,7 @@ export const AtalhosRapidos: React.FC = () => {
 
   return (
     <motion.ul
-      className="lg:hidden mb-4 grid grid-cols-4 gap-2"
+      className="lg:hidden mb-6 grid grid-cols-4 gap-2"
       initial="fora"
       animate="dentro"
       variants={{ dentro: { transition: { staggerChildren: 0.05 } } }}

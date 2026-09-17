@@ -113,7 +113,6 @@ const DashboardPage: React.FC = () => {
         subtitle={todayLabel}
       >
         <PageTour id="dashboard" />
-        <AtalhosRapidos />
         <AvisoPlayStore />
         {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : (
         <motion.div
@@ -129,6 +128,11 @@ const DashboardPage: React.FC = () => {
           totalTasks={stats.total}
           onNewTask={openNewTask}
         />
+        </motion.div>
+
+        {/* Logo abaixo do banner do dia, antes dos números: é o que se faz, não o que se lê. */}
+        <motion.div variants={REGIAO} className="mt-4">
+          <AtalhosRapidos />
         </motion.div>
 
         <motion.div variants={REGIAO}>
