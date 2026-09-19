@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { registrarModoApp } from './utils/modoApp'
-import { registrarTwa } from './utils/twa'
+import { registrarTwa, registrarAberturaPorApp } from './utils/twa'
 import { ANDROID_PACKAGE } from './utils/playConfig'
 
 // Antes do render: o login com Google precisa saber, mais tarde e talvez numa
@@ -12,6 +12,7 @@ registrarModoApp()
 // E o Pro precisa saber se estamos DENTRO do app da Play Store: só a primeira
 // navegação traz o referrer `android-app://`, e é agora.
 registrarTwa(document.referrer, ANDROID_PACKAGE)
+registrarAberturaPorApp(document.referrer)
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

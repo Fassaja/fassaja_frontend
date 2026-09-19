@@ -228,10 +228,14 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             tarefa vista duas vezes, e dar duas caras a ela é o que fazia a
             edição parecer outro produto. */}
         <div>
+          <label htmlFor="titulo-da-tarefa-edicao" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-soft">
+            Título da tarefa
+          </label>
           <HeadlineInput
+            id="titulo-da-tarefa-edicao"
             name="title"
             aria-label="Título da tarefa"
-            placeholder="O que precisa ser feito?"
+            placeholder="Ex.: Enviar o relatório para a Ana"
             value={formData.title}
             onChange={e => {
               set('title', e.target.value);
@@ -245,7 +249,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
             name="description"
             aria-label="Descrição da tarefa"
             className="mt-2"
-            placeholder="Adicionar detalhes…"
+            placeholder="Detalhes, links, o que precisa lembrar… (opcional)"
             value={formData.description}
             onChange={e => set('description', e.target.value)}
             disabled={loading}

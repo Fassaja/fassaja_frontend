@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { AvisoPlayStore } from '@/components/pro/AvisoPlayStore';
+import { AvisoAbaComBarra } from '@/components/pro/AvisoAbaComBarra';
 import { AtalhosRapidos } from '@/components/dashboard/AtalhosRapidos';
 import { TodayFocus } from '@/components/dashboard/TodayFocus';
 import { StatStrip } from '@/components/common/StatStrip';
@@ -113,6 +114,7 @@ const DashboardPage: React.FC = () => {
         subtitle={todayLabel}
       >
         <PageTour id="dashboard" />
+        <AvisoAbaComBarra />
         <AvisoPlayStore />
         {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : (
         <motion.div

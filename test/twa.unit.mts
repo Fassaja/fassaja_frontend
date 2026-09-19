@@ -14,6 +14,8 @@ import {
   linkGerenciarAssinatura,
   ondeAssinar,
   deveAvisarDaLoja,
+  veioDeAlgumApp,
+  emAbaComBarra,
 } from '../src/utils/twa.ts';
 
 let passed = 0;
@@ -74,6 +76,12 @@ check('app não publicado → não avisa', !deveAvisarDaLoja({ ...base, pacote: 
 check('já dispensou → não avisa', !deveAvisarDaLoja({ ...base, dispensado: true }));
 check('iPhone → não avisa (não tem como instalar)', !deveAvisarDaLoja({ ...base, userAgent: IPHONE }));
 check('computador → não avisa', !deveAvisarDaLoja({ ...base, userAgent: MAC }));
+
+console.log('\nemAbaComBarra');
+check('veio de app e não é standalone → aba com barra (Brave/Firefox)', emAbaComBarra({ abriuDeApp: true, standalone: false }));
+check('veio de app e é standalone → TWA de verdade, sem aviso', !emAbaComBarra({ abriuDeApp: true, standalone: true }));
+check('não veio de app → navegador comum, sem aviso', !emAbaComBarra({ abriuDeApp: false, standalone: false }));
+check('veioDeAlgumApp ignora o pacote', veioDeAlgumApp('android-app://com.outro.app/') && !veioDeAlgumApp('https://x/'));
 
 console.log(`\n${passed} ok, ${failed} falha(s)`);
 if (failed > 0) process.exit(1);
