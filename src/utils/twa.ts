@@ -93,3 +93,35 @@ export function deveAvisarDaLoja(opts: {
   if (!opts.pacote || opts.noApp || opts.dispensado) return false;
   return /android/i.test(opts.userAgent);
 }
+
+const KEY_ALGUM_APP = 'fassaja_abriu_de_app';
+
+/**
+ * O referrer é de ALGUM app Android (`android-app://…`)? Não confere o
+ * pacote: serve para o aviso de "aba com barra", que precisa funcionar
+ * mesmo antes de VITE_ANDROID_PACKAGE existir — o app já está na loja.
+ */
+export function veioDeAlgumApp(referrer: string): boolean {
+  return referrer.startsWith('android-app://');
+}
+
+/** Anota que a aba foi aberta por um app. Chamado na subida, junto com registrarTwa. */
+export function registrarAberturaPorApp(referrer: string): void {
+  try {
+    if (veioDeAlgumApp(referrer)) sessionStorage.setItem(KEY_ALGUM_APP, '1');
+  } catch {
+    /* sem armazenamento: sem aviso, o que é seguro */
+  }
+}
+
+/**
+ * Estamos numa ABA COM BARRA aberta pelo app da loja (o fallback da TWA)?
+ *
+ * Acontece quando o navegador padrão do aparelho não implementa TWA (Brave,
+ * Firefox…): o app abre, mas como aba personalizada, com barra de endereço.
+ * A pista: a aba veio de um app (`android-app://`) e NÃO está em modo
+ * standalone — em TWA de verdade o Chrome reporta `display-mode: standalone`.
+ */
+export function emAbaComBarra(opts: { abriuDeApp: boolean; standalone: boolean }): boolean {
+  return opts.abriuDeApp && !opts.standalone;
+}

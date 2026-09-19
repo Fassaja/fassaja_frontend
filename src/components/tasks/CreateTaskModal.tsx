@@ -217,12 +217,19 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           {/* O "?" na MESMA linha do campo: a ajuda pertence ao que se está
               escrevendo ali, e uma linha própria abaixo era exatamente o que
               deixava o modal poluído. */}
+          {/* Rótulo pequeno em cima: sem ele, o campo grande com uma pergunta
+              dentro parecia o TÍTULO do modal, e a pessoa ia escrever a tarefa
+              no campo de detalhes logo abaixo (reclamação real, 19/09). */}
+          <label htmlFor="titulo-da-tarefa" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-soft">
+            Título da tarefa
+          </label>
           <div className="flex items-start gap-1">
             <div className="min-w-0 flex-1">
               <HeadlineInput
+                id="titulo-da-tarefa"
                 name="title"
                 aria-label="Título da tarefa"
-                placeholder="O que precisa ser feito?"
+                placeholder="Ex.: Enviar o relatório para a Ana"
                 value={formData.title}
                 onChange={e => {
                   set('title', e.target.value);
@@ -242,7 +249,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             name="description"
             aria-label="Descrição da tarefa"
             className="mt-2"
-            placeholder="Adicionar detalhes…"
+            placeholder="Detalhes, links, o que precisa lembrar… (opcional)"
             value={formData.description}
             onChange={e => set('description', e.target.value)}
             disabled={loading}
