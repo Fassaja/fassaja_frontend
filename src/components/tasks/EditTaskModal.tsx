@@ -169,11 +169,24 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
       setLoading(true);
       await onUpdateTask(task.id, {
         title: formData.title.trim(),
-        description: formData.description || undefined,
+        // '' limpa os detalhes. Com `|| undefined` a chave sumia do JSON e o
+        // servidor lia "não mexa" — apagar o texto simplesmente não salvava.
+        description: formData.description,
         priority: formData.priority,
         status: formData.status,
-        projectId: formData.projectId || undefined,
-        dueDate: formData.dueDate || undefined,
+        /*
+         * Projeto e prazo só vão quando MUDARAM, e aí `null`/`''` apagam.
+         *
+         * Mandar sempre não é inofensivo: no servidor, trocar o projeto é
+         * operação de gestão e mexer no prazo de uma tarefa que se repete
+         * também. Reenviar o mesmo valor jogaria uma edição comum contra
+         * essas travas sem necessidade — e '' contra um prazo já vazio
+         * contaria como mudança, porque lá ele é nulo, não ''.
+         */
+        ...(formData.projectId !== (task.projectId ?? '')
+          ? { projectId: formData.projectId || null }
+          : {}),
+        ...(formData.dueDate !== (task.dueDate ?? '') ? { dueDate: formData.dueDate } : {}),
         // Início vai como está — '' limpa. Só em tarefa de equipe: fora dela
         // o campo nem aparece, e mandá-lo vazio apagaria sem a pessoa ver.
         ...(equipeId ? { startDate: formData.startDate } : {}),

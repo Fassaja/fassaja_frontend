@@ -3,16 +3,21 @@ import type { Task, TaskUpdate } from '@/types/task';
 /**
  * Mescla uma atualização na tarefa que está na tela.
  *
- * Superficial, como sempre foi — `updates` é parcial por natureza. A única
- * tradução é `dependsOnId: null`, que no PATCH significa "desfaz" e na tarefa
- * lida significa "ausente": sem isto o otimismo do contexto deixaria um `null`
- * onde o tipo (e a API) só têm `undefined`.
+ * Superficial, como sempre foi — `updates` é parcial por natureza. O que ela
+ * traduz é o vocabulário de APAGAR: no PATCH um campo se esvazia com `null`
+ * (vínculos) ou `''` (texto e data), e na tarefa lida isso é simplesmente
+ * "ausente". Sem a tradução, o otimismo do contexto deixaria um `null` ou um
+ * `''` onde o tipo — e o resto da tela — só esperam `undefined`.
  */
 export function aplicarAtualizacao(task: Task, updates: TaskUpdate): Task {
-  const { dependsOnId, ...resto } = updates;
+  const { dependsOnId, projectId, description, dueDate, ...resto } = updates;
+  const limpando = <T,>(v: T | '' | null) => (v === '' || v === null ? undefined : v);
   return {
     ...task,
     ...resto,
-    ...(dependsOnId !== undefined ? { dependsOnId: dependsOnId ?? undefined } : {}),
+    ...(dependsOnId !== undefined ? { dependsOnId: limpando(dependsOnId) } : {}),
+    ...(projectId !== undefined ? { projectId: limpando(projectId) } : {}),
+    ...(description !== undefined ? { description: limpando(description) } : {}),
+    ...(dueDate !== undefined ? { dueDate: limpando(dueDate) } : {}),
   };
 }

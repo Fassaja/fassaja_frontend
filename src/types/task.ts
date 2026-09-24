@@ -83,4 +83,15 @@ export interface Task {
  * a dependência. Na leitura o campo nunca é nulo — vem omitido — e é por isso
  * que `Task` não o declara assim.
  */
-export type TaskUpdate = Omit<Partial<Task>, 'dependsOnId'> & { dependsOnId?: string | null };
+/**
+ * O que se manda num PATCH de tarefa.
+ *
+ * `null` e `''` não são descuido: são como o servidor APAGA um campo.
+ * `projectId: null` desvincula do projeto, `description: ''` e `dueDate: ''`
+ * esvaziam. `undefined` não serve para nenhum deles — some do JSON, e o
+ * servidor lê a ausência como "não mexa neste campo".
+ */
+export type TaskUpdate = Omit<Partial<Task>, 'dependsOnId' | 'projectId'> & {
+  dependsOnId?: string | null;
+  projectId?: string | null;
+};
