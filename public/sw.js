@@ -80,19 +80,44 @@ self.addEventListener('push', event => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
+/* Endereços que já foram o Fassajá e hoje não servem o site.
+   Cópia FIEL de HOSTS_LEGADOS em src/utils/dominio.ts, pelo mesmo motivo da
+   política de URL acima: este arquivo é servido como está de /public.
+   test/dominioLegado.unit.mts compara os dois. */
+var HOSTS_LEGADOS_SW = ['fassaja.vercel.app'];
+var ORIGEM_CANONICA_SW = 'https://www.fassaja.com';
+
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const bruto = (event.notification.data && event.notification.data.url) || '/agenda';
   // De novo no ponto de uso. A checagem anterior era "começa com / e não com
   // //", que aprovava um caminho com barra invertida — o navegador a lê como
   // barra e abre outra origem.
-  const url = caminhoInternoSeguro(bruto) || '/agenda';
+  const caminho = caminhoInternoSeguro(bruto) || '/agenda';
+
+  /* O clique abre na origem DESTE worker — e é aí que estava o defeito.
+     Quem instalou o app quando o Fassajá morava em fassaja.vercel.app tem um
+     service worker registrado LÁ. O backend manda o caminho ('/team'), o
+     worker o abre no próprio domínio, e a pessoa cai num 404 da Vercel: a
+     rota existe e funciona, o domínio é que não serve mais nada.
+
+     Trocar o worker não resolveria sozinho (um worker num domínio morto não
+     recebe atualização), mas o `openWindow` aceita outra origem — então o
+     próprio clique pode levar para o lugar certo. */
+  const legado = HOSTS_LEGADOS_SW.indexOf(self.location.hostname) !== -1;
+  const url = legado ? ORIGEM_CANONICA_SW + caminho : caminho;
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      for (const client of list) {
-        if ('focus' in client) {
-          if ('navigate' in client) client.navigate(url);
-          return client.focus();
+      // Numa origem legada não dá para reaproveitar a janela aberta:
+      // `client.navigate` só funciona na MESMA origem, e a janela em questão
+      // está no domínio morto. Abrir uma nova é o único caminho.
+      if (!legado) {
+        for (const client of list) {
+          if ('focus' in client) {
+            if ('navigate' in client) client.navigate(url);
+            return client.focus();
+          }
         }
       }
       if (self.clients.openWindow) return self.clients.openWindow(url);
