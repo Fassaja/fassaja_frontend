@@ -88,6 +88,10 @@ function novaNotificacao() {
 const selfFalso = {
   addEventListener: (tipo: string, fn: Handler) => { handlers[tipo] = fn; },
   skipWaiting: () => undefined,
+  // O worker real SEMPRE tem `location`, e o clique agora a consulta para
+  // saber se está num domínio aposentado. Sem isto no dublê, o handler
+  // quebrava aqui e passava lá.
+  location: { hostname: 'www.fassaja.com' },
   registration: {
     showNotification: (title: string, options: { data: { url: string } }) => {
       mostradas.push({ title, options });
@@ -159,6 +163,49 @@ clientesAbertos = [];
 handlers.notificationclick(evento({ notification: { close: () => undefined, data: { url: '/\\host' } } }));
 await Promise.all(pendentes.splice(0));
 check('openWindow também recebe destino seguro', abertas[0] === '/agenda');
+
+// --- 3) domínio aposentado ----------------------------------------------
+/*
+ * Quem instalou o app quando o Fassajá morava em fassaja.vercel.app tem um
+ * service worker registrado LÁ. O backend manda o caminho ('/team'), o worker
+ * o abria na própria origem, e a pessoa caía num 404 da Vercel — a rota
+ * existe e responde 200 no domínio de verdade.
+ *
+ * O worker é instanciado de novo, com outro hostname: é a única forma de
+ * exercitar o caminho que só existe fora do domínio canônico.
+ */
+const abertasNoLegado: string[] = [];
+const navegadasNoLegado: string[] = [];
+const handlersLegado: Record<string, Handler> = {};
+const pendentesLegado: Promise<unknown>[] = [];
+const selfLegado = {
+  ...selfFalso,
+  addEventListener: (tipo: string, fn: Handler) => { handlersLegado[tipo] = fn; },
+  location: { hostname: 'fassaja.vercel.app' },
+  clients: {
+    claim: () => Promise.resolve(),
+    matchAll: () => Promise.resolve([
+      { focus: () => undefined, navigate: (u: string) => navegadasNoLegado.push(u) },
+    ]),
+    openWindow: (u: string) => { abertasNoLegado.push(u); return Promise.resolve(); },
+  },
+};
+new Function('self', 'caches', 'URL', fonte)(selfLegado, cachesFalso, URL);
+handlersLegado.notificationclick({
+  waitUntil: (pr: Promise<unknown>) => pendentesLegado.push(pr),
+  notification: { close: () => undefined, data: { url: '/team' } },
+});
+await Promise.all(pendentesLegado.splice(0));
+check(
+  'no domínio aposentado o clique abre no domínio de verdade',
+  abertasNoLegado[0] === 'https://www.fassaja.com/team',
+);
+check(
+  'e não reaproveita a janela do domínio morto',
+  // `client.navigate` só funciona na MESMA origem: insistir nela deixaria a
+  // pessoa parada no 404, com a notificação já consumida.
+  navegadasNoLegado.length === 0,
+);
 
 // message: o logout fecha o que já está na bandeja.
 notificacoesAbertas.length = 0;

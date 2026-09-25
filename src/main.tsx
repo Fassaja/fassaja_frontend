@@ -5,6 +5,19 @@ import './index.css'
 import { registrarModoApp } from './utils/modoApp'
 import { registrarTwa, registrarAberturaPorApp } from './utils/twa'
 import { ANDROID_PACKAGE } from './utils/playConfig'
+import { destinoCanonico } from './utils/dominio'
+
+/*
+ * Chegou por um endereço antigo? Manda para o de verdade, com o caminho.
+ *
+ * Antes de qualquer render: redirecionar depois de montar a árvore faria a
+ * pessoa ver meio segundo de uma tela que vai embora. Hoje `fassaja.vercel.app`
+ * devolve 404 da própria Vercel e isto nem chega a rodar — mas vale para o dia
+ * em que o domínio voltar a servir o site, e para qualquer outro endereço que
+ * entre na lista de legados.
+ */
+const canonico = destinoCanonico(window.location)
+if (canonico) window.location.replace(canonico)
 
 // Antes do render: o login com Google precisa saber, mais tarde e talvez numa
 // aba do navegador, que esta pessoa usa o app instalado.
