@@ -23,6 +23,8 @@ import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { isToday } from '@/utils/date';
+import { podeConcluir } from '@/utils/taskScope';
+import { useToast } from '@/contexts/ToastContext';
 import { useTaskHistory } from '@/hooks/useTaskHistory';
 import { diaISO, inicioDaSemana, resumoSemanal } from '@/utils/produtividade';
 
@@ -45,7 +47,8 @@ const DashboardPage: React.FC = () => {
   const showSkeleton = useDeferredLoading(loading);
   const { projects } = useProjects();
   const { user } = useUser();
-  const { isGuest, guestTaskCount, guestTaskLimit, requireAuth } = useAuth();
+  const { isGuest, guestTaskCount, guestTaskLimit, requireAuth, account } = useAuth();
+  const toast = useToast();
   /*
    * Semana a partir do histórico do servidor.
    *
@@ -75,8 +78,10 @@ const DashboardPage: React.FC = () => {
     setShowNewTaskModal(true);
   };
 
+  // Só o que ESTA pessoa pode concluir: a tarefa da equipe entregue a outra
+  // pessoa é acompanhamento, não próxima tarefa — e o clique nela era recusado.
   const upcomingTasks = tasks
-    .filter(t => t.status !== 'completed')
+    .filter(t => t.status !== 'completed' && podeConcluir(t, account?.id))
     .sort((a, b) => {
       if (!a.dueDate) return 1;
       if (!b.dueDate) return -1;
@@ -84,6 +89,16 @@ const DashboardPage: React.FC = () => {
     })
     .slice(0, 8);
 
+
+  // O TasksContext desfaz o palpite se o servidor recusar; sem este aviso a
+  // tarefa só voltava para a lista, e o clique parecia não ter pegado.
+  const concluir = async (id: string) => {
+    try {
+      await completeTask(id);
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível concluir a tarefa. Tente novamente.');
+    }
+  };
 
   // Números do dia: é o que o bloco de abertura mostra, no lugar da saudação.
   const completedToday = tasks.filter(
@@ -188,7 +203,7 @@ const DashboardPage: React.FC = () => {
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
           <div className="lg:col-span-2">
             {upcomingTasks.length > 0 ? (
-              <UpcomingTasks tasks={upcomingTasks} projects={projects} onComplete={completeTask} />
+              <UpcomingTasks tasks={upcomingTasks} projects={projects} onComplete={concluir} />
             ) : (
               <EmptyState
                 mascotState="happy"
