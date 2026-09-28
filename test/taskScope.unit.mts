@@ -12,6 +12,7 @@ import {
   saveScope,
   teamProjectIds,
   escopoDoProjeto,
+  podeConcluir,
 } from '../src/utils/taskScope.ts';
 import type { Task } from '../src/types/task.ts';
 import type { Project } from '../src/types/project.ts';
@@ -167,6 +168,20 @@ check('lista vazia não decide nada',
 // back antigo não manda `teamId`, a dedução pelo projeto ainda vale.
 check('sem teamId, o projeto de equipe ainda responde',
   isTeamTask(tarefa('t2', 'p-time'), new Set(['p-time'])));
+
+// Concluir: tarefa com responsáveis só é concluída por eles — igual ao servidor.
+{
+  const semNinguem = tarefa('c1');
+  const deOutro = { ...tarefa('c2'), assignees: [{ id: 'ana', name: 'Ana', done: false }] };
+  const minha = { ...tarefa('c3'), assignees: [
+    { id: 'ana', name: 'Ana', done: false },
+    { id: 'eu', name: 'Eu', done: false },
+  ] };
+  check('sem responsáveis, quem vê conclui', podeConcluir(semNinguem, 'eu'));
+  check('entregue a outra pessoa, não conclui', !podeConcluir(deOutro, 'eu'));
+  check('sendo um dos responsáveis, conclui', podeConcluir(minha, 'eu'));
+  check('sem conta, não conclui tarefa com responsáveis', !podeConcluir(deOutro, undefined));
+}
 
 console.log(`\n${passed} ok, ${failed} falha(s)\n`);
 if (failed > 0) process.exit(1);

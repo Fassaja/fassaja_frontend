@@ -109,3 +109,17 @@ export function projectIdsOfTeam(projects: Project[], teamId: string): Set<strin
 export function isAssignedTo(task: Task, userId: string): boolean {
   return (task.assignees ?? []).some(a => a.id === userId);
 }
+
+/**
+ * Esta pessoa pode marcar a tarefa como concluída?
+ *
+ * Espelha a regra do servidor: tarefa com responsáveis só é concluída por
+ * eles. Sem isto, o dashboard listava em "Próximas tarefas" as tarefas da
+ * equipe entregues a OUTRAS pessoas — o clique recebia 403, o palpite era
+ * desfeito e a tarefa voltava para a lista sem dizer por quê.
+ */
+export function podeConcluir(task: Task, userId: string | undefined): boolean {
+  const responsaveis = task.assignees ?? [];
+  if (responsaveis.length === 0) return true;
+  return !!userId && responsaveis.some(a => a.id === userId);
+}

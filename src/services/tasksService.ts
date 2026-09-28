@@ -1,5 +1,6 @@
 import { Task, TaskUpdate } from '@/types/task';
 import { api } from './api';
+import { todayISO } from '@/utils/date';
 
 export const tasksService = {
   async getTasks(): Promise<Task[]> {
@@ -23,8 +24,13 @@ export const tasksService = {
     return true;
   },
 
+  /**
+   * `today` é o dia LOCAL: sem ele o servidor só anda a rotina um passo, e uma
+   * diária atrasada renascia vencida — de volta ao topo de "Próximas tarefas",
+   * como se o clique não tivesse concluído nada.
+   */
   async completeTask(id: string): Promise<Task | undefined> {
-    return api.patch<Task>(`/tasks/${id}/complete`, {});
+    return api.patch<Task>(`/tasks/${id}/complete`, { today: todayISO() });
   },
 
   /** Define o conjunto FINAL de responsáveis. Lista vazia remove todos. */
