@@ -1,0 +1,25 @@
+# Atualizações automáticas de dependências.
+#
+# As actions do CI estão fixadas por SHA (ver ci.yml); sem isto, o SHA
+# envelhece em silêncio. O Dependabot atualiza o SHA e o comentário de versão
+# juntos.
+#
+# Repositório público: os PRs do Dependabot rodam com o mesmo CI de qualquer
+# PR (token só de leitura, sem segredos).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Menor/patch num PR só. Major vem separado — o react-router 6 -> 7, por
+      # exemplo, é migração, não atualização.
+      menores:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
