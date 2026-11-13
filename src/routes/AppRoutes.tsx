@@ -1,37 +1,82 @@
-import React from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import DashboardPage from '@/pages/DashboardPage';
-import TasksPage from '@/pages/TasksPage';
-import ProjectsPage from '@/pages/ProjectsPage';
-import CalendarPage from '@/pages/CalendarPage';
-import AgendaPage from '@/pages/AgendaPage';
-import PrioritiesPage from '@/pages/PrioritiesPage';
-import FocusPage from '@/pages/FocusPage';
-import ReportsPage from '@/pages/ReportsPage';
-import { TeamShell } from '@/components/team/TeamShell';
-import ProfilePage from '@/pages/ProfilePage';
-import SettingsPage from '@/pages/SettingsPage';
-import AiAssistantPage from '@/pages/AiAssistantPage';
-import NotFoundPage from '@/pages/NotFoundPage';
 import AuthPage from '@/pages/AuthPage';
-import PasswordResetPage from '@/pages/PasswordResetPage';
-import AccountDeletionPage from '@/pages/AccountDeletionPage';
-import JoinPage from '@/pages/JoinPage';
-import ProPage from '@/pages/ProPage';
-import IdeasPage from '@/pages/IdeasPage';
-import LegalPage from '@/pages/LegalPage';
 import { PlayBillingSync } from '@/components/pro/PlayBillingSync';
 import { useAuth } from '@/contexts/AuthContext';
+import { paginaSobDemanda } from './paginaSobDemanda';
+
+/*
+ * Dashboard e Login ficam no arquivo principal: são as duas portas de entrada,
+ * e carregá-las sob demanda só acrescentaria uma ida a mais ao servidor antes
+ * da primeira tela. Todo o resto vem quando é aberto.
+ */
+const TasksPage = paginaSobDemanda(() => import('@/pages/TasksPage'));
+const ProjectsPage = paginaSobDemanda(() => import('@/pages/ProjectsPage'));
+const CalendarPage = paginaSobDemanda(() => import('@/pages/CalendarPage'));
+const AgendaPage = paginaSobDemanda(() => import('@/pages/AgendaPage'));
+const PrioritiesPage = paginaSobDemanda(() => import('@/pages/PrioritiesPage'));
+const FocusPage = paginaSobDemanda(() => import('@/pages/FocusPage'));
+const ReportsPage = paginaSobDemanda(() => import('@/pages/ReportsPage'));
+const ProfilePage = paginaSobDemanda(() => import('@/pages/ProfilePage'));
+const SettingsPage = paginaSobDemanda(() => import('@/pages/SettingsPage'));
+const AiAssistantPage = paginaSobDemanda(() => import('@/pages/AiAssistantPage'));
+const NotFoundPage = paginaSobDemanda(() => import('@/pages/NotFoundPage'));
+const PasswordResetPage = paginaSobDemanda(() => import('@/pages/PasswordResetPage'));
+const AccountDeletionPage = paginaSobDemanda(() => import('@/pages/AccountDeletionPage'));
+const JoinPage = paginaSobDemanda(() => import('@/pages/JoinPage'));
+const ProPage = paginaSobDemanda(() => import('@/pages/ProPage'));
+const IdeasPage = paginaSobDemanda(() => import('@/pages/IdeasPage'));
+const LegalPage = paginaSobDemanda(() => import('@/pages/LegalPage'));
+const TeamShell = paginaSobDemanda(() =>
+  import('@/components/team/TeamShell').then(m => ({ default: m.TeamShell })),
+);
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { status } = useAuth();
   return status === 'authed' ? children : <Navigate to="/login" replace />;
 };
 
+/**
+ * Adianta as páginas mais prováveis enquanto o navegador está ocioso, para o
+ * primeiro clique nelas não esperar o download.
+ *
+ * Só para quem tem conta (o visitante quase sempre vai é para o cadastro) e
+ * nunca com "economia de dados" ligada: ali cada arquivo é pedido só se for
+ * mesmo usado.
+ */
+function useAdiantarPaginas(ativo: boolean): void {
+  useEffect(() => {
+    if (!ativo) return;
+    const conexao = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (conexao?.saveData) return;
+
+    const adiantar = () => {
+      TasksPage.preload();
+      ProjectsPage.preload();
+      AgendaPage.preload();
+    };
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(adiantar, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(adiantar, 2500);
+    return () => clearTimeout(id);
+  }, [ativo]);
+}
+
 export const AppRoutes: React.FC = () => {
+  const { status } = useAuth();
+  useAdiantarPaginas(status === 'authed');
+
   return (
     <>
     <PlayBillingSync />
+    {/* Só aparece na PRIMEIRA carga direto numa página sob demanda: nas
+        navegações o roteador segura a tela anterior até a nova chegar
+        (`v7_startTransition` no App), e a barra do topo avisa que está indo.
+        Por isso é só o fundo — um esqueleto piscaria por um instante. */}
+    <Suspense fallback={<div className="min-h-screen bg-bg-main" />}>
     <Routes>
       {/* Públicas (visitante) */}
       <Route path="/login" element={<AuthPage mode="login" />} />
@@ -75,6 +120,7 @@ export const AppRoutes: React.FC = () => {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </Suspense>
     </>
   );
 };

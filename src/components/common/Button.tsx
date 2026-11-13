@@ -70,6 +70,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           largura de sempre, então a medida do botão é a MESMA carregando ou
           não. Não há como voltar a pular.
         */}
+        {/* Brilho que varre o botão principal no hover. Fica numa camada
+            própria com o recorte nela, e não no botão: `overflow-hidden` no
+            botão cortaria o anel de foco e qualquer selo pendurado nele. */}
+        {variant === 'primary' && !disabled && !isLoading && (
+          <span className="fx-shine" aria-hidden="true" />
+        )}
+
         {isLoading && (
           <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
             <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">

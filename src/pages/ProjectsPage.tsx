@@ -21,6 +21,7 @@ import { Project } from '@/types/project';
 import { projectsService } from '@/services/projectsService';
 import { HIDE_COMPLETED_AFTER_DAYS, splitByVisibility } from '@/utils/projectVisibility';
 import { projectSummary } from '@/utils/cardSummary';
+import { Stagger } from '@/components/motion';
 
 const ProjectsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -228,9 +229,9 @@ const ProjectsPage: React.FC = () => {
               </div>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {visible.map(renderProject)}
-            </div>
+            </Stagger>
 
             {/* Concluídos há mais de uma semana: saem da grade, mas continuam
                 acessíveis. Sumir de vez faria a pessoa achar que perdeu o

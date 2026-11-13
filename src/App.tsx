@@ -19,8 +19,11 @@ import { TopProgressBar } from '@/components/layout/TopProgressBar';
 import { Analytics } from '@vercel/analytics/react';
 import { ProProvider } from '@/contexts/ProContext';
 import { sanitizeUrl } from '@/utils/analyticsPath';
+import { useSpotlight } from '@/components/motion';
 
 function App() {
+  // Um ouvinte só para o foco de luz de todos os cartões do app.
+  useSpotlight();
   return (
     <MotionConfig reducedMotion="user">
     {/* Mais externo: o tema não depende de sessão nem de dados, e a tela de
@@ -32,7 +35,10 @@ function App() {
     <ToastProvider>
       <UserProvider>
         <CelebrationProvider>
-          <BrowserRouter>
+          {/* `v7_startTransition`: ao navegar para uma página que ainda está
+              baixando, a tela atual continua no lugar em vez de dar lugar a um
+              vazio. */}
+          <BrowserRouter future={{ v7_startTransition: true }}>
             <AuthProvider>
             {/* Depois do AuthProvider (lê a sessão) e dentro do Router (navega
                 ao convite). Antes das áreas, que perguntam "está trancado?". */}
