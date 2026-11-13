@@ -16,7 +16,7 @@ import { usePageScrolled } from '@/hooks/usePageScrolled';
 import { partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
 import { Kbd } from '@/components/common/Kbd';
 import { useAjudaDaArea } from '@/components/onboarding/AjudaDaArea';
-import { TextReveal } from '@/components/motion';
+import { Magnetic, TextReveal } from '@/components/motion';
 
 interface TopbarProps {
   onNewTask?: () => void;
@@ -245,14 +245,18 @@ export const Topbar: React.FC<TopbarProps> = ({
 
           {/* No celular, "nova tarefa" é o "+" da dock; aqui só do sm para cima. */}
           {onNewTask && (
-            <Button
-              onClick={onNewTask}
-              size="md"
-              icon={<Plus size={18} />}
-              className="hidden sm:inline-flex rounded-xl shadow-sm shadow-primary-vibrant/20 whitespace-nowrap"
-            >
-              {actionLabel}
-            </Button>
+            // A ação principal da tela "puxa" o ponteiro. O `hidden` fica no
+            // invólucro: escondido o botão mas não ele, sobraria um vão.
+            <Magnetic strength={0.2} className="hidden sm:inline-block">
+              <Button
+                onClick={onNewTask}
+                size="md"
+                icon={<Plus size={18} />}
+                className="rounded-xl shadow-sm shadow-primary-vibrant/20 whitespace-nowrap"
+              >
+                {actionLabel}
+              </Button>
+            </Magnetic>
           )}
 
           {/* A regra "folgas não quebram a streak" estava dentro de um title=

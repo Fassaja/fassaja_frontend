@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useInView } from './useInView';
 
 interface StaggerProps extends React.HTMLAttributes<HTMLElement> {
@@ -17,9 +17,15 @@ interface StaggerProps extends React.HTMLAttributes<HTMLElement> {
  * vem de `:nth-child` no CSS — nenhum `style` por item, nenhum componente por
  * item, e do décimo em diante todos entram juntos.
  *
- * Itens acrescentados DEPOIS da entrada também animam (a regra é do CSS e
- * vale para qualquer filho novo), o que serve bem a listas que crescem.
+ * A cascata é da ENTRADA do grupo, e só dela: pouco depois de terminar, o
+ * grupo se desliga (`is-done`). Se a regra ficasse valendo, um item que muda
+ * de posição — o React o reinsere no DOM — repetiria a animação a cada
+ * reordenação. Para listas que ganham, perdem e reordenam itens o tempo todo,
+ * o componente certo é o AnimatedList.
  */
+// Folga para o último filho (9 intervalos + duração) terminar com sobra.
+const FIM_DA_CASCATA_MS = 1600;
+
 export const Stagger: React.FC<StaggerProps> = ({
   as = 'div',
   gap,
@@ -30,6 +36,13 @@ export const Stagger: React.FC<StaggerProps> = ({
   ...rest
 }) => {
   const { ref, visto } = useInView<HTMLElement>();
+  const [pronto, setPronto] = useState(false);
+
+  useEffect(() => {
+    if (!visto) return;
+    const id = setTimeout(() => setPronto(true), FIM_DA_CASCATA_MS + (delay ?? 0));
+    return () => clearTimeout(id);
+  }, [visto, delay]);
   const vars: Record<string, string> = {};
   if (gap !== undefined) vars['--fx-gap'] = `${gap}ms`;
   if (delay !== undefined) vars['--fx-delay'] = `${delay}ms`;
@@ -38,7 +51,7 @@ export const Stagger: React.FC<StaggerProps> = ({
     as,
     {
       ref,
-      className: `fx-stagger ${visto ? 'is-in' : ''} ${className}`,
+      className: `fx-stagger ${visto ? 'is-in' : ''} ${pronto ? 'is-done' : ''} ${className}`,
       style: { ...vars, ...style },
       ...rest,
     },

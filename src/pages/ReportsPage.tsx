@@ -30,6 +30,8 @@ import { serieDaSemana, serieDoMes } from '@/utils/produtividade';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useChartTheme, type ChartTheme } from '@/utils/chartTheme';
+import { CountUp } from '@/components/common/CountUp';
+import { GradientText, Reveal, Stagger } from '@/components/motion';
 
 /**
  * Estilo compartilhado dos gráficos (eixos limpos + tooltip da marca).
@@ -200,27 +202,29 @@ const ReportsPage: React.FC = () => {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <Stagger delay={120} gap={70} className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-text-primary">{conclusao.total}</p>
+          <p className="text-3xl font-bold text-text-primary"><CountUp from={0} value={conclusao.total} /></p>
           <p className="text-sm text-text-secondary">Total de Tarefas</p>
         </Card>
         {/* Concluídas, total e taxa vêm do mesmo lugar de propósito: os três
             são o mesmo fato dito de formas diferentes, e misturar a origem
             (uma vitalícia, outra da tela) faria a conta não fechar. */}
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-green-500 dark:text-green-400">{conclusao.concluidas}</p>
+          <p className="text-3xl font-bold text-green-500 dark:text-green-400"><CountUp from={0} value={conclusao.concluidas} /></p>
           <p className="text-sm text-text-secondary">Concluídas</p>
         </Card>
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-primary-vibrant">{conclusao.taxa}%</p>
+          <p className="text-3xl font-bold text-primary-vibrant">
+            <GradientText><CountUp from={0} value={conclusao.taxa} suffix="%" /></GradientText>
+          </p>
           <p className="text-sm text-text-secondary">Taxa de Conclusão</p>
         </Card>
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-yellow-500 dark:text-yellow-400">{stats.inProgress}</p>
+          <p className="text-3xl font-bold text-yellow-500 dark:text-yellow-400"><CountUp from={0} value={stats.inProgress} /></p>
           <p className="text-sm text-text-secondary">Em Andamento</p>
         </Card>
-      </div>
+      </Stagger>
 
       {stats.total === 0 ? (
         <Card className="flex flex-col items-center text-center py-12 bg-gradient-to-b from-surface to-primary-light/30">
@@ -233,8 +237,9 @@ const ReportsPage: React.FC = () => {
         </Card>
       ) : (
       <>
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {/* Charts — cada bloco entra quando chega à tela, não todos de uma vez
+          lá embaixo, onde ninguém está olhando. */}
+      <Reveal className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Status Distribution */}
         <Card>
           <h3 className="text-lg font-bold text-text-primary mb-1">Tarefas por status</h3>
@@ -304,10 +309,11 @@ const ReportsPage: React.FC = () => {
             ))}
           </div>
         </Card>
-      </div>
+      </Reveal>
 
       {/* Tasks by tag — corte transversal aos projetos */}
       {tagData.length > 0 && (
+      <Reveal>
       <Card className="mb-6">
         <h3 className="text-lg font-bold text-text-primary mb-1">Tarefas por tag</h3>
         <p className="text-sm text-text-secondary mb-4">Seu esforço por área — atravessa todos os projetos.</p>
@@ -338,9 +344,11 @@ const ReportsPage: React.FC = () => {
           </BarChart>
         </ResponsiveContainer>
       </Card>
+      </Reveal>
       )}
 
       {/* Trend Chart */}
+      <Reveal>
       <Card>
         <div className="flex items-center justify-between gap-3 mb-1">
           <h3 className="text-lg font-bold text-text-primary">Tendência</h3>
@@ -399,6 +407,7 @@ const ReportsPage: React.FC = () => {
           </span>
         </div>
       </Card>
+      </Reveal>
       </>
       )}
 

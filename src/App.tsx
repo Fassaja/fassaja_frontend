@@ -35,7 +35,10 @@ function App() {
     <ToastProvider>
       <UserProvider>
         <CelebrationProvider>
-          <BrowserRouter>
+          {/* `v7_startTransition`: ao navegar para uma página que ainda está
+              baixando, a tela atual continua no lugar em vez de dar lugar a um
+              vazio. */}
+          <BrowserRouter future={{ v7_startTransition: true }}>
             <AuthProvider>
             {/* Depois do AuthProvider (lê a sessão) e dentro do Router (navega
                 ao convite). Antes das áreas, que perguntam "está trancado?". */}

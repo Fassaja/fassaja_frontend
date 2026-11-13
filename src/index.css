@@ -350,6 +350,17 @@ a,
    último esperar dois segundos para aparecer. */
 .fx-stagger > :nth-child(n + 10) { --fx-i: 9; }
 
+/* Depois da entrada o Stagger se desliga (ver Stagger.tsx): sem isto, um
+   filho que MUDA DE LUGAR na lista — o DOM o reinsere — repetiria a entrada. */
+.fx-stagger.is-done > * { animation: none; }
+
+/* Um Reveal que é filho direto de um Stagger obedece a si mesmo: espera
+   chegar à tela em vez de gastar a entrada lá embaixo, fora de vista. */
+.fx-stagger.is-in > .fx-reveal:not(.is-in) { animation: none; }
+.fx-stagger.is-in > .fx-reveal.is-in {
+  animation: fx-rise var(--fx-dur, 600ms) var(--fx-ease) var(--fx-delay, 0ms) backwards;
+}
+
 /* --- TextReveal: palavra por palavra ------------------------------------- */
 .fx-word {
   display: inline-block;

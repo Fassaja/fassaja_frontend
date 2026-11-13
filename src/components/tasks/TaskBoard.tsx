@@ -22,6 +22,7 @@ import { combinaComProjeto } from '@/utils/taskFilters';
 // As colunas moram em taskColumns: o painel da Equipe monta o mesmo fluxo, e
 // duas tabelas de status acabariam discordando sobre onde cada tarefa vive.
 import { BOARD_COLUMNS as COLUMNS, columnOf, type ColumnKey } from '@/utils/taskColumns';
+import { Stagger } from '@/components/motion';
 
 interface TaskBoardProps {
   tasks: Task[];
@@ -194,7 +195,9 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
           com a barra única sobram cerca de 10,5rem, e 12rem deixa uma folga de
           propósito — errar para baixo custa um pouco de espaço morto, errar
           para cima empurra as colunas para fora da janela. */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[calc(100vh-12rem)]">
+      {/* As três colunas entram em cascata. São fixas — quem se move são os
+          cartões dentro delas, que o arrastar já anima por conta própria. */}
+      <Stagger gap={80} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[calc(100vh-12rem)]">
         {columns.map(col => (
           <BoardColumn key={col.key} col={col} count={col.items.length}>
             {col.items.length > 0 ? (
@@ -221,7 +224,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
             )}
           </BoardColumn>
         ))}
-      </div>
+      </Stagger>
 
       {/* Pré-visualização do card sendo arrastado (não é clipada pelas colunas). */}
       <DragOverlay dropAnimation={null}>

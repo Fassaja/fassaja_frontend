@@ -8,7 +8,6 @@ import { AtalhosRapidos } from '@/components/dashboard/AtalhosRapidos';
 import { TodayFocus } from '@/components/dashboard/TodayFocus';
 import { StatStrip } from '@/components/common/StatStrip';
 import { SoftDivider } from '@/components/common/SoftDivider';
-import { WeeklyOverviewChart } from '@/components/dashboard/WeeklyOverviewChart';
 import { ProgressCard } from '@/components/dashboard/ProgressCard';
 import { UpcomingTasks } from '@/components/dashboard/UpcomingTasks';
 import { XpCard } from '@/components/dashboard/XpCard';
@@ -27,6 +26,16 @@ import { podeConcluir } from '@/utils/taskScope';
 import { useToast } from '@/contexts/ToastContext';
 import { useTaskHistory } from '@/hooks/useTaskHistory';
 import { diaISO, inicioDaSemana, resumoSemanal } from '@/utils/produtividade';
+
+/*
+ * O gráfico traz a biblioteca de gráficos inteira consigo, e fica lá embaixo
+ * na página: vem depois, num arquivo à parte, sem atrasar a primeira tela.
+ */
+const WeeklyOverviewChart = React.lazy(() =>
+  import('@/components/dashboard/WeeklyOverviewChart').then(m => ({
+    default: m.WeeklyOverviewChart,
+  })),
+);
 
 /**
  * Entrada de cada região, em cascata de cima para baixo.
@@ -235,7 +244,11 @@ const DashboardPage: React.FC = () => {
             mais espaço nele é mais dias visíveis, não mais vão. */}
         <motion.div variants={REGIAO} className="mt-10">
           <SoftDivider className="mb-8" />
-          <WeeklyOverviewChart />
+          {/* A altura reservada é a do gráfico pronto: quando ele chega, nada
+              abaixo dele se mexe. */}
+          <React.Suspense fallback={<div className="skeleton h-[260px] rounded-2xl" />}>
+            <WeeklyOverviewChart />
+          </React.Suspense>
         </motion.div>
 
         <motion.div variants={REGIAO} className="mt-10">

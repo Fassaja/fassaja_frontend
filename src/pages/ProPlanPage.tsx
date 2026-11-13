@@ -25,7 +25,7 @@ import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT, FREE_W
 import { linkLoja } from '@/utils/twa';
 import { AssinaturaAtual } from '@/components/pro/AssinaturaAtual';
 import * as play from '@/utils/playBilling';
-import { BorderBeam, Reveal, ShinyText, Stagger, TiltCard } from '@/components/motion';
+import { BorderBeam, GradientText, Reveal, ShinyText, Stagger, TiltCard } from '@/components/motion';
 
 /** O que o Pro destrava. Espelha docs/google-play.md (fatia 5) e os Termos (8.1). */
 const DESTRAVA = [
@@ -258,7 +258,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
           <div className="flex flex-col items-center text-center gap-4">
             <div>
               <p className="text-4xl font-bold tabular-nums text-text-primary">
-                {precoTexto}
+                <GradientText>{precoTexto}</GradientText>
                 <span className="text-lg font-normal text-text-secondary"> / mês</span>
               </p>
               <p className="mt-1 text-sm text-text-soft">
