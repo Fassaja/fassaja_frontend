@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLightOnlyScreen } from '@/contexts/ThemeContext';
 import { caminhoInternoSeguro } from '@/utils/url';
 import { marcarIdaAoGoogle } from '@/utils/postLoginRedirect';
+import { Aurora, Reveal, Stagger, TextReveal } from '@/components/motion';
 
 interface AuthPageProps {
   mode: 'login' | 'register';
@@ -132,15 +133,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           {/* O painel da marca apresenta o PRODUTO; a saudação fica para depois
               do login. Antes havia duas na mesma tela: um "Que bom te ver de
               novo!" aqui e um "Bem-vindo de volta" no formulário ao lado. */}
-          <h1 className="text-3xl font-extrabold mt-6 leading-tight max-w-md">
-            Tudo o que você precisa fazer, em um só lugar
-          </h1>
-          <p className="text-white/80 mt-3 max-w-md">
+          <TextReveal
+            as="h1"
+            delay={120}
+            text="Tudo o que você precisa fazer, em um só lugar"
+            className="text-3xl font-extrabold mt-6 leading-tight max-w-md"
+          />
+          <p className="fx-reveal is-in text-white/80 mt-3 max-w-md" style={{ '--fx-delay': '480ms' } as React.CSSProperties}>
             Tarefas, projetos, agenda e relatórios de produtividade — organizados do jeito que
             você trabalha.
           </p>
 
-          <div className="mt-8 grid grid-cols-2 gap-2.5 w-full max-w-sm">
+          <Stagger delay={620} gap={70} className="mt-8 grid grid-cols-2 gap-2.5 w-full max-w-sm">
             {[
               { icon: <CheckSquare size={16} />, label: 'Tarefas e projetos' },
               { icon: <CalendarDays size={16} />, label: 'Calendário' },
@@ -155,9 +159,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
                 {f.label}
               </div>
             ))}
-          </div>
+          </Stagger>
         </div>
 
+        <Aurora intensity={0.5} />
         <div className="absolute -right-16 -bottom-16 w-72 h-72 rounded-full bg-white/10" />
         <div className="absolute right-24 top-20 w-32 h-32 rounded-full bg-white/10" />
         <div className="absolute -left-12 top-1/3 w-40 h-40 rounded-full bg-white/5" />
@@ -165,7 +170,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
 
       {/* Form panel */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-md">
+        <Reveal className="w-full max-w-md">
           {/* No mobile o painel da marca não existe: o Bob recebe aqui. */}
           <div className="lg:hidden flex justify-center">
             <Mascot state={isLogin ? 'happy' : 'strong'} size="sm" animate />
@@ -379,7 +384,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           </p>
           </>
           )}
-        </div>
+        </Reveal>
       </div>
     </div>
   );

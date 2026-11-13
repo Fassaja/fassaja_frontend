@@ -16,6 +16,7 @@ import { usePageScrolled } from '@/hooks/usePageScrolled';
 import { partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
 import { Kbd } from '@/components/common/Kbd';
 import { useAjudaDaArea } from '@/components/onboarding/AjudaDaArea';
+import { TextReveal } from '@/components/motion';
 
 interface TopbarProps {
   onNewTask?: () => void;
@@ -128,7 +129,12 @@ export const Topbar: React.FC<TopbarProps> = ({
         {/* Greeting */}
         <div className="min-w-0">
           <div className="text-base sm:text-xl lg:text-2xl font-bold text-text-primary truncate">
-            {typeof title === 'string' ? <h1 className="truncate">{title}</h1> : title}
+            {/* `key`: o título reanima a cada troca de página. */}
+            {typeof title === 'string' ? (
+              <TextReveal as="h1" key={title} text={title} className="truncate" />
+            ) : (
+              title
+            )}
           </div>
           {subtitle && (
             <p className="text-sm text-text-secondary truncate hidden sm:block first-letter:uppercase">

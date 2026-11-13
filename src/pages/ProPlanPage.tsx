@@ -25,6 +25,7 @@ import { ANDROID_PACKAGE, PLAY_SKU, FREE_PROJECT_LIMIT, PRO_WEEKLY_LIMIT, FREE_W
 import { linkLoja } from '@/utils/twa';
 import { AssinaturaAtual } from '@/components/pro/AssinaturaAtual';
 import * as play from '@/utils/playBilling';
+import { BorderBeam, Reveal, ShinyText, Stagger, TiltCard } from '@/components/motion';
 
 /** O que o Pro destrava. Espelha docs/google-play.md (fatia 5) e os Termos (8.1). */
 const DESTRAVA = [
@@ -211,11 +212,12 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
             Fassajá sem teto para quem já o usa todo dia — a página fala com
             essa pessoa, não com quem chegou ontem. */}
         <section className="relative overflow-hidden rounded-3xl border border-primary-vibrant/20 bg-gradient-to-br from-primary-light via-surface to-surface p-6 sm:p-8">
+          <BorderBeam duration={7} />
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <Mascot state="strong" size="lg" animate />
             <div className="text-center sm:text-left">
               <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-vibrant/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary-vibrant">
-                <Sparkles size={13} /> Fassajá Pro
+                <Sparkles size={13} /> <ShinyText>Fassajá Pro</ShinyText>
               </p>
               <h2 className="mt-3 text-2xl sm:text-3xl font-bold leading-tight text-text-primary">
                 Você já organiza o seu dia aqui.
@@ -233,9 +235,10 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
 
         {/* O que destrava, um cartão por coisa: dá para bater o olho e achar
             a que a pessoa já sentiu falta. */}
-        <section className="grid gap-3 sm:grid-cols-2">
+        <Stagger as="section" className="grid gap-3 sm:grid-cols-2">
           {DESTRAVA.map((b) => (
-            <Card key={b.titulo} padding="md" className="flex items-start gap-3">
+            <TiltCard key={b.titulo} max={5}>
+            <Card padding="md" className="flex h-full items-start gap-3">
               <span className="mt-0.5 w-10 h-10 shrink-0 rounded-xl bg-primary-light text-primary-vibrant flex items-center justify-center">
                 {b.icone}
               </span>
@@ -244,11 +247,14 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
                 <p className="mt-0.5 text-sm text-text-secondary leading-relaxed">{b.detalhe}</p>
               </div>
             </Card>
+            </TiltCard>
           ))}
-        </section>
+        </Stagger>
 
         {/* Preço e o botão — tudo centralizado num eixo só. */}
-        <Card padding="lg" className="border-primary-vibrant/30">
+        <Reveal>
+        <Card padding="lg" className="relative border-primary-vibrant/30">
+          <BorderBeam duration={9} />
           <div className="flex flex-col items-center text-center gap-4">
             <div>
               <p className="text-4xl font-bold tabular-nums text-text-primary">
@@ -279,6 +285,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
             )}
           </div>
         </Card>
+        </Reveal>
 
         {/* O que NÃO muda. Dizer isso é o que faz o resto ser crível: ninguém
             está sendo trancado para fora do que já usa. */}
@@ -289,7 +296,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
           continua seu, com ou sem Pro.
         </section>
 
-        <section className="space-y-3">
+        <Stagger as="section" className="space-y-3">
           <h3 className="font-semibold text-text-primary">Perguntas rápidas</h3>
           {FAQ.map((f) => (
             <details key={f.p} className="group rounded-xl border border-border bg-surface px-4 py-3">
@@ -303,7 +310,7 @@ const ProPlanPage: React.FC<{ modo: 'app' | 'web' | 'loja' }> = ({ modo }) => {
           <p className="text-xs text-text-soft">
             Detalhes nos <a href="/termos" className="underline underline-offset-2">Termos de Uso</a>.
           </p>
-        </section>
+        </Stagger>
       </div>
     </AppLayout>
   );

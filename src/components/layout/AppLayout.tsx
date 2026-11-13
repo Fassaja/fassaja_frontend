@@ -8,6 +8,7 @@ import { BobAssistant } from '@/components/ai/BobAssistant';
 import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTimeZoneSync } from '@/hooks/useTimeZoneSync';
+import { Aurora, Stagger } from '@/components/motion';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -35,20 +36,26 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   return (
     <AjudaDaAreaProvider>
     <div className="flex min-h-screen bg-bg-main">
+      {/* Aurora da marca atrás de tudo. Vem ANTES na árvore e a coluna do
+          conteúdo é `relative`: entre posicionados sem z-index, quem vem
+          depois pinta por cima — o conteúdo cobre a aurora sem abrir um
+          contexto de empilhamento (que prenderia o z-index da barra do topo). */}
+      <Aurora className="!fixed" intensity={0.1} />
       <Sidebar />
       {/* A margem acompanha a barra na mesma duração e curva — se as duas
           transições divergirem, aparece uma faixa de fundo entre elas. */}
       <div
-        className={`flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ease-out-expo ${margem}`}
+        className={`relative flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ease-out-expo ${margem}`}
       >
         <Topbar onNewTask={onNewTask} actionLabel={actionLabel} title={title} subtitle={subtitle} />
         <main className="flex-1 pt-20">
           {/* Entrada suave do conteúdo a cada navegação (o layout remonta por página). */}
           {/* Embaixo, no celular, o conteúdo precisa passar por trás da dock
               sem o último item ficar escondido atrás dela. */}
-          <div className="p-4 pb-28 lg:p-8 animate-page-in">
+          {/* Os blocos de primeiro nível da página entram em cascata. */}
+          <Stagger className="p-4 pb-28 lg:p-8 animate-page-in">
             {children}
-          </div>
+          </Stagger>
         </main>
       </div>
       <PlatformTourModal />

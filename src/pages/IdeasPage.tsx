@@ -20,6 +20,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { Idea, IdeaStatus } from '@/types/idea';
 import { IDEA_STATUS_META, countIdeas, needsAttention } from '@/utils/ideaStatus';
 import { ideaSummary } from '@/utils/cardSummary';
+import { Stagger } from '@/components/motion';
 
 const IdeasPage: React.FC = () => {
   const { ideas, loading, createIdea, updateIdea, deleteIdea, convertIdea } = useIdeas();
@@ -237,7 +238,7 @@ const IdeasPage: React.FC = () => {
                 description="Nenhuma ideia corresponde à busca ou ao estágio selecionado."
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {visiveis.map(idea => (
                   <HoverRevealCard
                     key={idea.id}
@@ -253,7 +254,7 @@ const IdeasPage: React.FC = () => {
                     />
                   </HoverRevealCard>
                 ))}
-              </div>
+              </Stagger>
             )}
           </>
         )}

@@ -284,3 +284,292 @@ a,
   height: 100vh;
   height: 100dvh;
 }
+
+/* ==========================================================================
+ * KIT DE MOVIMENTO (src/components/motion)
+ *
+ * A regra que organiza tudo aqui: o efeito é CSS e o JavaScript só dá a
+ * largada. Uma animação em CSS que mexe apenas em `transform` e `opacity`
+ * roda no compositor — continua a 60 fps mesmo com a thread principal ocupada
+ * carregando tarefas — e não custa um render do React por quadro.
+ *
+ * Três decisões que valem para todos os efeitos:
+ *
+ * 1. `animation-fill-mode: backwards`, nunca `both`. Com `both` o elemento
+ *    fica com `transform: translateY(0)` para sempre, e um `transform`
+ *    qualquer vira bloco de contenção de `position: fixed` — foi exatamente
+ *    isso que já quebrou um diálogo neste app. `backwards` segura o estado
+ *    inicial durante o atraso e não deixa resíduo nenhum no fim.
+ *
+ * 2. Desfoque só onde há folga. `filter: blur` é o efeito mais caro da lista;
+ *    em celular ele fica zerado pela variável `--fx-blur` e a entrada vira só
+ *    subida + opacidade.
+ *
+ * 3. "Reduzir movimento" já é coberto pela regra global acima (toda animação
+ *    CSS vira instantânea); os laços infinitos são desligados no fim do bloco.
+ * ========================================================================== */
+
+:root {
+  --fx-blur: 0px;
+  --fx-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) and (min-width: 1024px) {
+  :root { --fx-blur: 6px; }
+}
+
+@keyframes fx-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--fx-y, 14px), 0);
+    filter: blur(var(--fx-blur));
+  }
+}
+
+/* --- Reveal: entra quando chega à tela ----------------------------------- */
+.fx-reveal:not(.is-in) { opacity: 0; }
+.fx-reveal.is-in {
+  animation: fx-rise var(--fx-dur, 600ms) var(--fx-ease) var(--fx-delay, 0ms) backwards;
+}
+
+/* --- Stagger: os filhos entram em cascata -------------------------------- */
+.fx-stagger:not(.is-in) > * { opacity: 0; }
+.fx-stagger.is-in > * {
+  animation: fx-rise var(--fx-dur, 520ms) var(--fx-ease)
+    calc(var(--fx-delay, 0ms) + var(--fx-i, 0) * var(--fx-gap, 55ms)) backwards;
+}
+.fx-stagger > :nth-child(2) { --fx-i: 1; }
+.fx-stagger > :nth-child(3) { --fx-i: 2; }
+.fx-stagger > :nth-child(4) { --fx-i: 3; }
+.fx-stagger > :nth-child(5) { --fx-i: 4; }
+.fx-stagger > :nth-child(6) { --fx-i: 5; }
+.fx-stagger > :nth-child(7) { --fx-i: 6; }
+.fx-stagger > :nth-child(8) { --fx-i: 7; }
+.fx-stagger > :nth-child(9) { --fx-i: 8; }
+/* Do décimo em diante todos entram juntos: uma cascata de 40 itens faria o
+   último esperar dois segundos para aparecer. */
+.fx-stagger > :nth-child(n + 10) { --fx-i: 9; }
+
+/* --- TextReveal: palavra por palavra ------------------------------------- */
+.fx-word {
+  display: inline-block;
+  white-space: pre;
+  animation: fx-rise 560ms var(--fx-ease)
+    calc(var(--fx-delay, 0ms) + var(--fx-i, 0) * 45ms) backwards;
+  --fx-y: 0.45em;
+}
+
+/* --- Spotlight: um foco de luz que segue o ponteiro ---------------------- *
+ * É uma camada de `background-image`, não um pseudo-elemento: assim o cartão
+ * não precisa virar `position: relative` (o que mudaria o bloco de contenção
+ * de todo filho absoluto do app). As coordenadas chegam por variável CSS, de
+ * UM ouvinte só no documento — ver useSpotlight.
+ *
+ * `@property` é o que permite a luz acender e apagar com transição; onde não
+ * houver suporte ela simplesmente liga e desliga.                           */
+@property --fx-spot {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@layer components {
+  .fx-spotlight {
+    background-image: radial-gradient(
+      340px circle at var(--fx-mx, 50%) var(--fx-my, 50%),
+      rgb(var(--c-primary-vibrant) / calc(var(--fx-spot) * var(--fx-spot-strength, 0.1))),
+      transparent 65%
+    );
+    transition-property: --fx-spot, box-shadow, transform, border-color;
+  }
+}
+
+@media (hover: hover) {
+  .fx-spotlight:hover {
+    --fx-spot: 1;
+    border-color: rgb(var(--c-primary-vibrant) / 0.35);
+  }
+}
+
+.dark .fx-spotlight { --fx-spot-strength: 0.16; }
+
+/* --- Brilho que varre o botão principal ---------------------------------- */
+.fx-shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.fx-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  transform: translateX(-140%) skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+}
+@media (hover: hover) {
+  :hover > .fx-shine::after {
+    transform: translateX(340%) skewX(-20deg);
+    transition: transform 700ms var(--fx-ease);
+  }
+}
+
+/* --- Texto com brilho / degradê ------------------------------------------ */
+.fx-shiny-text {
+  background: linear-gradient(
+      110deg,
+      currentColor 40%,
+      rgb(var(--c-turquoise)) 50%,
+      currentColor 60%
+    )
+    0 0 / 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fx-shiny 3.2s linear infinite;
+}
+@keyframes fx-shiny {
+  from { background-position: 100% 0; }
+  to { background-position: -150% 0; }
+}
+
+.fx-gradient-text {
+  background: linear-gradient(
+    100deg,
+    rgb(var(--c-primary-vibrant)),
+    rgb(var(--c-turquoise)),
+    rgb(var(--c-priority-high))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --- BorderBeam: um feixe que percorre a borda --------------------------- *
+ * A máscara recorta só o anel da borda; o que gira é um cônico por baixo,
+ * animado por `transform` (compositor), não o ângulo do degradê (repintura). */
+.fx-beam {
+  position: absolute;
+  inset: 0;
+  padding: var(--fx-beam-size, 1.5px);
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.fx-beam::before {
+  content: '';
+  position: absolute;
+  /* Quadrado maior que a diagonal do cartão, centrado: girando, cobre tudo. */
+  left: 50%;
+  top: 50%;
+  width: 200vmax;
+  height: 200vmax;
+  margin: -100vmax 0 0 -100vmax;
+  max-width: none;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 78%,
+    rgb(var(--c-primary-vibrant)) 90%,
+    rgb(var(--c-turquoise)) 97%,
+    transparent 100%
+  );
+  animation: fx-spin var(--fx-beam-dur, 6s) linear infinite;
+}
+@keyframes fx-spin {
+  to { transform: rotate(1turn); }
+}
+
+/* --- Aurora: manchas de cor à deriva no fundo ---------------------------- *
+ * São degradês radiais, que já nascem difusos — nenhum `filter: blur`, que
+ * numa área deste tamanho seria a coisa mais cara da tela. A camada é fixa e
+ * só anima `transform`: rolar a página não repinta nada.                    */
+.fx-aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.fx-aurora > i {
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--fx-aurora-c), transparent);
+  opacity: var(--fx-aurora-o, 0.16);
+  will-change: transform;
+}
+.fx-aurora > i:nth-child(1) {
+  --fx-aurora-c: rgb(var(--c-primary-vibrant));
+  top: -22vmax;
+  right: -12vmax;
+}
+.fx-aurora > i:nth-child(2) {
+  --fx-aurora-c: rgb(var(--c-turquoise));
+  bottom: -28vmax;
+  left: -8vmax;
+}
+.fx-aurora > i:nth-child(3) {
+  --fx-aurora-c: rgb(var(--c-priority-high));
+  top: 30%;
+  left: 38%;
+  width: 40vmax;
+  height: 40vmax;
+  opacity: calc(var(--fx-aurora-o, 0.16) * 0.6);
+}
+/* A deriva só existe onde há máquina para ela; no celular a aurora fica
+   parada — continua bonita e não gasta bateria. */
+@media (hover: hover) and (min-width: 1024px) {
+  .fx-aurora > i { animation: fx-drift 26s ease-in-out infinite alternate; }
+  .fx-aurora > i:nth-child(2) { animation-duration: 32s; animation-direction: alternate-reverse; }
+  .fx-aurora > i:nth-child(3) { animation-duration: 38s; }
+}
+@keyframes fx-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-9vmax, 7vmax, 0) scale(1.18); }
+}
+
+/* --- Marquee: faixa que corre sem parar ---------------------------------- */
+.fx-marquee {
+  display: flex;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.fx-marquee > div {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--fx-marquee-gap, 1rem);
+  padding-right: var(--fx-marquee-gap, 1rem);
+  animation: fx-marquee var(--fx-marquee-dur, 30s) linear infinite;
+}
+.fx-marquee:hover > div { animation-play-state: paused; }
+@keyframes fx-marquee {
+  to { transform: translate3d(-100%, 0, 0); }
+}
+
+/* --- Malha de pontos (fundo de áreas vazias) ----------------------------- */
+.fx-dots {
+  background-image: radial-gradient(rgb(var(--c-text-soft) / 0.22) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* A regra global encurta a duração, mas um laço infinito "instantâneo"
+     ainda ficaria piscando: estes param de vez. */
+  .fx-aurora > i,
+  .fx-beam::before,
+  .fx-shiny-text,
+  .fx-marquee > div { animation: none; }
+  .fx-shiny-text { -webkit-text-fill-color: currentColor; background: none; }
+  .fx-shine { display: none; }
+  /* Sem animação para revelar, o conteúdo tem de nascer visível. */
+  .fx-reveal:not(.is-in),
+  .fx-stagger:not(.is-in) > * { opacity: 1; }
+}

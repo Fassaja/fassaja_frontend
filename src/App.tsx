@@ -19,8 +19,11 @@ import { TopProgressBar } from '@/components/layout/TopProgressBar';
 import { Analytics } from '@vercel/analytics/react';
 import { ProProvider } from '@/contexts/ProContext';
 import { sanitizeUrl } from '@/utils/analyticsPath';
+import { useSpotlight } from '@/components/motion';
 
 function App() {
+  // Um ouvinte só para o foco de luz de todos os cartões do app.
+  useSpotlight();
   return (
     <MotionConfig reducedMotion="user">
     {/* Mais externo: o tema não depende de sessão nem de dados, e a tela de
