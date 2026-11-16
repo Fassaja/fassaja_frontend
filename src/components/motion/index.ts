@@ -3,7 +3,7 @@
  *
  * Entrada ........ Reveal, Stagger, TextReveal
  * Texto .......... ShinyText, GradientText
- * Ponteiro ....... TiltCard, Magnetic, useSpotlight (+ classe `fx-spotlight`)
+ * Ponteiro ....... TiltCard, Magnetic
  * Enfeite ........ BorderBeam, Aurora, Marquee (+ classe `fx-dots`)
  *
  * Os efeitos são CSS (bloco "KIT DE MOVIMENTO" em index.css); os componentes
@@ -17,5 +17,4 @@ export { ShinyText, GradientText } from './Text';
 export { TiltCard } from './TiltCard';
 export { Magnetic } from './Magnetic';
 export { BorderBeam, Aurora, Marquee } from './Decor';
-export { useSpotlight } from './useSpotlight';
 export { useInView } from './useInView';

@@ -301,9 +301,9 @@ a,
  *    isso que já quebrou um diálogo neste app. `backwards` segura o estado
  *    inicial durante o atraso e não deixa resíduo nenhum no fim.
  *
- * 2. Desfoque só onde há folga. `filter: blur` é o efeito mais caro da lista;
- *    em celular ele fica zerado pela variável `--fx-blur` e a entrada vira só
- *    subida + opacidade.
+ * 2. O kit é de desktop. Em celular e tablet quase tudo se desliga (bloco
+ *    "Celular e tablet" no fim): lá ficam só a entrada curta da página, que
+ *    já existia, e o que é estático.
  *
  * 3. "Reduzir movimento" já é coberto pela regra global acima (toda animação
  *    CSS vira instantânea); os laços infinitos são desligados no fim do bloco.
@@ -369,40 +369,6 @@ a,
     calc(var(--fx-delay, 0ms) + var(--fx-i, 0) * 45ms) backwards;
   --fx-y: 0.45em;
 }
-
-/* --- Spotlight: um foco de luz que segue o ponteiro ---------------------- *
- * É uma camada de `background-image`, não um pseudo-elemento: assim o cartão
- * não precisa virar `position: relative` (o que mudaria o bloco de contenção
- * de todo filho absoluto do app). As coordenadas chegam por variável CSS, de
- * UM ouvinte só no documento — ver useSpotlight.
- *
- * `@property` é o que permite a luz acender e apagar com transição; onde não
- * houver suporte ela simplesmente liga e desliga.                           */
-@property --fx-spot {
-  syntax: '<number>';
-  inherits: false;
-  initial-value: 0;
-}
-
-@layer components {
-  .fx-spotlight {
-    background-image: radial-gradient(
-      340px circle at var(--fx-mx, 50%) var(--fx-my, 50%),
-      rgb(var(--c-primary-vibrant) / calc(var(--fx-spot) * var(--fx-spot-strength, 0.1))),
-      transparent 65%
-    );
-    transition-property: --fx-spot, box-shadow, transform, border-color;
-  }
-}
-
-@media (hover: hover) {
-  .fx-spotlight:hover {
-    --fx-spot: 1;
-    border-color: rgb(var(--c-primary-vibrant) / 0.35);
-  }
-}
-
-.dark .fx-spotlight { --fx-spot-strength: 0.16; }
 
 /* --- Brilho que varre o botão principal ---------------------------------- */
 .fx-shine {
@@ -569,6 +535,34 @@ a,
 .fx-dots {
   background-image: radial-gradient(rgb(var(--c-text-soft) / 0.22) 1px, transparent 1px);
   background-size: 18px 18px;
+}
+
+/* --- Celular e tablet: só o essencial ----------------------------------- *
+ * Em aparelho de toque o kit quase todo se cala. Cascatas, auroras e feixes
+ * disputam a mesma GPU modesta que precisa rolar a lista de tarefas, e num
+ * app usado várias vezes ao dia a entrada animada de cada tela vira espera.
+ * Fica o que já existia antes do kit (a entrada curta da página) e o que é
+ * estático (a malha de pontos, o texto em degradê).
+ *
+ * A condição é "sem hover OU tela estreita": pega celular, tablet e a janela
+ * de desktop encolhida, que tem o mesmo problema de espaço.                 */
+@media (hover: none), (max-width: 1023px) {
+  .fx-reveal:not(.is-in),
+  .fx-stagger:not(.is-in) > * { opacity: 1; }
+  .fx-reveal.is-in,
+  .fx-stagger.is-in > *,
+  .fx-stagger.is-in > .fx-reveal.is-in,
+  .fx-word { animation: none; }
+
+  .fx-aurora,
+  .fx-beam,
+  .fx-shine { display: none; }
+
+  .fx-shiny-text {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
