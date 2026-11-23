@@ -90,6 +90,21 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return response.json() as Promise<T>;
 }
 
+/**
+ * DELETE que sobrevive ao fechamento da aba.
+ *
+ * Para as exclusões que ainda estavam na janela do "Desfazer" quando a pessoa
+ * saiu da página: `keepalive` deixa o navegador terminar o pedido mesmo com a
+ * página indo embora. Não há resposta para ler — quem chama não espera nada.
+ */
+export function excluirAoSair(path: string): void {
+  try {
+    void fetch(`${API_URL}${path}`, { method: 'DELETE', credentials: 'include', keepalive: true });
+  } catch {
+    /* navegador sem keepalive: a tarefa fica, que é o lado seguro */
+  }
+}
+
 export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body: unknown) => request<T>(path, { method: 'POST', body }),

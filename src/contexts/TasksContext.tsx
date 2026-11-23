@@ -12,6 +12,7 @@ import { aplicarAtualizacao } from '@/utils/taskUpdate';
 import { tasksService } from '@/services/tasksService';
 import { guestTasksStore } from '@/services/guestTasksStore';
 import { useCelebration } from './CelebrationContext';
+import { useToast } from './ToastContext';
 import { useUser, computeStreak } from './UserContext';
 import { useAuth } from './AuthContext';
 import { useSessao } from '@/hooks/useSessao';
@@ -28,6 +29,11 @@ interface TasksContextValue {
   updateTask: (id: string, updates: TaskUpdate) => Promise<Task | undefined>;
   completeTask: (id: string) => Promise<Task | undefined>;
   deleteTask: (id: string) => Promise<void>;
+  /**
+   * Exclui com "Desfazer": as tarefas somem da tela na hora e o aviso oferece
+   * desfazer; o pedido só vai ao servidor quando o aviso fecha sem ele.
+   */
+  excluirComDesfazer: (ids: string[]) => void;
   assignTask: (id: string, assigneeIds: string[], teamId?: string) => Promise<Task>;
   addSubtask: (taskId: string, title: string) => Promise<void>;
   updateSubtask: (
@@ -66,10 +72,16 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { celebrate } = useCelebration();
+  const toast = useToast();
   const { user, recordProductiveDay } = useUser();
   const { isGuest, noteGuestTask } = useAuth();
   // Identidade da sessão: diz de quem é cada resposta que volta (FE-01).
   const { identidade, identidadeAtual, carregar, marcar } = useSessao();
+
+  /** Exclusões esperando o fim da janela do "Desfazer". Ver excluirComDesfazer. */
+  const exclusoesPendentes = useRef(new Map<string, { tarefa: Task; indice: number }>());
+  /** Último aviso de "concluída": um novo substitui o anterior em vez de empilhar. */
+  const ultimoAvisoDeConclusao = useRef<number | null>(null);
 
   const loadTasks = useCallback(
     (silent = false) => {
@@ -78,7 +90,14 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Visitante: tarefas só do navegador (sandbox local). Autenticado: API.
         buscar: async () => (isGuest ? guestTasksStore.getAll() : await tasksService.getTasks()),
         aoReceber: data => {
-          setRawTasks(data);
+          // O que está na janela do "Desfazer" já saiu da tela; uma
+          // atualização vinda do servidor nesse meio-tempo não pode trazer
+          // a tarefa de volta.
+          setRawTasks(
+            exclusoesPendentes.current.size
+              ? data.filter(t => !exclusoesPendentes.current.has(t.id))
+              : data,
+          );
           setError(null);
         },
         aoFalhar: err => setError(err),
@@ -169,6 +188,11 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [isGuest, marcar]);
 
+  // O "Desfazer" da conclusão chama updateTask; pela ref, para a lista de
+  // dependências de completeTask não crescer a cada mudança de updateTask.
+  const updateTaskRef = useRef(updateTask);
+  updateTaskRef.current = updateTask;
+
   const completeTask = useCallback(async (id: string) => {
     const aplicar = marcar();
     const marca = identidadeAtual();
@@ -232,6 +256,22 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           } else {
             celebrate();
           }
+
+          // "Desfazer" devolve o status que a tarefa tinha antes do clique.
+          // É o mesmo caminho de trocar o status na mão, então nada fica
+          // diferente de quem desmarcasse pelo seletor.
+          const statusAnterior = anterior?.status;
+          if (statusAnterior && statusAnterior !== 'completed') {
+            if (ultimoAvisoDeConclusao.current !== null) toast.dismiss(ultimoAvisoDeConclusao.current);
+            ultimoAvisoDeConclusao.current = toast.comAcao('Tarefa concluída.', {
+              rotulo: 'Desfazer',
+              onClick: () => {
+                updateTaskRef.current(id, { status: statusAnterior }).catch(() =>
+                  toast.error('Não foi possível desfazer. Tente mudar o status na tarefa.'),
+                );
+              },
+            });
+          }
         }
       }
       return updated;
@@ -259,6 +299,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     isGuest,
     marcar,
     identidadeAtual,
+    toast,
   ]);
 
   const deleteTask = useCallback(
@@ -275,6 +316,74 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     },
     [isGuest, marcar],
   );
+
+  const excluirComDesfazer = useCallback(
+    (ids: string[]) => {
+      const marca = identidadeAtual();
+      const atual = tasksRef.current;
+      const alvo = ids
+        .map(id => ({ tarefa: atual.find(t => t.id === id), indice: atual.findIndex(t => t.id === id) }))
+        .filter((x): x is { tarefa: Task; indice: number } => !!x.tarefa);
+      if (alvo.length === 0) return;
+
+      setRawTasks(prev => prev.filter(t => !ids.includes(t.id)));
+      for (const p of alvo) exclusoesPendentes.current.set(p.tarefa.id, p);
+
+      /** Tira da fila só o que ainda está nela (a saída da página pode ter levado). */
+      const retirar = () =>
+        alvo.filter(({ tarefa }) => exclusoesPendentes.current.delete(tarefa.id));
+
+      toast.comAcao(alvo.length === 1 ? 'Tarefa excluída.' : `${alvo.length} tarefas excluídas.`, {
+        rotulo: 'Desfazer',
+        onClick: () => {
+          const devolver = retirar();
+          if (devolver.length === 0 || identidadeAtual() !== marca) return;
+          // De volta ao lugar de onde saiu, e não ao fim da lista.
+          setRawTasks(prev => {
+            const proxima = [...prev];
+            for (const { tarefa, indice } of devolver.sort((x, y) => x.indice - y.indice)) {
+              proxima.splice(Math.min(indice, proxima.length), 0, tarefa);
+            }
+            return proxima;
+          });
+        },
+        // O aviso fechou sem "Desfazer": agora sim vai ao servidor.
+        aoExpirar: () => {
+          for (const { tarefa } of retirar()) {
+            void (async () => {
+              try {
+                if (isGuest) guestTasksStore.remove(tarefa.id);
+                else await tasksService.deleteTask(tarefa.id);
+              } catch {
+                // O servidor recusou: a tarefa volta, e a pessoa fica sabendo.
+                if (identidadeAtual() !== marca) return;
+                setRawTasks(prev => (prev.some(t => t.id === tarefa.id) ? prev : [...prev, tarefa]));
+                toast.error(`Não foi possível excluir "${tarefa.title}".`);
+              }
+            })();
+          }
+        },
+      });
+    },
+    [isGuest, identidadeAtual, toast],
+  );
+
+  /*
+   * Fechou a aba com exclusões ainda na janela do "Desfazer": elas valem. O
+   * pedido vai com `keepalive`, que o navegador termina mesmo com a página
+   * indo embora.
+   */
+  useEffect(() => {
+    const aoSair = () => {
+      for (const id of exclusoesPendentes.current.keys()) {
+        if (isGuest) guestTasksStore.remove(id);
+        else tasksService.deleteTaskAoSair(id);
+      }
+      exclusoesPendentes.current.clear();
+    };
+    window.addEventListener('pagehide', aoSair);
+    return () => window.removeEventListener('pagehide', aoSair);
+  }, [isGuest]);
 
   const assignTask = useCallback(
     async (id: string, assigneeIds: string[], teamId?: string) => {
@@ -376,6 +485,7 @@ export const TasksProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateTask,
         completeTask,
         deleteTask,
+        excluirComDesfazer,
         assignTask,
         addSubtask,
         updateSubtask,

@@ -56,7 +56,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               border-border focus:outline-none focus:border-primary-vibrant focus:ring-4 focus:ring-primary-light/60
               transition-shadow disabled:bg-bg-secondary disabled:cursor-not-allowed
               ${icon ? 'pl-10' : ''}
-              ${error ? 'border-danger focus:border-danger focus:ring-red-100' : ''}
+              ${error ? 'border-danger focus:border-danger focus:ring-perigo-suave' : ''}
               ${className}
             `}
             {...props}

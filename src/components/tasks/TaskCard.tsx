@@ -25,14 +25,16 @@ interface TaskCardProps {
   /** Modo de seleção em massa: o card vira um item selecionável. */
   selectionMode?: boolean;
   selected?: boolean;
+  /** É a tarefa aberta no painel lateral: marca o cartão para orientar. */
+  aberta?: boolean;
   onToggleSelect?: (taskId: string) => void;
 }
 
 const statusConfig: Record<Task['status'], { label: string; className: string; dot: string }> = {
   pending: { label: 'Pendente', className: 'bg-bg-secondary text-text-secondary', dot: '#64748B' },
   in_progress: { label: 'Em andamento', className: 'bg-primary-light text-primary-vibrant', dot: '#2477FF' },
-  completed: { label: 'Concluída', className: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', dot: '#22C55E' },
-  overdue: { label: 'Atrasada', className: 'bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300', dot: '#F43F5E' },
+  completed: { label: 'Concluída', className: 'bg-sucesso-suave text-sucesso', dot: '#22C55E' },
+  overdue: { label: 'Atrasada', className: 'bg-perigo-suave text-perigo', dot: '#F43F5E' },
 };
 
 // Status que o usuário pode escolher direto no card (overdue é calculado pelo servidor).
@@ -71,11 +73,20 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
   useEffect(() => {
     if (!open) return;
     const close = () => setOpen(false);
+    // Esc fecha e devolve o foco ao botão de status (antes, só o clique fora
+    // fechava o menu).
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setOpen(false);
+      btnRef.current?.focus();
+    };
     window.addEventListener('scroll', close, true);
     window.addEventListener('resize', close);
+    window.addEventListener('keydown', aoTeclar);
     return () => {
       window.removeEventListener('scroll', close, true);
       window.removeEventListener('resize', close);
+      window.removeEventListener('keydown', aoTeclar);
     };
   }, [open]);
 
@@ -110,7 +121,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
         aria-haspopup="menu"
         aria-expanded={open}
         title="Mudar status"
-        className={`inline-flex items-center gap-1 text-[11px] font-semibold pl-2 pr-1 py-0.5 rounded-full transition-all hover:brightness-95 active:scale-95 disabled:opacity-60 ${current.className}`}
+        className={`inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold pl-2 pr-1 py-0.5 rounded-full transition-all hover:brightness-95 active:scale-95 disabled:opacity-60 ${current.className}`}
       >
         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: current.dot }} />
         {current.label}
@@ -119,8 +130,10 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
 
       {open && pos && createPortal(
         <>
+          {/* Véu de "clique fora": decoração. Pelo teclado, Esc fecha. */}
           <div
             className="fixed inset-0 z-[60]"
+            aria-hidden="true"
             onClick={e => { e.stopPropagation(); setOpen(false); }}
           />
           <m.div
@@ -180,6 +193,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onClick,
   selectionMode = false,
   selected = false,
+  aberta = false,
   onToggleSelect,
 }) => {
   const { account } = useAuth();
@@ -220,7 +234,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         onClick={handleClick}
         padding="none"
         className={`relative flex items-start gap-3 overflow-hidden p-3.5 pl-4 group ${
-          selected ? 'ring-2 ring-primary-vibrant border-primary-vibrant' : ''
+          selected
+            ? 'ring-2 ring-primary-vibrant border-primary-vibrant'
+            : aberta
+            ? 'ring-2 ring-primary-vibrant/40 border-primary-vibrant/50'
+            : ''
         }`}
       >
         {/* Prioridade como faixa lateral, e não como mais uma pílula.
@@ -258,7 +276,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         {/* Conteúdo */}
         <div className="flex-1 min-w-0">
           <h4
-            className={`text-sm font-semibold leading-snug truncate ${
+            className={`text-sm font-semibold leading-snug line-clamp-2 break-words ${
               isCompleted ? 'line-through text-text-soft' : 'text-text-primary'
             }`}
           >
@@ -418,7 +436,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 onDelete(task.id);
               }}
               aria-label="Excluir tarefa"
-              className="p-1.5 hover:bg-rose-50 rounded-lg text-danger transition-colors"
+              className="p-1.5 hover:bg-perigo-suave rounded-lg text-danger transition-colors"
             >
               <Trash2 size={15} />
             </button>

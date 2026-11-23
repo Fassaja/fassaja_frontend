@@ -22,6 +22,8 @@ interface DatePickerProps {
    * largura total dos formulários completos.
    */
   size?: 'sm' | 'md';
+  /** Chip em azul: a data veio do que foi escrito no título ("sexta"). */
+  destaque?: boolean;
 }
 
 const MONTHS = [
@@ -66,6 +68,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   disabled,
   openUp = false,
   size = 'md',
+  destaque = false,
 }) => {
   const compact = size === 'sm';
   const [open, setOpen] = useState(false);
@@ -182,7 +185,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   };
 
   return (
-    <div className={compact ? 'inline-block' : 'w-full'}>
+    <div className={compact ? 'inline-block shrink-0' : 'w-full'}>
       {label && (
         <label className="block text-sm font-medium text-text-primary mb-2">{label}</label>
       )}
@@ -196,9 +199,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60
             disabled:bg-bg-secondary disabled:cursor-not-allowed
             ${compact
-              ? 'min-h-[40px] sm:min-h-0 gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-semibold'
+              ? 'min-h-[40px] sm:min-h-0 shrink-0 whitespace-nowrap gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-semibold'
               : 'w-full gap-3 px-4 py-2.5 rounded-xl'}
-            ${open ? 'border-primary-vibrant ring-4 ring-primary-light/60' : 'border-border hover:border-primary-vibrant/50'}
+            ${open
+              ? 'border-primary-vibrant ring-4 ring-primary-light/60'
+              : destaque
+              ? 'border-primary-vibrant/30 !bg-primary-light text-primary-vibrant'
+              : 'border-border hover:border-primary-vibrant/50'}
           `}
         >
           <CalendarIcon
@@ -221,6 +228,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 e.stopPropagation();
                 onChange('');
               }}
+              // Tinha foco (tabIndex) mas não fazia nada pelo teclado: Enter
+              // ou espaço chegavam ao botão de fora e abriam o calendário.
+              onKeyDown={e => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                e.stopPropagation();
+                onChange('');
+              }}
               className="text-text-soft hover:text-danger transition-colors"
             >
               <X size={compact ? 13 : 16} />
@@ -233,6 +248,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
             {open && (
               <m.div
                 ref={painelRef}
+                data-popup
                 style={estilo}
                 initial={{ opacity: 0, y: -6, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}

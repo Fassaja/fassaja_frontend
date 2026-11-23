@@ -11,7 +11,8 @@ import { useTasks } from '@/contexts/TasksContext';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 import { usePageScrolled } from '@/hooks/usePageScrolled';
-import { partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
+import { ABRIR_ATALHOS_EVENT, partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
+import { useAtalhosGlobais } from '@/hooks/useAtalhosGlobais';
 import { Kbd } from '@/components/common/Kbd';
 import { useAjudaDaArea } from '@/components/onboarding/AjudaDaArea';
 import { Magnetic, TextReveal } from '@/components/motion';
@@ -23,6 +24,9 @@ import { useMontadoAoAbrir } from '@/hooks/useMontadoAoAbrir';
  */
 const importarBusca = () => import('./SearchModal');
 const SearchModal = React.lazy(() => importarBusca().then(mod => ({ default: mod.SearchModal })));
+const AtalhosModal = React.lazy(() =>
+  import('./AtalhosModal').then(mod => ({ default: mod.AtalhosModal })),
+);
 const StreakDaysModal = React.lazy(() =>
   import('./StreakDaysModal').then(mod => ({ default: mod.StreakDaysModal })),
 );
@@ -53,6 +57,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [showStreakDays, setShowStreakDays] = useState(false);
   const buscaMontada = useMontadoAoAbrir(showSearch);
   const sequenciaMontada = useMontadoAoAbrir(showStreakDays);
+  const [showAtalhos, setShowAtalhos] = useState(false);
+  const atalhosMontado = useMontadoAoAbrir(showAtalhos);
   const { items: notifications, unreadCount, markRead, markAllRead, refresh: refreshNotifications } =
     useNotifications();
   const navigate = useNavigate();
@@ -85,6 +91,58 @@ export const Topbar: React.FC<TopbarProps> = ({
     };
     window.addEventListener('keydown', aoTeclar);
     return () => window.removeEventListener('keydown', aoTeclar);
+  }, []);
+
+  /*
+   * Atalhos de uma tecla. Ficam aqui porque é a barra do topo que já guarda a
+   * busca e a "nova tarefa" da página — e ela está em toda tela do app.
+   */
+  // Atalho N e comando "Nova tarefa" da paleta. Usa a "nova" da página só
+  // quando ela É de tarefa — na Agenda ela cria evento, em Projetos cria
+  // projeto. Nas outras, abre a criação em Minhas Tarefas.
+  const novaTarefa = () => {
+    if (onNewTask && actionLabel === 'Nova tarefa') onNewTask();
+    else navigate('/tasks?nova=1');
+  };
+
+  useAtalhosGlobais(acao => {
+    switch (acao.tipo) {
+      case 'buscar':
+        setShowSearch(true);
+        break;
+      case 'ajuda':
+        setShowAtalhos(true);
+        break;
+      case 'ir':
+        navigate(acao.rota);
+        break;
+      case 'nova-tarefa':
+        novaTarefa();
+        break;
+    }
+  });
+
+  // Adianta o arquivo da busca assim que o navegador fica ocioso. Sem isto,
+  // o primeiro Ctrl+K da visita ainda baixava o arquivo, e o que se digitava
+  // nesse meio-tempo se perdia. É pequeno (~2,5 KB gzip) e sai do caminho da
+  // primeira tela, que é o que importa.
+  useEffect(() => {
+    const adiantar = () => void importarBusca();
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(adiantar, { timeout: 5000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    // `globalThis`: depois do `in window` acima, o TypeScript estreita
+    // `window` para `never` neste ramo.
+    const id = globalThis.setTimeout(adiantar, 3000);
+    return () => globalThis.clearTimeout(id);
+  }, []);
+
+  // O menu da conta também abre a lista (para quem não sabe do `?`).
+  useEffect(() => {
+    const abrir = () => setShowAtalhos(true);
+    window.addEventListener(ABRIR_ATALHOS_EVENT, abrir);
+    return () => window.removeEventListener(ABRIR_ATALHOS_EVENT, abrir);
   }, []);
 
   const handleRefresh = async () => {
@@ -136,10 +194,17 @@ export const Topbar: React.FC<TopbarProps> = ({
       {/* `fallback={null}`: o primeiro clique espera o arquivo chegar (poucos
           ms; a busca já vem adiantada ao passar o mouse no botão). */}
       <React.Suspense fallback={null}>
-        {buscaMontada && <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />}
+        {buscaMontada && (
+          <SearchModal
+            isOpen={showSearch}
+            onClose={() => setShowSearch(false)}
+            onNovaTarefa={novaTarefa}
+          />
+        )}
         {sequenciaMontada && (
           <StreakDaysModal isOpen={showStreakDays} onClose={() => setShowStreakDays(false)} />
         )}
+        {atalhosMontado && <AtalhosModal isOpen={showAtalhos} onClose={() => setShowAtalhos(false)} />}
       </React.Suspense>
 
       <div className="h-full px-4 lg:px-8 py-4 flex items-center justify-between gap-4">
@@ -290,7 +355,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               type="button"
               aria-label="Editar dias da sequência"
               onClick={openStreakDays}
-              className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-surface text-amber-500 dark:text-amber-400 hover:border-amber-300 hover:bg-amber-50 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-100"
+              className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-surface text-amber-500 dark:text-amber-400 hover:border-aviso-borda hover:bg-aviso-suave active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-aviso-suave"
             >
               <Flame size={20} />
             </button>

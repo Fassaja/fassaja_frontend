@@ -215,6 +215,9 @@ export const MonthGrid: React.FC<MonthGridProps> = ({
         ref={gridRef}
         role="grid"
         aria-label={`${MONTH_NAMES[monthIndex]} de ${year}`}
+        // -1: o widget é focável (como pede o papel "grid"), mas quem entra
+        // na ordem do Tab é a célula do dia, com o foco móvel das setas.
+        tabIndex={-1}
         onKeyDown={handleKeyDown}
         className="space-y-1 sm:space-y-1.5"
       >

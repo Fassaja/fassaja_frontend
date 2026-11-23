@@ -112,8 +112,8 @@ const AccountDeletionPage: React.FC = () => {
             incompleto". */}
         {!done && !token && (
           <div className="text-center">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-              <ShieldQuestion size={28} className="text-amber-600 dark:text-amber-300" />
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-aviso-suave flex items-center justify-center">
+              <ShieldQuestion size={28} className="text-aviso" />
             </div>
             <h2 className="text-2xl font-bold text-text-primary">Excluir sua conta</h2>
             <p className="text-text-secondary mt-2">
@@ -151,8 +151,8 @@ const AccountDeletionPage: React.FC = () => {
             proposital — quem interceptar o e-mail ainda precisa estar logado. */}
         {!done && token && status !== 'authed' && (
           <div className="text-center">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
-              <ShieldQuestion size={28} className="text-amber-600 dark:text-amber-300" />
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-aviso-suave flex items-center justify-center">
+              <ShieldQuestion size={28} className="text-aviso" />
             </div>
             <h2 className="text-2xl font-bold text-text-primary">Entre para confirmar</h2>
             <p className="text-text-secondary mt-2">
@@ -172,7 +172,7 @@ const AccountDeletionPage: React.FC = () => {
         {/* O caminho normal. */}
         {!done && token && status === 'authed' && (
           <>
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-perigo-suave flex items-center justify-center">
               <Trash2 size={28} className="text-danger" />
             </div>
             <h2 className="text-2xl font-bold text-text-primary text-center">
@@ -182,7 +182,7 @@ const AccountDeletionPage: React.FC = () => {
               <p className="text-text-secondary mt-1 text-center text-sm">{account.email}</p>
             )}
 
-            <div className="mt-6 flex items-start gap-2 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+            <div className="mt-6 flex items-start gap-2 rounded-xl border border-perigo-borda bg-perigo-suave px-4 py-3 text-sm font-medium text-perigo">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
               <span>
                 Isto é permanente. Seu perfil, projetos individuais, tarefas, etiquetas, eventos e

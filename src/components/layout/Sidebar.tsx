@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   CheckSquare,
@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   LogOut,
   Mail,
+  Keyboard,
   MessageCircle,
   MessageSquareHeart,
   Lock,
@@ -31,6 +32,7 @@ import { NotificationsHelp } from './NotificationsHelp';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useMontadoAoAbrir } from '@/hooks/useMontadoAoAbrir';
+import { ABRIR_ATALHOS_EVENT } from '@/utils/atalhos';
 
 // O formulário de feedback é aberto por pouca gente e poucas vezes: vem sob
 // demanda, no primeiro clique.
@@ -116,6 +118,15 @@ let rolagemDoMenu = 0;
 
 export const Sidebar: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false);
+  // Esc fecha o menu da conta: antes só fechava clicando fora.
+  useEffect(() => {
+    if (!showMenu) return;
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowMenu(false);
+    };
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, [showMenu]);
   const [showHelp, setShowHelp] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const feedbackMontado = useMontadoAoAbrir(showFeedback);
@@ -375,8 +386,10 @@ export const Sidebar: React.FC = () => {
             <div className="relative">
               {showMenu && (
                 <>
+                  {/* Véu de "clique fora": decoração. Pelo teclado, Esc fecha. */}
                   <div
                     className="fixed inset-0 z-30"
+                    aria-hidden="true"
                     onClick={() => setShowMenu(false)}
                   />
                   <div
@@ -409,6 +422,18 @@ export const Sidebar: React.FC = () => {
                     >
                       <Settings size={18} className="text-text-secondary" />
                       Configurações
+                    </button>
+                    {/* Só no desktop: atalho de teclado não existe no celular. */}
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        window.dispatchEvent(new Event(ABRIR_ATALHOS_EVENT));
+                      }}
+                      className="hidden lg:flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+                    >
+                      <Keyboard size={18} className="text-text-secondary" />
+                      Atalhos de teclado
+                      <kbd className="ml-auto text-xs text-text-soft">?</kbd>
                     </button>
                     <button
                       onClick={() => {
@@ -450,7 +475,7 @@ export const Sidebar: React.FC = () => {
                           setShowMenu(false);
                           setShowLogout(true);
                         }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-danger hover:bg-rose-50 border-t border-border transition-colors"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-danger hover:bg-perigo-suave border-t border-border transition-colors"
                       >
                         <LogOut size={18} />
                         Sair
@@ -589,6 +614,7 @@ export const Sidebar: React.FC = () => {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden animate-fade-in"
+          aria-hidden="true"
           onClick={() => setIsOpen(false)}
         />
       )}

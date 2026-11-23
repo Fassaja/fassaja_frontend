@@ -115,7 +115,15 @@ export const BobAssistant: React.FC = () => {
    * referência guardada na abertura aponta para um nó órfão e focá-la não faz
    * nada — o foco cairia no <body>.
    */
+  // Só devolve o foco ao lançador depois de o painel ter sido ABERTO. Sem
+  // isto, o efeito rodava também na montagem e o lançador roubava o foco
+  // ~200ms depois de toda página carregar — o que a pessoa digitava em
+  // seguida (num formulário que abriu sozinho, por exemplo) ia para o botão
+  // do Bob, e um espaço chegava a abri-lo.
+  const jaAbriu = useRef(false);
   useEffect(() => {
+    if (open) jaAbriu.current = true;
+    else if (!jaAbriu.current) return;
     // Espera o framer-motion montar (entrada ~180ms, saída ~120ms) antes de
     // mover o foco; focar um nó ainda não montado é um no-op silencioso.
     const id = window.setTimeout(
@@ -182,7 +190,7 @@ export const BobAssistant: React.FC = () => {
             exit={{ opacity: 0, scale: 0.6, y: 24, transition: transicao.saida }}
             transition={mola.viva}
             whileTap={{ scale: 0.92 }}
-            className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 flex h-16 w-16 lg:h-[72px] lg:w-[72px] items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-light"
+            className="bob-desvia fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 flex h-16 w-16 lg:h-[72px] lg:w-[72px] items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-light"
           >
             <Sparkles size={28} />
           </m.button>
@@ -203,7 +211,7 @@ export const BobAssistant: React.FC = () => {
             tabIndex={-1}
             // bottom-6 (e não bottom-24): como o lançador some ao abrir, o
             // painel encosta onde ele estava em vez de deixar um vão vazio.
-            className="fixed inset-x-4 bottom-24 lg:bottom-6 z-50 flex max-h-[70dvh] lg:max-h-[75dvh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl sm:left-auto sm:right-6 sm:w-[380px]"
+            className="bob-desvia fixed inset-x-4 bottom-24 lg:bottom-6 z-50 flex max-h-[70dvh] lg:max-h-[75dvh] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-xl sm:left-auto sm:right-6 sm:w-[380px]"
           >
             {/* Cabeçalho. Sem faixa própria: o Bob é recortado (PNG com fundo
                 transparente) e a faixa cinza atrás dele desenhava um retângulo

@@ -226,7 +226,7 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
                   <button
                     type="button"
                     onClick={() => decidir(r.id, 'reject')}
-                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-danger transition-all hover:bg-rose-50 active:scale-95 dark:hover:bg-rose-500/10"
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-danger transition-all hover:bg-perigo-suave active:scale-95 dark:hover:bg-rose-500/10"
                   >
                     <X size={14} /> Recusar
                   </button>
@@ -313,7 +313,7 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
                         disabled={ocupado === m.userId}
                         title="Tornar dono da equipe"
                         aria-label={`Tornar ${m.name} dono da equipe`}
-                        className="rounded-lg p-2 text-amber-600 transition-colors hover:bg-amber-50 disabled:opacity-50 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                        className="rounded-lg p-2 text-amber-600 transition-colors hover:bg-aviso-suave disabled:opacity-50 dark:text-amber-300 dark:hover:bg-amber-500/10"
                       >
                         <Crown size={16} />
                       </button>
@@ -325,7 +325,7 @@ export const TeamManage: React.FC<Props> = ({ detail, userId, onTeamsChanged, on
                         disabled={ocupado === m.userId}
                         title="Remover da equipe"
                         aria-label={`Remover ${m.name} da equipe`}
-                        className="rounded-lg p-2 text-danger transition-colors hover:bg-rose-50 disabled:opacity-50 dark:hover:bg-rose-500/10"
+                        className="rounded-lg p-2 text-danger transition-colors hover:bg-perigo-suave disabled:opacity-50 dark:hover:bg-rose-500/10"
                       >
                         <UserMinus size={16} />
                       </button>

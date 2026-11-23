@@ -30,7 +30,7 @@ export function dueLabel(t: Task): { text: string; cls: string } {
   if (t.status === 'completed') return { text: 'Concluída', cls: 'text-success' };
   if (!t.dueDate) return { text: 'Sem prazo', cls: 'text-text-soft' };
   if (isToday(t.dueDate)) return { text: 'Hoje', cls: 'text-danger' };
-  if (isTomorrow(t.dueDate)) return { text: 'Amanhã', cls: 'text-amber-600 dark:text-amber-300' };
+  if (isTomorrow(t.dueDate)) return { text: 'Amanhã', cls: 'text-aviso' };
   return { text: formatDate(t.dueDate), cls: 'text-text-secondary' };
 }
 

@@ -16,6 +16,11 @@ interface AppLayoutProps {
   actionLabel?: string;
   title?: React.ReactNode;
   subtitle?: string;
+  /**
+   * Espaço reservado à direita do conteúdo, em px — para um painel lateral
+   * fixo (o detalhe da tarefa) não cobrir a última coluna do quadro.
+   */
+  espacoDireita?: number;
 }
 
 export const AppLayout: React.FC<AppLayoutProps> = ({
@@ -24,6 +29,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   actionLabel,
   title,
   subtitle,
+  espacoDireita = 0,
 }) => {
   const { collapsed } = useSidebar();
   // Aqui, e não numa tela específica: o servidor precisa do fuso para agendar
@@ -48,7 +54,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         className={`relative flex-1 flex flex-col min-w-0 transition-[margin] duration-300 ease-out-expo ${margem}`}
       >
         <Topbar onNewTask={onNewTask} actionLabel={actionLabel} title={title} subtitle={subtitle} />
-        <main className="flex-1 pt-20">
+        <main
+          className="flex-1 pt-20 transition-[padding] duration-300 ease-out-expo"
+          style={espacoDireita ? { paddingRight: espacoDireita } : undefined}
+        >
           {/* Entrada suave do conteúdo a cada navegação (o layout remonta por página). */}
           {/* Embaixo, no celular, o conteúdo precisa passar por trás da dock
               sem o último item ficar escondido atrás dela. */}

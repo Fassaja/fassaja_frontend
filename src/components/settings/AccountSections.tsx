@@ -87,7 +87,7 @@ export const AccountNameSection: React.FC = () => {
         </div>
 
         {left > 0 ? (
-          <p className="text-sm text-amber-600 dark:text-amber-300 inline-flex items-center gap-1.5">
+          <p className="text-sm text-aviso inline-flex items-center gap-1.5">
             <Lock size={14} />
             Disponível em {days(left)}
             {account?.nameChangedAt && ` — em ${availableOn(account.nameChangedAt)}`}.
@@ -206,7 +206,7 @@ export const AccountPasswordSection: React.FC = () => {
           </div>
         </div>
       ) : left > 0 ? (
-        <div className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300 inline-flex items-center gap-2">
+        <div className="rounded-xl border border-aviso-borda bg-aviso-suave px-4 py-3 text-sm font-medium text-aviso inline-flex items-center gap-2">
           <Lock size={15} />
           Você já alterou a senha recentemente. Poderá trocar novamente em {days(left)}
           {account?.passwordChangedAt && ` (em ${availableOn(account.passwordChangedAt)})`}.

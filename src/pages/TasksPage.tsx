@@ -9,6 +9,9 @@ import { TaskSearch, TaskFilterMenu, ActiveFilterChips } from '@/components/task
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
+import { PainelDaTarefa, LARGURA_DO_PAINEL } from '@/components/tasks/PainelDaTarefa';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { TaskListSkeleton } from '@/components/common/Skeletons';
 import { SlidingHighlight } from '@/components/common/SlidingHighlight';
@@ -16,6 +19,7 @@ import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useTags } from '@/contexts/TagsContext';
+import { tarefaDoTexto } from '@/utils/criacaoRapida';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -45,7 +49,7 @@ import { useWorkspaces } from '@/hooks/useWorkspaces';
 import { teamsService } from '@/services/teamsService';
 
 const TasksPage: React.FC = () => {
-  const { tasks: allTasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
+  const { tasks: allTasks, createTask, updateTask, completeTask, excluirComDesfazer, loading } = useTasks();
   const { projects } = useProjects();
   const { tags } = useTags();
   const showSkeleton = useDeferredLoading(loading);
@@ -60,6 +64,42 @@ const TasksPage: React.FC = () => {
     }
     setShowCreateModal(true);
   };
+  /*
+   * Criação na própria coluna (CriacaoRapida). O "Mais detalhes" guarda aqui
+   * o que já foi escrito e o status da coluna, e o formulário abre com eles.
+   */
+  const [rascunho, setRascunho] = useState<{ titulo: string; status: TaskStatus } | null>(null);
+  const criarRapido = async (texto: string, status: TaskStatus) => {
+    const dados = tarefaDoTexto(texto, tags, status);
+    if (!dados) {
+      toast.info('Faltou dizer o que precisa ser feito, além da data e da prioridade.');
+      return false;
+    }
+    if (isGuest && guestTaskCount >= guestTaskLimit) {
+      requireAuth(`Visitantes podem criar até ${guestTaskLimit} tarefas por dia. Entre para criar mais.`);
+      return false;
+    }
+    try {
+      await handleCreateTask(dados);
+      return true;
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível criar a tarefa. Tente novamente.');
+      return false;
+    }
+  };
+  const maisDetalhes = (texto: string, status: TaskStatus) => {
+    setRascunho({ titulo: texto, status });
+    openNewTask();
+  };
+
+  // Detalhe como painel lateral a partir do `lg`: ali sobra largura para o
+  // quadro e o painel lado a lado.
+  const painelLateral = useMediaQuery('(min-width: 1024px)');
+  const fecharDetalhe = React.useCallback(() => {
+    setShowDetailModal(false);
+    setSelectedTaskId(undefined);
+  }, []);
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   /**
@@ -71,22 +111,13 @@ const TasksPage: React.FC = () => {
    * viva, qualquer mudança na tarefa chega ao modal sozinha.
    */
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>();
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>();
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const confirmDeleteTask = async () => {
-    if (!deletingTask) return;
-    try {
-      setIsDeleting(true);
-      await deleteTask(deletingTask.id);
-      toast.success('Tarefa excluída.');
-      setDeletingTask(undefined);
-    } catch {
-      toast.error('Não foi possível excluir a tarefa. Tente novamente.');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  /*
+   * Excluir uma tarefa não pede mais confirmação: ela some na hora e o aviso
+   * oferece "Desfazer" (TasksContext.excluirComDesfazer). A confirmação
+   * protegia do clique errado, e o "Desfazer" protege igual sem cobrar um
+   * clique a mais de quem exclui de propósito — que é quase sempre.
+   */
+  const excluirTarefa = (taskId: string) => excluirComDesfazer([taskId]);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, setView] = useState<'board' | 'list'>('board');
@@ -160,6 +191,18 @@ const TasksPage: React.FC = () => {
    * Espera as tarefas carregarem e roda uma vez: sem a trava, fechar o modal
    * o reabriria no render seguinte, e não haveria como sair dele.
    */
+  // `?nova=1`: o atalho N, apertado fora de Tarefas, chega aqui pedindo a
+  // criação. Abre uma vez e tira o parâmetro, para voltar/recarregar não
+  // reabrir o modal.
+  useEffect(() => {
+    if (searchParams.get('nova') !== '1') return;
+    openNewTask();
+    const proximos = new URLSearchParams(searchParams);
+    proximos.delete('nova');
+    setSearchParams(proximos, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reage só ao parâmetro
+  }, [searchParams]);
+
   const tarefaDaUrl = searchParams.get('task');
   const tarefaJaAberta = useRef(false);
   useEffect(() => {
@@ -321,7 +364,6 @@ const TasksPage: React.FC = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkDelete, setShowBulkDelete] = useState(false);
-  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   /**
    * Recorte vindo do link: uma equipe (`?team=`) e/ou uma pessoa
@@ -456,23 +498,14 @@ const TasksPage: React.FC = () => {
     exitSelection();
   };
 
-  const confirmBulkDelete = async () => {
+  // Em lote continua pedindo confirmação (são várias de uma vez), e também
+  // ganha o "Desfazer" no aviso.
+  const confirmBulkDelete = () => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    try {
-      setIsBulkDeleting(true);
-      const results = await Promise.allSettled(ids.map(id => deleteTask(id)));
-      const failed = results.filter(r => r.status === 'rejected').length;
-      if (failed === 0) {
-        toast.success(ids.length === 1 ? 'Tarefa excluída.' : `${ids.length} tarefas excluídas.`);
-      } else {
-        toast.error(`Não foi possível excluir ${failed} ${failed === 1 ? 'tarefa' : 'tarefas'}.`);
-      }
-      setShowBulkDelete(false);
-      exitSelection();
-    } finally {
-      setIsBulkDeleting(false);
-    }
+    excluirComDesfazer(ids);
+    setShowBulkDelete(false);
+    exitSelection();
   };
 
   const handleOpenTask = (task: Task) => {
@@ -568,12 +601,30 @@ const TasksPage: React.FC = () => {
     <>
       <CreateTaskModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false);
+          setRascunho(null);
+        }}
         onCreateTask={handleCreateTask}
+        initialTitle={rascunho?.titulo}
+        initialStatus={rascunho?.status}
       />
 
+      {/* No desktop o detalhe é um painel ao lado do quadro (ver
+          PainelDaTarefa); no celular e no tablet continua sendo o modal. */}
+      <AnimatePresence>
+        {painelLateral && showDetailModal && selectedTask && (
+          <PainelDaTarefa
+            task={selectedTask}
+            project={projects.find(p => p.id === selectedTask.projectId)}
+            onClose={fecharDetalhe}
+            onEditarTudo={handleEditTask}
+          />
+        )}
+      </AnimatePresence>
+
       <TaskDetailModal
-        isOpen={showDetailModal}
+        isOpen={showDetailModal && !painelLateral}
         task={selectedTask}
         project={projects.find(p => p.id === selectedTask?.projectId)}
         onClose={() => {
@@ -598,24 +649,6 @@ const TasksPage: React.FC = () => {
       />
 
       <ConfirmDialog
-        isOpen={!!deletingTask}
-        mascotState="investigate"
-        tone="danger"
-        title="Excluir esta tarefa?"
-        message={deletingTask ? `"${deletingTask.title}"` : ''}
-        hint={
-          <>
-            <strong className="text-text-primary">Atenção:</strong> esta tarefa será removida
-            permanentemente. Esta ação não pode ser desfeita.
-          </>
-        }
-        confirmLabel="Excluir tarefa"
-        cancelLabel="Cancelar"
-        onConfirm={confirmDeleteTask}
-        onClose={() => !isDeleting && setDeletingTask(undefined)}
-      />
-
-      <ConfirmDialog
         isOpen={showBulkDelete}
         mascotState="investigate"
         tone="danger"
@@ -623,18 +656,19 @@ const TasksPage: React.FC = () => {
         message="As tarefas selecionadas serão removidas."
         hint={
           <>
-            <strong className="text-text-primary">Atenção:</strong> esta ação remove todas as
-            tarefas selecionadas de uma vez e não pode ser desfeita.
+            Dá para desfazer pelo aviso que aparece logo depois, enquanto ele estiver na
+            tela.
           </>
         }
         confirmLabel={`Excluir ${selectedIds.size} ${selectedIds.size === 1 ? 'tarefa' : 'tarefas'}`}
         cancelLabel="Cancelar"
         onConfirm={confirmBulkDelete}
-        onClose={() => !isBulkDeleting && setShowBulkDelete(false)}
+        onClose={() => setShowBulkDelete(false)}
       />
 
       <AppLayout
         onNewTask={openNewTask}
+        espacoDireita={painelLateral && showDetailModal && selectedTask ? LARGURA_DO_PAINEL : 0}
         title={scope === 'team' ? 'Tarefas da equipe' : 'Minhas Tarefas'}
         subtitle={
           scope === 'team'
@@ -951,16 +985,16 @@ const TasksPage: React.FC = () => {
               filterPriority={filterPriority}
               filterProject={filterProject}
               onComplete={completeTask}
-              onDelete={taskId => {
-                const task = tasks.find(t => t.id === taskId);
-                if (task) setDeletingTask(task);
-              }}
+              onDelete={excluirTarefa}
               onEdit={handleOpenTask}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
               onToggleSelect={toggleSelect}
               onNewTask={openNewTask}
               onClearFilters={limparFiltros}
+              onCriarRapido={criarRapido}
+              onMaisDetalhes={maisDetalhes}
+              abertaId={painelLateral && showDetailModal ? selectedTaskId : undefined}
             />
           ) : (
             <TaskList
@@ -971,16 +1005,16 @@ const TasksPage: React.FC = () => {
               filterPriority={filterPriority}
               filterProject={filterProject}
               onComplete={completeTask}
-              onDelete={taskId => {
-                const task = tasks.find(t => t.id === taskId);
-                if (task) setDeletingTask(task);
-              }}
+              onDelete={excluirTarefa}
               onEdit={handleOpenTask}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
               onToggleSelect={toggleSelect}
               onNewTask={openNewTask}
               onClearFilters={limparFiltros}
+              onCriarRapido={criarRapido}
+              onMaisDetalhes={maisDetalhes}
+              abertaId={painelLateral && showDetailModal ? selectedTaskId : undefined}
             />
           )}
         </div>

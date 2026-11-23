@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
-import { MoreOptions } from '@/components/common/MoreOptions';
 import { Button } from '@/components/common/Button';
-import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
-import { Dropdown } from '@/components/common/Dropdown';
+import { type OpcaoDaLista } from '@/components/common/Propriedade';
 import { AssigneeSelector } from './AssigneeSelector';
 import { DelegarSemProjeto } from './DelegarSemProjeto';
-import { DatePicker } from '@/components/common/DatePicker';
-import { TagSelector } from './TagSelector';
+import { LinhaDePropriedades } from './LinhaDePropriedades';
+import { useCtrlEnter } from '@/hooks/useCtrlEnter';
+import { ehMac, plataformaAtual } from '@/utils/atalhos';
 import { Task, TaskPriority, TaskStatus, TaskUpdate } from '@/types/task';
 import { TeamMember } from '@/types/team';
 import { useProjects } from '@/hooks/useProjects';
@@ -32,18 +31,6 @@ interface EditTaskModalProps {
    */
   podeEncadear?: boolean;
 }
-
-const priorityOptions: SelectableOption[] = [
-  { value: 'low', label: 'Baixa', color: '#22C55E', dot: true },
-  { value: 'medium', label: 'Média', color: '#FBBF24', dot: true },
-  { value: 'high', label: 'Alta', color: '#8B5CF6', dot: true },
-];
-
-const statusOptions: SelectableOption[] = [
-  { value: 'pending', label: 'Pendente', color: '#64748B' },
-  { value: 'in_progress', label: 'Em progresso', color: '#2477FF' },
-  { value: 'completed', label: 'Concluída', color: '#22C55E' },
-];
 
 export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   isOpen,
@@ -134,22 +121,16 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
    * não seguraria nada — e a que está guardada continua na lista mesmo se
    * fechou, para o campo não parecer vazio enquanto o vínculo ainda existe.
    */
-  const opcoesDeMae: SelectableOption[] = [
-    { value: '', label: 'Nenhuma' },
+  const opcoesDeMae: OpcaoDaLista[] = [
+    { valor: '', rotulo: 'Nenhuma' },
     ...tarefasDaEquipe
       .filter(t => t.id !== task?.id && (!t.teamCompleted || t.id === formData.dependsOnId))
       .sort((a, b) => (a.projectId ?? '').localeCompare(b.projectId ?? '') || a.title.localeCompare(b.title))
       .map(t => {
         const projeto = projects.find(p => p.id === t.projectId);
-        return { value: t.id, label: t.title, color: projeto?.color, dot: !!projeto };
+        return { valor: t.id, rotulo: t.title, cor: projeto?.color };
       }),
   ];
-
-  const projectOptions: SelectableOption[] = [
-    { value: '', label: 'Sem projeto' },
-    ...projects.map(p => ({ value: p.id, label: p.name, color: p.color, dot: true })),
-  ];
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,20 +207,39 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
     }
   };
 
-  // O que está definido atrás do "mais opções" — decide o contador e, na
-  // edição, se o bloco já nasce aberto.
-  const ajustesDefinidos =
-    (formData.status !== 'pending' ? 1 : 0) +
-    (assigneeIds.length ? 1 : 0) +
-    (formData.dependsOnId ? 1 : 0) +
-    tagIds.length;
+  // Ctrl/⌘+Enter salva de qualquer campo (ver useCtrlEnter).
+  const formRef = React.useRef<HTMLFormElement>(null);
+  useCtrlEnter(formRef, isOpen);
+  const atalhoSalvar = ehMac(plataformaAtual()) ? '⌘ ↵' : 'Ctrl ↵';
+
+  const rodape = (
+    <div className="flex items-center justify-end gap-2">
+      <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+        Cancelar
+      </Button>
+      <Button type="submit" form="form-editar-tarefa" variant="primary" isLoading={loading}>
+        Salvar alterações
+        <span className="hidden rounded-md bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold sm:inline">
+          {atalhoSalvar}
+        </span>
+      </Button>
+    </div>
+  );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Editar tarefa" size="lg">
-      <form onSubmit={handleSubmit} className="space-y-5">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Editar tarefa"
+      size="lg"
+      variante="folha"
+      rodape={rodape}
+    >
+      <form id="form-editar-tarefa" ref={formRef} onSubmit={handleSubmit} className="space-y-4">
         {/* Mesma estrutura da criação, de propósito: editar e criar são a mesma
             tarefa vista duas vezes, e dar duas caras a ela é o que fazia a
-            edição parecer outro produto. */}
+            edição parecer outro produto. A linha de propriedades é literalmente
+            o mesmo componente (LinhaDePropriedades). */}
         <div>
           <label htmlFor="titulo-da-tarefa-edicao" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-soft">
             Título da tarefa
@@ -269,110 +269,67 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border">
-          {/* Início antes do prazo, na ordem em que acontecem. Só em tarefa de
-              equipe: é o cronograma que lê este campo. */}
-          {equipeId && (
-            <DatePicker
-              value={formData.startDate}
-              onChange={v => {
-                set('startDate', v);
-                if (error) setError('');
-              }}
-              placeholder="Sem início"
-              disabled={loading}
-              size="sm"
-            />
-          )}
-          <DatePicker
-            value={formData.dueDate}
-            onChange={v => {
-              set('dueDate', v);
-              if (error) setError('');
-            }}
-            placeholder="Sem data"
-            disabled={loading}
-            size="sm"
-          />
-          <OptionSelector
-            options={priorityOptions}
-            value={formData.priority}
-            onChange={v => set('priority', v as TaskPriority)}
-            disabled={loading}
-            size="sm"
-          />
-          <Dropdown
-            options={projectOptions}
-            value={formData.projectId}
-            onChange={v => set('projectId', v)}
-            placeholder="Sem projeto"
-            size="sm"
-            disabled={loading}
-          />
-        </div>
-
-        {/* Na edição o bloco abre sozinho quando já há algo definido lá dentro:
-            esconder um responsável ou uma tag que a pessoa mesma escolheu
-            pareceria que a tarefa os perdeu. */}
-        <MoreOptions
-          key={task?.id}
-          activeCount={ajustesDefinidos}
-          defaultOpen={ajustesDefinidos > 0}
-        >
-          <OptionSelector
-            label="Status"
-            options={statusOptions}
-            value={formData.status}
-            onChange={v => set('status', v as TaskStatus)}
-            layout="grid"
-            columns={3}
-            disabled={loading}
-          />
-
-          {teamProject ? (
-            <AssigneeSelector
-              members={members}
-              value={assigneeIds}
-              onChange={setAssigneeIds}
-              disabled={loading}
-            />
-          ) : (
-            // Sem projeto de equipe, a equipe é escolhida aqui — é o caminho
-            // de delegar algo solto, que antes exigia criar um projeto.
-            <DelegarSemProjeto
-              teamId={equipeSolta}
-              onTeamChange={setEquipeSolta}
-              assigneeIds={assigneeIds}
-              onAssigneesChange={setAssigneeIds}
-              disabled={loading}
-            />
-          )}
-
-          {mostrarEncadear && (
-            <Dropdown
-              label="Depois de"
-              options={opcoesDeMae}
-              value={formData.dependsOnId}
-              onChange={v => set('dependsOnId', v)}
-              placeholder="Nenhuma"
-              fullWidth
-              disabled={loading}
-            />
-          )}
-
-          {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
-        </MoreOptions>
+        {/* Na edição tudo fica à vista, inclusive responsáveis, tags e
+            "Depois de": antes eles moravam atrás de "Mais opções", e um
+            responsável escondido parecia ter sido perdido pela tarefa. */}
+        <LinhaDePropriedades
+          disabled={loading}
+          inicio={
+            equipeId
+              ? {
+                  valor: formData.startDate,
+                  onMudar: v => {
+                    set('startDate', v);
+                    if (error) setError('');
+                  },
+                }
+              : undefined
+          }
+          prazo={formData.dueDate}
+          onPrazo={v => {
+            set('dueDate', v);
+            if (error) setError('');
+          }}
+          prioridade={formData.priority}
+          onPrioridade={v => set('priority', v)}
+          projetoId={formData.projectId}
+          onProjeto={v => set('projectId', v)}
+          status={formData.status}
+          onStatus={v => set('status', v)}
+          tags={isGuest ? undefined : { ids: tagIds, onMudar: setTagIds }}
+          responsaveis={
+            isGuest
+              ? undefined
+              : {
+                  quantidade: assigneeIds.length,
+                  painel: teamProject ? (
+                    <AssigneeSelector
+                      members={members}
+                      value={assigneeIds}
+                      onChange={setAssigneeIds}
+                      disabled={loading}
+                    />
+                  ) : (
+                    // Sem projeto de equipe, a equipe é escolhida aqui — é o
+                    // caminho de delegar algo solto.
+                    <DelegarSemProjeto
+                      teamId={equipeSolta}
+                      onTeamChange={setEquipeSolta}
+                      assigneeIds={assigneeIds}
+                      onAssigneesChange={setAssigneeIds}
+                      disabled={loading}
+                    />
+                  ),
+                }
+          }
+          depoisDe={
+            mostrarEncadear
+              ? { opcoes: opcoesDeMae, valor: formData.dependsOnId, onMudar: v => set('dependsOnId', v) }
+              : undefined
+          }
+        />
 
         {error && <p className="text-sm text-danger">{error}</p>}
-
-        <div className="sticky bottom-0 -mx-6 px-6 pt-3 pb-1 bg-surface border-t border-border flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button type="submit" variant="primary" isLoading={loading}>
-            Salvar alterações
-          </Button>
-        </div>
       </form>
     </Modal>
   );

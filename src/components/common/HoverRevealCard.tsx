@@ -38,6 +38,9 @@ export const HoverRevealCard: React.FC<HoverRevealCardProps> = ({
   const revealed = !hoverCapable || open;
 
   return (
+    // O hover é só o caminho do mouse; o do teclado é o foco (captura logo
+    // abaixo), e sem hover a síntese já nasce aberta. Não é um controle.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div
       className={`flex flex-col ${className}`}
       onMouseEnter={() => setOpen(true)}

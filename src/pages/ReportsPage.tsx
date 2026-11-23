@@ -211,7 +211,7 @@ const ReportsPage: React.FC = () => {
             são o mesmo fato dito de formas diferentes, e misturar a origem
             (uma vitalícia, outra da tela) faria a conta não fechar. */}
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-green-500 dark:text-green-400"><CountUp from={0} value={conclusao.concluidas} /></p>
+          <p className="text-3xl font-bold text-sucesso"><CountUp from={0} value={conclusao.concluidas} /></p>
           <p className="text-sm text-text-secondary">Concluídas</p>
         </Card>
         <Card className="text-center py-4">
@@ -221,7 +221,7 @@ const ReportsPage: React.FC = () => {
           <p className="text-sm text-text-secondary">Taxa de Conclusão</p>
         </Card>
         <Card className="text-center py-4">
-          <p className="text-3xl font-bold text-yellow-500 dark:text-yellow-400"><CountUp from={0} value={stats.inProgress} /></p>
+          <p className="text-3xl font-bold text-aviso"><CountUp from={0} value={stats.inProgress} /></p>
           <p className="text-sm text-text-secondary">Em Andamento</p>
         </Card>
       </Stagger>

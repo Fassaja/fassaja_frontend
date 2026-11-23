@@ -114,7 +114,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
               Se <strong className="text-text-primary">{email.trim()}</strong> estiver cadastrado,
               enviamos um link para criar uma nova senha. Ele vale por 1 hora.
             </p>
-            <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-aviso-borda bg-aviso-suave px-4 py-3 text-sm font-medium text-aviso">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
               <span>
                 Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico.
@@ -126,8 +126,8 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
         {/* Sucesso: senha redefinida */}
         {done && mode === 'reset' && (
           <div className="text-center">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-              <CheckCircle2 size={28} className="text-emerald-600 dark:text-emerald-300" />
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-sucesso-suave flex items-center justify-center">
+              <CheckCircle2 size={28} className="text-sucesso" />
             </div>
             <h2 className="text-2xl font-bold text-text-primary">Senha redefinida!</h2>
             <p className="text-text-secondary mt-2">
@@ -176,7 +176,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
             </p>
 
             {missingToken ? (
-              <div className="rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+              <div className="rounded-xl border border-perigo-borda bg-perigo-suave px-4 py-3 text-sm font-medium text-perigo">
                 Link inválido ou incompleto. Peça um novo e-mail de redefinição.
               </div>
             ) : (

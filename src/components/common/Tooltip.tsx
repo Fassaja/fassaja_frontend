@@ -99,6 +99,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
   return (
     <>
+      {/* Invólucro, não controle: o hover é o caminho do mouse, e o do teclado
+          é o foco no botão de dentro (captura logo abaixo). */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <span
         ref={wrapperRef}
         className={`inline-flex ${className}`}

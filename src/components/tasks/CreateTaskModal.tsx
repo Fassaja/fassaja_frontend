@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal } from '@/components/common/Modal';
 import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
-import { MoreOptions } from '@/components/common/MoreOptions';
 import { Button } from '@/components/common/Button';
-import { OptionSelector, SelectableOption } from '@/components/common/OptionSelector';
-import { Dropdown } from '@/components/common/Dropdown';
+import { Kbd } from '@/components/common/Kbd';
+import { Toggle } from '@/components/common/Toggle';
+import { LinhaDePropriedades } from './LinhaDePropriedades';
+import { ehMac, plataformaAtual } from '@/utils/atalhos';
+import { useCtrlEnter } from '@/hooks/useCtrlEnter';
 import { AssigneeSelector } from './AssigneeSelector';
 import { DelegarSemProjeto } from './DelegarSemProjeto';
-import { DatePicker } from '@/components/common/DatePicker';
-import { TagSelector } from './TagSelector';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
 import { TeamMember } from '@/types/team';
 import { useProjects } from '@/hooks/useProjects';
@@ -18,7 +18,6 @@ import { useToast } from '@/contexts/ToastContext';
 import { teamsService } from '@/services/teamsService';
 import { useTags } from '@/contexts/TagsContext';
 import { interpretar } from '@/utils/quickParse';
-import { QuickParseHint } from './QuickParseHint';
 import { AjudaDoTitulo } from './AjudaDoTitulo';
 
 interface CreateTaskModalProps {
@@ -33,19 +32,21 @@ interface CreateTaskModalProps {
   initialStatus?: TaskStatus;
   /** Projeto pré-selecionado (ex.: criar direto no painel de uma equipe). */
   initialProjectId?: string;
+  /**
+   * Título já escrito. Vem do "Mais detalhes" da linha de criação rápida da
+   * coluna: o que a pessoa digitou ali continua aqui, sem precisar redigitar.
+   */
+  initialTitle?: string;
 }
 
-const priorityOptions: SelectableOption[] = [
-  { value: 'low', label: 'Baixa', color: '#22C55E', dot: true },
-  { value: 'medium', label: 'Média', color: '#FBBF24', dot: true },
-  { value: 'high', label: 'Alta', color: '#8B5CF6', dot: true },
-];
-
-const statusOptions: SelectableOption[] = [
-  { value: 'pending', label: 'Pendente', color: '#64748B' },
-  { value: 'in_progress', label: 'Em progresso', color: '#2477FF' },
-  { value: 'completed', label: 'Concluída', color: '#22C55E' },
-];
+const CHAVE_CRIAR_OUTRA = 'fassaja_criar_outra';
+function lerCriarOutra(): boolean {
+  try {
+    return localStorage.getItem(CHAVE_CRIAR_OUTRA) === '1';
+  } catch {
+    return false;
+  }
+}
 
 const emptyForm = {
   title: '',
@@ -63,6 +64,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   onCreateTask,
   initialStatus,
   initialProjectId,
+  initialTitle,
 }) => {
   const { projects } = useProjects();
   const { assignTask } = useTasks();
@@ -81,8 +83,22 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       ...prev,
       ...(initialStatus ? { status: initialStatus } : {}),
       ...(initialProjectId ? { projectId: initialProjectId } : {}),
+      ...(initialTitle ? { title: initialTitle } : {}),
     }));
-  }, [isOpen, initialStatus, initialProjectId]);
+    setPrazoManual(false);
+    setPrioridadeManual(false);
+  }, [isOpen, initialStatus, initialProjectId, initialTitle]);
+
+  /*
+   * Quem vence: o que foi escrito no título ("sexta", "!alta") ou o botão?
+   * O ÚLTIMO que a pessoa mexeu. Escreveu "sexta" e depois escolheu outra data
+   * no botão: vale o botão. Enquanto o botão não foi tocado, vale o texto.
+   */
+  const [prazoManual, setPrazoManual] = useState(false);
+  const [prioridadeManual, setPrioridadeManual] = useState(false);
+  // "Criar outra": a janela fica aberta para uma sequência. Lembrado entre visitas.
+  const [criarOutra, setCriarOutra] = useState(lerCriarOutra);
+  const tituloRef = React.useRef<HTMLTextAreaElement & HTMLInputElement>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
   // Equipe para delegar uma tarefa que não vai para projeto de equipe.
@@ -115,10 +131,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     [formData.title, tags],
   );
 
-  const projectOptions: SelectableOption[] = [
-    { value: '', label: 'Sem projeto' },
-    ...projects.map(p => ({ value: p.id, label: p.name, color: p.color, dot: true })),
-  ];
+  // O valor que vale agora, já aplicada a regra "o último a mexer vence".
+  const prazoEfetivo = prazoManual ? formData.dueDate : interpretado.dueDate ?? formData.dueDate;
+  const prioridadeEfetiva = prioridadeManual
+    ? formData.priority
+    : interpretado.priority ?? formData.priority;
 
 
   // Em projeto de equipe, só o dono ou um "gerente de tarefas" pode criar.
@@ -150,7 +167,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     }
     // A mesma regra do servidor, antes de ir até ele — contra o prazo que vai
     // valer, que pode ter vindo do texto ("sexta").
-    const prazo = interpretado.dueDate ?? formData.dueDate;
+    const prazo = prazoEfetivo;
     if (teamProject && formData.startDate && prazo && formData.startDate > prazo) {
       setError('O início não pode ser depois do prazo.');
       return;
@@ -169,10 +186,10 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       const created = await onCreateTask({
         title: interpretado.title,
         description: formData.description || undefined,
-        priority: interpretado.priority ?? formData.priority,
+        priority: prioridadeEfetiva,
         status: formData.status,
         projectId: formData.projectId || undefined,
-        dueDate: interpretado.dueDate ?? formData.dueDate ?? undefined,
+        dueDate: prazoEfetivo || undefined,
         // Só com projeto de equipe: é o cronograma que lê o início.
         startDate: teamProject && formData.startDate ? formData.startDate : undefined,
         tagIds: tagsFinais.length ? tagsFinais : undefined,
@@ -185,51 +202,112 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           teamProject ? undefined : equipeSolta ?? undefined,
         );
       }
+      setError('');
+      toast.success('Tarefa criada.');
+      if (criarOutra) {
+        // Próxima da sequência: mesmo projeto e status (quem cria várias
+        // seguidas costuma criá-las no mesmo lugar); o resto zera.
+        setFormData(prev => ({ ...emptyForm, projectId: prev.projectId, status: prev.status }));
+        setPrazoManual(false);
+        setPrioridadeManual(false);
+        setTagIds([]);
+        return;
+      }
       setFormData(emptyForm);
       setAssigneeIds([]);
       setEquipeSolta(null);
       setTagIds([]);
-      setError('');
-      toast.success('Tarefa criada.');
       onClose();
     } catch (err) {
       setError((err as Error).message || 'Não foi possível criar a tarefa. Tente novamente.');
       console.error(err);
     } finally {
       setLoading(false);
+      // Na sequência do "Criar outra", o cursor volta ao título — depois de o
+      // campo voltar a ficar habilitado, senão o foco não pega.
+      if (criarOutra) requestAnimationFrame(() => tituloRef.current?.focus());
     }
   };
 
-  // Quantos ajustes escondidos já estão definidos. Sem esse aviso, quem abriu
-  // "mais opções", escolheu um responsável e recolheu de volta salvaria sem
-  // lembrar do que tinha marcado.
-  const ajustesDefinidos =
-    (formData.status !== 'pending' ? 1 : 0) + (assigneeIds.length ? 1 : 0) + tagIds.length;
+  // Ctrl/⌘+Enter cria de qualquer campo (ver useCtrlEnter).
+  const formRef = React.useRef<HTMLFormElement>(null);
+  useCtrlEnter(formRef, isOpen);
+
+  const atalhoCriar = ehMac(plataformaAtual()) ? '⌘ ↵' : 'Ctrl ↵';
+  const podeAtribuir = !isGuest && !(teamProject && blockedByPermission);
+
+  const rodape = (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2 text-sm text-text-secondary">
+        <Toggle
+          checked={criarOutra}
+          label="Criar outra em seguida"
+          onChange={() => {
+            const v = !criarOutra;
+            setCriarOutra(v);
+            try {
+              if (v) localStorage.setItem(CHAVE_CRIAR_OUTRA, '1');
+              else localStorage.removeItem(CHAVE_CRIAR_OUTRA);
+            } catch {
+              /* sem armazenamento: vale só nesta visita */
+            }
+          }}
+          disabled={loading}
+        />
+        <span aria-hidden="true">Criar outra</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button type="button" variant="ghost" onClick={handleClose} disabled={loading} className="hidden sm:flex">
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          form="form-nova-tarefa"
+          variant="primary"
+          isLoading={loading}
+          disabled={blockedByPermission}
+        >
+          Criar tarefa
+          <span className="hidden rounded-md bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold sm:inline">
+            {atalhoCriar}
+          </span>
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Nova tarefa" size="lg">
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* O título e a descrição formam UM bloco de escrita, sem rótulos e
-            sem molduras: é onde o cursor já está quando o modal abre, e
-            digitar + Enter basta para criar a tarefa. Todo o resto tem
-            padrão razoável e pode ficar como está. */}
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Nova tarefa"
+      size="lg"
+      variante="folha"
+      rodape={rodape}
+    >
+      <form
+        id="form-nova-tarefa"
+        ref={formRef}
+        onSubmit={handleSubmit}
+        className="space-y-4"
+      >
+        {/* O título e a descrição formam UM bloco de escrita: é onde o cursor
+            já está quando o modal abre, e digitar + Enter basta para criar. */}
         <div>
-          {/* O "?" na MESMA linha do campo: a ajuda pertence ao que se está
-              escrevendo ali, e uma linha própria abaixo era exatamente o que
-              deixava o modal poluído. */}
-          {/* Rótulo pequeno em cima: sem ele, o campo grande com uma pergunta
-              dentro parecia o TÍTULO do modal, e a pessoa ia escrever a tarefa
-              no campo de detalhes logo abaixo (reclamação real, 19/09). */}
+          {/* Rótulo pequeno em cima: sem ele, o campo grande parecia o TÍTULO
+              do modal, e a pessoa escrevia a tarefa no campo de detalhes logo
+              abaixo (reclamação real, 19/09). */}
           <label htmlFor="titulo-da-tarefa" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-soft">
             Título da tarefa
           </label>
           <div className="flex items-start gap-1">
             <div className="min-w-0 flex-1">
               <HeadlineInput
+                ref={tituloRef}
                 id="titulo-da-tarefa"
                 name="title"
                 aria-label="Título da tarefa"
-                placeholder="Ex.: Enviar o relatório para a Ana"
+                placeholder="Ex.: Enviar o relatório para a Ana sexta !alta"
                 value={formData.title}
                 onChange={e => {
                   set('title', e.target.value);
@@ -244,7 +322,14 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               <AjudaDoTitulo />
             </div>
           </div>
-          <QuickParseHint resultado={interpretado} />
+          {/* Os valores entendidos já acendem os botões da linha de
+              propriedades (em azul); aqui fica só o aviso de que os
+              marcadores não vão parar no título. */}
+          {(interpretado.dueDate || interpretado.priority || interpretado.tags.length > 0) && (
+            <p className="mt-1.5 text-xs text-text-soft">
+              Os marcadores saem do título ao salvar: fica “{interpretado.title || '…'}”.
+            </p>
+          )}
           <NoteField
             name="description"
             aria-label="Descrição da tarefa"
@@ -256,105 +341,76 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           />
         </div>
 
-        {/* A linha de decisões rápidas: quando, quanto importa, onde. São as
-            três que a pessoa realmente responde ao criar — como controles do
-            tamanho da resposta, não como três campos de formulário. */}
-        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-border">
-          {/* Início, só em projeto de equipe — é o cronograma que o lê. */}
-          {teamProject && (
-            <DatePicker
-              value={formData.startDate}
-              onChange={v => set('startDate', v)}
-              placeholder="Sem início"
-              disabled={loading}
-              size="sm"
-            />
-          )}
-          <DatePicker
-            value={formData.dueDate}
-            onChange={v => set('dueDate', v)}
-            placeholder="Sem data"
-            disabled={loading}
-            size="sm"
-          />
-          <OptionSelector
-            options={priorityOptions}
-            value={formData.priority}
-            onChange={v => set('priority', v as TaskPriority)}
-            disabled={loading}
-            size="sm"
-          />
-          <Dropdown
-            options={projectOptions}
-            value={formData.projectId}
-            onChange={v => set('projectId', v)}
-            placeholder="Sem projeto"
-            size="sm"
-            disabled={loading}
-          />
-        </div>
+        {/*
+          A linha de propriedades: TODAS numa linha só, cada botão do tamanho
+          do próprio valor. Antes eram três linhas (data, prioridade, projeto)
+          e o resto escondido em "Mais opções" — status, responsáveis e tags
+          ficavam a dois cliques e fora de vista.
+
+          No celular a linha rola de lado em vez de quebrar: a folha fica baixa
+          e colada ao teclado, com o campo de título sempre à vista.
+        */}
+        <LinhaDePropriedades
+          disabled={loading}
+          inicio={
+            teamProject ? { valor: formData.startDate, onMudar: v => set('startDate', v) } : undefined
+          }
+          prazo={prazoEfetivo}
+          onPrazo={v => {
+            set('dueDate', v);
+            setPrazoManual(true);
+          }}
+          prazoDestaque={!prazoManual && !!interpretado.dueDate}
+          prioridade={prioridadeEfetiva}
+          onPrioridade={v => {
+            set('priority', v);
+            setPrioridadeManual(true);
+          }}
+          prioridadeDestaque={!prioridadeManual && !!interpretado.priority}
+          projetoId={formData.projectId}
+          onProjeto={v => set('projectId', v)}
+          status={formData.status}
+          onStatus={v => set('status', v)}
+          rotuloDoStatus="Começar como"
+          tags={isGuest ? undefined : { ids: tagIds, onMudar: setTagIds }}
+          responsaveis={
+            podeAtribuir
+              ? {
+                  quantidade: assigneeIds.length,
+                  painel: teamProject ? (
+                    <AssigneeSelector
+                      members={members}
+                      value={assigneeIds}
+                      onChange={setAssigneeIds}
+                      disabled={loading}
+                    />
+                  ) : (
+                    // Dá para já criar a tarefa delegada, sem projeto nenhum.
+                    <DelegarSemProjeto
+                      teamId={equipeSolta}
+                      onTeamChange={setEquipeSolta}
+                      assigneeIds={assigneeIds}
+                      onAssigneesChange={setAssigneeIds}
+                      disabled={loading}
+                    />
+                  ),
+                }
+              : undefined
+          }
+        />
 
         {blockedByPermission && (
-          <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl px-3 py-2">
+          <p className="text-sm text-aviso bg-aviso-suave border border-aviso-borda rounded-xl px-3 py-2">
             Você não pode criar tarefas neste projeto de equipe. Peça ao dono para te tornar
             <span className="font-semibold"> gerente de tarefas</span>.
           </p>
         )}
 
-        <MoreOptions activeCount={ajustesDefinidos}>
-          <OptionSelector
-            label="Começar como"
-            options={statusOptions}
-            value={formData.status}
-            onChange={v => set('status', v as TaskStatus)}
-            layout="grid"
-            columns={3}
-            disabled={loading}
-          />
+        {error && <p className="text-sm text-danger">{error}</p>}
 
-          {teamProject && !blockedByPermission ? (
-            <AssigneeSelector
-              members={members}
-              value={assigneeIds}
-              onChange={setAssigneeIds}
-              disabled={loading}
-            />
-          ) : (
-            !teamProject &&
-            !isGuest && (
-              // Dá para já criar a tarefa delegada, sem projeto nenhum.
-              <DelegarSemProjeto
-                teamId={equipeSolta}
-                onTeamChange={setEquipeSolta}
-                assigneeIds={assigneeIds}
-                onAssigneesChange={setAssigneeIds}
-                disabled={loading}
-              />
-            )
-          )}
-
-          {!isGuest && <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />}
-        </MoreOptions>
-
-        {error && (
-          <p className="text-sm text-danger">{error}</p>
-        )}
-
-        {/* sticky: em janela baixa o modal rola, e sem isto os botões ficam
-            abaixo da dobra — a pessoa escreve tudo e não acha como salvar. */}
-        <div className="sticky bottom-0 -mx-6 px-6 pt-3 pb-1 bg-surface border-t border-border flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={handleClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            isLoading={loading}
-            disabled={blockedByPermission}
-          >
-            Criar tarefa
-          </Button>
-        </div>
+        <p className="hidden text-xs text-text-soft sm:block">
+          <Kbd>↵</Kbd> no título cria · <Kbd>Esc</Kbd> fecha
+        </p>
       </form>
     </Modal>
   );

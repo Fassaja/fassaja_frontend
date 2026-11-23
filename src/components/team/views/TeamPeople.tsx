@@ -49,7 +49,7 @@ export const TeamPeople: React.FC<Props> = ({ detail, userId }) => {
         <button
           type="button"
           onClick={() => navigate(`${base}&unassigned=1`)}
-          className="flex w-full items-center gap-3 rounded-xl border border-amber-300/60 bg-amber-50/70 px-4 py-3 text-left transition-colors hover:bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
+          className="flex w-full items-center gap-3 rounded-xl border border-aviso-borda bg-aviso-suave/70 px-4 py-3 text-left transition-colors hover:bg-aviso-suave"
         >
           <AlertTriangle size={18} className="shrink-0 text-amber-500 dark:text-amber-400" />
           <p className="text-sm text-text-primary">

@@ -11,7 +11,7 @@ import { useProjects } from '@/hooks/useProjects';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 
 const PrioritiesPage: React.FC = () => {
-  const { tasks, completeTask, deleteTask, loading } = useTasks();
+  const { tasks, completeTask, excluirComDesfazer, loading } = useTasks();
   const showSkeleton = useDeferredLoading(loading);
   const { projects } = useProjects();
 
@@ -53,7 +53,7 @@ const PrioritiesPage: React.FC = () => {
                 task={task}
                 project={projects.find(p => p.id === task.projectId)}
                 onComplete={completeTask}
-                onDelete={deleteTask}
+                onDelete={id => excluirComDesfazer([id])}
               />
             )}
           />

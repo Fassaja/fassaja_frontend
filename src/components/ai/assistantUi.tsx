@@ -15,7 +15,7 @@ export const Notice: React.FC<{ tone?: 'info' | 'warn'; children: React.ReactNod
   <div
     className={`flex gap-2 rounded-xl border p-3 text-xs leading-relaxed ${
       tone === 'warn'
-        ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300'
+        ? 'border-aviso-borda bg-aviso-suave text-amber-900 dark:text-amber-300'
         : 'border-primary-light bg-primary-light/50 text-primary-dark'
     }`}
   >
@@ -171,7 +171,7 @@ export const DoneState: React.FC<{
   onHome: () => void;
 }> = ({ message, onRestart, onHome }) => (
   <div className="flex flex-col items-center gap-3 py-6 text-center">
-    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300">
+    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sucesso-suave text-sucesso">
       <Check size={24} strokeWidth={3} />
     </span>
     <p className="text-sm font-semibold text-text-primary">{message}</p>

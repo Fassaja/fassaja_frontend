@@ -42,8 +42,8 @@ interface TaskDetailModalProps {
 const statusConfig: Record<Task['status'], { label: string; className: string; dot: string }> = {
   pending: { label: 'Pendente', className: 'bg-bg-secondary text-text-secondary', dot: '#64748B' },
   in_progress: { label: 'Em andamento', className: 'bg-primary-light text-primary-vibrant', dot: '#2477FF' },
-  completed: { label: 'Concluída', className: 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', dot: '#22C55E' },
-  overdue: { label: 'Atrasada', className: 'bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300', dot: '#F43F5E' },
+  completed: { label: 'Concluída', className: 'bg-sucesso-suave text-sucesso', dot: '#22C55E' },
+  overdue: { label: 'Atrasada', className: 'bg-perigo-suave text-perigo', dot: '#F43F5E' },
 };
 
 const priorityConfig: Record<Task['priority'], { label: string; color: string }> = {

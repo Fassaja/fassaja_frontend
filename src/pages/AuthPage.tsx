@@ -198,7 +198,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               <strong className="text-text-primary">{registeredEmail}</strong>. Clique nele para
               ativar sua conta.
             </p>
-            <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-aviso-borda bg-aviso-suave px-4 py-3 text-sm font-medium text-aviso">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
               <span>
                 Não encontrou? Verifique a caixa de <strong>spam</strong> ou lixo eletrônico — e
@@ -235,18 +235,18 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
           </p>
 
           {sessionExpired && isLogin && (
-            <div className="mb-6 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+            <div className="mb-6 rounded-xl border border-aviso-borda bg-aviso-suave px-4 py-3 text-sm font-medium text-aviso">
               Sua sessão expirou. Entre novamente para continuar.
             </div>
           )}
 
           {verifiedParam === '1' && isLogin && (
-            <div className="mb-6 rounded-xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            <div className="mb-6 rounded-xl border border-sucesso-borda bg-sucesso-suave px-4 py-3 text-sm font-medium text-sucesso">
               E-mail confirmado! Faça login para entrar.
             </div>
           )}
           {verifiedParam === '0' && isLogin && (
-            <div className="mb-6 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+            <div className="mb-6 rounded-xl border border-perigo-borda bg-perigo-suave px-4 py-3 text-sm font-medium text-perigo">
               Link inválido ou expirado. Faça login para reenviar a confirmação.
             </div>
           )}
@@ -258,7 +258,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
               porque os e-mails coincidem. Sem esta mensagem a pessoa tentaria o
               mesmo botão para sempre, recebendo "não foi possível entrar". */}
           {googleParam === 'vinculo' ? (
-            <div className="mb-6 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
+            <div className="mb-6 rounded-xl border border-aviso-borda bg-aviso-suave px-4 py-3 text-sm text-amber-800 dark:text-amber-200">
               <strong className="block font-semibold mb-1">Já existe uma conta com esse e-mail</strong>
               Entre com sua senha para continuar. Se não lembra dela — ou nunca definiu uma —, use{' '}
               <Link to="/forgot-password" className="underline font-medium">
@@ -269,7 +269,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             </div>
           ) : (
             googleParam && (
-              <div className="mb-6 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+              <div className="mb-6 rounded-xl border border-perigo-borda bg-perigo-suave px-4 py-3 text-sm font-medium text-perigo">
                 {googleParam === 'csrf'
                   ? 'A verificação de segurança do login com Google falhou. Tente de novo; se persistir, entre com e-mail e senha.'
                   : 'Não foi possível entrar com o Google. Tente de novo ou use e-mail e senha.'}

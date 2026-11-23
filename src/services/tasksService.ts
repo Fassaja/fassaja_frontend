@@ -1,5 +1,5 @@
 import { Task, TaskUpdate } from '@/types/task';
-import { api } from './api';
+import { api, excluirAoSair } from './api';
 import { todayISO } from '@/utils/date';
 
 export const tasksService = {
@@ -17,6 +17,11 @@ export const tasksService = {
 
   async updateTask(id: string, updates: TaskUpdate): Promise<Task | undefined> {
     return api.patch<Task>(`/tasks/${id}`, updates);
+  },
+
+  /** Ver `excluirAoSair`: só para quando a página está fechando. */
+  deleteTaskAoSair(id: string): void {
+    excluirAoSair(`/tasks/${id}`);
   },
 
   async deleteTask(id: string): Promise<boolean> {

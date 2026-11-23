@@ -14,11 +14,14 @@ export const Toggle: React.FC<{
   checked: boolean;
   onChange: () => void;
   disabled?: boolean;
-}> = ({ checked, onChange, disabled = false }) => (
+  /** Nome acessível, quando não há um rótulo visível ligado ao interruptor. */
+  label?: string;
+}> = ({ checked, onChange, disabled = false, label }) => (
   <button
     type="button"
     role="switch"
     aria-checked={checked}
+    aria-label={label}
     disabled={disabled}
     onClick={onChange}
     className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors shrink-0 disabled:opacity-60 ${
