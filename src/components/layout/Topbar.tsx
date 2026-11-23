@@ -97,6 +97,14 @@ export const Topbar: React.FC<TopbarProps> = ({
    * Atalhos de uma tecla. Ficam aqui porque é a barra do topo que já guarda a
    * busca e a "nova tarefa" da página — e ela está em toda tela do app.
    */
+  // Atalho N e comando "Nova tarefa" da paleta. Usa a "nova" da página só
+  // quando ela É de tarefa — na Agenda ela cria evento, em Projetos cria
+  // projeto. Nas outras, abre a criação em Minhas Tarefas.
+  const novaTarefa = () => {
+    if (onNewTask && actionLabel === 'Nova tarefa') onNewTask();
+    else navigate('/tasks?nova=1');
+  };
+
   useAtalhosGlobais(acao => {
     switch (acao.tipo) {
       case 'buscar':
@@ -109,10 +117,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         navigate(acao.rota);
         break;
       case 'nova-tarefa':
-        // A página que tem "nova" própria (Tarefas, Agenda…) decide o que é
-        // novo ali; nas outras, abre a criação de tarefa em Minhas Tarefas.
-        if (onNewTask) onNewTask();
-        else navigate('/tasks?nova=1');
+        novaTarefa();
         break;
     }
   });
@@ -173,7 +178,13 @@ export const Topbar: React.FC<TopbarProps> = ({
       {/* `fallback={null}`: o primeiro clique espera o arquivo chegar (poucos
           ms; a busca já vem adiantada ao passar o mouse no botão). */}
       <React.Suspense fallback={null}>
-        {buscaMontada && <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />}
+        {buscaMontada && (
+          <SearchModal
+            isOpen={showSearch}
+            onClose={() => setShowSearch(false)}
+            onNovaTarefa={novaTarefa}
+          />
+        )}
         {sequenciaMontada && (
           <StreakDaysModal isOpen={showStreakDays} onClose={() => setShowStreakDays(false)} />
         )}
