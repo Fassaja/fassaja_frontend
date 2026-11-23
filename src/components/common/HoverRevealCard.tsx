@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { m } from 'framer-motion';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
+import { mola } from '@/components/motion/tokens';
 
 interface HoverRevealCardProps {
   /** O card em si (fica por cima, opaco). */
@@ -61,7 +62,7 @@ export const HoverRevealCard: React.FC<HoverRevealCardProps> = ({
           hidden: { opacity: 0, y: -28 },
           shown: { opacity: 1, y: 0 },
         }}
-        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        transition={mola.viva}
         className="z-0 w-11/12 self-center"
         // Escondido de leitores de tela enquanto está recolhido no desktop:
         // o conteúdo repetiria o card sem que nada tenha sido acionado.

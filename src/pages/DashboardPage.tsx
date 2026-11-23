@@ -26,6 +26,7 @@ import { podeConcluir } from '@/utils/taskScope';
 import { useToast } from '@/contexts/ToastContext';
 import { useTaskHistory } from '@/hooks/useTaskHistory';
 import { diaISO, inicioDaSemana, resumoSemanal } from '@/utils/produtividade';
+import { transicao, escalonamento } from '@/components/motion/tokens';
 
 /*
  * O gráfico traz a biblioteca de gráficos inteira consigo, e fica lá embaixo
@@ -48,7 +49,7 @@ const WeeklyOverviewChart = React.lazy(() =>
  */
 const REGIAO = {
   hidden: { opacity: 0, y: 12 },
-  shown: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+  shown: { opacity: 1, y: 0, transition: transicao.lenta },
 };
 
 const DashboardPage: React.FC = () => {
@@ -144,7 +145,7 @@ const DashboardPage: React.FC = () => {
         <m.div
           initial="hidden"
           animate="shown"
-          variants={{ shown: { transition: { staggerChildren: 0.07 } } }}
+          variants={{ shown: { transition: { staggerChildren: escalonamento } } }}
         >
         <m.div variants={REGIAO}>
         <TodayFocus

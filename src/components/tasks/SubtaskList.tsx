@@ -5,6 +5,7 @@ import { Task } from '@/types/task';
 import { useTasks } from '@/contexts/TasksContext';
 import { useToast } from '@/contexts/ToastContext';
 import { MAX_SUBTASKS, subtaskProgress } from '@/utils/subtasks';
+import { transicao } from '@/components/motion/tokens';
 
 /**
  * Checklist da tarefa.
@@ -99,7 +100,7 @@ export const SubtaskList: React.FC<{ task: Task }> = ({ task }) => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.16 }}
+              transition={transicao.rapida}
               className="group flex items-center gap-2.5 rounded-lg py-1.5 pl-1 pr-1 hover:bg-bg-secondary/60"
             >
               {/* O botão é o ALVO (40px no celular); o quadrado visual tem

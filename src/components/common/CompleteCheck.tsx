@@ -1,6 +1,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { Check } from 'lucide-react';
+import { mola } from '@/components/motion/tokens';
 
 interface CompleteCheckProps {
   completed: boolean;
@@ -39,7 +40,7 @@ export const CompleteCheck: React.FC<CompleteCheckProps> = ({
         <m.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+          transition={mola.quique}
           className="flex"
         >
           <Check size={13} strokeWidth={3} />

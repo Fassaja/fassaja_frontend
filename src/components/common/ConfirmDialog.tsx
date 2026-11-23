@@ -4,6 +4,7 @@ import { m, AnimatePresence } from 'framer-motion';
 import { Button } from './Button';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { transicao, mola } from '@/components/motion/tokens';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -52,16 +53,16 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: transicao.saida }}
+            transition={transicao.media}
             onClick={onClose}
             className="fixed inset-0 bg-scrim/70 z-[60]"
           />
           <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: transicao.saida }}
+            transition={transicao.media}
             className="fixed inset-0 z-[70] overflow-y-auto p-4"
             onClick={onClose}
           >
@@ -75,8 +76,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
               <m.div
                 initial={{ scale: 0.95, y: 8 }}
                 animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
-                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                exit={{ scale: 0.95, y: 8, transition: transicao.saida }}
+                transition={mola.viva}
                 className="bg-surface rounded-2xl shadow-lg max-w-sm w-full p-6 text-center"
                 onClick={e => e.stopPropagation()}
               >

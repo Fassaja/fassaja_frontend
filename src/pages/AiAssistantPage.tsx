@@ -28,6 +28,7 @@ import { TeamSummary, TeamMember } from '@/types/team';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { useTasks } from '@/contexts/TasksContext';
 import { tint, chipText } from '@/utils/color';
+import { transicao, mola, escalonamento } from '@/components/motion/tokens';
 
 
 /**
@@ -594,7 +595,7 @@ const AiAssistantPage: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: docAberto ? 0 : 1, scale: docAberto ? 0.94 : 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                transition={transicao.media}
                 style={{ pointerEvents: docAberto ? 'none' : 'auto' }}
                 className="flex min-h-full flex-col items-center justify-center gap-4 text-center"
               >
@@ -785,7 +786,7 @@ const AiAssistantPage: React.FC = () => {
                               initial={{ opacity: 0, y: 6 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, x: 60, scale: 0.85 }}
-                              transition={{ duration: 0.2 }}
+                              transition={transicao.media}
                               className={`relative flex items-start gap-2 rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-colors ${
                                 added ? 'border-green-200 dark:border-green-500/30 bg-green-50/60 dark:bg-green-500/10' : 'border-border bg-surface'
                               }`}
@@ -874,7 +875,7 @@ const AiAssistantPage: React.FC = () => {
                   className="flex flex-col gap-3"
                   initial="hidden"
                   animate="shown"
-                  variants={{ shown: { transition: { staggerChildren: 0.04 } } }}
+                  variants={{ shown: { transition: { staggerChildren: escalonamento } } }}
                 >
                   {draft.cards.length === 0 && (
                     <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-text-secondary">
@@ -900,7 +901,7 @@ const AiAssistantPage: React.FC = () => {
                         shown: { opacity: 1, y: 0 },
                       }}
                       exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      transition={transicao.media}
                     >
                     <Card padding="sm" className="flex flex-col gap-2">
                       <div className="flex items-start gap-2">
@@ -1062,7 +1063,7 @@ const AiAssistantPage: React.FC = () => {
           */}
           <m.div
             layout="position"
-            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            transition={transicao.lenta}
             onMouseEnter={() => setPertoDoBalao(true)}
             onMouseLeave={() => setPertoDoBalao(false)}
             className="w-full max-w-3xl flex flex-col gap-1"
@@ -1155,7 +1156,7 @@ const AiAssistantPage: React.FC = () => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              transition={transicao.lenta}
               className="w-full max-w-3xl overflow-hidden"
             >
             <div className="flex max-h-[45vh] flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-3">
@@ -1267,7 +1268,7 @@ const AiAssistantPage: React.FC = () => {
             className="w-32 h-32 object-contain drop-shadow-lg"
             initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+            transition={mola.quique}
           />
           <div>
             <p className="font-semibold text-text-primary">

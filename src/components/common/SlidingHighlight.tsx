@@ -1,5 +1,6 @@
 import React from 'react';
 import { m } from 'framer-motion';
+import { mola } from '@/components/motion/tokens';
 
 interface SlidingHighlightProps {
   /**
@@ -41,7 +42,7 @@ export const SlidingHighlight: React.FC<SlidingHighlightProps> = ({
   <m.span
     layoutId={groupId}
     aria-hidden="true"
-    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+    transition={mola.firme}
     className={`absolute inset-0 rounded-lg ${className}`}
   />
 );

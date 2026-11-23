@@ -2,6 +2,7 @@ import React from 'react';
 import { m } from 'framer-motion';
 import { Section } from '@/components/common/Section';
 import { CountUp } from '@/components/common/CountUp';
+import { transicao } from '@/components/motion/tokens';
 
 interface GoalProgress {
   done: number;
@@ -39,7 +40,7 @@ const GoalBar: React.FC<{ label: string; done: number; goal: number; barClass: s
           className={`h-full rounded-full ${barClass}`}
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={transicao.progresso}
         />
       </div>
     </div>
@@ -83,7 +84,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
               strokeLinecap="round"
               initial={{ strokeDashoffset: circumference }}
               animate={{ strokeDashoffset: offset }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              transition={transicao.progresso}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">

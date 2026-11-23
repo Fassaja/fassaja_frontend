@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Check } from 'lucide-react';
+import { transicao } from '@/components/motion/tokens';
 
 export interface DropdownOption {
   value: string;
@@ -147,7 +148,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 initial={{ opacity: 0, y: -6, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                transition={{ duration: 0.16, ease: [0.25, 1, 0.5, 1] }}
+                transition={transicao.rapida}
                 className="w-max max-w-[16rem] overflow-y-auto bg-surface rounded-xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-1.5"
               >
                 {options.map(option => {

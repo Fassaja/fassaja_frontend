@@ -14,6 +14,7 @@ import { tint, chipText } from '@/utils/color';
 import { subtaskProgress } from '@/utils/subtasks';
 import { useFocusTimes } from '@/contexts/FocusTimesContext';
 import { rotuloDeDuracao } from '@/utils/focoCoach';
+import { transicao } from '@/components/motion/tokens';
 
 interface TaskCardProps {
   task: Task;
@@ -126,7 +127,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
             role="menu"
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.16, ease: [0.25, 1, 0.5, 1] }}
+            transition={transicao.rapida}
             style={{ position: 'fixed', top: pos.top, left: pos.left, width: MENU_W }}
             className="z-[61] rounded-xl border border-border bg-surface shadow-lg overflow-hidden py-1"
             onClick={e => e.stopPropagation()}

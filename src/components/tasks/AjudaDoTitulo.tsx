@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
+import { transicao } from '@/components/motion/tokens';
 
-const SUAVE = { duration: 0.16, ease: [0.16, 1, 0.3, 1] as const };
+const SUAVE = transicao.lenta;
 
 /**
  * O "?" ao lado do título: como escrever prazo, prioridade e etiqueta.

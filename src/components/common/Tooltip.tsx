@@ -2,6 +2,7 @@ import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'reac
 import { createPortal } from 'react-dom';
 import { AnimatePresence, m } from 'framer-motion';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
+import { transicao } from '@/components/motion/tokens';
 
 interface TooltipProps {
   /** Linha principal — curta, o rótulo da ação. */
@@ -121,7 +122,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
-              transition={{ duration: 0.14 }}
+              transition={transicao.rapida}
               style={{ top: pos.top, left: pos.left }}
               className="pointer-events-none fixed z-[100] max-w-xs rounded-lg border border-border bg-surface px-3 py-2 shadow-lg"
             >

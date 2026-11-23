@@ -18,6 +18,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { bobGreeting } from '@/utils/aiAssistant';
 import { Notice } from './assistantUi';
+import { transicao, mola } from '@/components/motion/tokens';
 /*
  * Os três painéis de ação só aparecem depois que a pessoa abre o Bob E escolhe
  * uma ação — e o lançador está em toda tela do app. Sob demanda, eles deixam
@@ -178,8 +179,8 @@ export const BobAssistant: React.FC = () => {
             aria-label="Abrir o assistente"
             initial={{ opacity: 0, scale: 0.6, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.6, y: 24, transition: { duration: 0.22, ease: [0.4, 0, 1, 1] } }}
-            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+            exit={{ opacity: 0, scale: 0.6, y: 24, transition: transicao.saida }}
+            transition={mola.viva}
             whileTap={{ scale: 0.92 }}
             className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 flex h-16 w-16 lg:h-[72px] lg:w-[72px] items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-light"
           >
@@ -194,8 +195,8 @@ export const BobAssistant: React.FC = () => {
             ref={panelRef}
             initial={{ opacity: 0, y: 12, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, y: 8, scale: 0.98, transition: transicao.saida }}
+            transition={transicao.media}
             role="dialog"
             aria-modal="true"
             aria-label="Assistente Bob"

@@ -261,6 +261,7 @@ const SettingsPage: React.FC = () => {
           Fechado, a página vira um índice do que dá para ajustar. */}
       <div className="mx-auto w-full max-w-2xl">
         <Accordion
+          cascata
           items={[
             {
               id: 'aparencia',

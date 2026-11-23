@@ -18,9 +18,10 @@ import { SeletorDeTempo } from '@/components/focus/SeletorDeTempo';
 import { todayISO } from '@/utils/date';
 import { buscar } from '@/utils/buscaGlobal';
 import { tint } from '@/utils/color';
+import { escalonamento, transicao } from '@/components/motion/tokens';
 
 /** Curva usada no app inteiro. Repetida aqui para o ritmo ser o mesmo. */
-const SUAVE = { duration: 0.28, ease: [0.16, 1, 0.3, 1] as const };
+const SUAVE = transicao.lenta;
 
 /**
  * A aba Foco.
@@ -270,7 +271,7 @@ const FocusPage: React.FC = () => {
                      cima para baixo — a mesma ordem em que a lista deve ser
                      lida. Um bloco inteiro aparecendo de uma vez não diz por
                      onde começar. */
-                  variants={{ visivel: { transition: { staggerChildren: 0.045 } } }}
+                  variants={{ visivel: { transition: { staggerChildren: escalonamento } } }}
                 >
                   {lista.map(({ task, motivo }) => {
                     const escolhida = tarefaId === task.id;

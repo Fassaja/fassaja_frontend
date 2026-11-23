@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { transicao } from '@/components/motion/tokens';
 
 interface MoreOptionsProps {
   children: React.ReactNode;
@@ -76,7 +77,7 @@ export const MoreOptions: React.FC<MoreOptionsProps> = ({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            transition={transicao.media}
             onAnimationComplete={() => setAnimating(false)}
             className={animating ? 'overflow-hidden' : 'overflow-visible'}
           >

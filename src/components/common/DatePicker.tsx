@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { m, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { formatDateChip } from '@/utils/date';
+import { transicao } from '@/components/motion/tokens';
 
 interface DatePickerProps {
   label?: string;
@@ -236,7 +237,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 initial={{ opacity: 0, y: -6, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                transition={{ duration: 0.14 }}
+                transition={transicao.rapida}
                 /* w-72 = os mesmos 288px do style: o painel é filho de <body> até o
                    style chegar, e sem largura aqui a primeira medição de altura
                    sairia errada. */

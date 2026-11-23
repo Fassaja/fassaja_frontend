@@ -19,12 +19,13 @@ import { useTasks } from '@/hooks/useTasks';
 import { useXp } from '@/hooks/useXp';
 import { XP_PER_LEVEL } from '@/utils/xp';
 import { recusaDeDimensoes, recusaDeImagem } from '@/utils/limitesDeArquivo';
+import { transicao, escalonamento } from '@/components/motion/tokens';
 
 // Geometria do anel de nível em volta do avatar.
 // Entrada de cada bloco da página, em cascata.
 const BLOCO = {
   hidden: { opacity: 0, y: 12 },
-  shown: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+  shown: { opacity: 1, y: 0, transition: transicao.lenta },
 };
 
 const RING = 96;
@@ -138,7 +139,7 @@ const ProfilePage: React.FC = () => {
         className="mx-auto w-full max-w-2xl space-y-6"
         initial="hidden"
         animate="shown"
-        variants={{ shown: { transition: { staggerChildren: 0.07 } } }}
+        variants={{ shown: { transition: { staggerChildren: escalonamento } } }}
       >
         {/* Cabeçalho.
             A faixa de gradiente de 96px que ficava aqui era decoração pura —
@@ -180,7 +181,7 @@ const ProfilePage: React.FC = () => {
                   strokeDasharray={RING_C}
                   initial={{ strokeDashoffset: RING_C }}
                   animate={{ strokeDashoffset: RING_C - (xp.pctToNext / 100) * RING_C }}
-                  transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                  transition={transicao.progresso}
                 />
               </svg>
 

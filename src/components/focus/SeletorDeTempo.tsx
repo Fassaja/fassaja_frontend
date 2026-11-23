@@ -8,8 +8,9 @@ import {
   limitarMinutos,
   rotuloDeDuracao,
 } from '@/utils/focoCoach';
+import { transicao } from '@/components/motion/tokens';
 
-const SUAVE = { duration: 0.28, ease: [0.16, 1, 0.3, 1] as const };
+const SUAVE = transicao.lenta;
 /** Passo do +/-. Cinco minutos é o ajuste que alguém realmente pensa. */
 const PASSO = 5;
 
@@ -138,7 +139,7 @@ export const SeletorDeTempo: React.FC<{
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  transition={transicao.rapida}
                   className="min-w-[6rem] text-center text-3xl font-bold tabular-nums text-text-primary"
                 >
                   {rotuloDeDuracao(minutos)}

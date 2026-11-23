@@ -8,6 +8,7 @@ import { Project } from '@/types/project';
 import { Tag } from '@/types/tag';
 import { tint, chipText } from '@/utils/color';
 import { SEM_PROJETO, TODOS_PROJETOS } from '@/utils/taskFilters';
+import { transicao } from '@/components/motion/tokens';
 
 const priorityOptions = [
   { value: 'all', label: 'Todas as prioridades' },
@@ -216,7 +217,7 @@ export const TaskFilterMenu: React.FC<TaskFilterMenuProps> = ({
               initial={{ opacity: 0, y: -6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
-              transition={{ duration: 0.16, ease: [0.25, 1, 0.5, 1] }}
+              transition={transicao.rapida}
               style={{ position: 'fixed', top: pos.top, left: pos.left, width: PANEL_W }}
               className="z-[80] space-y-3 rounded-2xl border-2 border-border bg-surface p-3 shadow-xl ring-1 ring-primary-vibrant/20"
             >

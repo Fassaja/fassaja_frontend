@@ -4,6 +4,7 @@ import { Flame, Moon } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { useUser, computeStreak } from '@/contexts/UserContext';
 import { useTasks } from '@/hooks/useTasks';
+import { transicao, mola } from '@/components/motion/tokens';
 
 function isoOf(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -46,7 +47,7 @@ export const StreakContent: React.FC = () => {
             className="inline-flex"
             initial={reduce || streak === 0 ? false : { scale: 0.4, rotate: -12 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 14 }}
+            transition={mola.quique}
           >
             <Flame size={16} />
           </m.span>
@@ -67,7 +68,7 @@ export const StreakContent: React.FC = () => {
             className="flex-1 flex flex-col items-center gap-1.5"
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: reduce ? 0 : 0.25 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ ...transicao.lenta, delay: reduce ? 0 : 0.25 + i * 0.05 }}
           >
             <div
               title={day.rest && !day.active ? 'Dia de folga — não quebra a sequência' : undefined}

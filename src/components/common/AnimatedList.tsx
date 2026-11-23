@@ -1,5 +1,6 @@
 import React from 'react';
 import { AnimatePresence, m } from 'framer-motion';
+import { mola } from '@/components/motion/tokens';
 
 export type AnimationType = 'scale' | 'slide' | 'fade' | 'bounce';
 
@@ -80,12 +81,7 @@ export function AnimatedList<T extends { id: string | number }>({
             initial={variants.initial}
             animate={variants.animate}
             exit={variants.exit}
-            transition={{
-              type: 'spring',
-              stiffness: 350,
-              damping: 28,
-              layout: { type: 'spring', stiffness: 350, damping: 28 },
-            }}
+            transition={{ ...mola.firme, layout: mola.firme }}
           >
             {renderItem(item, index)}
           </m.div>

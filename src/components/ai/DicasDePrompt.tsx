@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { EXEMPLOS_DE_COMANDO } from '@/utils/exemplosDeComando';
+import { transicao } from '@/components/motion/tokens';
 
 /**
  * Setinha torta que revela exemplos de comando.
@@ -62,7 +63,7 @@ export const DicasDePrompt: React.FC<{
          */
         initial={false}
         animate={{ opacity: mostrar ? 1 : 0, y: mostrar ? 0 : 4 }}
-        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        transition={transicao.media}
         style={{ pointerEvents: mostrar ? 'auto' : 'none' }}
         className={`flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-lg text-xs font-medium hover:text-primary-vibrant focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-light ${
           aberto ? 'text-primary-vibrant' : 'text-text-soft'
@@ -110,7 +111,7 @@ export const DicasDePrompt: React.FC<{
             initial={{ opacity: 0, y: 6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.14 }}
+            transition={transicao.rapida}
             /* Abre para CIMA: o balão está colado no rodapé da tela, e para
                baixo não há espaço. */
             className="absolute bottom-full left-0 mb-1.5 z-20 w-[min(22rem,calc(100vw-3rem))] rounded-xl border border-border bg-surface/95 backdrop-blur-md p-1.5 shadow-xl"

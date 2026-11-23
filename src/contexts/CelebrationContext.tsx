@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { AnimatePresence, m } from 'framer-motion';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
+import { mola } from '@/components/motion/tokens';
 
 type CelebrationVariant = 'task' | 'goal';
 
@@ -83,7 +84,7 @@ export const CelebrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
               initial={{ scale: 0.6, y: 40, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.8, y: 20, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 360, damping: 20 }}
+              transition={mola.viva}
               className={`relative flex items-center gap-3 bg-surface rounded-2xl shadow-xl pl-3 pr-5 py-3 ${
                 isGoal
                   ? 'border-2 border-amber-300 dark:border-amber-500/40 ring-2 ring-amber-200/60'

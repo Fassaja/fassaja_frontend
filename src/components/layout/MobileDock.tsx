@@ -24,6 +24,7 @@ import {
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { transicao, mola } from '@/components/motion/tokens';
 
 /**
  * A dock do celular: Início · Tarefas · [+] · Projetos · Mais.
@@ -114,7 +115,7 @@ const Item: React.FC<{
     type="button"
     onClick={onClick}
     whileTap={{ scale: 0.88 }}
-    transition={{ type: 'spring', stiffness: 600, damping: 30 }}
+    transition={mola.viva}
     aria-current={on && expanded === undefined ? 'page' : undefined}
     aria-expanded={expanded}
     aria-label={rotulo}
@@ -124,12 +125,12 @@ const Item: React.FC<{
       <m.span
         layoutId="dock-pilula"
         className="absolute inset-x-1 top-0.5 h-8 rounded-full bg-primary-light"
-        transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+        transition={mola.firme}
       />
     )}
     <m.span
       animate={{ y: on ? -1 : 0, scale: on ? 1.08 : 1, rotate: expanded ? 90 : 0 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      transition={mola.viva}
       className={`relative z-10 flex h-7 items-center ${on ? 'text-primary-vibrant' : 'text-text-secondary'}`}
     >
       <Icone size={22} strokeWidth={on ? 2.4 : 2} />
@@ -181,7 +182,7 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
+              transition={transicao.rapida}
               onClick={() => setMaisAberto(false)}
               className="fixed inset-0 z-40 bg-black/50 lg:hidden"
             />
@@ -192,7 +193,7 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
               initial={{ y: 40, opacity: 0, scale: 0.98 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 40, opacity: 0, scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+              transition={mola.viva}
               className="fixed inset-x-3 z-40 mx-auto max-w-md rounded-[1.75rem] border border-border/70 bg-surface p-4 shadow-[0_16px_50px_rgba(0,0,0,0.3)] lg:hidden"
               style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}
             >
@@ -262,7 +263,7 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
         aria-label="Navegação principal"
         initial={false}
         animate={{ y: escondida && !maisAberto ? 110 : 0 }}
-        transition={{ type: 'spring', stiffness: 420, damping: 38 }}
+        transition={mola.viva}
         className="fixed inset-x-0 bottom-0 z-40 lg:hidden px-3"
         style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
       >
@@ -280,7 +281,7 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
                 type="button"
                 onClick={novaTarefa}
                 whileTap={{ scale: 0.9, rotate: 90 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 26 }}
+                transition={mola.viva}
                 aria-label="Nova tarefa"
                 className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg shadow-primary-vibrant/40 ring-4 ring-bg-main focus:outline-none focus-visible:ring-primary-vibrant/60"
               >

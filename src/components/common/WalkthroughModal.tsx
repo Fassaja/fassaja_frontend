@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
+import { transicao } from '@/components/motion/tokens';
 
 export interface WalkthroughStep {
   image: string;
@@ -47,7 +48,7 @@ export const WalkthroughModal: React.FC<WalkthroughModalProps> = ({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+            transition={transicao.media}
             className="flex flex-col items-center gap-4"
           >
             <img
