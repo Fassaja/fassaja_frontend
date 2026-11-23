@@ -1,5 +1,5 @@
 import React from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Section } from '@/components/common/Section';
 import { CompleteCheck } from '@/components/common/CompleteCheck';
 import { Task } from '@/types/task';
@@ -54,7 +54,7 @@ export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = 
           const project = projects.find(p => p.id === task.projectId);
 
           return (
-            <motion.li
+            <m.li
               key={task.id}
               layout="position"
               initial={{ opacity: 0, y: -8 }}
@@ -94,7 +94,7 @@ export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = 
               >
                 {completed ? 'Concluída' : priority.label}
               </span>
-            </motion.li>
+            </m.li>
           );
         })}
         </AnimatePresence>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Trash2, Check, CalendarDays, ChevronDown, ListChecks, Timer, Users } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Task, TaskStatus } from '@/types/task';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
@@ -122,7 +122,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
             className="fixed inset-0 z-[60]"
             onClick={e => { e.stopPropagation(); setOpen(false); }}
           />
-          <motion.div
+          <m.div
             role="menu"
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -148,7 +148,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
                 </button>
               );
             })}
-          </motion.div>
+          </m.div>
         </>,
         document.body,
       )}
@@ -209,7 +209,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
   return (
     // Entrada em CSS, não framer-motion: o cartão aparece às dezenas (o quadro
-    // monta todos de uma vez), e cada `motion.div` era uma animação em
+    // monta todos de uma vez), e cada `m.div` era uma animação em
     // JavaScript a mais no mesmo quadro — no celular, boa parte da travada ao
     // abrir Tarefas. A saída nunca dependeu daqui: quem anima a remoção é a
     // lista em volta (AnimatedList).

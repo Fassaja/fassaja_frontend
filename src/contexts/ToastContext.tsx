@@ -6,7 +6,7 @@ import React, {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'info';
@@ -73,7 +73,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             {toasts.map(toast => {
               const c = config[toast.type];
               return (
-                <motion.div
+                <m.div
                   key={toast.id}
                   layout
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -94,7 +94,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   >
                     <X size={16} />
                   </button>
-                </motion.div>
+                </m.div>
               );
             })}
           </AnimatePresence>

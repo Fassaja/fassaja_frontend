@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
 
 interface HoverRevealCardProps {
@@ -54,7 +54,7 @@ export const HoverRevealCard: React.FC<HoverRevealCardProps> = ({
           esticar o invólucro, e o card dentro dele fica solto. */}
       <div className="relative z-10 flex-1">{children}</div>
 
-      <motion.div
+      <m.div
         initial={false}
         animate={revealed ? 'shown' : 'hidden'}
         variants={{
@@ -70,7 +70,7 @@ export const HoverRevealCard: React.FC<HoverRevealCardProps> = ({
         <div className="relative rounded-b-2xl border border-t-0 border-border bg-surface px-5 pt-5 pb-3">
           {summary}
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 };

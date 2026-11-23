@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { BellOff, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationItem } from '@/contexts/NotificationsContext';
@@ -34,7 +34,7 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={onClose} />
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -102,7 +102,7 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
             >
               Ver todas as tarefas
             </button>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

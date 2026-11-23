@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
 
 interface TooltipProps {
@@ -114,7 +114,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       {createPortal(
         <AnimatePresence>
           {open && (
-            <motion.div
+            <m.div
               ref={bubbleRef}
               id={id}
               role="tooltip"
@@ -129,7 +129,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
               {description && (
                 <p className="mt-1 text-xs leading-snug text-text-secondary">{description}</p>
               )}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>,
         document.body,

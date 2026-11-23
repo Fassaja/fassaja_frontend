@@ -1,5 +1,5 @@
 import React from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 
 export type AnimationType = 'scale' | 'slide' | 'fade' | 'bounce';
 
@@ -74,7 +74,7 @@ export function AnimatedList<T extends { id: string | number }>({
     <div className={className}>
       <AnimatePresence mode="popLayout" initial={false}>
         {items.map((item, index) => (
-          <motion.div
+          <m.div
             key={item.id}
             layout="position"
             initial={variants.initial}
@@ -88,7 +88,7 @@ export function AnimatedList<T extends { id: string | number }>({
             }}
           >
             {renderItem(item, index)}
-          </motion.div>
+          </m.div>
         ))}
       </AnimatePresence>
     </div>

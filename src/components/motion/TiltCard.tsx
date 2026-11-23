@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
+import { m, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
 
 interface TiltCardProps {
@@ -28,7 +28,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({ children, max = 6, className
   if (!hover || calmo) return <div className={className}>{children}</div>;
 
   return (
-    <motion.div
+    <m.div
       className={className}
       style={{ rotateX, rotateY, transformPerspective: 900 }}
       onPointerMove={e => {
@@ -42,6 +42,6 @@ export const TiltCard: React.FC<TiltCardProps> = ({ children, max = 6, className
       }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 };

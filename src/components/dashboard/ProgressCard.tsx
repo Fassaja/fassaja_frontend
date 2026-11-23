@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Section } from '@/components/common/Section';
 import { CountUp } from '@/components/common/CountUp';
 
@@ -35,7 +35,7 @@ const GoalBar: React.FC<{ label: string; done: number; goal: number; barClass: s
         </span>
       </div>
       <div className="w-full h-2 rounded-full overflow-hidden bg-bg-secondary">
-        <motion.div
+        <m.div
           className={`h-full rounded-full ${barClass}`}
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
@@ -72,7 +72,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
               className="stroke-primary-light"
               strokeWidth={stroke}
             />
-            <motion.circle
+            <m.circle
               cx={size / 2}
               cy={size / 2}
               r={radius}

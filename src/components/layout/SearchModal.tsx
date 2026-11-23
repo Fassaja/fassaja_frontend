@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Search,
   CheckSquare,
@@ -212,7 +212,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               que estava atrás. Um véu mais leve que o normal (50%) de
               propósito: se o fundo some, não há o que o painel translúcido
               deixe transparecer, e o fosco vira só um cinza. */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
@@ -220,7 +220,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
             onClick={onClose}
             className="fixed inset-0 bg-scrim/50 z-[60]"
           />
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
@@ -228,7 +228,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
             className="fixed inset-x-0 top-20 z-[70] flex justify-center px-4"
             onClick={onClose}
           >
-            <motion.div
+            <m.div
               initial={{ y: -16 }}
               animate={{ y: 0 }}
               exit={{ y: -16, transition: { duration: 0.15, ease: 'easeIn' } }}
@@ -319,8 +319,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 ))}
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>,

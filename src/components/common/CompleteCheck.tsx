@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Check } from 'lucide-react';
 
 interface CompleteCheckProps {
@@ -36,14 +36,14 @@ export const CompleteCheck: React.FC<CompleteCheckProps> = ({
       }`}
     >
       {completed ? (
-        <motion.span
+        <m.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 500, damping: 18 }}
           className="flex"
         >
           <Check size={13} strokeWidth={3} />
-        </motion.span>
+        </m.span>
       ) : (
         <Check
           size={11}

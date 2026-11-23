@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { Section } from '@/components/common/Section';
 import { CountUp } from '@/components/common/CountUp';
@@ -42,7 +42,7 @@ export const XpCard: React.FC = () => {
             </span>
           </div>
           <div className="h-2.5 overflow-hidden rounded-full bg-bg-secondary">
-            <motion.div
+            <m.div
               className="h-full rounded-full bg-primary-vibrant"
               initial={{ width: 0 }}
               animate={{ width: `${xp.pctToNext}%` }}

@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
 export interface AccordionItem {
@@ -99,7 +99,7 @@ const AccordionPanel: React.FC<{
               {item.summary}
             </span>
           )}
-          <motion.span
+          <m.span
             aria-hidden="true"
             initial={false}
             animate={{ rotate: isOpen ? 180 : 0 }}
@@ -107,11 +107,11 @@ const AccordionPanel: React.FC<{
             className="shrink-0 text-text-secondary"
           >
             <ChevronDown size={18} />
-          </motion.span>
+          </m.span>
         </button>
       </h3>
 
-      <motion.div
+      <m.div
         ref={panelRef}
         id={panelId}
         role="region"
@@ -127,7 +127,7 @@ const AccordionPanel: React.FC<{
         <div ref={contentRef} className="px-1 pb-5">
           {item.content}
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 };

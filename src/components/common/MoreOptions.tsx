@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
 interface MoreOptionsProps {
@@ -72,7 +72,7 @@ export const MoreOptions: React.FC<MoreOptionsProps> = ({
 
       <AnimatePresence initial={false}>
         {open && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -81,7 +81,7 @@ export const MoreOptions: React.FC<MoreOptionsProps> = ({
             className={animating ? 'overflow-hidden' : 'overflow-visible'}
           >
             <div className="pt-4 space-y-4">{children}</div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

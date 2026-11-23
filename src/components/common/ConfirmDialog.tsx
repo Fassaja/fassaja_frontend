@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Button } from './Button';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
@@ -49,7 +49,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <>
           {/* Sem backdrop-blur (caro em tela cheia); fade barato no wrapper e
               scale só no painel pequeno — evita queda de FPS ao abrir. */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
@@ -57,7 +57,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             onClick={onClose}
             className="fixed inset-0 bg-scrim/70 z-[60]"
           />
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15 } }}
@@ -72,7 +72,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 painel centraliza quando cabe e cresce a partir do topo quando
                 não cabe. */}
             <div className="flex min-h-full items-center justify-center">
-              <motion.div
+              <m.div
                 initial={{ scale: 0.95, y: 8 }}
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.95, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
@@ -119,9 +119,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                     {confirmLabel}
                   </Button>
                 </div>
-              </motion.div>
+              </m.div>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>,

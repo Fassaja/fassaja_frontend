@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Timer, CalendarClock, CalendarDays, Sparkles, type LucideIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { vibrar } from '@/components/layout/MobileDock';
@@ -35,21 +35,21 @@ export const AtalhosRapidos: React.FC = () => {
   const logado = status === 'authed';
 
   return (
-    <motion.ul
+    <m.ul
       className="lg:hidden mb-6 grid grid-cols-4 gap-2"
       initial="fora"
       animate="dentro"
       variants={{ dentro: { transition: { staggerChildren: 0.05 } } }}
     >
       {ATALHOS.map(a => (
-        <motion.li
+        <m.li
           key={a.rotulo}
           variants={{
             fora: { opacity: 0, y: 14, scale: 0.94 },
             dentro: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring', stiffness: 420, damping: 30 } },
           }}
         >
-          <motion.button
+          <m.button
             type="button"
             whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 600, damping: 30 }}
@@ -63,9 +63,9 @@ export const AtalhosRapidos: React.FC = () => {
               <a.Icone size={18} strokeWidth={2.2} />
             </span>
             {a.rotulo}
-          </motion.button>
-        </motion.li>
+          </m.button>
+        </m.li>
       ))}
-    </motion.ul>
+    </m.ul>
   );
 };

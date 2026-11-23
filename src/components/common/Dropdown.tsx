@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Check } from 'lucide-react';
 
 export interface DropdownOption {
@@ -140,7 +140,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         {createPortal(
           <AnimatePresence>
             {open && (
-              <motion.ul
+              <m.ul
                 ref={menuRef}
                 role="listbox"
                 style={menuStyle}
@@ -173,7 +173,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                     </li>
                   );
                 })}
-              </motion.ul>
+              </m.ul>
             )}
           </AnimatePresence>,
           document.body,

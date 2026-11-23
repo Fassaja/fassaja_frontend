@@ -5,7 +5,7 @@ import {
   Loader2,
   Sparkles,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProBadge } from '@/components/pro/ProBadge';
 import { Tooltip } from '@/components/common/Tooltip';
@@ -134,7 +134,7 @@ const ProfilePage: React.FC = () => {
           de propósito — o suficiente para a página se montar em vez de piscar
           inteira, sem virar espetáculo. Respeita "reduzir movimento" pelo
           MotionConfig do App. */}
-      <motion.div
+      <m.div
         className="mx-auto w-full max-w-2xl space-y-6"
         initial="hidden"
         animate="shown"
@@ -149,7 +149,7 @@ const ProfilePage: React.FC = () => {
 
             O chip "Nível X · Y XP" saiu junto: o bloco de Experiência, logo
             abaixo, já mostra nível, total e barra com muito mais detalhe. */}
-        <motion.div variants={BLOCO} className="flex flex-col sm:flex-row sm:items-center gap-5">
+        <m.div variants={BLOCO} className="flex flex-col sm:flex-row sm:items-center gap-5">
           <Tooltip
             content={`Nível ${xp.level}`}
             description={`${xp.intoLevel} de ${XP_PER_LEVEL} XP para o nível ${xp.level + 1}.`}
@@ -169,7 +169,7 @@ const ProfilePage: React.FC = () => {
                   className="stroke-primary-light"
                   strokeWidth={RING_W}
                 />
-                <motion.circle
+                <m.circle
                   cx={RING / 2}
                   cy={RING / 2}
                   r={RING_R}
@@ -239,31 +239,31 @@ const ProfilePage: React.FC = () => {
             )}
             {avatarMsg && <p className="text-sm text-danger mt-2">{avatarMsg}</p>}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Três cartões com ícone colorido viraram a mesma faixa usada no
             Dashboard e na Equipe — menos moldura repetida, e os números do
             app passam a ter uma forma só em toda parte. */}
-        <motion.div variants={BLOCO}>
+        <m.div variants={BLOCO}>
           {/* `loading` em vez de esqueleto: a faixa tem altura fixa e os rótulos
               já são conhecidos, então trocar só os números por traços não move
               nada na tela. Sem isso, os três saltavam de 0 para o valor real. */}
           <StatStrip stats={stats} loading={tasksLoading} />
-        </motion.div>
+        </m.div>
 
         {/* Sequência produtiva (foguinhos) */}
-        <motion.div variants={BLOCO}>
+        <m.div variants={BLOCO}>
           <StreakCard />
-        </motion.div>
+        </m.div>
 
         {/* Experiência (XP), níveis e conquistas */}
-        <motion.section variants={BLOCO}>
+        <m.section variants={BLOCO}>
           <h3 className="text-lg font-bold text-text-primary mb-3 flex items-center gap-2">
             <Sparkles size={18} className="text-primary-vibrant" /> Experiência e conquistas
           </h3>
           <XpView tasks={tasks} />
-        </motion.section>
-      </motion.div>
+        </m.section>
+      </m.div>
     </AppLayout>
   );
 };

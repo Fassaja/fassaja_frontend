@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { Flame, Moon } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { useUser, computeStreak } from '@/contexts/UserContext';
@@ -42,14 +42,14 @@ export const StreakContent: React.FC = () => {
           Sequência produtiva
         </h2>
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-300 font-bold text-sm">
-          <motion.span
+          <m.span
             className="inline-flex"
             initial={reduce || streak === 0 ? false : { scale: 0.4, rotate: -12 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 320, damping: 14 }}
           >
             <Flame size={16} />
-          </motion.span>
+          </m.span>
           {streak} {streak === 1 ? 'dia' : 'dias'}
         </span>
       </div>
@@ -62,7 +62,7 @@ export const StreakContent: React.FC = () => {
 
       <div className="flex justify-between gap-2">
         {weekStrip.map((day, i) => (
-          <motion.div
+          <m.div
             key={i}
             className="flex-1 flex flex-col items-center gap-1.5"
             initial={reduce ? false : { opacity: 0, y: 8 }}
@@ -84,7 +84,7 @@ export const StreakContent: React.FC = () => {
             <span className={`text-[11px] ${day.rest && !day.active ? 'text-text-soft' : 'text-text-secondary'}`}>
               {day.letter}
             </span>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </>

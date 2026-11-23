@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Plus, Trash2, Check, ListChecks } from 'lucide-react';
 import { Task } from '@/types/task';
 import { useTasks } from '@/contexts/TasksContext';
@@ -93,7 +93,7 @@ export const SubtaskList: React.FC<{ task: Task }> = ({ task }) => {
       <ul className="mt-3 space-y-0.5">
         <AnimatePresence initial={false}>
           {passos.map(passo => (
-            <motion.li
+            <m.li
               key={passo.id}
               layout
               initial={{ opacity: 0, height: 0 }}
@@ -141,7 +141,7 @@ export const SubtaskList: React.FC<{ task: Task }> = ({ task }) => {
               >
                 <Trash2 size={14} />
               </button>
-            </motion.li>
+            </m.li>
           ))}
         </AnimatePresence>
       </ul>

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import {
   ArrowLeft,
   CalendarClock,
@@ -154,7 +154,7 @@ export const BobAssistant: React.FC = () => {
           já existe no cabeçalho. Fechar continua por ali, Esc ou clique fora. */}
       <AnimatePresence>
         {!open && !maisAberto && (
-          <motion.button
+          <m.button
             ref={launcherRef}
             type="button"
             onClick={() => setOpen(true)}
@@ -167,13 +167,13 @@ export const BobAssistant: React.FC = () => {
             className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-40 flex h-16 w-16 lg:h-[72px] lg:w-[72px] items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-light"
           >
             <Sparkles size={28} />
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             ref={panelRef}
             initial={{ opacity: 0, y: 12, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -300,7 +300,7 @@ export const BobAssistant: React.FC = () => {
                 <BreakdownPanel onBusyChange={setBusy} onHome={goHome} />
               )}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>,

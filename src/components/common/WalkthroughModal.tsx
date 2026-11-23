@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Modal } from '@/components/common/Modal';
 import { Button } from '@/components/common/Button';
 
@@ -42,7 +42,7 @@ export const WalkthroughModal: React.FC<WalkthroughModalProps> = ({
     <Modal isOpen={isOpen} onClose={close} title={title} size="md">
       <div className="flex flex-col items-center text-center gap-4">
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={step}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -57,7 +57,7 @@ export const WalkthroughModal: React.FC<WalkthroughModalProps> = ({
             />
             <h3 className="text-lg font-bold text-text-primary">{current.title}</h3>
             <p className="text-sm text-text-secondary max-w-sm">{current.text}</p>
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         {/* Bolinhas de progresso */}

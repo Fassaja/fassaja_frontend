@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 interface SlidingHighlightProps {
   /**
@@ -38,7 +38,7 @@ export const SlidingHighlight: React.FC<SlidingHighlightProps> = ({
   groupId,
   className = 'bg-surface shadow-sm',
 }) => (
-  <motion.span
+  <m.span
     layoutId={groupId}
     aria-hidden="true"
     transition={{ type: 'spring', stiffness: 400, damping: 32 }}

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { EXEMPLOS_DE_COMANDO } from '@/utils/exemplosDeComando';
 
 /**
@@ -44,7 +44,7 @@ export const DicasDePrompt: React.FC<{
 
   return (
     <div ref={caixaRef} className="relative flex justify-start">
-      <motion.button
+      <m.button
         type="button"
         onClick={() => setAberto(v => !v)}
         onFocus={() => setFocado(true)}
@@ -102,11 +102,11 @@ export const DicasDePrompt: React.FC<{
           />
         </svg>
         dicas de prompt
-      </motion.button>
+      </m.button>
 
       <AnimatePresence>
         {aberto && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
@@ -128,7 +128,7 @@ export const DicasDePrompt: React.FC<{
                 {exemplo}
               </button>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

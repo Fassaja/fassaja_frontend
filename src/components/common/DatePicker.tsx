@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { formatDateChip } from '@/utils/date';
 
@@ -230,7 +230,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         {createPortal(
           <AnimatePresence>
             {open && (
-              <motion.div
+              <m.div
                 ref={painelRef}
                 style={estilo}
                 initial={{ opacity: 0, y: -6, scale: 0.98 }}
@@ -326,7 +326,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                     Hoje
                   </button>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>,
           document.body,

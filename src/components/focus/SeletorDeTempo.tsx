@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Loader2, Minus, Plus, SlidersHorizontal, X } from 'lucide-react';
 import {
   DURACOES_RAPIDAS,
@@ -51,7 +51,7 @@ export const SeletorDeTempo: React.FC<{
 
       <AnimatePresence mode="wait" initial={false}>
         {!livre ? (
-          <motion.div
+          <m.div
             key="atalhos"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -60,14 +60,14 @@ export const SeletorDeTempo: React.FC<{
             className="flex w-full flex-col items-center gap-2"
           >
             <div className="flex w-full gap-2">
-              {DURACOES_RAPIDAS.map((m, i) => (
-                <motion.button
-                  key={m}
+              {DURACOES_RAPIDAS.map((minutos, i) => (
+                <m.button
+                  key={minutos}
                   type="button"
                   disabled={desabilitado}
                   onClick={() => {
-                    setEscolhido(m);
-                    onEscolher(m);
+                    setEscolhido(minutos);
+                    onEscolher(minutos);
                   }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -76,17 +76,17 @@ export const SeletorDeTempo: React.FC<{
                   transition={{ ...SUAVE, delay: i * 0.05 }}
                   whileTap={{ scale: 0.97 }}
                   className={`flex-1 rounded-xl border py-3 text-sm font-bold transition-colors disabled:opacity-50 min-h-[52px] ${
-                    m === sugerida
+                    minutos === sugerida
                       ? 'border-primary-vibrant bg-primary-vibrant text-white hover:bg-primary-hover'
                       : 'border-border bg-surface text-text-secondary hover:border-primary-vibrant/40 hover:text-primary-vibrant'
                   }`}
                 >
-                  {desabilitado && escolhido === m ? (
+                  {desabilitado && escolhido === minutos ? (
                     <Loader2 size={16} className="mx-auto animate-spin" />
                   ) : (
-                    `${m} min`
+                    `${minutos} min`
                   )}
-                </motion.button>
+                </m.button>
               ))}
             </div>
             <button
@@ -96,9 +96,9 @@ export const SeletorDeTempo: React.FC<{
             >
               <SlidersHorizontal size={13} /> Outro tempo
             </button>
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.div
+          <m.div
             key="livre"
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -133,7 +133,7 @@ export const SeletorDeTempo: React.FC<{
               {/* O número troca com uma passada curta: o valor muda, e a
                   transição diz que mudou sem roubar a atenção. */}
               <AnimatePresence mode="popLayout">
-                <motion.span
+                <m.span
                   key={minutos}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -142,7 +142,7 @@ export const SeletorDeTempo: React.FC<{
                   className="min-w-[6rem] text-center text-3xl font-bold tabular-nums text-text-primary"
                 >
                   {rotuloDeDuracao(minutos)}
-                </motion.span>
+                </m.span>
               </AnimatePresence>
 
               <button
@@ -170,7 +170,7 @@ export const SeletorDeTempo: React.FC<{
               <span>1h</span>
             </div>
 
-            <motion.button
+            <m.button
               type="button"
               disabled={desabilitado}
               onClick={() => {
@@ -185,8 +185,8 @@ export const SeletorDeTempo: React.FC<{
               ) : (
                 `Focar por ${rotuloDeDuracao(minutos)}`
               )}
-            </motion.button>
-          </motion.div>
+            </m.button>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

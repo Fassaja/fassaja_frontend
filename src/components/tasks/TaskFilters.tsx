@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
 import { Dropdown } from '@/components/common/Dropdown';
 import { TaskPriority } from '@/types/task';
@@ -209,7 +209,7 @@ export const TaskFilterMenu: React.FC<TaskFilterMenuProps> = ({
       {createPortal(
         <AnimatePresence>
           {open && pos && (
-            <motion.div
+            <m.div
               ref={panelRef}
               role="dialog"
               aria-label="Filtros de tarefas"
@@ -291,7 +291,7 @@ export const TaskFilterMenu: React.FC<TaskFilterMenuProps> = ({
                   <X size={15} /> Limpar filtros
                 </button>
               )}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>,
         document.body,
