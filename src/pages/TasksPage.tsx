@@ -9,6 +9,9 @@ import { TaskSearch, TaskFilterMenu, ActiveFilterChips } from '@/components/task
 import { CreateTaskModal } from '@/components/tasks/CreateTaskModal';
 import { EditTaskModal } from '@/components/tasks/EditTaskModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
+import { PainelDaTarefa, LARGURA_DO_PAINEL } from '@/components/tasks/PainelDaTarefa';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { AnimatePresence } from 'framer-motion';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { TaskListSkeleton } from '@/components/common/Skeletons';
 import { SlidingHighlight } from '@/components/common/SlidingHighlight';
@@ -88,6 +91,14 @@ const TasksPage: React.FC = () => {
     setRascunho({ titulo: texto, status });
     openNewTask();
   };
+
+  // Detalhe como painel lateral a partir do `lg`: ali sobra largura para o
+  // quadro e o painel lado a lado.
+  const painelLateral = useMediaQuery('(min-width: 1024px)');
+  const fecharDetalhe = React.useCallback(() => {
+    setShowDetailModal(false);
+    setSelectedTaskId(undefined);
+  }, []);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -599,8 +610,21 @@ const TasksPage: React.FC = () => {
         initialStatus={rascunho?.status}
       />
 
+      {/* No desktop o detalhe é um painel ao lado do quadro (ver
+          PainelDaTarefa); no celular e no tablet continua sendo o modal. */}
+      <AnimatePresence>
+        {painelLateral && showDetailModal && selectedTask && (
+          <PainelDaTarefa
+            task={selectedTask}
+            project={projects.find(p => p.id === selectedTask.projectId)}
+            onClose={fecharDetalhe}
+            onEditarTudo={handleEditTask}
+          />
+        )}
+      </AnimatePresence>
+
       <TaskDetailModal
-        isOpen={showDetailModal}
+        isOpen={showDetailModal && !painelLateral}
         task={selectedTask}
         project={projects.find(p => p.id === selectedTask?.projectId)}
         onClose={() => {
@@ -644,6 +668,7 @@ const TasksPage: React.FC = () => {
 
       <AppLayout
         onNewTask={openNewTask}
+        espacoDireita={painelLateral && showDetailModal && selectedTask ? LARGURA_DO_PAINEL : 0}
         title={scope === 'team' ? 'Tarefas da equipe' : 'Minhas Tarefas'}
         subtitle={
           scope === 'team'
@@ -969,6 +994,7 @@ const TasksPage: React.FC = () => {
               onClearFilters={limparFiltros}
               onCriarRapido={criarRapido}
               onMaisDetalhes={maisDetalhes}
+              abertaId={painelLateral && showDetailModal ? selectedTaskId : undefined}
             />
           ) : (
             <TaskList
@@ -988,6 +1014,7 @@ const TasksPage: React.FC = () => {
               onClearFilters={limparFiltros}
               onCriarRapido={criarRapido}
               onMaisDetalhes={maisDetalhes}
+              abertaId={painelLateral && showDetailModal ? selectedTaskId : undefined}
             />
           )}
         </div>

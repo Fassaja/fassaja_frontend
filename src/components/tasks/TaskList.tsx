@@ -30,6 +30,8 @@ interface TaskListProps {
   /** Linha "+ Adicionar tarefa" no topo da lista (ver CriacaoRapida). */
   onCriarRapido?: (texto: string, status: TaskStatus) => Promise<boolean>;
   onMaisDetalhes?: (texto: string, status: TaskStatus) => void;
+  /** Tarefa aberta no painel lateral, para marcar o cartão dela. */
+  abertaId?: string;
 }
 
 type GroupKey = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later' | 'nodate' | 'completed';
@@ -77,6 +79,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   onClearFilters,
   onCriarRapido,
   onMaisDetalhes,
+  abertaId,
 }) => {
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -149,6 +152,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                     onClick={onEdit}
                     selectionMode={selectionMode}
                     selected={selectedIds?.has(task.id)}
+                    aberta={task.id === abertaId}
                     onToggleSelect={onToggleSelect}
                   />
                 )}

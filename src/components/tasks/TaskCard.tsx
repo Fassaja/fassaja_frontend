@@ -25,6 +25,8 @@ interface TaskCardProps {
   /** Modo de seleção em massa: o card vira um item selecionável. */
   selectionMode?: boolean;
   selected?: boolean;
+  /** É a tarefa aberta no painel lateral: marca o cartão para orientar. */
+  aberta?: boolean;
   onToggleSelect?: (taskId: string) => void;
 }
 
@@ -110,7 +112,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
         aria-haspopup="menu"
         aria-expanded={open}
         title="Mudar status"
-        className={`inline-flex items-center gap-1 text-[11px] font-semibold pl-2 pr-1 py-0.5 rounded-full transition-all hover:brightness-95 active:scale-95 disabled:opacity-60 ${current.className}`}
+        className={`inline-flex items-center gap-1 whitespace-nowrap text-[11px] font-semibold pl-2 pr-1 py-0.5 rounded-full transition-all hover:brightness-95 active:scale-95 disabled:opacity-60 ${current.className}`}
       >
         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: current.dot }} />
         {current.label}
@@ -180,6 +182,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   onClick,
   selectionMode = false,
   selected = false,
+  aberta = false,
   onToggleSelect,
 }) => {
   const { account } = useAuth();
@@ -220,7 +223,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         onClick={handleClick}
         padding="none"
         className={`relative flex items-start gap-3 overflow-hidden p-3.5 pl-4 group ${
-          selected ? 'ring-2 ring-primary-vibrant border-primary-vibrant' : ''
+          selected
+            ? 'ring-2 ring-primary-vibrant border-primary-vibrant'
+            : aberta
+            ? 'ring-2 ring-primary-vibrant/40 border-primary-vibrant/50'
+            : ''
         }`}
       >
         {/* Prioridade como faixa lateral, e não como mais uma pílula.
@@ -258,7 +265,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         {/* Conteúdo */}
         <div className="flex-1 min-w-0">
           <h4
-            className={`text-sm font-semibold leading-snug truncate ${
+            className={`text-sm font-semibold leading-snug line-clamp-2 break-words ${
               isCompleted ? 'line-through text-text-soft' : 'text-text-primary'
             }`}
           >

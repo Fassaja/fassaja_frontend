@@ -68,6 +68,8 @@ interface TaskBoardProps {
   /** Linha "+ Adicionar tarefa" no topo das colunas (ver CriacaoRapida). */
   onCriarRapido?: (texto: string, status: TaskStatus) => Promise<boolean>;
   onMaisDetalhes?: (texto: string, status: TaskStatus) => void;
+  /** Tarefa aberta no painel lateral, para marcar o cartão dela. */
+  abertaId?: string;
 }
 
 // Zona de soltar = corpo da coluna. Destaca quando há um card por cima.
@@ -195,6 +197,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
   onClearFilters,
   onCriarRapido,
   onMaisDetalhes,
+  abertaId,
 }) => {
   const { updateTask, completeTask } = useTasks();
   const toast = useToast();
@@ -397,6 +400,7 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
                     onClick={onEdit}
                     selectionMode={selectionMode}
                     selected={selectedIds?.has(task.id)}
+                    aberta={task.id === abertaId}
                     onToggleSelect={onToggleSelect}
                   />
                 </DraggableTask>
