@@ -1,7 +1,7 @@
 name: CI
 
-# Integração contínua do front-end: lint, checagem de tipos, build, testes de
-# unidade e auditoria de dependências.
+# Integração contínua do front-end: lint, checagem de tipos, build, orçamento
+# do bundle, testes de unidade, testes de tela e auditoria de dependências.
 on:
   push:
     branches: [main]
@@ -56,11 +56,28 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Orçamento do arquivo principal (o JS que toda visita baixa antes da
+      # primeira tela). Falha se crescer além do teto em
+      # scripts/orcamento-bundle.mjs — subir o teto é decisão consciente.
+      - name: Orçamento do bundle
+        run: npm run orcamento
+
       # Suítes puras (datas, recorrência, streak, permissões de equipe, política
       # de URL, identidade de sessão…), rodadas pelo próprio Node via
       # --experimental-strip-types.
       - name: Unit tests
         run: npm test
+
+      # Testes de tela contra o build de produção (vite preview), com a API
+      # simulada: toda tela abre sem erro, os fluxos principais (criar,
+      # desfazer, painel, abas do celular) e o orçamento de elementos da tela
+      # de Tarefas no celular. Só o Chromium, e só com as dependências de
+      # sistema dele.
+      - name: Instalar navegador dos testes de tela
+        run: npx playwright install --with-deps chromium
+
+      - name: Testes de tela (e2e)
+        run: npm run e2e
 
       # Gate de dependências. Só o que chega ao NAVEGADOR (--omit=dev) e só a
       # partir de "high": ferramenta de build vulnerável é problema de CI, não

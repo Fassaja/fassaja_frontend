@@ -122,6 +122,22 @@ export const Topbar: React.FC<TopbarProps> = ({
     }
   });
 
+  // Adianta o arquivo da busca assim que o navegador fica ocioso. Sem isto,
+  // o primeiro Ctrl+K da visita ainda baixava o arquivo, e o que se digitava
+  // nesse meio-tempo se perdia. É pequeno (~2,5 KB gzip) e sai do caminho da
+  // primeira tela, que é o que importa.
+  useEffect(() => {
+    const adiantar = () => void importarBusca();
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(adiantar, { timeout: 5000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    // `globalThis`: depois do `in window` acima, o TypeScript estreita
+    // `window` para `never` neste ramo.
+    const id = globalThis.setTimeout(adiantar, 3000);
+    return () => globalThis.clearTimeout(id);
+  }, []);
+
   // O menu da conta também abre a lista (para quem não sabe do `?`).
   useEffect(() => {
     const abrir = () => setShowAtalhos(true);
