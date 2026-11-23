@@ -4,13 +4,11 @@ import { HeadlineInput, NoteField } from '@/components/common/HeadlineInput';
 import { Button } from '@/components/common/Button';
 import { Kbd } from '@/components/common/Kbd';
 import { Toggle } from '@/components/common/Toggle';
-import { ListaDeOpcoes, Propriedade, type OpcaoDaLista } from '@/components/common/Propriedade';
-import { CircleDashed, Flag, FolderOpen, Hash, UserRound } from 'lucide-react';
+import { LinhaDePropriedades } from './LinhaDePropriedades';
 import { ehMac, plataformaAtual } from '@/utils/atalhos';
+import { useCtrlEnter } from '@/hooks/useCtrlEnter';
 import { AssigneeSelector } from './AssigneeSelector';
 import { DelegarSemProjeto } from './DelegarSemProjeto';
-import { DatePicker } from '@/components/common/DatePicker';
-import { TagSelector } from './TagSelector';
 import { Task, TaskPriority, TaskStatus } from '@/types/task';
 import { TeamMember } from '@/types/team';
 import { useProjects } from '@/hooks/useProjects';
@@ -40,18 +38,6 @@ interface CreateTaskModalProps {
    */
   initialTitle?: string;
 }
-
-const priorityOptions: OpcaoDaLista[] = [
-  { valor: 'low', rotulo: 'Baixa', cor: '#22C55E' },
-  { valor: 'medium', rotulo: 'Média', cor: '#FBBF24' },
-  { valor: 'high', rotulo: 'Alta', cor: '#8B5CF6' },
-];
-
-const statusOptions: OpcaoDaLista[] = [
-  { valor: 'pending', rotulo: 'Pendente', cor: '#64748B' },
-  { valor: 'in_progress', rotulo: 'Em progresso', cor: '#2477FF' },
-  { valor: 'completed', rotulo: 'Concluída', cor: '#22C55E' },
-];
 
 const CHAVE_CRIAR_OUTRA = 'fassaja_criar_outra';
 function lerCriarOutra(): boolean {
@@ -144,11 +130,6 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     () => interpretar(formData.title, new Date(), { tagsConhecidas: tags.map(t => t.name) }),
     [formData.title, tags],
   );
-
-  const projectOptions: OpcaoDaLista[] = [
-    { valor: '', rotulo: 'Sem projeto' },
-    ...projects.map(p => ({ valor: p.id, rotulo: p.name, cor: p.color })),
-  ];
 
   // O valor que vale agora, já aplicada a regra "o último a mexer vence".
   const prazoEfetivo = prazoManual ? formData.dueDate : interpretado.dueDate ?? formData.dueDate;
@@ -248,27 +229,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     }
   };
 
-  // Ctrl/⌘+Enter cria de qualquer campo — inclusive da descrição, onde o
-  // Enter sozinho quebra linha.
+  // Ctrl/⌘+Enter cria de qualquer campo (ver useCtrlEnter).
   const formRef = React.useRef<HTMLFormElement>(null);
-  useEffect(() => {
-    if (!isOpen) return;
-    const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key !== 'Enter' || !(e.metaKey || e.ctrlKey)) return;
-      const form = formRef.current;
-      if (!form || !form.contains(document.activeElement)) return;
-      e.preventDefault();
-      form.requestSubmit();
-    };
-    window.addEventListener('keydown', aoTeclar);
-    return () => window.removeEventListener('keydown', aoTeclar);
-  }, [isOpen]);
+  useCtrlEnter(formRef, isOpen);
 
   const atalhoCriar = ehMac(plataformaAtual()) ? '⌘ ↵' : 'Ctrl ↵';
-  const prioridade = priorityOptions.find(o => o.valor === prioridadeEfetiva);
-  const status = statusOptions.find(o => o.valor === formData.status);
-  const projeto = projectOptions.find(o => o.valor === formData.projectId);
-  const nomesDasTags = tagIds.map(id => tags.find(t => t.id === id)?.name).filter(Boolean);
   const podeAtribuir = !isGuest && !(teamProject && blockedByPermission);
 
   const rodape = (
@@ -385,127 +350,34 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           No celular a linha rola de lado em vez de quebrar: a folha fica baixa
           e colada ao teclado, com o campo de título sempre à vista.
         */}
-        <div
-          role="group"
-          aria-label="Propriedades da tarefa"
-          className="-mx-5 flex gap-1.5 overflow-x-auto px-5 pb-1 pt-3 border-t border-border sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-        >
-          {teamProject && (
-            <DatePicker
-              value={formData.startDate}
-              onChange={v => set('startDate', v)}
-              placeholder="Início"
-              disabled={loading}
-              size="sm"
-            />
-          )}
-          <DatePicker
-            value={prazoEfetivo}
-            onChange={v => {
-              set('dueDate', v);
-              setPrazoManual(true);
-            }}
-            placeholder="Prazo"
-            disabled={loading}
-            size="sm"
-            destaque={!prazoManual && !!interpretado.dueDate}
-          />
-
-          <Propriedade
-            icone={<Flag size={14} style={{ color: prioridade?.cor }} />}
-            rotulo={prioridade?.rotulo ?? 'Prioridade'}
-            preenchida
-            destaque={!prioridadeManual && !!interpretado.priority}
-            nomeAcessivel={`Prioridade: ${prioridade?.rotulo ?? 'média'}`}
-            disabled={loading}
-            largura={180}
-          >
-            {fechar => (
-              <ListaDeOpcoes
-                opcoes={priorityOptions}
-                valor={prioridadeEfetiva}
-                onEscolher={v => {
-                  set('priority', v as TaskPriority);
-                  setPrioridadeManual(true);
-                  fechar();
-                }}
-              />
-            )}
-          </Propriedade>
-
-          <Propriedade
-            icone={<FolderOpen size={14} style={projeto?.cor ? { color: projeto.cor } : undefined} />}
-            rotulo={formData.projectId ? projeto?.rotulo ?? 'Projeto' : 'Projeto'}
-            preenchida={!!formData.projectId}
-            nomeAcessivel={`Projeto: ${formData.projectId ? projeto?.rotulo : 'nenhum'}`}
-            disabled={loading}
-            largura={240}
-          >
-            {fechar => (
-              <ListaDeOpcoes
-                opcoes={projectOptions}
-                valor={formData.projectId}
-                onEscolher={v => {
-                  set('projectId', v);
-                  fechar();
-                }}
-              />
-            )}
-          </Propriedade>
-
-          <Propriedade
-            icone={<CircleDashed size={14} style={{ color: status?.cor }} />}
-            rotulo={status?.rotulo ?? 'Pendente'}
-            preenchida={formData.status !== 'pending'}
-            nomeAcessivel={`Começar como: ${status?.rotulo ?? 'pendente'}`}
-            disabled={loading}
-            largura={190}
-          >
-            {fechar => (
-              <ListaDeOpcoes
-                opcoes={statusOptions}
-                valor={formData.status}
-                onEscolher={v => {
-                  set('status', v as TaskStatus);
-                  fechar();
-                }}
-              />
-            )}
-          </Propriedade>
-
-          {!isGuest && (
-            <Propriedade
-              icone={<Hash size={14} />}
-              rotulo={nomesDasTags.length ? nomesDasTags.slice(0, 2).join(', ') + (nomesDasTags.length > 2 ? ` +${nomesDasTags.length - 2}` : '') : 'Tags'}
-              preenchida={tagIds.length > 0}
-              nomeAcessivel={`Tags: ${nomesDasTags.length ? nomesDasTags.join(', ') : 'nenhuma'}`}
-              disabled={loading}
-              largura={300}
-            >
-              {() => (
-                <div className="p-1.5">
-                  <TagSelector value={tagIds} onChange={setTagIds} disabled={loading} />
-                </div>
-              )}
-            </Propriedade>
-          )}
-
-          {podeAtribuir && (
-            <Propriedade
-              icone={<UserRound size={14} />}
-              rotulo={
-                assigneeIds.length
-                  ? `${assigneeIds.length} ${assigneeIds.length === 1 ? 'responsável' : 'responsáveis'}`
-                  : 'Responsável'
-              }
-              preenchida={assigneeIds.length > 0}
-              nomeAcessivel={`Responsáveis: ${assigneeIds.length || 'nenhum'}`}
-              disabled={loading}
-              largura={300}
-            >
-              {() => (
-                <div className="p-2">
-                  {teamProject ? (
+        <LinhaDePropriedades
+          disabled={loading}
+          inicio={
+            teamProject ? { valor: formData.startDate, onMudar: v => set('startDate', v) } : undefined
+          }
+          prazo={prazoEfetivo}
+          onPrazo={v => {
+            set('dueDate', v);
+            setPrazoManual(true);
+          }}
+          prazoDestaque={!prazoManual && !!interpretado.dueDate}
+          prioridade={prioridadeEfetiva}
+          onPrioridade={v => {
+            set('priority', v);
+            setPrioridadeManual(true);
+          }}
+          prioridadeDestaque={!prioridadeManual && !!interpretado.priority}
+          projetoId={formData.projectId}
+          onProjeto={v => set('projectId', v)}
+          status={formData.status}
+          onStatus={v => set('status', v)}
+          rotuloDoStatus="Começar como"
+          tags={isGuest ? undefined : { ids: tagIds, onMudar: setTagIds }}
+          responsaveis={
+            podeAtribuir
+              ? {
+                  quantidade: assigneeIds.length,
+                  painel: teamProject ? (
                     <AssigneeSelector
                       members={members}
                       value={assigneeIds}
@@ -521,12 +393,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                       onAssigneesChange={setAssigneeIds}
                       disabled={loading}
                     />
-                  )}
-                </div>
-              )}
-            </Propriedade>
-          )}
-        </div>
+                  ),
+                }
+              : undefined
+          }
+        />
 
         {blockedByPermission && (
           <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl px-3 py-2">
