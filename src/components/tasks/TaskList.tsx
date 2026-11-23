@@ -8,6 +8,7 @@ import { isToday, isTomorrow } from '@/utils/date';
 import { combinaComProjeto } from '@/utils/taskFilters';
 import { TasksVazio } from './TasksVazio';
 import { mola } from '@/components/motion/tokens';
+import { CriacaoRapida } from './CriacaoRapida';
 
 interface TaskListProps {
   tasks: Task[];
@@ -26,6 +27,9 @@ interface TaskListProps {
   onNewTask?: () => void;
   /** Vazio POR FILTRO: há tarefas, mas o recorte atual esconde todas. */
   onClearFilters?: () => void;
+  /** Linha "+ Adicionar tarefa" no topo da lista (ver CriacaoRapida). */
+  onCriarRapido?: (texto: string, status: TaskStatus) => Promise<boolean>;
+  onMaisDetalhes?: (texto: string, status: TaskStatus) => void;
 }
 
 type GroupKey = 'overdue' | 'today' | 'tomorrow' | 'week' | 'later' | 'nodate' | 'completed';
@@ -71,6 +75,8 @@ export const TaskList: React.FC<TaskListProps> = ({
   onToggleSelect,
   onNewTask,
   onClearFilters,
+  onCriarRapido,
+  onMaisDetalhes,
 }) => {
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -103,6 +109,9 @@ export const TaskList: React.FC<TaskListProps> = ({
 
   return (
     <div className="space-y-7">
+      {onCriarRapido && onMaisDetalhes && !selectionMode && (
+        <CriacaoRapida status="pending" onCriar={onCriarRapido} onMaisDetalhes={onMaisDetalhes} />
+      )}
       {/* A seção também anima: ao concluir a última tarefa de um grupo, o
           cabeçalho sumia de golpe enquanto o card ainda saía animando. */}
       <AnimatePresence mode="popLayout" initial={false}>

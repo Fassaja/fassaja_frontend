@@ -16,6 +16,7 @@ import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { useTasks } from '@/hooks/useTasks';
 import { useProjects } from '@/hooks/useProjects';
 import { useTags } from '@/contexts/TagsContext';
+import { tarefaDoTexto } from '@/utils/criacaoRapida';
 import { useDeferredLoading } from '@/hooks/useDeferredLoading';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -60,6 +61,34 @@ const TasksPage: React.FC = () => {
     }
     setShowCreateModal(true);
   };
+  /*
+   * Criação na própria coluna (CriacaoRapida). O "Mais detalhes" guarda aqui
+   * o que já foi escrito e o status da coluna, e o formulário abre com eles.
+   */
+  const [rascunho, setRascunho] = useState<{ titulo: string; status: TaskStatus } | null>(null);
+  const criarRapido = async (texto: string, status: TaskStatus) => {
+    const dados = tarefaDoTexto(texto, tags, status);
+    if (!dados) {
+      toast.info('Faltou dizer o que precisa ser feito, além da data e da prioridade.');
+      return false;
+    }
+    if (isGuest && guestTaskCount >= guestTaskLimit) {
+      requireAuth(`Visitantes podem criar até ${guestTaskLimit} tarefas por dia. Entre para criar mais.`);
+      return false;
+    }
+    try {
+      await handleCreateTask(dados);
+      return true;
+    } catch (err) {
+      toast.error((err as Error).message || 'Não foi possível criar a tarefa. Tente novamente.');
+      return false;
+    }
+  };
+  const maisDetalhes = (texto: string, status: TaskStatus) => {
+    setRascunho({ titulo: texto, status });
+    openNewTask();
+  };
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   /**
@@ -561,8 +590,13 @@ const TasksPage: React.FC = () => {
     <>
       <CreateTaskModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false);
+          setRascunho(null);
+        }}
         onCreateTask={handleCreateTask}
+        initialTitle={rascunho?.titulo}
+        initialStatus={rascunho?.status}
       />
 
       <TaskDetailModal
@@ -933,6 +967,8 @@ const TasksPage: React.FC = () => {
               onToggleSelect={toggleSelect}
               onNewTask={openNewTask}
               onClearFilters={limparFiltros}
+              onCriarRapido={criarRapido}
+              onMaisDetalhes={maisDetalhes}
             />
           ) : (
             <TaskList
@@ -950,6 +986,8 @@ const TasksPage: React.FC = () => {
               onToggleSelect={toggleSelect}
               onNewTask={openNewTask}
               onClearFilters={limparFiltros}
+              onCriarRapido={criarRapido}
+              onMaisDetalhes={maisDetalhes}
             />
           )}
         </div>

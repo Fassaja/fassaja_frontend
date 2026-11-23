@@ -4,6 +4,8 @@ import { m, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { transicao } from '@/components/motion/tokens';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useAlturaDoTeclado } from '@/hooks/useAlturaDoTeclado';
 
 interface ModalProps {
   isOpen: boolean;
@@ -11,6 +13,14 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  /**
+   * `folha`: no celular, o painel sobe de baixo, ocupa a largura e fica colado
+   * ao teclado (ver useAlturaDoTeclado) — onde o polegar e o campo de texto
+   * estão. Do `sm` para cima continua sendo o modal centralizado.
+   */
+  variante?: 'centro' | 'folha';
+  /** Rodapé fixo (botões), fora da área que rola. */
+  rodape?: React.ReactNode;
 }
 
 const sizeClasses = {
@@ -53,8 +63,13 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   children,
   size = 'md',
+  variante = 'centro',
+  rodape,
 }) => {
   useBodyScrollLock(isOpen);
+  const folha = variante === 'folha';
+  const celular = useMediaQuery('(max-width: 639px)');
+  const teclado = useAlturaDoTeclado(isOpen && folha && celular);
 
   const painelRef = React.useRef<HTMLDivElement>(null);
   const tituloId = React.useId();
@@ -97,7 +112,13 @@ export const Modal: React.FC<ModalProps> = ({
 
     // Foco inicial no painel, e não no primeiro campo: o leitor de tela começa
     // pelo título do diálogo, que é o que diz onde a pessoa acabou de entrar.
-    const t = window.setTimeout(() => painelRef.current?.focus(), 0);
+    // Exceção: se um campo de dentro já pegou o foco sozinho (`autoFocus`, como
+    // o título da nova tarefa), ele fica — tirar o foco dali fazia o que a
+    // pessoa já começou a digitar ir para lugar nenhum.
+    const t = window.setTimeout(() => {
+      const painel = painelRef.current;
+      if (painel && !painel.contains(document.activeElement)) painel.focus();
+    }, 0);
 
     const onKey = (e: KeyboardEvent) => {
       // Só o modal do topo responde.
@@ -171,7 +192,11 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: transicao.saida }}
             transition={transicao.media}
-            className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+            className={`fixed inset-0 z-[70] flex justify-center ${
+              folha ? 'items-end p-0 sm:items-center sm:p-4' : 'items-center p-4'
+            }`}
+            // Com o teclado aberto, a folha sobe junto e fica colada nele.
+            style={folha && teclado ? { paddingBottom: teclado } : undefined}
             onClick={onClose}
           >
             {/* max-h no PAINEL + corpo rolável, em vez de altura fixa calculada
@@ -185,15 +210,31 @@ export const Modal: React.FC<ModalProps> = ({
               aria-modal="true"
               aria-labelledby={tituloId}
               tabIndex={-1}
-              initial={{ scale: 0.96, y: 12 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.97, y: 8, transition: transicao.saida }}
+              initial={folha && celular ? { y: 48 } : { scale: 0.96, y: 12 }}
+              animate={folha && celular ? { y: 0 } : { scale: 1, y: 0 }}
+              exit={
+                folha && celular
+                  ? { y: 48, transition: transicao.saida }
+                  : { scale: 0.97, y: 8, transition: transicao.saida }
+              }
               transition={transicao.media}
-              className={`bg-surface rounded-2xl shadow-lg ${sizeClasses[size]} w-full max-h-[90dvh] flex flex-col focus:outline-none`}
+              className={`bg-surface shadow-lg ${sizeClasses[size]} w-full flex flex-col focus:outline-none ${
+                folha
+                  ? 'rounded-t-2xl sm:rounded-2xl max-h-[92dvh] sm:max-h-[90dvh] pb-[env(safe-area-inset-bottom)] sm:pb-0'
+                  : 'rounded-2xl max-h-[90dvh]'
+              }`}
               onClick={e => e.stopPropagation()}
             >
+              {/* Alça da folha: diz "isto é um painel que subiu", como nos apps. */}
+              {folha && (
+                <span aria-hidden="true" className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-border sm:hidden" />
+              )}
               {/* Header */}
-              <div className="flex shrink-0 items-center justify-between p-6 border-b border-border">
+              <div
+                className={`flex shrink-0 items-center justify-between border-b border-border ${
+                  folha ? 'px-5 py-3 sm:p-6' : 'p-6'
+                }`}
+              >
                 <h2 id={tituloId} className="text-xl font-bold text-text-primary">
                   {title}
                 </h2>
@@ -209,9 +250,14 @@ export const Modal: React.FC<ModalProps> = ({
               </div>
 
               {/* Content — ocupa o que sobrar do painel e rola sozinho. */}
-              <div className="min-h-0 flex-1 overflow-y-auto p-6">
+              <div className={`min-h-0 flex-1 overflow-y-auto ${folha ? 'p-5 sm:p-6' : 'p-6'}`}>
                 {children}
               </div>
+              {rodape && (
+                <div className={`shrink-0 border-t border-border ${folha ? 'px-5 py-3 sm:px-6' : 'px-6 py-3'}`}>
+                  {rodape}
+                </div>
+              )}
             </m.div>
           </m.div>
         </>

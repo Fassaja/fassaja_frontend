@@ -36,6 +36,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useFocus } from '@/contexts/FocusContext';
 import { useToast } from '@/contexts/ToastContext';
 import { interpretar } from '@/utils/quickParse';
+import { tarefaDoTexto } from '@/utils/criacaoRapida';
 import { type Comando, filtrarComandos, pedidoDeCriacao } from '@/utils/comandos';
 import { ABRIR_ATALHOS_EVENT } from '@/utils/atalhos';
 
@@ -163,20 +164,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onNov
       requireAuth(`Visitantes podem criar até ${guestTaskLimit} tarefas por dia. Entre para criar mais.`);
       return;
     }
-    const lido = interpretar(texto, new Date(), { tagsConhecidas: tags.map(t => t.name) });
-    if (!lido.title.trim()) return;
+    const dados = tarefaDoTexto(texto, tags);
+    if (!dados) return;
     onClose();
     try {
-      const tagIds = lido.tags
-        .map(nome => tags.find(t => t.name === nome)?.id)
-        .filter((id): id is string => !!id);
-      const nova = await createTask({
-        title: lido.title,
-        priority: lido.priority ?? 'medium',
-        status: 'pending',
-        dueDate: lido.dueDate,
-        tagIds: tagIds.length ? tagIds : undefined,
-      });
+      const nova = await createTask(dados);
       toast.comAcao('Tarefa criada.', {
         rotulo: 'Abrir',
         onClick: () => navigate(`/tasks?task=${nova.id}`),

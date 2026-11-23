@@ -178,6 +178,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
       {open && (matches.length > 0 || canCreate) && createPortal(
         <div
           ref={listaRef}
+          data-popup
           style={estilo}
           className="rounded-xl border border-border bg-surface shadow-xl max-h-56 overflow-y-auto py-1"
         >

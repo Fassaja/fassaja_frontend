@@ -12,7 +12,8 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { Task, TaskPriority } from '@/types/task';
+import { Task, TaskPriority, TaskStatus } from '@/types/task';
+import { CriacaoRapida } from './CriacaoRapida';
 import { Project } from '@/types/project';
 import { TaskCard } from './TaskCard';
 import { TasksVazio } from './TasksVazio';
@@ -64,6 +65,9 @@ interface TaskBoardProps {
   onNewTask?: () => void;
   /** Vazio POR FILTRO: há tarefas, mas o recorte atual esconde todas. */
   onClearFilters?: () => void;
+  /** Linha "+ Adicionar tarefa" no topo das colunas (ver CriacaoRapida). */
+  onCriarRapido?: (texto: string, status: TaskStatus) => Promise<boolean>;
+  onMaisDetalhes?: (texto: string, status: TaskStatus) => void;
 }
 
 // Zona de soltar = corpo da coluna. Destaca quando há um card por cima.
@@ -189,6 +193,8 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
   onToggleSelect,
   onNewTask,
   onClearFilters,
+  onCriarRapido,
+  onMaisDetalhes,
 }) => {
   const { updateTask, completeTask } = useTasks();
   const toast = useToast();
@@ -375,6 +381,11 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
       <Stagger gap={80} className="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[calc(100vh-12rem)]">
         {(celular ? columns.filter(c => c.key === aba) : columns).map(col => (
           <BoardColumn key={col.key} col={col} count={col.items.length} emAba={celular}>
+            {/* Criar direto na coluna — menos em "Concluída": anotar algo que
+                já nasce feito é raro, e a linha ali só ocuparia espaço. */}
+            {onCriarRapido && onMaisDetalhes && col.key !== 'completed' && !selectionMode && (
+              <CriacaoRapida status={col.key} onCriar={onCriarRapido} onMaisDetalhes={onMaisDetalhes} />
+            )}
             {col.items.length > 0 ? (
               (celular ? col.items.slice(0, limite) : col.items).map(task => (
                 <DraggableTask key={task.id} id={task.id} disabled={selectionMode}>

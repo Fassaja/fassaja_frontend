@@ -115,7 +115,15 @@ export const BobAssistant: React.FC = () => {
    * referência guardada na abertura aponta para um nó órfão e focá-la não faz
    * nada — o foco cairia no <body>.
    */
+  // Só devolve o foco ao lançador depois de o painel ter sido ABERTO. Sem
+  // isto, o efeito rodava também na montagem e o lançador roubava o foco
+  // ~200ms depois de toda página carregar — o que a pessoa digitava em
+  // seguida (num formulário que abriu sozinho, por exemplo) ia para o botão
+  // do Bob, e um espaço chegava a abri-lo.
+  const jaAbriu = useRef(false);
   useEffect(() => {
+    if (open) jaAbriu.current = true;
+    else if (!jaAbriu.current) return;
     // Espera o framer-motion montar (entrada ~180ms, saída ~120ms) antes de
     // mover o foco; focar um nó ainda não montado é um no-op silencioso.
     const id = window.setTimeout(
