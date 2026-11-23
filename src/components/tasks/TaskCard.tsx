@@ -208,12 +208,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.18 }}
-    >
+    // Entrada em CSS, não framer-motion: o cartão aparece às dezenas (o quadro
+    // monta todos de uma vez), e cada `motion.div` era uma animação em
+    // JavaScript a mais no mesmo quadro — no celular, boa parte da travada ao
+    // abrir Tarefas. A saída nunca dependeu daqui: quem anima a remoção é a
+    // lista em volta (AnimatedList).
+    <div className="animate-card-in">
       <Card
         hoverable
         onClick={handleClick}
@@ -424,6 +424,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         )}
       </Card>
-    </motion.div>
+    </div>
   );
 };
