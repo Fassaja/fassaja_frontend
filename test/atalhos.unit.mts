@@ -5,7 +5,7 @@
  * não funciona — e é o tipo de erro que ninguém percebe testando só no Mac.
  * Rodar: npm test
  */
-import { ehMac, partesDoAtalho, rotuloAtalho } from '../src/utils/atalhos.ts';
+import { ehMac, partesDoAtalho, rotuloAtalho, resolverAtalho, DESTINOS_DO_G } from '../src/utils/atalhos.ts';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {
@@ -39,6 +39,33 @@ check('userAgent do Mac vira Mac',
 check('partes no Mac', partesDoAtalho('k', 'MacIntel').join('|') === '⌘|K');
 check('partes no Windows', partesDoAtalho('k', 'Win32').join('|') === 'Ctrl|K');
 check('sempre dois chips', partesDoAtalho('k', 'Linux').length === 2);
+
+// --- Atalhos de uma tecla ---------------------------------------------------
+const tecla = (key: string, mod: Partial<{ ctrlKey: boolean; metaKey: boolean; altKey: boolean }> = {}) =>
+  ({ key, ctrlKey: false, metaKey: false, altKey: false, ...mod });
+
+check('N cria tarefa', resolverAtalho(tecla('n'), false).acao?.tipo === 'nova-tarefa');
+check('N maiúsculo (Caps Lock) também', resolverAtalho(tecla('N'), false).acao?.tipo === 'nova-tarefa');
+check('/ abre a busca', resolverAtalho(tecla('/'), false).acao?.tipo === 'buscar');
+check('? abre a lista de atalhos', resolverAtalho(tecla('?'), false).acao?.tipo === 'ajuda');
+check('Ctrl+N fica com o navegador', resolverAtalho(tecla('n', { ctrlKey: true }), false).acao === null);
+check('⌘N fica com o navegador', resolverAtalho(tecla('n', { metaKey: true }), false).acao === null);
+check('Alt+N fica com o sistema', resolverAtalho(tecla('n', { altKey: true }), false).acao === null);
+check('letra sem atalho não faz nada', resolverAtalho(tecla('z'), false).acao === null);
+
+const g = resolverAtalho(tecla('g'), false);
+check('G sozinho só espera a próxima', g.acao === null && g.gPendente);
+const gt = resolverAtalho(tecla('t'), true);
+check('G depois T vai para Tarefas', gt.acao?.tipo === 'ir' && gt.acao.rota === '/tasks' && !gt.gPendente);
+check('G depois D vai para o Dashboard', (resolverAtalho(tecla('d'), true).acao as { rota?: string })?.rota === '/');
+const gz = resolverAtalho(tecla('z'), true);
+check('G depois letra sem destino cancela', gz.acao === null && !gz.gPendente);
+check('G depois N não cria tarefa (a sequência consome a tecla)', resolverAtalho(tecla('n'), true).acao === null);
+check('Ctrl no meio da sequência cancela', !resolverAtalho(tecla('t', { ctrlKey: true }), true).gPendente);
+check('cada destino do G tem uma letra própria',
+  new Set(DESTINOS_DO_G.map(d => d.tecla)).size === DESTINOS_DO_G.length);
+check('nenhum destino do G usa letra de outro atalho',
+  !DESTINOS_DO_G.some(d => ['g', 'n', '/', '?'].includes(d.tecla)));
 
 console.log(`\n${passed} ok, ${failed} falha(s)\n`);
 if (failed > 0) process.exit(1);

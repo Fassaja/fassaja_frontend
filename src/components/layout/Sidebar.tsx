@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   LogOut,
   Mail,
+  Keyboard,
   MessageCircle,
   MessageSquareHeart,
   Lock,
@@ -31,6 +32,7 @@ import { NotificationsHelp } from './NotificationsHelp';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { useMontadoAoAbrir } from '@/hooks/useMontadoAoAbrir';
+import { ABRIR_ATALHOS_EVENT } from '@/utils/atalhos';
 
 // O formulário de feedback é aberto por pouca gente e poucas vezes: vem sob
 // demanda, no primeiro clique.
@@ -409,6 +411,18 @@ export const Sidebar: React.FC = () => {
                     >
                       <Settings size={18} className="text-text-secondary" />
                       Configurações
+                    </button>
+                    {/* Só no desktop: atalho de teclado não existe no celular. */}
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        window.dispatchEvent(new Event(ABRIR_ATALHOS_EVENT));
+                      }}
+                      className="hidden lg:flex w-full items-center gap-3 px-4 py-2.5 text-sm text-text-primary hover:bg-bg-secondary transition-colors"
+                    >
+                      <Keyboard size={18} className="text-text-secondary" />
+                      Atalhos de teclado
+                      <kbd className="ml-auto text-xs text-text-soft">?</kbd>
                     </button>
                     <button
                       onClick={() => {

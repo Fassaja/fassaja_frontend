@@ -319,9 +319,13 @@ export const TaskBoard: React.FC<TaskBoardProps> = ({
     const label = COLUMNS.find(c => c.key === overId)?.label ?? '';
     try {
       // Concluir passa pelo completeTask (completedAt + comemoração).
+      // Concluir já mostra "Tarefa concluída · Desfazer"; um segundo aviso
+      // ("Movida para Concluída") só empilharia o mesmo recado.
       if (overId === 'completed') await completeTask(id);
-      else await updateTask(id, { status: overId });
-      toast.success(`Movida para ${label}`);
+      else {
+        await updateTask(id, { status: overId });
+        toast.success(`Movida para ${label}`);
+      }
     } catch {
       toast.error('Não foi possível mover a tarefa. Tente novamente.');
     }

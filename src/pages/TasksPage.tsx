@@ -45,7 +45,7 @@ import { useWorkspaces } from '@/hooks/useWorkspaces';
 import { teamsService } from '@/services/teamsService';
 
 const TasksPage: React.FC = () => {
-  const { tasks: allTasks, createTask, updateTask, completeTask, deleteTask, loading } = useTasks();
+  const { tasks: allTasks, createTask, updateTask, completeTask, excluirComDesfazer, loading } = useTasks();
   const { projects } = useProjects();
   const { tags } = useTags();
   const showSkeleton = useDeferredLoading(loading);
@@ -71,22 +71,13 @@ const TasksPage: React.FC = () => {
    * viva, qualquer mudança na tarefa chega ao modal sozinha.
    */
   const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>();
-  const [deletingTask, setDeletingTask] = useState<Task | undefined>();
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const confirmDeleteTask = async () => {
-    if (!deletingTask) return;
-    try {
-      setIsDeleting(true);
-      await deleteTask(deletingTask.id);
-      toast.success('Tarefa excluída.');
-      setDeletingTask(undefined);
-    } catch {
-      toast.error('Não foi possível excluir a tarefa. Tente novamente.');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  /*
+   * Excluir uma tarefa não pede mais confirmação: ela some na hora e o aviso
+   * oferece "Desfazer" (TasksContext.excluirComDesfazer). A confirmação
+   * protegia do clique errado, e o "Desfazer" protege igual sem cobrar um
+   * clique a mais de quem exclui de propósito — que é quase sempre.
+   */
+  const excluirTarefa = (taskId: string) => excluirComDesfazer([taskId]);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, setView] = useState<'board' | 'list'>('board');
@@ -160,6 +151,18 @@ const TasksPage: React.FC = () => {
    * Espera as tarefas carregarem e roda uma vez: sem a trava, fechar o modal
    * o reabriria no render seguinte, e não haveria como sair dele.
    */
+  // `?nova=1`: o atalho N, apertado fora de Tarefas, chega aqui pedindo a
+  // criação. Abre uma vez e tira o parâmetro, para voltar/recarregar não
+  // reabrir o modal.
+  useEffect(() => {
+    if (searchParams.get('nova') !== '1') return;
+    openNewTask();
+    const proximos = new URLSearchParams(searchParams);
+    proximos.delete('nova');
+    setSearchParams(proximos, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reage só ao parâmetro
+  }, [searchParams]);
+
   const tarefaDaUrl = searchParams.get('task');
   const tarefaJaAberta = useRef(false);
   useEffect(() => {
@@ -321,7 +324,6 @@ const TasksPage: React.FC = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBulkDelete, setShowBulkDelete] = useState(false);
-  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   /**
    * Recorte vindo do link: uma equipe (`?team=`) e/ou uma pessoa
@@ -456,23 +458,14 @@ const TasksPage: React.FC = () => {
     exitSelection();
   };
 
-  const confirmBulkDelete = async () => {
+  // Em lote continua pedindo confirmação (são várias de uma vez), e também
+  // ganha o "Desfazer" no aviso.
+  const confirmBulkDelete = () => {
     const ids = [...selectedIds];
     if (ids.length === 0) return;
-    try {
-      setIsBulkDeleting(true);
-      const results = await Promise.allSettled(ids.map(id => deleteTask(id)));
-      const failed = results.filter(r => r.status === 'rejected').length;
-      if (failed === 0) {
-        toast.success(ids.length === 1 ? 'Tarefa excluída.' : `${ids.length} tarefas excluídas.`);
-      } else {
-        toast.error(`Não foi possível excluir ${failed} ${failed === 1 ? 'tarefa' : 'tarefas'}.`);
-      }
-      setShowBulkDelete(false);
-      exitSelection();
-    } finally {
-      setIsBulkDeleting(false);
-    }
+    excluirComDesfazer(ids);
+    setShowBulkDelete(false);
+    exitSelection();
   };
 
   const handleOpenTask = (task: Task) => {
@@ -598,24 +591,6 @@ const TasksPage: React.FC = () => {
       />
 
       <ConfirmDialog
-        isOpen={!!deletingTask}
-        mascotState="investigate"
-        tone="danger"
-        title="Excluir esta tarefa?"
-        message={deletingTask ? `"${deletingTask.title}"` : ''}
-        hint={
-          <>
-            <strong className="text-text-primary">Atenção:</strong> esta tarefa será removida
-            permanentemente. Esta ação não pode ser desfeita.
-          </>
-        }
-        confirmLabel="Excluir tarefa"
-        cancelLabel="Cancelar"
-        onConfirm={confirmDeleteTask}
-        onClose={() => !isDeleting && setDeletingTask(undefined)}
-      />
-
-      <ConfirmDialog
         isOpen={showBulkDelete}
         mascotState="investigate"
         tone="danger"
@@ -623,14 +598,14 @@ const TasksPage: React.FC = () => {
         message="As tarefas selecionadas serão removidas."
         hint={
           <>
-            <strong className="text-text-primary">Atenção:</strong> esta ação remove todas as
-            tarefas selecionadas de uma vez e não pode ser desfeita.
+            Dá para desfazer pelo aviso que aparece logo depois, enquanto ele estiver na
+            tela.
           </>
         }
         confirmLabel={`Excluir ${selectedIds.size} ${selectedIds.size === 1 ? 'tarefa' : 'tarefas'}`}
         cancelLabel="Cancelar"
         onConfirm={confirmBulkDelete}
-        onClose={() => !isBulkDeleting && setShowBulkDelete(false)}
+        onClose={() => setShowBulkDelete(false)}
       />
 
       <AppLayout
@@ -951,10 +926,7 @@ const TasksPage: React.FC = () => {
               filterPriority={filterPriority}
               filterProject={filterProject}
               onComplete={completeTask}
-              onDelete={taskId => {
-                const task = tasks.find(t => t.id === taskId);
-                if (task) setDeletingTask(task);
-              }}
+              onDelete={excluirTarefa}
               onEdit={handleOpenTask}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
@@ -971,10 +943,7 @@ const TasksPage: React.FC = () => {
               filterPriority={filterPriority}
               filterProject={filterProject}
               onComplete={completeTask}
-              onDelete={taskId => {
-                const task = tasks.find(t => t.id === taskId);
-                if (task) setDeletingTask(task);
-              }}
+              onDelete={excluirTarefa}
               onEdit={handleOpenTask}
               selectionMode={selectionMode}
               selectedIds={selectedIds}

@@ -285,6 +285,13 @@ a,
   height: 100dvh;
 }
 
+/* Barra do tempo que resta num aviso com "Desfazer" (ToastContext). Pausa
+   junto com o relógio do aviso quando o ponteiro está em cima dele. */
+.toast-tempo { animation: toast-tempo linear forwards; }
+:hover > .toast-tempo,
+:focus-within > .toast-tempo { animation-play-state: paused; }
+@keyframes toast-tempo { to { transform: scaleX(0); } }
+
 /* ==========================================================================
  * KIT DE MOVIMENTO (src/components/motion)
  *

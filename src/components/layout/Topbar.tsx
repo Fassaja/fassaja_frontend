@@ -11,7 +11,8 @@ import { useTasks } from '@/contexts/TasksContext';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { SIDEBAR_LARGURA, useSidebar } from '@/contexts/SidebarContext';
 import { usePageScrolled } from '@/hooks/usePageScrolled';
-import { partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
+import { ABRIR_ATALHOS_EVENT, partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
+import { useAtalhosGlobais } from '@/hooks/useAtalhosGlobais';
 import { Kbd } from '@/components/common/Kbd';
 import { useAjudaDaArea } from '@/components/onboarding/AjudaDaArea';
 import { Magnetic, TextReveal } from '@/components/motion';
@@ -23,6 +24,9 @@ import { useMontadoAoAbrir } from '@/hooks/useMontadoAoAbrir';
  */
 const importarBusca = () => import('./SearchModal');
 const SearchModal = React.lazy(() => importarBusca().then(mod => ({ default: mod.SearchModal })));
+const AtalhosModal = React.lazy(() =>
+  import('./AtalhosModal').then(mod => ({ default: mod.AtalhosModal })),
+);
 const StreakDaysModal = React.lazy(() =>
   import('./StreakDaysModal').then(mod => ({ default: mod.StreakDaysModal })),
 );
@@ -53,6 +57,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [showStreakDays, setShowStreakDays] = useState(false);
   const buscaMontada = useMontadoAoAbrir(showSearch);
   const sequenciaMontada = useMontadoAoAbrir(showStreakDays);
+  const [showAtalhos, setShowAtalhos] = useState(false);
+  const atalhosMontado = useMontadoAoAbrir(showAtalhos);
   const { items: notifications, unreadCount, markRead, markAllRead, refresh: refreshNotifications } =
     useNotifications();
   const navigate = useNavigate();
@@ -85,6 +91,37 @@ export const Topbar: React.FC<TopbarProps> = ({
     };
     window.addEventListener('keydown', aoTeclar);
     return () => window.removeEventListener('keydown', aoTeclar);
+  }, []);
+
+  /*
+   * Atalhos de uma tecla. Ficam aqui porque é a barra do topo que já guarda a
+   * busca e a "nova tarefa" da página — e ela está em toda tela do app.
+   */
+  useAtalhosGlobais(acao => {
+    switch (acao.tipo) {
+      case 'buscar':
+        setShowSearch(true);
+        break;
+      case 'ajuda':
+        setShowAtalhos(true);
+        break;
+      case 'ir':
+        navigate(acao.rota);
+        break;
+      case 'nova-tarefa':
+        // A página que tem "nova" própria (Tarefas, Agenda…) decide o que é
+        // novo ali; nas outras, abre a criação de tarefa em Minhas Tarefas.
+        if (onNewTask) onNewTask();
+        else navigate('/tasks?nova=1');
+        break;
+    }
+  });
+
+  // O menu da conta também abre a lista (para quem não sabe do `?`).
+  useEffect(() => {
+    const abrir = () => setShowAtalhos(true);
+    window.addEventListener(ABRIR_ATALHOS_EVENT, abrir);
+    return () => window.removeEventListener(ABRIR_ATALHOS_EVENT, abrir);
   }, []);
 
   const handleRefresh = async () => {
@@ -140,6 +177,7 @@ export const Topbar: React.FC<TopbarProps> = ({
         {sequenciaMontada && (
           <StreakDaysModal isOpen={showStreakDays} onClose={() => setShowStreakDays(false)} />
         )}
+        {atalhosMontado && <AtalhosModal isOpen={showAtalhos} onClose={() => setShowAtalhos(false)} />}
       </React.Suspense>
 
       <div className="h-full px-4 lg:px-8 py-4 flex items-center justify-between gap-4">

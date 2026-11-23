@@ -231,7 +231,8 @@ export const TeamFlowBoard: React.FC<Props> = ({ tasks, members, onOpen, onAdd, 
     try {
       const atualizada =
         destino === 'completed' ? await completeTask(id) : await updateTask(id, { status: destino });
-      toast.success(`Movida para ${rotulo}`);
+      // Concluir já avisa com "Desfazer" (TasksContext).
+      if (destino !== 'completed') toast.success(`Movida para ${rotulo}`);
       // A tarefa volta pronta da escrita; recarregar o painel inteiro só para
       // descobrir o que já está na mão era 155 KB por arraste.
       if (atualizada) onMoved?.(atualizada);

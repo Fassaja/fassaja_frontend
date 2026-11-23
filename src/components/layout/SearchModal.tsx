@@ -234,6 +234,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               animate={{ y: 0 }}
               exit={{ y: -16, transition: transicao.saida }}
               transition={transicao.media}
+              // Diálogo de verdade para o leitor de tela — e para os atalhos
+              // de uma tecla saberem que há uma janela aberta por cima.
+              role="dialog"
+              aria-modal="true"
+              aria-label="Buscar"
               /* Fosco: translúcido + desfoque do que passa por baixo. A borda
                  fica fina e discreta — no vidro é a sombra que separa o painel
                  do fundo, e uma moldura grossa o transformaria numa caixa
