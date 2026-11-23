@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Plus, RefreshCw, Flame, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/common/Button';
 import { Tooltip } from '@/components/common/Tooltip';
-import { SearchModal } from './SearchModal';
 import { NotificationsMenu } from './NotificationsMenu';
-import { StreakDaysModal } from './StreakDaysModal';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useUser, initialsOf } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +15,17 @@ import { partesDoAtalho, plataformaAtual, rotuloAtalho } from '@/utils/atalhos';
 import { Kbd } from '@/components/common/Kbd';
 import { useAjudaDaArea } from '@/components/onboarding/AjudaDaArea';
 import { Magnetic, TextReveal } from '@/components/motion';
+import { useMontadoAoAbrir } from '@/hooks/useMontadoAoAbrir';
+
+/*
+ * A busca e o modal da sequência só existem depois de abertos: são arquivos à
+ * parte, pedidos no primeiro uso, em vez de virem junto com toda tela do app.
+ */
+const importarBusca = () => import('./SearchModal');
+const SearchModal = React.lazy(() => importarBusca().then(mod => ({ default: mod.SearchModal })));
+const StreakDaysModal = React.lazy(() =>
+  import('./StreakDaysModal').then(mod => ({ default: mod.StreakDaysModal })),
+);
 
 interface TopbarProps {
   onNewTask?: () => void;
@@ -42,6 +51,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showStreakDays, setShowStreakDays] = useState(false);
+  const buscaMontada = useMontadoAoAbrir(showSearch);
+  const sequenciaMontada = useMontadoAoAbrir(showStreakDays);
   const { items: notifications, unreadCount, markRead, markAllRead, refresh: refreshNotifications } =
     useNotifications();
   const navigate = useNavigate();
@@ -122,8 +133,14 @@ export const Topbar: React.FC<TopbarProps> = ({
             : 'bg-transparent border-transparent'
         }`}
       />
-      <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
-      <StreakDaysModal isOpen={showStreakDays} onClose={() => setShowStreakDays(false)} />
+      {/* `fallback={null}`: o primeiro clique espera o arquivo chegar (poucos
+          ms; a busca já vem adiantada ao passar o mouse no botão). */}
+      <React.Suspense fallback={null}>
+        {buscaMontada && <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />}
+        {sequenciaMontada && (
+          <StreakDaysModal isOpen={showStreakDays} onClose={() => setShowStreakDays(false)} />
+        )}
+      </React.Suspense>
 
       <div className="h-full px-4 lg:px-8 py-4 flex items-center justify-between gap-4">
         {/* Greeting */}
@@ -184,6 +201,10 @@ export const Topbar: React.FC<TopbarProps> = ({
             type="button"
             aria-label={`Buscar, atalho ${atalhoBusca}`}
             onClick={() => setShowSearch(true)}
+            // Adianta o arquivo da busca: entre o mouse chegar e o clique
+            // há tempo de sobra para ele baixar.
+            onPointerEnter={() => void importarBusca()}
+            onFocus={() => void importarBusca()}
             className="hidden sm:flex items-center gap-2 h-9 sm:h-11 px-2.5 lg:pl-3 lg:pr-2 rounded-xl border border-border bg-surface/70 backdrop-blur-md text-text-secondary hover:text-primary-vibrant hover:border-primary-vibrant/40 hover:bg-primary-light/30 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary-light/60"
           >
             <Search size={20} className="shrink-0 lg:w-[18px] lg:h-[18px]" />

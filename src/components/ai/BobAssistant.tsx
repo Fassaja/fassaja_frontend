@@ -7,6 +7,7 @@ import {
   CalendarClock,
   ChevronRight,
   FileText,
+  Loader2,
   Sparkles,
   Split,
   Users,
@@ -17,9 +18,25 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { bobGreeting } from '@/utils/aiAssistant';
 import { Notice } from './assistantUi';
-import { ReplanPanel } from './ReplanPanel';
-import { DistributePanel } from './DistributePanel';
-import { BreakdownPanel } from './BreakdownPanel';
+/*
+ * Os três painéis de ação só aparecem depois que a pessoa abre o Bob E escolhe
+ * uma ação — e o lançador está em toda tela do app. Sob demanda, eles deixam
+ * de vir junto com cada página e chegam no clique da ação.
+ */
+const ReplanPanel = React.lazy(() => import('./ReplanPanel').then(mod => ({ default: mod.ReplanPanel })));
+const DistributePanel = React.lazy(() =>
+  import('./DistributePanel').then(mod => ({ default: mod.DistributePanel })),
+);
+const BreakdownPanel = React.lazy(() =>
+  import('./BreakdownPanel').then(mod => ({ default: mod.BreakdownPanel })),
+);
+
+/** Enquanto o painel escolhido baixa: mesma altura de uma linha de texto. */
+const CarregandoPainel = () => (
+  <p className="flex items-center gap-2 text-sm text-text-secondary" role="status">
+    <Loader2 size={16} className="animate-spin" /> Carregando…
+  </p>
+);
 
 type View = 'home' | 'replan' | 'distribute' | 'breakdown';
 
@@ -292,12 +309,16 @@ export const BobAssistant: React.FC = () => {
                     Criar um projeto a partir de um documento
                   </button>
                 </div>
-              ) : view === 'replan' ? (
-                <ReplanPanel onBusyChange={setBusy} onHome={goHome} />
-              ) : view === 'distribute' ? (
-                <DistributePanel onBusyChange={setBusy} onHome={goHome} />
               ) : (
-                <BreakdownPanel onBusyChange={setBusy} onHome={goHome} />
+                <React.Suspense fallback={<CarregandoPainel />}>
+                  {view === 'replan' ? (
+                    <ReplanPanel onBusyChange={setBusy} onHome={goHome} />
+                  ) : view === 'distribute' ? (
+                    <DistributePanel onBusyChange={setBusy} onHome={goHome} />
+                  ) : (
+                    <BreakdownPanel onBusyChange={setBusy} onHome={goHome} />
+                  )}
+                </React.Suspense>
               )}
             </div>
           </m.div>
