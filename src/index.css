@@ -49,6 +49,20 @@
      XP) o vibrante continua, porque área pequena não ofusca. */
   --c-brand-hero: 36 119 255;
 
+  /* Estados semânticos com texto, fundo suave e borda — os avisos amarelos,
+     os erros e as confirmações. Antes cada tela escrevia o próprio par
+     `bg-amber-50 dark:bg-amber-500/10`; agora o par mora aqui e o tema troca
+     os três de uma vez. O texto passa no contraste AA sobre o fundo suave. */
+  --c-aviso: 180 83 9;          /* amber-700 */
+  --c-aviso-suave: 255 251 235; /* amber-50 */
+  --c-aviso-borda: 253 230 138; /* amber-200 */
+  --c-perigo: 190 18 60;          /* rose-700 */
+  --c-perigo-suave: 255 241 242;  /* rose-50 */
+  --c-perigo-borda: 254 205 211;  /* rose-200 */
+  --c-sucesso: 4 120 87;           /* emerald-700 */
+  --c-sucesso-suave: 236 253 245;  /* emerald-50 */
+  --c-sucesso-borda: 167 243 208;  /* emerald-200 */
+
   /* Intensidade com que cores VINDAS DOS DADOS (projeto, tag, evento) tingem
      o fundo. Ver src/utils/color.ts. */
   --tint-subtle: 10%;
@@ -109,6 +123,19 @@
      com o formulário e a divisão da tela sumia; #3B82F6 ofuscava. Este tom
      tem ~1/2 da luminância do vibrante e ainda lê como azul da marca. */
   --c-brand-hero: 29 78 216;
+
+  /* No escuro o texto clareia (tom 300) e o fundo vira a cor a ~10% sobre a
+     superfície, já misturada — com a mistura pronta, o modificador de
+     opacidade do Tailwind continua funcionando nestes tokens. */
+  --c-aviso: 252 211 77;        /* amber-300 */
+  --c-aviso-suave: 44 45 47;    /* amber-500 a 10% sobre a superfície */
+  --c-aviso-borda: 89 70 39;    /* amber-500 a 30% */
+  --c-perigo: 253 164 175;        /* rose-300 */
+  --c-perigo-suave: 44 35 55;     /* rose-500 a 10% */
+  --c-perigo-borda: 89 41 64;     /* rose-500 a 30% */
+  --c-sucesso: 110 231 183;        /* emerald-300 */
+  --c-sucesso-suave: 21 50 60;     /* emerald-500 a 12% */
+  --c-sucesso-borda: 20 78 74;     /* emerald-500 a 30% */
 
   /* 10% de uma cor saturada sobre fundo escuro é quase invisível — os chips
      precisam de bem mais tinta para se destacar da superfície. */

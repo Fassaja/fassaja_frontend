@@ -132,6 +132,9 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
       <div
         className="flex items-center gap-1 mt-4 pt-3 border-t"
         style={{ borderColor: tint(idea.color, 'medium') }}
+        // Só segura o clique dos botões de dentro (o cartão inteiro abre a
+        // ideia); não é um controle — por isso "presentation".
+        role="presentation"
         onClick={e => e.stopPropagation()}
       >
         {!convertida && (
@@ -170,7 +173,7 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({
           <button
             onClick={() => onDelete(idea)}
             aria-label="Excluir ideia"
-            className="p-2 rounded-lg text-danger hover:bg-rose-50 transition-colors"
+            className="p-2 rounded-lg text-danger hover:bg-perigo-suave transition-colors"
           >
             <Trash2 size={15} />
           </button>

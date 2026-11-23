@@ -141,7 +141,7 @@ export const XpView: React.FC<XpViewProps> = ({ tasks }) => {
             >
               <span
                 className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                  a.unlocked ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 dark:text-amber-400' : 'bg-bg-secondary text-text-soft'
+                  a.unlocked ? 'bg-aviso-suave text-amber-500 dark:text-amber-400' : 'bg-bg-secondary text-text-soft'
                 }`}
               >
                 {a.unlocked ? a.icon : <Lock size={18} />}

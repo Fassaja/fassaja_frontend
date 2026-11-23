@@ -630,7 +630,7 @@ const AiAssistantPage: React.FC = () => {
                       cobrado — deixamos isso explícito para a pessoa não achar
                       que gastou uma das 5 gerações da semana à toa. */}
                   {draft.generatedBy === 'demo' && draft.demoReason === 'ai-error' && (
-                    <div className="flex items-start gap-2 rounded-lg border border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 px-3 py-2 text-sm text-yellow-800 dark:text-yellow-300">
+                    <div className="flex items-start gap-2 rounded-lg border border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 px-3 py-2 text-sm text-aviso">
                       <Info size={16} className="mt-0.5 shrink-0" />
                       <span>
                         <strong>A IA não respondeu desta vez.</strong> Montamos um rascunho
@@ -1031,6 +1031,9 @@ const AiAssistantPage: React.FC = () => {
         {/* COMPOSER — ancorado embaixo, sempre à mão.
             `shrink-0` para a gaveta do documento crescer PARA CIMA, comendo a
             faixa de cima, em vez de ser espremida contra a borda da janela. */}
+        {/* Soltar arquivo é atalho de mouse; pelo teclado o mesmo caminho é o
+            botão de anexar (input de arquivo), que fica dentro desta área. */}
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
         <div
           onDragOver={(e) => {
             e.preventDefault();

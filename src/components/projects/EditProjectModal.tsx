@@ -122,7 +122,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} title="Editar projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
         {!canEdit && (
-          <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+          <div className="flex items-start gap-2.5 rounded-xl border border-aviso-borda bg-aviso-suave px-4 py-3 text-sm font-medium text-aviso">
             <Lock size={18} className="shrink-0 mt-0.5" />
             <span>
               Apenas o dono do projeto pode alterar estas informações. Você pode visualizá-las, mas

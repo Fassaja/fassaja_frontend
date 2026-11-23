@@ -88,7 +88,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 ) : icon ? (
                   <div
                     className={`w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center ${
-                      tone === 'danger' ? 'bg-rose-100 dark:bg-rose-500/15 text-danger' : 'bg-primary-light text-primary-vibrant'
+                      tone === 'danger' ? 'bg-perigo-suave text-danger' : 'bg-primary-light text-primary-vibrant'
                     }`}
                   >
                     {icon}

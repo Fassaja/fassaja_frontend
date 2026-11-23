@@ -288,7 +288,7 @@ const MenuDaAba: React.FC<{
             type="button"
             role="menuitem"
             onClick={onExcluir}
-            className="flex items-center gap-2.5 px-3 py-2 text-left text-sm text-danger hover:bg-rose-50 dark:hover:bg-rose-500/10"
+            className="flex items-center gap-2.5 px-3 py-2 text-left text-sm text-danger hover:bg-perigo-suave"
           >
             <Trash2 size={15} /> Excluir área
           </button>

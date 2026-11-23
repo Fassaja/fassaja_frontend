@@ -346,7 +346,7 @@ const SettingsPage: React.FC = () => {
                       <p className="text-xs text-text-secondary">Salvamos ao sair do campo.</p>
                     )}
                     {weeklyBelowDaily && (
-                      <span className="text-xs font-medium text-amber-600 dark:text-amber-300">
+                      <span className="text-xs font-medium text-aviso">
                         Sua meta semanal é menor que a diária — confira se é isso mesmo.
                       </span>
                     )}
@@ -533,7 +533,7 @@ const SettingsPage: React.FC = () => {
                     />
                     <ActionRow
                       icon={<RotateCcw size={18} />}
-                      iconClass="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-300"
+                      iconClass="bg-sucesso-suave text-sucesso"
                       title="Reexibir dicas das áreas"
                       description="As boas-vindas de cada tela voltam a aparecer uma vez"
                       onClick={resetAreaTours}
@@ -573,7 +573,7 @@ const SettingsPage: React.FC = () => {
                   </SectionHint>
                   <ActionRow
                     icon={<Trash2 size={18} />}
-                    iconClass="bg-rose-50 dark:bg-rose-500/10 text-danger"
+                    iconClass="bg-perigo-suave text-danger"
                     title="Excluir minha conta"
                     description="Pede confirmação e sua senha antes de apagar"
                     onClick={() => setConfirmDelete(true)}
@@ -639,7 +639,7 @@ const SettingsPage: React.FC = () => {
           </div>
         ) : (
         <form onSubmit={handleDeleteAccount} className="flex flex-col gap-4">
-          <div className="flex items-start gap-2 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-700 dark:text-rose-300">
+          <div className="flex items-start gap-2 rounded-xl border border-perigo-borda bg-perigo-suave px-4 py-3 text-sm font-medium text-perigo">
             <AlertTriangle size={16} className="mt-0.5 shrink-0" />
             <span>Último passo. Depois disso não há como recuperar a conta.</span>
           </div>

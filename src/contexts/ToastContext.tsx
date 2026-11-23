@@ -57,8 +57,8 @@ const DURATION = 4000;
 const DURACAO_COM_ACAO = 6000;
 
 const config: Record<ToastType, { icon: React.ReactNode; accent: string; ring: string }> = {
-  success: { icon: <CheckCircle2 size={20} />, accent: 'text-emerald-600 dark:text-emerald-300', ring: 'border-emerald-200 dark:border-emerald-500/30' },
-  error: { icon: <AlertCircle size={20} />, accent: 'text-danger', ring: 'border-rose-200 dark:border-rose-500/30' },
+  success: { icon: <CheckCircle2 size={20} />, accent: 'text-sucesso', ring: 'border-sucesso-borda' },
+  error: { icon: <AlertCircle size={20} />, accent: 'text-danger', ring: 'border-perigo-borda' },
   info: { icon: <Info size={20} />, accent: 'text-primary-vibrant', ring: 'border-primary-light' },
 };
 

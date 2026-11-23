@@ -369,7 +369,7 @@ export const ConvertIdeaModal: React.FC<ConvertIdeaModalProps> = ({
               ) : (
                 <>
                   {demo && (
-                    <div className="flex items-start gap-2 rounded-lg border border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 px-3 py-2 text-xs text-yellow-800 dark:text-yellow-300">
+                    <div className="flex items-start gap-2 rounded-lg border border-yellow-200 dark:border-yellow-500/30 bg-yellow-50 dark:bg-yellow-500/10 px-3 py-2 text-xs text-aviso">
                       <Info size={14} className="mt-0.5 shrink-0" />
                       <span>
                         <strong>Modo demonstração:</strong> a IA real está desativada, estas
@@ -417,7 +417,7 @@ export const ConvertIdeaModal: React.FC<ConvertIdeaModalProps> = ({
                           type="button"
                           onClick={() => setCards(cs => (cs ?? []).filter(c => c.id !== card.id))}
                           aria-label={`Remover "${card.title}"`}
-                          className="p-1.5 rounded-lg text-danger hover:bg-rose-50 transition-colors shrink-0"
+                          className="p-1.5 rounded-lg text-danger hover:bg-perigo-suave transition-colors shrink-0"
                         >
                           <Trash2 size={14} />
                         </button>

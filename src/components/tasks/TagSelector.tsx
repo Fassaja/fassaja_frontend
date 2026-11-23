@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Tag as TagIcon, X } from 'lucide-react';
 import { useTags } from '@/contexts/TagsContext';
@@ -32,6 +32,8 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
   const [open, setOpen] = useState(false);
 
   const listaRef = useRef<HTMLDivElement>(null);
+  const campoRef = useRef<HTMLInputElement>(null);
+  const campoId = useId();
   const [estilo, setEstilo] = useState<React.CSSProperties>({});
 
   /*
@@ -133,14 +135,21 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
 
   return (
     <div ref={wrapRef} className="relative">
-      <label className="block text-sm font-medium text-text-primary mb-2">Tags</label>
+      <label htmlFor={campoId} className="block text-sm font-medium text-text-primary mb-2">Tags</label>
 
       {/* Campo com chips selecionados + input */}
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className={`flex flex-wrap items-center gap-1.5 min-h-[44px] w-full rounded-xl border border-border bg-surface px-2.5 py-1.5 transition-colors focus-within:border-text-soft ${
           disabled ? 'opacity-60 pointer-events-none' : ''
         }`}
-        onClick={() => setOpen(true)}
+        // Clicar em qualquer ponto da caixa (entre os chips) leva ao campo.
+        // É conveniência de mouse: pelo teclado o Tab chega direto ao campo,
+        // que abre a lista ao receber o foco.
+        onClick={() => {
+          setOpen(true);
+          campoRef.current?.focus();
+        }}
       >
         {selected.map(tag => (
           <span
@@ -164,6 +173,8 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ value, onChange, disab
           </span>
         ))}
         <input
+          ref={campoRef}
+          id={campoId}
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}

@@ -58,6 +58,23 @@ export default {
         warning: 'rgb(var(--c-warning) / <alpha-value>)',
         danger: 'rgb(var(--c-danger) / <alpha-value>)',
         coral: 'rgb(var(--c-coral) / <alpha-value>)',
+        // Estados com três tons cada (texto, fundo suave, borda), já com a
+        // versão escura no tema — ver index.css.
+        aviso: {
+          DEFAULT: 'rgb(var(--c-aviso) / <alpha-value>)',
+          suave: 'rgb(var(--c-aviso-suave) / <alpha-value>)',
+          borda: 'rgb(var(--c-aviso-borda) / <alpha-value>)',
+        },
+        perigo: {
+          DEFAULT: 'rgb(var(--c-perigo) / <alpha-value>)',
+          suave: 'rgb(var(--c-perigo-suave) / <alpha-value>)',
+          borda: 'rgb(var(--c-perigo-borda) / <alpha-value>)',
+        },
+        sucesso: {
+          DEFAULT: 'rgb(var(--c-sucesso) / <alpha-value>)',
+          suave: 'rgb(var(--c-sucesso-suave) / <alpha-value>)',
+          borda: 'rgb(var(--c-sucesso-borda) / <alpha-value>)',
+        },
         turquoise: 'rgb(var(--c-turquoise) / <alpha-value>)',
         priority: {
           high: 'rgb(var(--c-priority-high) / <alpha-value>)',

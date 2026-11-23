@@ -106,7 +106,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             <button
               onClick={() => onDelete(project.id)}
               aria-label="Excluir projeto"
-              className="p-2 hover:bg-rose-50 rounded-lg text-danger transition-colors"
+              className="p-2 hover:bg-perigo-suave rounded-lg text-danger transition-colors"
             >
               <Trash2 size={15} />
             </button>

@@ -321,10 +321,12 @@ export const EventModal: React.FC<EventModalProps> = ({
         {/* Repetir nos dias da semana (só na criação; edição mexe num único evento) */}
         {!isEditing && (
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-1.5">
+            {/* Rótulo de GRUPO, não <label>: não há um campo único a que ele
+                se ligue — são sete botões, e o grupo é que leva o nome. */}
+            <p id="evento-repetir-rotulo" className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-1.5">
               <Repeat size={15} className="text-text-secondary" /> Repetir nos dias
-            </label>
-            <div className="flex flex-wrap gap-2">
+            </p>
+            <div role="group" aria-labelledby="evento-repetir-rotulo" className="flex flex-wrap gap-2">
               {WEEKDAY_OPTIONS.map(d => {
                 const selected = weekdays.includes(d.value);
                 return (
@@ -364,9 +366,10 @@ export const EventModal: React.FC<EventModalProps> = ({
 
         {/* Lembrete */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-1.5">
+          <p id="evento-lembrete-rotulo" className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-1.5">
             <Bell size={15} className="text-text-secondary" /> Lembrete
-          </label>
+          </p>
+          <div role="group" aria-labelledby="evento-lembrete-rotulo">
           <Dropdown
             options={REMINDER_OPTIONS.map(o => ({ value: o.value, label: o.label }))}
             value={reminder}
@@ -374,6 +377,7 @@ export const EventModal: React.FC<EventModalProps> = ({
             placeholder="Sem lembrete"
             fullWidth
           />
+          </div>
           {reminder && allDay && (
             <p className="mt-1.5 text-xs text-text-secondary">
               Eventos de dia inteiro são lembrados a partir das 09:00.
@@ -394,8 +398,8 @@ export const EventModal: React.FC<EventModalProps> = ({
 
         {/* Cor */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">Cor</label>
-          <div className="flex flex-wrap gap-2.5">
+          <p id="evento-cor-rotulo" className="block text-sm font-medium text-text-primary mb-2">Cor</p>
+          <div role="group" aria-labelledby="evento-cor-rotulo" className="flex flex-wrap gap-2.5">
             {EVENT_COLORS.map(c => {
               const selected = c === color;
               return (
@@ -436,16 +440,18 @@ export const EventModal: React.FC<EventModalProps> = ({
 
         {/* Vínculo com tarefa */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-1.5">
+          <p id="evento-tarefa-rotulo" className="block text-sm font-medium text-text-primary mb-2 flex items-center gap-1.5">
             <Link2 size={15} className="text-text-secondary" /> Vincular a uma tarefa (opcional)
-          </label>
-          <Dropdown
-            options={taskOptions}
-            value={taskId}
-            onChange={handleTaskChange}
-            placeholder="Nenhuma (sem vínculo)"
-            fullWidth
-          />
+          </p>
+          <div role="group" aria-labelledby="evento-tarefa-rotulo">
+            <Dropdown
+              options={taskOptions}
+              value={taskId}
+              onChange={handleTaskChange}
+              placeholder="Nenhuma (sem vínculo)"
+              fullWidth
+            />
+          </div>
         </div>
         </MoreOptions>
 
@@ -458,7 +464,7 @@ export const EventModal: React.FC<EventModalProps> = ({
               variant="ghost"
               onClick={() => setConfirmDelete(true)}
               icon={<Trash2 size={16} />}
-              className="text-danger hover:bg-rose-50 rounded-xl"
+              className="text-danger hover:bg-perigo-suave rounded-xl"
             >
               Excluir
             </Button>

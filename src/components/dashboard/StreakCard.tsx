@@ -42,7 +42,7 @@ export const StreakContent: React.FC = () => {
         <h2 className="text-xs font-bold uppercase tracking-wide text-text-soft">
           Sequência produtiva
         </h2>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-300 font-bold text-sm">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-aviso-suave text-aviso font-bold text-sm">
           <m.span
             className="inline-flex"
             initial={reduce || streak === 0 ? false : { scale: 0.4, rotate: -12 }}

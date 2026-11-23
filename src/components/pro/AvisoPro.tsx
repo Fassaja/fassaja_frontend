@@ -15,9 +15,9 @@ export const AvisoPro: React.FC<{ area: AreaPro }> = ({ area }) => {
   return (
     <div
       role="status"
-      className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm"
+      className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-aviso-borda bg-aviso-suave px-4 py-3 text-sm"
     >
-      <Lock size={16} className="shrink-0 text-amber-600 dark:text-amber-300" />
+      <Lock size={16} className="shrink-0 text-aviso" />
       <p className="flex-1 min-w-[12rem] text-text-primary">
         <strong>{oQue[0].toUpperCase() + oQue.slice(1)}</strong> é do plano Pro.{' '}
         <span className="text-text-secondary">O que você já tem continua aqui.</span>

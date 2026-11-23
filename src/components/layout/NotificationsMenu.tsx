@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { m, AnimatePresence } from 'framer-motion';
 import { BellOff, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -30,11 +30,23 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
     navigate(item.link);
   };
 
+  // Esc fecha: antes o menu só fechava clicando fora, e quem usa teclado
+  // ficava preso nele.
+  useEffect(() => {
+    if (!isOpen) return;
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, [isOpen, onClose]);
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={onClose} />
+          {/* Véu de "clique fora": decoração. Pelo teclado, fecha no Esc. */}
+          <div className="fixed inset-0 z-40" aria-hidden="true" onClick={onClose} />
           <m.div
             initial={{ opacity: 0, y: -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

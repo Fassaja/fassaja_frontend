@@ -24,7 +24,7 @@ import { memberColor } from './TeamTaskRow';
 
 const PRIORITY: Record<Task['priority'], { label: string; cls: string }> = {
   low: { label: 'Baixa', cls: 'bg-bg-secondary text-text-secondary' },
-  medium: { label: 'Média', cls: 'bg-amber-500/15 text-amber-700 dark:text-amber-300' },
+  medium: { label: 'Média', cls: 'bg-amber-500/15 text-aviso' },
   high: { label: 'Alta', cls: 'bg-danger/15 text-danger' },
 };
 

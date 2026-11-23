@@ -191,8 +191,8 @@ export const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ isOpen, idea, onCl
 
         {/* Cor */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">Cor</label>
-          <div className="flex flex-wrap gap-2">
+          <p id="ideia-cor-rotulo" className="block text-sm font-medium text-text-primary mb-2">Cor</p>
+          <div role="group" aria-labelledby="ideia-cor-rotulo" className="flex flex-wrap gap-2">
             {colorOptions.map(c => (
               <button
                 key={c}
@@ -211,8 +211,8 @@ export const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ isOpen, idea, onCl
 
         {tags.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">Tags</label>
-            <div className="flex flex-wrap gap-2">
+            <p id="ideia-tags-rotulo" className="block text-sm font-medium text-text-primary mb-2">Tags</p>
+            <div role="group" aria-labelledby="ideia-tags-rotulo" className="flex flex-wrap gap-2">
               {tags.map(tag => {
                 const on = form.tagIds.includes(tag.id);
                 return (

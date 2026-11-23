@@ -228,6 +228,14 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                 e.stopPropagation();
                 onChange('');
               }}
+              // Tinha foco (tabIndex) mas não fazia nada pelo teclado: Enter
+              // ou espaço chegavam ao botão de fora e abriam o calendário.
+              onKeyDown={e => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                e.stopPropagation();
+                onChange('');
+              }}
               className="text-text-soft hover:text-danger transition-colors"
             >
               <X size={compact ? 13 : 16} />

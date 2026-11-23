@@ -90,8 +90,8 @@ export const NotificationsHelp: React.FC = () => {
           Safari no iPhone com o app instalado na tela de início.
         </p>
       ) : enabled ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 px-3 py-2">
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-sucesso-suave border border-sucesso-borda px-3 py-2">
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-sucesso">
             <Check size={16} /> Ativado neste dispositivo
           </span>
           <button

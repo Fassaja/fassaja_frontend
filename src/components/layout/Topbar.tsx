@@ -339,7 +339,7 @@ export const Topbar: React.FC<TopbarProps> = ({
               type="button"
               aria-label="Editar dias da sequência"
               onClick={openStreakDays}
-              className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-surface text-amber-500 dark:text-amber-400 hover:border-amber-300 hover:bg-amber-50 active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-100"
+              className="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl border border-border bg-surface text-amber-500 dark:text-amber-400 hover:border-aviso-borda hover:bg-aviso-suave active:scale-95 transition-all duration-150 focus:outline-none focus-visible:ring-4 focus-visible:ring-aviso-suave"
             >
               <Flame size={20} />
             </button>

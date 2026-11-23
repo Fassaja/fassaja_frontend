@@ -17,7 +17,7 @@ export const AvisoLimiteProjetos: React.FC<{ emAndamento: number }> = ({ emAndam
       role="status"
       className={`mb-5 flex flex-wrap items-center gap-3 rounded-2xl border px-4 py-3 text-sm ${
         cheio
-          ? 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10'
+          ? 'border-aviso-borda bg-aviso-suave'
           : 'border-border bg-bg-secondary'
       }`}
     >
