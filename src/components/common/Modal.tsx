@@ -1,8 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { transicao } from '@/components/motion/tokens';
 
 interface ModalProps {
   isOpen: boolean;
@@ -152,11 +153,11 @@ export const Modal: React.FC<ModalProps> = ({
           {/* aria-hidden: o véu é decoração. Fechar pelo clique fora continua
               valendo para quem usa mouse; para o teclado, o caminho é o Escape
               e o botão de fechar — por isso ele não precisa ser um controle. */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: transicao.saida }}
+            transition={transicao.media}
             onClick={onClose}
             aria-hidden="true"
             className="fixed inset-0 bg-scrim/75 z-[60]"
@@ -165,11 +166,11 @@ export const Modal: React.FC<ModalProps> = ({
           {/* O wrapper de tela cheia só faz fade (barato); o scale/subida fica
               no painel pequeno — transformar uma camada do tamanho da viewport
               a cada frame era a causa do travamento ao abrir. */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: transicao.saida }}
+            transition={transicao.media}
             className="fixed inset-0 z-[70] flex items-center justify-center p-4"
             onClick={onClose}
           >
@@ -178,7 +179,7 @@ export const Modal: React.FC<ModalProps> = ({
                 do cabeçalho) e o modal nunca ultrapassa a tela. dvh em vez de
                 vh porque no celular a 100vh inclui a área da barra de
                 endereço. */}
-            <motion.div
+            <m.div
               ref={painelRef}
               role="dialog"
               aria-modal="true"
@@ -186,8 +187,8 @@ export const Modal: React.FC<ModalProps> = ({
               tabIndex={-1}
               initial={{ scale: 0.96, y: 12 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.97, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
-              transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ scale: 0.97, y: 8, transition: transicao.saida }}
+              transition={transicao.media}
               className={`bg-surface rounded-2xl shadow-lg ${sizeClasses[size]} w-full max-h-[90dvh] flex flex-col focus:outline-none`}
               onClick={e => e.stopPropagation()}
             >
@@ -211,8 +212,8 @@ export const Modal: React.FC<ModalProps> = ({
               <div className="min-h-0 flex-1 overflow-y-auto p-6">
                 {children}
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>,

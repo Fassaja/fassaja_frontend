@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
+import { m, useMotionValue, useReducedMotion, useSpring } from 'framer-motion';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
 
 interface MagneticProps {
@@ -27,7 +27,7 @@ export const Magnetic: React.FC<MagneticProps> = ({ children, strength = 0.3, cl
   if (!hover || calmo) return <span className={`inline-block ${className}`}>{children}</span>;
 
   return (
-    <motion.span
+    <m.span
       className={`inline-block ${className}`}
       style={{ x, y }}
       onPointerMove={e => {
@@ -41,6 +41,6 @@ export const Magnetic: React.FC<MagneticProps> = ({ children, strength = 0.3, cl
       }}
     >
       {children}
-    </motion.span>
+    </m.span>
   );
 };

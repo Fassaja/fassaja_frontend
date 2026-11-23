@@ -100,6 +100,12 @@ export default {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-9px)' },
         },
+        // `backwards` (não `both`): terminada a entrada, o cartão não guarda
+        // `transform` nenhum — um transform residual vira bloco de contenção
+        // para qualquer `position: fixed` lá dentro.
+        'card-in': {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+        },
         'pulse-soft': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.55' },
@@ -108,6 +114,7 @@ export default {
       animation: {
         'page-in': 'page-in 240ms cubic-bezier(0.25, 1, 0.5, 1) both',
         'fade-in': 'fade-in 200ms cubic-bezier(0.25, 1, 0.5, 1) both',
+        'card-in': 'card-in 180ms cubic-bezier(0.25, 1, 0.5, 1) backwards',
         bob: 'bob 3s ease-in-out infinite',
         'pulse-soft': 'pulse-soft 2.4s ease-in-out infinite',
       },

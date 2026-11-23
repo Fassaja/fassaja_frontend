@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageTour } from '@/components/onboarding/PageTour';
 import { AvisoPlayStore } from '@/components/pro/AvisoPlayStore';
@@ -26,6 +26,7 @@ import { podeConcluir } from '@/utils/taskScope';
 import { useToast } from '@/contexts/ToastContext';
 import { useTaskHistory } from '@/hooks/useTaskHistory';
 import { diaISO, inicioDaSemana, resumoSemanal } from '@/utils/produtividade';
+import { transicao, escalonamento } from '@/components/motion/tokens';
 
 /*
  * O gráfico traz a biblioteca de gráficos inteira consigo, e fica lá embaixo
@@ -48,7 +49,7 @@ const WeeklyOverviewChart = React.lazy(() =>
  */
 const REGIAO = {
   hidden: { opacity: 0, y: 12 },
-  shown: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+  shown: { opacity: 1, y: 0, transition: transicao.lenta },
 };
 
 const DashboardPage: React.FC = () => {
@@ -141,12 +142,12 @@ const DashboardPage: React.FC = () => {
         <AvisoAbaComBarra />
         <AvisoPlayStore />
         {loading ? (showSkeleton ? <DashboardSkeleton /> : null) : (
-        <motion.div
+        <m.div
           initial="hidden"
           animate="shown"
-          variants={{ shown: { transition: { staggerChildren: 0.07 } } }}
+          variants={{ shown: { transition: { staggerChildren: escalonamento } } }}
         >
-        <motion.div variants={REGIAO}>
+        <m.div variants={REGIAO}>
         <TodayFocus
           overdue={stats.overdue}
           dueToday={dueToday}
@@ -154,14 +155,14 @@ const DashboardPage: React.FC = () => {
           totalTasks={stats.total}
           onNewTask={openNewTask}
         />
-        </motion.div>
+        </m.div>
 
         {/* Logo abaixo do banner do dia, antes dos números: é o que se faz, não o que se lê. */}
-        <motion.div variants={REGIAO} className="mt-4">
+        <m.div variants={REGIAO} className="mt-4">
           <AtalhosRapidos />
-        </motion.div>
+        </m.div>
 
-        <motion.div variants={REGIAO}>
+        <m.div variants={REGIAO}>
         {/* No celular os números vão numa caixa 2×2 (tudo alinhado à esquerda
             da própria célula); solto no fundo, o par da direita ia parar na
             borda da tela, longe do rótulo. No desktop a versão sem caixa
@@ -186,7 +187,7 @@ const DashboardPage: React.FC = () => {
             { label: 'Atrasadas', value: stats.overdue, comparison: stats.comparisons.overdue, alert: true },
           ]}
         />
-        </motion.div>
+        </m.div>
 
         {/*
           A ordem das regiões é a ordem das perguntas: primeiro O QUE FAZER
@@ -207,7 +208,7 @@ const DashboardPage: React.FC = () => {
           <SoftDivider> nasce cheio na margem esquerda, onde a leitura começa,
           e se apaga antes de cruzar a tela.
         */}
-        <motion.div variants={REGIAO}>
+        <m.div variants={REGIAO}>
           <SoftDivider className="mb-8" />
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
           <div className="lg:col-span-2">
@@ -238,20 +239,20 @@ const DashboardPage: React.FC = () => {
             />
           </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* O gráfico é o único bloco que de fato PREENCHE a largura inteira:
             mais espaço nele é mais dias visíveis, não mais vão. */}
-        <motion.div variants={REGIAO} className="mt-10">
+        <m.div variants={REGIAO} className="mt-10">
           <SoftDivider className="mb-8" />
           {/* A altura reservada é a do gráfico pronto: quando ele chega, nada
               abaixo dele se mexe. */}
           <React.Suspense fallback={<div className="skeleton h-[260px] rounded-2xl" />}>
             <WeeklyOverviewChart />
           </React.Suspense>
-        </motion.div>
+        </m.div>
 
-        <motion.div variants={REGIAO} className="mt-10">
+        <m.div variants={REGIAO} className="mt-10">
           <SoftDivider className="mb-8" />
           <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
             <XpCard />
@@ -259,8 +260,8 @@ const DashboardPage: React.FC = () => {
               <StreakContent />
             </div>
           </div>
-        </motion.div>
-        </motion.div>
+        </m.div>
+        </m.div>
         )}
       </AppLayout>
     </>

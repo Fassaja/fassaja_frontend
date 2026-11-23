@@ -8,6 +8,7 @@ import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { deleteAccount } from '@/services/authService';
 import { useAuth } from '@/contexts/AuthContext';
+import { Stagger } from '@/components/motion';
 
 /**
  * Confirmação final da exclusão de conta, aberta pelo link do e-mail.
@@ -66,7 +67,7 @@ const AccountDeletionPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-bg-main flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md">
+      <Stagger className="w-full max-w-md">
         <div className="flex justify-center">
           <Mascot state={done ? 'sad' : 'confused'} size="sm" animate />
         </div>
@@ -236,7 +237,7 @@ const AccountDeletionPage: React.FC = () => {
             </form>
           </>
         )}
-      </div>
+      </Stagger>
     </div>
   );
 };

@@ -1,7 +1,8 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { useHoverCapable } from '@/hooks/useHoverCapable';
+import { transicao } from '@/components/motion/tokens';
 
 interface TooltipProps {
   /** Linha principal — curta, o rótulo da ação. */
@@ -114,14 +115,14 @@ export const Tooltip: React.FC<TooltipProps> = ({
       {createPortal(
         <AnimatePresence>
           {open && (
-            <motion.div
+            <m.div
               ref={bubbleRef}
               id={id}
               role="tooltip"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 4 }}
-              transition={{ duration: 0.14 }}
+              transition={transicao.rapida}
               style={{ top: pos.top, left: pos.left }}
               className="pointer-events-none fixed z-[100] max-w-xs rounded-lg border border-border bg-surface px-3 py-2 shadow-lg"
             >
@@ -129,7 +130,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
               {description && (
                 <p className="mt-1 text-xs leading-snug text-text-secondary">{description}</p>
               )}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>,
         document.body,

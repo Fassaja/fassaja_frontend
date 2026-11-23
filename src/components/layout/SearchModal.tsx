@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Search,
   CheckSquare,
@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { buscar, trecho } from '@/utils/buscaGlobal';
 import { tint, chipText } from '@/utils/color';
 import { formatDateChip } from '@/utils/date';
+import { transicao } from '@/components/motion/tokens';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -212,27 +213,27 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
               que estava atrás. Um véu mais leve que o normal (50%) de
               propósito: se o fundo some, não há o que o painel translúcido
               deixe transparecer, e o fosco vira só um cinza. */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: transicao.saida }}
+            transition={transicao.media}
             onClick={onClose}
             className="fixed inset-0 bg-scrim/50 z-[60]"
           />
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: transicao.saida }}
+            transition={transicao.media}
             className="fixed inset-x-0 top-20 z-[70] flex justify-center px-4"
             onClick={onClose}
           >
-            <motion.div
+            <m.div
               initial={{ y: -16 }}
               animate={{ y: 0 }}
-              exit={{ y: -16, transition: { duration: 0.15, ease: 'easeIn' } }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ y: -16, transition: transicao.saida }}
+              transition={transicao.media}
               /* Fosco: translúcido + desfoque do que passa por baixo. A borda
                  fica fina e discreta — no vidro é a sombra que separa o painel
                  do fundo, e uma moldura grossa o transformaria numa caixa
@@ -319,8 +320,8 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 ))}
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>,

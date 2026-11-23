@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
+import { mola } from '@/components/motion/tokens';
 
 type CelebrationVariant = 'task' | 'goal';
 
@@ -71,7 +72,7 @@ export const CelebrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       <AnimatePresence>
         {active && (
-          <motion.div
+          <m.div
             key="celebration"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -79,11 +80,11 @@ export const CelebrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
             className="fixed inset-x-0 bottom-8 z-[80] flex justify-center pointer-events-none px-4"
             aria-live="polite"
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.6, y: 40, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.8, y: 20, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 360, damping: 20 }}
+              transition={mola.viva}
               className={`relative flex items-center gap-3 bg-surface rounded-2xl shadow-xl pl-3 pr-5 py-3 ${
                 isGoal
                   ? 'border-2 border-amber-300 dark:border-amber-500/40 ring-2 ring-amber-200/60'
@@ -93,7 +94,7 @@ export const CelebrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
               {/* Confetti burst */}
               <div className="absolute left-1/2 top-1/2 w-0 h-0">
                 {confetti.map(c => (
-                  <motion.span
+                  <m.span
                     key={c.id}
                     initial={{ x: 0, y: 0, opacity: 1, rotate: 0 }}
                     animate={{ x: c.x, y: c.y, opacity: 0, rotate: c.rotate }}
@@ -104,21 +105,21 @@ export const CelebrationProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 ))}
               </div>
 
-              <motion.div
+              <m.div
                 animate={isGoal ? { rotate: [0, -8, 8, -6, 0], scale: [1, 1.08, 1] } : { rotate: [0, -6, 6, -4, 0] }}
                 transition={{ duration: 0.7, ease: 'easeInOut' }}
                 className="shrink-0"
               >
                 <Mascot state={active.mascot} size="xs" animate={false} />
-              </motion.div>
+              </m.div>
               <div>
                 <p className="font-bold text-text-primary leading-tight">{active.message}</p>
                 {active.subtitle && (
                   <p className="text-xs text-text-secondary">{active.subtitle}</p>
                 )}
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </CelebrationContext.Provider>

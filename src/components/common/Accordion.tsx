@@ -1,6 +1,8 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { mola, transicao } from '@/components/motion/tokens';
+import { Stagger } from '@/components/motion';
 
 export interface AccordionItem {
   /** Chave estável — decide qual item abre por padrão. */
@@ -33,6 +35,8 @@ interface AccordionProps {
   /** Item aberto ao montar. Sem isso, todos começam fechados. */
   defaultOpenId?: string;
   className?: string;
+  /** Itens entram em cascata na primeira vez que a lista aparece (desktop). */
+  cascata?: boolean;
 }
 
 /**
@@ -99,19 +103,19 @@ const AccordionPanel: React.FC<{
               {item.summary}
             </span>
           )}
-          <motion.span
+          <m.span
             aria-hidden="true"
             initial={false}
             animate={{ rotate: isOpen ? 180 : 0 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            transition={mola.firme}
             className="shrink-0 text-text-secondary"
           >
             <ChevronDown size={18} />
-          </motion.span>
+          </m.span>
         </button>
       </h3>
 
-      <motion.div
+      <m.div
         ref={panelRef}
         id={panelId}
         role="region"
@@ -119,15 +123,15 @@ const AccordionPanel: React.FC<{
         initial={false}
         animate={{ height: isOpen ? height : 0, opacity: isOpen ? 1 : 0 }}
         transition={{
-          height: { type: 'spring', stiffness: 340, damping: 34 },
-          opacity: { duration: 0.18 },
+          height: mola.firme,
+          opacity: transicao.rapida,
         }}
         style={{ overflow: 'hidden' }}
       >
         <div ref={contentRef} className="px-1 pb-5">
           {item.content}
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 };
@@ -136,13 +140,17 @@ export const Accordion: React.FC<AccordionProps> = ({
   items,
   defaultOpenId,
   className = '',
+  cascata = false,
 }) => {
   const rawId = useId();
   const baseId = `acc-${rawId.replace(/:/g, '')}`;
   const [openId, setOpenId] = useState<string | null>(defaultOpenId ?? null);
 
+  // Com `cascata`, os itens (e os rótulos de grupo) entram um após o outro na
+  // primeira vez que a lista aparece — só no desktop, como todo o kit.
+  const Raiz = cascata ? Stagger : 'div';
   return (
-    <div className={className}>
+    <Raiz className={className}>
       {items.map((item, i) => {
         const abreGrupo = !!item.group && item.group !== items[i - 1]?.group;
         return (
@@ -161,6 +169,6 @@ export const Accordion: React.FC<AccordionProps> = ({
           </React.Fragment>
         );
       })}
-    </div>
+    </Raiz>
   );
 };

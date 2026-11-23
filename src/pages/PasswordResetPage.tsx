@@ -8,6 +8,7 @@ import { Button } from '@/components/common/Button';
 import { forgotPassword, resetPassword } from '@/services/authService';
 import { useLightOnlyScreen } from '@/contexts/ThemeContext';
 import { useTelaSensivel } from '@/hooks/useTelaSensivel';
+import { Stagger } from '@/components/motion';
 
 interface PasswordResetPageProps {
   /** 'request' = pede o e-mail; 'reset' = define a nova senha (via link). */
@@ -86,7 +87,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
 
   return (
     <div className="min-h-screen bg-bg-main flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md">
+      <Stagger className="w-full max-w-md">
         <div className="flex justify-center">
           <Mascot state={done ? 'happy' : 'confused'} size="sm" animate />
         </div>
@@ -232,7 +233,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ mode }) => {
             </button>
           </div>
         )}
-      </div>
+      </Stagger>
     </div>
   );
 };

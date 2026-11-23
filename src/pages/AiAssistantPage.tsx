@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Check, RotateCcw, FileText, Upload, Info, RefreshCw, HelpCircle, Lightbulb, Loader2, Send, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PRO_WEEKLY_LIMIT } from '@/utils/playConfig';
@@ -28,6 +28,7 @@ import { TeamSummary, TeamMember } from '@/types/team';
 import { useProjects } from '@/contexts/ProjectsContext';
 import { useTasks } from '@/contexts/TasksContext';
 import { tint, chipText } from '@/utils/color';
+import { transicao, mola, escalonamento } from '@/components/motion/tokens';
 
 
 /**
@@ -547,7 +548,7 @@ const AiAssistantPage: React.FC = () => {
         <div className="flex-1 lg:min-h-0 lg:overflow-y-auto">
           <AnimatePresence mode="wait">
             {generating ? (
-              <motion.div
+              <m.div
                 key="gerando"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -582,19 +583,19 @@ const AiAssistantPage: React.FC = () => {
                 <p className="text-xs text-text-soft">
                   Leva alguns segundos. Nada é criado ainda.
                 </p>
-              </motion.div>
+              </m.div>
             ) : !draft ? (
               /* Com a gaveta aberta o Bob SAI de cena.
                  Ele é a pergunta inicial — "o que vamos montar?" —, e quem
                  acabou de abrir o documento já respondeu isso. Encolhê-lo
                  deixava um mascote pequeno e sem função ocupando o espaço que
                  o documento pede. Some inteiro, e a gaveta ganha a tela. */
-              <motion.div
+              <m.div
                 key="parado"
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: docAberto ? 0 : 1, scale: docAberto ? 0.94 : 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                transition={transicao.media}
                 style={{ pointerEvents: docAberto ? 'none' : 'auto' }}
                 className="flex min-h-full flex-col items-center justify-center gap-4 text-center"
               >
@@ -605,9 +606,9 @@ const AiAssistantPage: React.FC = () => {
                     Me dê um documento e diga o que fazer com ele.
                   </p>
                 </div>
-              </motion.div>
+              </m.div>
             ) : (
-              <motion.div
+              <m.div
                 key="draft"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -779,13 +780,13 @@ const AiAssistantPage: React.FC = () => {
                         .map((s) => {
                           const added = addedIds.includes(s.id);
                           return (
-                            <motion.div
+                            <m.div
                               key={s.id}
                               layout
                               initial={{ opacity: 0, y: 6 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, x: 60, scale: 0.85 }}
-                              transition={{ duration: 0.2 }}
+                              transition={transicao.media}
                               className={`relative flex items-start gap-2 rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-colors ${
                                 added ? 'border-green-200 dark:border-green-500/30 bg-green-50/60 dark:bg-green-500/10' : 'border-border bg-surface'
                               }`}
@@ -851,7 +852,7 @@ const AiAssistantPage: React.FC = () => {
                                   </button>
                                 </Tooltip>
                               </div>
-                            </motion.div>
+                            </m.div>
                           );
                         })}
                       </AnimatePresence>
@@ -870,11 +871,11 @@ const AiAssistantPage: React.FC = () => {
                   </Button>
                 </div>
 
-                <motion.div
+                <m.div
                   className="flex flex-col gap-3"
                   initial="hidden"
                   animate="shown"
-                  variants={{ shown: { transition: { staggerChildren: 0.04 } } }}
+                  variants={{ shown: { transition: { staggerChildren: escalonamento } } }}
                 >
                   {draft.cards.length === 0 && (
                     <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-sm text-text-secondary">
@@ -888,7 +889,7 @@ const AiAssistantPage: React.FC = () => {
                       duas lições dele valem e estão aplicadas abaixo. */}
                   <AnimatePresence mode="popLayout" initial={false}>
                   {draft.cards.map((card) => (
-                    <motion.div
+                    <m.div
                       key={card.id}
                       /* `layout="position"`, não `layout`: o layout completo
                          interpola também a ALTURA, e o texto do card aparece
@@ -900,7 +901,7 @@ const AiAssistantPage: React.FC = () => {
                         shown: { opacity: 1, y: 0 },
                       }}
                       exit={{ opacity: 0, scale: 0.96 }}
-                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      transition={transicao.media}
                     >
                     <Card padding="sm" className="flex flex-col gap-2">
                       <div className="flex items-start gap-2">
@@ -985,10 +986,10 @@ const AiAssistantPage: React.FC = () => {
                         )}
                       </div>
                     </Card>
-                    </motion.div>
+                    </m.div>
                   ))}
                   </AnimatePresence>
-                </motion.div>
+                </m.div>
                 </div>
                 </div>
                 </div>
@@ -1022,7 +1023,7 @@ const AiAssistantPage: React.FC = () => {
                     ? 'Criando...'
                     : `Aprovar e criar ${draft.cards.length} card(s)`}
                 </Button>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -1060,9 +1061,9 @@ const AiAssistantPage: React.FC = () => {
             que queremos: o balão subindo enquanto a gaveta ocupa o espaço
             embaixo dele.
           */}
-          <motion.div
+          <m.div
             layout="position"
-            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            transition={transicao.lenta}
             onMouseEnter={() => setPertoDoBalao(true)}
             onMouseLeave={() => setPertoDoBalao(false)}
             className="w-full max-w-3xl flex flex-col gap-1"
@@ -1134,7 +1135,7 @@ const AiAssistantPage: React.FC = () => {
                 </button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* A gaveta do documento. Abre sozinha quando não há documento e a
               pessoa clica em "+", e continua aceitando arrastar de qualquer
@@ -1150,12 +1151,12 @@ const AiAssistantPage: React.FC = () => {
                o trajeto para o conteúdo não vazar da caixa que ainda está
                crescendo — e volta a `auto` só no fim, senão a rolagem interna
                brigaria com a animação. */
-            <motion.div
+            <m.div
               key="gaveta"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              transition={transicao.lenta}
               className="w-full max-w-3xl overflow-hidden"
             >
             <div className="flex max-h-[45vh] flex-col gap-2 overflow-y-auto rounded-2xl border border-border bg-surface p-3">
@@ -1231,7 +1232,7 @@ const AiAssistantPage: React.FC = () => {
                 </span>
               </div>
             </div>
-            </motion.div>
+            </m.div>
             )}
           </AnimatePresence>
 
@@ -1261,13 +1262,13 @@ const AiAssistantPage: React.FC = () => {
         size="sm"
       >
         <div className="flex flex-col items-center text-center gap-4 py-2">
-          <motion.img
+          <m.img
             src="/bobheroi.png"
             alt="Bob herói comemorando"
             className="w-32 h-32 object-contain drop-shadow-lg"
             initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+            transition={mola.quique}
           />
           <div>
             <p className="font-semibold text-text-primary">

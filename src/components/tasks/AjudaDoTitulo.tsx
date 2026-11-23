@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
+import { transicao } from '@/components/motion/tokens';
 
-const SUAVE = { duration: 0.16, ease: [0.16, 1, 0.3, 1] as const };
+const SUAVE = transicao.lenta;
 
 /**
  * O "?" ao lado do título: como escrever prazo, prioridade e etiqueta.
@@ -61,7 +62,7 @@ export const AjudaDoTitulo: React.FC = () => {
 
       <AnimatePresence>
         {aberto && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
@@ -90,7 +91,7 @@ export const AjudaDoTitulo: React.FC = () => {
               A etiqueta só é reconhecida se já existir. Horas ficam no título —
               o prazo guarda o dia, não a hora.
             </p>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

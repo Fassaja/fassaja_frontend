@@ -30,7 +30,13 @@ import { OPEN_TOUR_EVENT } from './PlatformTourModal';
 import { NotificationsHelp } from './NotificationsHelp';
 import { Modal } from '@/components/common/Modal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
-import { FeedbackModal } from './FeedbackModal';
+import { useMontadoAoAbrir } from '@/hooks/useMontadoAoAbrir';
+
+// O formulário de feedback é aberto por pouca gente e poucas vezes: vem sob
+// demanda, no primeiro clique.
+const FeedbackModal = React.lazy(() =>
+  import('./FeedbackModal').then(mod => ({ default: mod.FeedbackModal })),
+);
 import { Tooltip } from '@/components/common/Tooltip';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUser, initialsOf } from '@/contexts/UserContext';
@@ -112,6 +118,7 @@ export const Sidebar: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const feedbackMontado = useMontadoAoAbrir(showFeedback);
   const [showLogout, setShowLogout] = useState(false);
 
   // No celular a navegação é a dock (MobileDock) e o painel "Mais"; a
@@ -554,7 +561,11 @@ export const Sidebar: React.FC = () => {
             </div>
           </Modal>
 
-          <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
+          {feedbackMontado && (
+            <React.Suspense fallback={null}>
+              <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
+            </React.Suspense>
+          )}
 
           <ConfirmDialog
             isOpen={showLogout}

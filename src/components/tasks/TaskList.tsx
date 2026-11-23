@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Task, TaskStatus, TaskPriority } from '@/types/task';
 import { Project } from '@/types/project';
 import { TaskCard } from './TaskCard';
@@ -7,6 +7,7 @@ import { AnimatedList } from '@/components/common/AnimatedList';
 import { isToday, isTomorrow } from '@/utils/date';
 import { combinaComProjeto } from '@/utils/taskFilters';
 import { TasksVazio } from './TasksVazio';
+import { mola } from '@/components/motion/tokens';
 
 interface TaskListProps {
   tasks: Task[];
@@ -110,13 +111,13 @@ export const TaskList: React.FC<TaskListProps> = ({
           if (items.length === 0) return null;
 
           return (
-            <motion.section
+            <m.section
               key={group.key}
               layout="position"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              transition={mola.firme}
               className="space-y-3"
             >
               <div className="flex items-center gap-2 px-1">
@@ -143,7 +144,7 @@ export const TaskList: React.FC<TaskListProps> = ({
                   />
                 )}
               />
-            </motion.section>
+            </m.section>
           );
         })}
       </AnimatePresence>

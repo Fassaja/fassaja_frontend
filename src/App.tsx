@@ -1,4 +1,8 @@
-import { MotionConfig } from 'framer-motion';
+import { LazyMotion, MotionConfig } from 'framer-motion';
+
+// Motor de animação sob demanda (ver components/motion/recursos.ts).
+const carregarRecursosDeAnimacao = () =>
+  import('@/components/motion/recursos').then(r => r.default);
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { SidebarProvider } from '@/contexts/SidebarContext';
@@ -23,6 +27,10 @@ import { sanitizeUrl } from '@/utils/analyticsPath';
 function App() {
   return (
     <MotionConfig reducedMotion="user">
+    {/* `strict`: um `motion.*` importado por engano traria o motor inteiro de
+        volta ao arquivo principal; assim ele quebra no desenvolvimento em vez
+        de pesar em silêncio. Use sempre `m.*`. */}
+    <LazyMotion features={carregarRecursosDeAnimacao} strict>
     {/* Mais externo: o tema não depende de sessão nem de dados, e a tela de
         login também precisa dele. */}
     <ThemeProvider>
@@ -83,6 +91,7 @@ function App() {
       </ToastProvider>
     </SidebarProvider>
     </ThemeProvider>
+    </LazyMotion>
     </MotionConfig>
   );
 }

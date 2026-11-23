@@ -8,6 +8,7 @@ import { useSessao } from '@/hooks/useSessao';
 import { useTelaSensivel } from '@/hooks/useTelaSensivel';
 import { invitesService } from '@/services/invitesService';
 import { InviteState } from '@/types/team';
+import { Reveal } from '@/components/motion';
 
 const JoinPage: React.FC = () => {
   const { token = '' } = useParams();
@@ -221,7 +222,7 @@ const JoinPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-bg-main flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-8 text-center">
+      <Reveal className="w-full max-w-md bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl p-8 text-center">
         {loading ? (
           <div className="py-10 text-text-secondary">Carregando convite...</div>
         ) : (
@@ -238,7 +239,7 @@ const JoinPage: React.FC = () => {
             {view.node && <div className="flex justify-center">{view.node}</div>}
           </>
         )}
-      </div>
+      </Reveal>
     </div>
   );
 };

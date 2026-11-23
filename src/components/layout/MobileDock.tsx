@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import {
   Home,
   CheckSquare,
@@ -24,6 +24,7 @@ import {
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { transicao, mola } from '@/components/motion/tokens';
 
 /**
  * A dock do celular: Início · Tarefas · [+] · Projetos · Mais.
@@ -110,32 +111,32 @@ const Item: React.FC<{
   /** Só o "Mais": vira o ícone quando o painel está aberto. */
   expanded?: boolean;
 }> = ({ on, rotulo, Icone, onClick, expanded }) => (
-  <motion.button
+  <m.button
     type="button"
     onClick={onClick}
     whileTap={{ scale: 0.88 }}
-    transition={{ type: 'spring', stiffness: 600, damping: 30 }}
+    transition={mola.viva}
     aria-current={on && expanded === undefined ? 'page' : undefined}
     aria-expanded={expanded}
     aria-label={rotulo}
     className="relative flex w-full flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10.5px] font-semibold select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-vibrant/60"
   >
     {on && (
-      <motion.span
+      <m.span
         layoutId="dock-pilula"
         className="absolute inset-x-1 top-0.5 h-8 rounded-full bg-primary-light"
-        transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+        transition={mola.firme}
       />
     )}
-    <motion.span
+    <m.span
       animate={{ y: on ? -1 : 0, scale: on ? 1.08 : 1, rotate: expanded ? 90 : 0 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      transition={mola.viva}
       className={`relative z-10 flex h-7 items-center ${on ? 'text-primary-vibrant' : 'text-text-secondary'}`}
     >
       <Icone size={22} strokeWidth={on ? 2.4 : 2} />
-    </motion.span>
+    </m.span>
     <span className={`relative z-10 ${on ? 'text-primary-vibrant' : 'text-text-soft'}`}>{rotulo}</span>
-  </motion.button>
+  </m.button>
 );
 
 export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) => {
@@ -176,23 +177,23 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
       <AnimatePresence>
         {maisAberto && (
           <>
-            <motion.div
+            <m.div
               key="fundo"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
+              transition={transicao.rapida}
               onClick={() => setMaisAberto(false)}
               className="fixed inset-0 z-40 bg-black/50 lg:hidden"
             />
-            <motion.section
+            <m.section
               key="painel"
               role="dialog"
               aria-label="Mais opções"
               initial={{ y: 40, opacity: 0, scale: 0.98 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 40, opacity: 0, scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+              transition={mola.viva}
               className="fixed inset-x-3 z-40 mx-auto max-w-md rounded-[1.75rem] border border-border/70 bg-surface p-4 shadow-[0_16px_50px_rgba(0,0,0,0.3)] lg:hidden"
               style={{ bottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}
             >
@@ -210,7 +211,7 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
               <ul className="grid grid-cols-4 gap-2">
                 {MAIS.map(d => (
                   <li key={d.path}>
-                    <motion.button
+                    <m.button
                       type="button"
                       whileTap={{ scale: 0.92 }}
                       onClick={() => ir(d)}
@@ -220,7 +221,7 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
                     >
                       <d.Icone size={22} />
                       <span className="leading-tight text-center">{d.rotulo}</span>
-                    </motion.button>
+                    </m.button>
                   </li>
                 ))}
               </ul>
@@ -228,18 +229,18 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
                 <ul className="mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3">
                   {CONTA.map(d => (
                     <li key={d.path}>
-                      <motion.button
+                      <m.button
                         type="button"
                         whileTap={{ scale: 0.92 }}
                         onClick={() => ir(d)}
                         className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-bg-secondary px-2 py-2.5 text-xs font-medium text-text-primary"
                       >
                         <d.Icone size={16} /> {d.rotulo}
-                      </motion.button>
+                      </m.button>
                     </li>
                   ))}
                   <li>
-                    <motion.button
+                    <m.button
                       type="button"
                       whileTap={{ scale: 0.92 }}
                       onClick={() => {
@@ -249,20 +250,20 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
                       className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-bg-secondary px-2 py-2.5 text-xs font-medium text-danger"
                     >
                       <LogOut size={16} /> Sair
-                    </motion.button>
+                    </m.button>
                   </li>
                 </ul>
               )}
-            </motion.section>
+            </m.section>
           </>
         )}
       </AnimatePresence>
 
-      <motion.nav
+      <m.nav
         aria-label="Navegação principal"
         initial={false}
         animate={{ y: escondida && !maisAberto ? 110 : 0 }}
-        transition={{ type: 'spring', stiffness: 420, damping: 38 }}
+        transition={mola.viva}
         className="fixed inset-x-0 bottom-0 z-40 lg:hidden px-3"
         style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
       >
@@ -276,16 +277,16 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
             {/* O "+": maior, saltado para cima, na cor da marca. É a ação
                 principal do app, então é o botão mais fácil de acertar. */}
             <li className="flex flex-1 justify-center">
-              <motion.button
+              <m.button
                 type="button"
                 onClick={novaTarefa}
                 whileTap={{ scale: 0.9, rotate: 90 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 26 }}
+                transition={mola.viva}
                 aria-label="Nova tarefa"
                 className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary-vibrant text-white shadow-lg shadow-primary-vibrant/40 ring-4 ring-bg-main focus:outline-none focus-visible:ring-primary-vibrant/60"
               >
                 <Plus size={28} strokeWidth={2.6} />
-              </motion.button>
+              </m.button>
             </li>
             {DIREITA.map(d => (
               <li key={d.path} className="flex-1">
@@ -306,7 +307,7 @@ export const MobileDock: React.FC<{ onNewTask?: () => void }> = ({ onNewTask }) 
             </li>
           </ul>
         </div>
-      </motion.nav>
+      </m.nav>
     </>
   );
 };

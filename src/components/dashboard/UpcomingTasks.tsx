@@ -1,10 +1,11 @@
 import React from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Section } from '@/components/common/Section';
 import { CompleteCheck } from '@/components/common/CompleteCheck';
 import { Task } from '@/types/task';
 import { Project } from '@/types/project';
 import { formatDate, isToday, isTomorrow } from '@/utils/date';
+import { mola } from '@/components/motion/tokens';
 
 interface UpcomingTasksProps {
   tasks: Task[];
@@ -54,13 +55,13 @@ export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = 
           const project = projects.find(p => p.id === task.projectId);
 
           return (
-            <motion.li
+            <m.li
               key={task.id}
               layout="position"
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: 24 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              transition={mola.firme}
               className="flex items-center gap-3 py-2 first:pt-0 last:pb-0"
             >
               <CompleteCheck completed={completed} onToggle={() => onComplete?.(task.id)} />
@@ -94,7 +95,7 @@ export const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, projects = 
               >
                 {completed ? 'Concluída' : priority.label}
               </span>
-            </motion.li>
+            </m.li>
           );
         })}
         </AnimatePresence>

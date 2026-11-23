@@ -1,9 +1,10 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Button } from './Button';
 import { Mascot, MascotState } from '@/components/mascot/Mascot';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { transicao, mola } from '@/components/motion/tokens';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -49,19 +50,19 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <>
           {/* Sem backdrop-blur (caro em tela cheia); fade barato no wrapper e
               scale só no painel pequeno — evita queda de FPS ao abrir. */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: transicao.saida }}
+            transition={transicao.media}
             onClick={onClose}
             className="fixed inset-0 bg-scrim/70 z-[60]"
           />
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, transition: transicao.saida }}
+            transition={transicao.media}
             className="fixed inset-0 z-[70] overflow-y-auto p-4"
             onClick={onClose}
           >
@@ -72,11 +73,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 painel centraliza quando cabe e cresce a partir do topo quando
                 não cabe. */}
             <div className="flex min-h-full items-center justify-center">
-              <motion.div
+              <m.div
                 initial={{ scale: 0.95, y: 8 }}
                 animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.95, y: 8, transition: { duration: 0.15, ease: 'easeIn' } }}
-                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                exit={{ scale: 0.95, y: 8, transition: transicao.saida }}
+                transition={mola.viva}
                 className="bg-surface rounded-2xl shadow-lg max-w-sm w-full p-6 text-center"
                 onClick={e => e.stopPropagation()}
               >
@@ -119,9 +120,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                     {confirmLabel}
                   </Button>
                 </div>
-              </motion.div>
+              </m.div>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>,

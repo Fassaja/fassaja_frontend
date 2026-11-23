@@ -1,9 +1,10 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { BellOff, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationItem } from '@/contexts/NotificationsContext';
 import { tint, chipText } from '@/utils/color';
+import { transicao } from '@/components/motion/tokens';
 
 interface NotificationsMenuProps {
   isOpen: boolean;
@@ -34,11 +35,11 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={onClose} />
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: [0.25, 1, 0.5, 1] }}
+            transition={transicao.rapida}
             className="fixed left-2 right-2 top-[5.25rem] w-auto sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 bg-surface rounded-2xl border-2 border-border ring-1 ring-primary-vibrant/20 shadow-xl z-50 overflow-hidden"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
@@ -102,7 +103,7 @@ export const NotificationsMenu: React.FC<NotificationsMenuProps> = ({
             >
               Ver todas as tarefas
             </button>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

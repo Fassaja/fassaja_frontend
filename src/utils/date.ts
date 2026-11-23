@@ -69,30 +69,42 @@ export function formatDateChip(dateString: string, hoje: Date = new Date()): str
   return alvo.getFullYear() === base.getFullYear() ? curto : `${curto} ${alvo.getFullYear()}`;
 }
 
+/*
+ * Formatadores criados UMA vez e reaproveitados.
+ *
+ * `toLocaleDateString(locale, opções)` monta um `Intl.DateTimeFormat` novo a
+ * cada chamada, e montar um é caro — no quadro de Tarefas, com uma data por
+ * cartão, isso aparecia entre as funções mais pesadas ao abrir a tela no
+ * celular. `format()` de um formatador pronto devolve exatamente o mesmo texto.
+ *
+ * Criados na primeira chamada, e não ao carregar o módulo: assim o custo não
+ * cai na abertura do app para quem nunca vê uma data.
+ */
+const formatadores = new Map<string, Intl.DateTimeFormat>();
+function formatador(chave: string, opcoes: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  let f = formatadores.get(chave);
+  if (!f) {
+    f = new Intl.DateTimeFormat('pt-BR', opcoes);
+    formatadores.set(chave, f);
+  }
+  return f;
+}
+
 export function formatDate(dateString: string): string {
   const date = parseDate(dateString);
-  return date.toLocaleDateString('pt-BR', {
-    day: 'numeric',
-    month: 'short',
-    year: date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
-  });
+  return date.getFullYear() === new Date().getFullYear()
+    ? formatador('dia-mes', { day: 'numeric', month: 'short' }).format(date)
+    : formatador('dia-mes-ano', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
 }
 
 export function formatDateWithDay(dateString: string): string {
   const date = parseDate(dateString);
-  return date.toLocaleDateString('pt-BR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  });
+  return formatador('semana-dia-mes', { weekday: 'short', day: 'numeric', month: 'short' }).format(date);
 }
 
 export function formatTime(dateString: string): string {
   const date = parseDate(dateString);
-  return date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatador('hora', { hour: '2-digit', minute: '2-digit' }).format(date);
 }
 
 export function isToday(dateString: string): boolean {

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { animate, useReducedMotion } from 'framer-motion';
+import { curva, duracao } from '@/components/motion/tokens';
 
 interface CountUpProps {
   value: number;
@@ -25,7 +26,7 @@ interface CountUpProps {
  */
 export const CountUp: React.FC<CountUpProps> = ({
   value,
-  durationMs = 900,
+  durationMs = duracao.progresso * 1000,
   from,
   suffix = '',
   className,
@@ -42,7 +43,7 @@ export const CountUp: React.FC<CountUpProps> = ({
     }
     const controls = animate(prev.current, value, {
       duration: durationMs / 1000,
-      ease: [0.16, 1, 0.3, 1],
+      ease: curva.entrada,
       onUpdate: v => setDisplay(Math.round(v)),
     });
     prev.current = value;

@@ -1,6 +1,6 @@
 import { AvisoPro } from '@/components/pro/AvisoPro';
 import React, { useEffect, useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Timer, Square, Check, Coffee, Search, X } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/common/Card';
@@ -18,9 +18,10 @@ import { SeletorDeTempo } from '@/components/focus/SeletorDeTempo';
 import { todayISO } from '@/utils/date';
 import { buscar } from '@/utils/buscaGlobal';
 import { tint } from '@/utils/color';
+import { escalonamento, transicao } from '@/components/motion/tokens';
 
 /** Curva usada no app inteiro. Repetida aqui para o ritmo ser o mesmo. */
-const SUAVE = { duration: 0.28, ease: [0.16, 1, 0.3, 1] as const };
+const SUAVE = transicao.lenta;
 
 /**
  * A aba Foco.
@@ -120,7 +121,7 @@ const FocusPage: React.FC = () => {
             mais meio segundo somado ao tempo da resposta do servidor, e a
             troca parecia travada. Aqui as duas se cruzam. */}
         <AnimatePresence mode="popLayout">
-          <motion.div
+          <m.div
             key={bob.titulo}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -133,13 +134,13 @@ const FocusPage: React.FC = () => {
               <h2 className="text-lg font-bold text-text-primary">{bob.titulo}</h2>
               <p className="text-sm text-text-secondary">{bob.texto}</p>
             </div>
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         {/* O relógio, quando há sessão. */}
         <AnimatePresence mode="wait">
           {sessao ? (
-            <motion.div
+            <m.div
               key="rodando"
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -147,7 +148,7 @@ const FocusPage: React.FC = () => {
               transition={SUAVE}
               className="flex flex-col items-center gap-4"
             >
-              <motion.div
+              <m.div
                 /* Respiração lenta enquanto a sessão corre: dá sinal de vida
                    sem competir com o número. Quatro segundos por ciclo — mais
                    rápido que isso vira ansiedade, que é o oposto do recurso. */
@@ -181,7 +182,7 @@ const FocusPage: React.FC = () => {
                     </span>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
 
               {sessao.taskTitle && (
                 <p className="max-w-sm truncate text-sm text-text-secondary">
@@ -196,9 +197,9 @@ const FocusPage: React.FC = () => {
               >
                 <Square size={15} fill="currentColor" /> Encerrar
               </button>
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="parado"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -237,7 +238,7 @@ const FocusPage: React.FC = () => {
 
                 <AnimatePresence mode="wait" initial={false}>
                   {procurando && (
-                    <motion.div
+                    <m.div
                       key="busca"
                       initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -252,11 +253,11 @@ const FocusPage: React.FC = () => {
                         placeholder="Buscar entre todas as tarefas…"
                         className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder-text-soft focus:border-primary-vibrant focus:outline-none"
                       />
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
 
-                <motion.div
+                <m.div
                   key={procurando ? 'todas' : 'sugeridas'}
                   className={`flex flex-col gap-1.5 ${
                     /* Só a lista completa rola: as cinco sugestões cabem
@@ -270,13 +271,13 @@ const FocusPage: React.FC = () => {
                      cima para baixo — a mesma ordem em que a lista deve ser
                      lida. Um bloco inteiro aparecendo de uma vez não diz por
                      onde começar. */
-                  variants={{ visivel: { transition: { staggerChildren: 0.045 } } }}
+                  variants={{ visivel: { transition: { staggerChildren: escalonamento } } }}
                 >
                   {lista.map(({ task, motivo }) => {
                     const escolhida = tarefaId === task.id;
                     const cor = projects.find(p => p.id === task.projectId)?.color;
                     return (
-                      <motion.button
+                      <m.button
                         key={task.id}
                         type="button"
                         layout
@@ -307,10 +308,10 @@ const FocusPage: React.FC = () => {
                           </span>
                         )}
                         {escolhida && <Check size={15} className="shrink-0 text-primary-vibrant" />}
-                      </motion.button>
+                      </m.button>
                     );
                   })}
-                </motion.div>
+                </m.div>
 
                 {lista.length === 0 && (
                   <p className="py-3 text-center text-xs text-text-soft">
@@ -350,14 +351,14 @@ const FocusPage: React.FC = () => {
               >
                 <Coffee size={14} /> Ou faça uma pausa de 5 minutos
               </button>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
         {/* O placar do dia. Só aparece quando há o que mostrar. */}
         <AnimatePresence>
           {hojeStats.sessions > 0 && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -385,7 +386,7 @@ const FocusPage: React.FC = () => {
                   </span>
                 </span>
               </Card>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

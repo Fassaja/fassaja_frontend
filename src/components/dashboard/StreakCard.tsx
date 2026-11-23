@@ -1,9 +1,10 @@
 import React from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { Flame, Moon } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { useUser, computeStreak } from '@/contexts/UserContext';
 import { useTasks } from '@/hooks/useTasks';
+import { transicao, mola } from '@/components/motion/tokens';
 
 function isoOf(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -42,14 +43,14 @@ export const StreakContent: React.FC = () => {
           Sequência produtiva
         </h2>
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-300 font-bold text-sm">
-          <motion.span
+          <m.span
             className="inline-flex"
             initial={reduce || streak === 0 ? false : { scale: 0.4, rotate: -12 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 14 }}
+            transition={mola.quique}
           >
             <Flame size={16} />
-          </motion.span>
+          </m.span>
           {streak} {streak === 1 ? 'dia' : 'dias'}
         </span>
       </div>
@@ -62,12 +63,12 @@ export const StreakContent: React.FC = () => {
 
       <div className="flex justify-between gap-2">
         {weekStrip.map((day, i) => (
-          <motion.div
+          <m.div
             key={i}
             className="flex-1 flex flex-col items-center gap-1.5"
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: reduce ? 0 : 0.25 + i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ ...transicao.lenta, delay: reduce ? 0 : 0.25 + i * 0.05 }}
           >
             <div
               title={day.rest && !day.active ? 'Dia de folga — não quebra a sequência' : undefined}
@@ -84,7 +85,7 @@ export const StreakContent: React.FC = () => {
             <span className={`text-[11px] ${day.rest && !day.active ? 'text-text-soft' : 'text-text-secondary'}`}>
               {day.letter}
             </span>
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </>

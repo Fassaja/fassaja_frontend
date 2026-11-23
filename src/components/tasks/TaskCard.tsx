@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Trash2, Check, CalendarDays, ChevronDown, ListChecks, Timer, Users } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Task, TaskStatus } from '@/types/task';
 import { Project } from '@/types/project';
 import { Card } from '@/components/common/Card';
@@ -14,6 +14,7 @@ import { tint, chipText } from '@/utils/color';
 import { subtaskProgress } from '@/utils/subtasks';
 import { useFocusTimes } from '@/contexts/FocusTimesContext';
 import { rotuloDeDuracao } from '@/utils/focoCoach';
+import { transicao } from '@/components/motion/tokens';
 
 interface TaskCardProps {
   task: Task;
@@ -122,11 +123,11 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
             className="fixed inset-0 z-[60]"
             onClick={e => { e.stopPropagation(); setOpen(false); }}
           />
-          <motion.div
+          <m.div
             role="menu"
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.16, ease: [0.25, 1, 0.5, 1] }}
+            transition={transicao.rapida}
             style={{ position: 'fixed', top: pos.top, left: pos.left, width: MENU_W }}
             className="z-[61] rounded-xl border border-border bg-surface shadow-lg overflow-hidden py-1"
             onClick={e => e.stopPropagation()}
@@ -148,7 +149,7 @@ const StatusSelect: React.FC<StatusSelectProps> = ({ task }) => {
                 </button>
               );
             })}
-          </motion.div>
+          </m.div>
         </>,
         document.body,
       )}
@@ -208,12 +209,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.18 }}
-    >
+    // Entrada em CSS, não framer-motion: o cartão aparece às dezenas (o quadro
+    // monta todos de uma vez), e cada `m.div` era uma animação em
+    // JavaScript a mais no mesmo quadro — no celular, boa parte da travada ao
+    // abrir Tarefas. A saída nunca dependeu daqui: quem anima a remoção é a
+    // lista em volta (AnimatedList).
+    <div className="animate-card-in">
       <Card
         hoverable
         onClick={handleClick}
@@ -424,6 +425,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         )}
       </Card>
-    </motion.div>
+    </div>
   );
 };
